@@ -1,0 +1,25 @@
+<!-- @dsCard group="App" name="프로젝트 개요" subtitle="구조 · 라이브 프로토타입 · 유지보수 가이드" width="900" height="700" -->
+<title>Sync Design System — 개요</title>
+<style>body{margin:0;padding:32px;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#F4F6F9;color:#1A2130;line-height:1.65}h1{font-size:20px;margin:0 0 6px}p{font-size:13px;color:#5C6577;margin:0 0 18px}h2{font-size:13px;color:#9AA3B2;letter-spacing:.06em;margin:22px 0 8px}.b{background:#fff;border:1px solid #E6E9F0;border-radius:12px;padding:16px 18px;font-size:13px}code{background:#F8F9FB;border:1px solid #E6E9F0;border-radius:5px;padding:1px 6px;font-size:12px}a{color:#2563EB;font-weight:600}.new{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:#2563EB;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle}</style>
+<h1>🧩 Sync 디지털 사이니지 — Design System</h1>
+<p>Claude Code에서 제작한 통합 프로토타입을 이전한 프로젝트입니다. 새 화면은 Foundations 토큰과 Components를 조합해 Templates 골격 위에 만듭니다.</p>
+<h2>구조</h2>
+<div class="b">
+<b>tokens/</b> tokens.css — 전체 디자인 토큰+컴포넌트 CSS (단일 원본)<br>
+<b>foundations/</b> Color · Typography · Spacing/Radius/Border · Shadow · Layout<br>
+<b>components/</b> Button ~ State 14종 (실제 제품 CSS로 렌더링)<br>
+<b>patterns/</b> Folder(3-Depth·DnD) · Upload · Calendar(주/월) · DateTime · Menu Board · Video Wall<br>
+<b>templates/</b> List Page · Editor Shell · Settings Page · Auth<br>
+<b>screens/</b> 17개 화면 — 라이브 앱을 해시 딥링크로 임베드<br>
+<b>app/</b> prototype.html(+styles.css, 모듈 JS 2) — 전체 인터랙티브 앱
+</div>
+<h2>사용성 테스트 프로토타입 <span class="new">NEW</span></h2>
+<div class="b"><b>app/user-test.html</b> — 로그인부터 대시보드·매장·패널·편성·콘텐츠·템플릿·재생목록·상품·메뉴 위젯·기타 관리까지 <b>전체 사용자 여정을 순서대로 안내</b>하는 가이드 투어예요.<br><b>이 버전은 신규 가입 직후처럼 모든 데이터가 비어 있는 초기 상태(Empty State)로 시작</b>합니다 — 매장·패널·콘텐츠·템플릿·재생목록·상품 없음, 최고관리자 계정만 존재. 각 페이지는 다음 행동을 안내하는 Empty State 메시지와 CTA를 보여줘요.<br>운영 데이터가 채워진 시나리오 버전은 <code>#dash</code> 등 기존 딥링크로 그대로 유지됩니다.<br>직접 링크: <code>app/prototype.html#tour</code></div>
+<h2>딥링크</h2>
+<div class="b"><code>app/prototype.html#tour</code>(가이드 투어) · <code>#dash</code> · <code>#products</code> · <code>#editor</code> · <code>#panels</code> · <code>#walls</code> · <code>#schedule</code> · <code>#schedule-month</code> · <code>#library</code> · <code>#playlists</code> · <code>#pledit</code> · <code>#templates</code> · <code>#stores</code> · <code>#users</code> · <code>#mypage</code> · <code>#support</code> · <code>#signup</code> · <code>#onboarding</code></div>
+<h2>라이브 프로토타입 (Claude Code 아티팩트)</h2>
+<div class="b"><a href="https://claude.ai/code/artifact/889f887a-03e5-409c-be1f-fa35aff34d04" target="_blank">claude.ai/code/artifact/889f887a…</a> — 동일한 딥링크 해시 지원</div>
+<h2>태그 관리 <span class="new">개선</span></h2>
+<div class="b">콘텐츠 관리·패널 관리의 태그는 이제 <b>사용하는 자리에서 바로 생성</b>돼요. 필터 칩·항목 메뉴·일괄 작업·업로드/등록·상세에서 태그 피커에 이름을 입력하면 새 태그가 만들어지고 즉시 적용돼요. 이름 변경·삭제·사용 건수는 각 피커의 <b>[태그 관리…]</b> 모달에서 관리하며, 별도 관리 페이지 없이 각 화면 안에서 완결돼요. (콘텐츠 태그와 패널 태그는 성격이 달라 별도 목록으로 유지됩니다.)</div>
+<h2>유지보수 규칙</h2>
+<div class="b">① 색·간격·라운드는 반드시 tokens의 CSS 변수 사용 ② 새 컴포넌트는 기존 카드에 변형 추가를 먼저 검토 ③ 화면 추가 시 Templates 골격 + screens/ 래퍼 1개 추가 ④ 파일당 256KiB 제한 — 앱은 styles.css/모듈 JS 분리 유지</div>

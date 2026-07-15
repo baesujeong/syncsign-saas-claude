@@ -1,0 +1,114 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "app/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--amber",
+      "--amber-bg",
+      "--bg",
+      "--blue",
+      "--blue-100",
+      "--blue-200",
+      "--blue-50",
+      "--blue-hover",
+      "--border",
+      "--border-2",
+      "--green",
+      "--green-bg",
+      "--lnb-w",
+      "--r-lg",
+      "--r-md",
+      "--r-sm",
+      "--r-xl",
+      "--red",
+      "--red-bg",
+      "--sh-lg",
+      "--sh-md",
+      "--sh-sm",
+      "--sunken",
+      "--surface",
+      "--text",
+      "--text-2",
+      "--text-3",
+      "--violet",
+      "--violet-bg"
+    ],
+    "tokenKinds": {
+      "--blue": "color",
+      "--blue-hover": "color",
+      "--blue-50": "color",
+      "--blue-100": "color",
+      "--blue-200": "color",
+      "--bg": "color",
+      "--surface": "color",
+      "--sunken": "color",
+      "--border": "color",
+      "--border-2": "color",
+      "--text": "font",
+      "--text-2": "font",
+      "--text-3": "font",
+      "--red": "color",
+      "--red-bg": "color",
+      "--green": "color",
+      "--green-bg": "color",
+      "--amber": "color",
+      "--amber-bg": "color",
+      "--violet": "color",
+      "--violet-bg": "color",
+      "--sh-sm": "shadow",
+      "--sh-md": "shadow",
+      "--sh-lg": "shadow",
+      "--r-sm": "spacing",
+      "--r-md": "spacing",
+      "--r-lg": "spacing",
+      "--r-xl": "spacing",
+      "--lnb-w": "spacing"
+    },
+    "fontFamilies": []
+  }
+}

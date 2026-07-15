@@ -1,0 +1,4 @@
+/* syncsign 디자인 시스템 — 단일 진입점 (Single entry point) */
+/* Consumers link this one file; it pulls in tokens + document chrome. */
+@import "tokens/tokens.css";
+@import "tokens/doc-chrome.css";
