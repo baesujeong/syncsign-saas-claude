@@ -7,7 +7,7 @@
 <!-- ═══════════ 인증 ═══════════ -->
 <div id="screen-auth">
   <aside class="auth-brand">
-    <div class="logo"><span class="mark"></span>syncsign</div>
+    <div class="logo"><img src="../uploads/Logo-Horizontal-Light.svg" alt="syncsign" style="height:28px;width:auto;display:block"></div>
     <h1>매장의 모든 화면을<br>한 곳에서 관리하세요</h1>
     <p>메뉴판·광고·안내 화면을 웹에서 만들고, 전국 매장의 화면에 원격으로 송출하는 디지털 사이니지 클라우드입니다.</p>
     <div class="auth-mock"><div class="bar"><i></i><i></i><i></i></div>
@@ -26,8 +26,8 @@
 
 <!-- ═══════════ 온보딩 ═══════════ -->
 <div id="screen-onboard" hidden>
-  <div class="lnb-logo" style="margin-bottom:22px"><span class="mark"></span>syncsign</div>
-  <div class="ob-steps" id="ob-steps"></div>
+  <div class="lnb-logo" style="margin-bottom:22px"><img src="../uploads/Logo-Horizontal-Light.svg" alt="syncsign" style="height:26px;width:auto;display:block"></div>
+  <div class="wiz-steps ob-steps" id="ob-steps"></div>
   <div class="ob-card" id="ob-card"></div>
 </div>
 
@@ -470,7 +470,8 @@ function startOnboard(msg){
  obStep=1;renderOnboard();if(msg)toast(msg);
 }
 function renderOnboard(){
- $('#ob-steps').innerHTML=[['1','업종 선택'],['2','운영 형태'],['3','첫 매장 만들기'],['4','화면 연결']].map(([n,l])=>`<span class="ob-step ${+n===obStep?'cur':+n<obStep?'done':''}"><span class="n">${n}</span>${l}</span>`).join('');
+ /* Process Stepper — 비디오월 위저드와 동일한 표준 컴포넌트(.wiz-step) 사용 */
+ $('#ob-steps').innerHTML=[['1','업종 선택'],['2','운영 형태'],['3','첫 매장 만들기'],['4','화면 연결']].map(([n,l])=>`<span class="wiz-step ${+n===obStep?'cur':+n<obStep?'done':''}"><span class="n">${n}</span>${l}</span>`).join('');
  const card=$('#ob-card');
  if(obStep===1){
   card.innerHTML=`<h2>어떤 매장을 운영하시나요?</h2><div class="sub">업종에 맞는 템플릿과 위젯을 추천해 드려요. 나중에 바꿀 수 있어요.</div>
@@ -670,11 +671,12 @@ function drawUsers(){
   if(u.role!=='owner')items.push({label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`${u.name}님 삭제`,desc:'삭제하면 즉시 접근 권한이 사라져요. 이 사용자가 만든 콘텐츠는 유지돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(x=>x!==u);drawUsers();toast('사용자를 삭제했어요')}})});
   popMenu(b,items);
  });
+ const ua=$('#u-all');if(ua){const arr=usersFiltered();ua.classList.toggle('on',!!arr.length&&arr.every(u=>uChecked.has(u.id)));}
  const bulk=$('#u-bulk');bulk.hidden=!uChecked.size;
  if(uChecked.size){
   bulk.innerHTML=`<b>${uChecked.size}명</b> 선택됨
-   <button class="btn" id="ub-role">역할 변경</button><button class="btn" id="ub-off">비활성화</button><button class="btn" style="color:#FCA5A5" id="ub-del">삭제</button>
-   <button class="close icon-btn" id="ub-x">${IC.x}</button>`;
+   <button class="btn" id="ub-role">역할 변경</button><button class="btn" id="ub-off">비활성화</button><button class="btn danger-t" id="ub-del">삭제</button>
+   <button class="close icon-btn" id="ub-x" aria-label="선택 해제">${IC.x}</button>`;
   bulk.querySelector('#ub-x').onclick=()=>{uChecked.clear();drawUsers()};
   bulk.querySelector('#ub-role').onclick=e=>popMenu(e.currentTarget,['admin','editor','viewer'].map(r=>({label:ROLE_META[r][0],onClick:()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.role=r});uChecked.clear();drawUsers();toast('역할을 변경했어요')}})));
   bulk.querySelector('#ub-off').onclick=()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.status='inactive'});uChecked.clear();drawUsers();toast('선택한 사용자를 비활성화했어요')};
@@ -752,6 +754,11 @@ function openRolesDrawer(){
 
 /* ═══════════ 매장 관리 ═══════════ */
 let sFlt={q:'',region:'all',call:'all'};
+const sChecked=new Set(); /* 매장 다중 선택 — 리스트 공통 패턴 */
+const storesFiltered=()=>STORES.filter(s=>
+ (sFlt.region==='all'||s.region===sFlt.region)&&
+ (sFlt.call==='all'||(sFlt.call==='on'?s.call.on:!s.call.on))&&
+ (!sFlt.q||s.name.includes(sFlt.q)||s.addr.includes(sFlt.q)));
 function renderStoresPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.stores.t')}</h1><span class="desc">${t('page.stores.d')}</span>
@@ -763,12 +770,15 @@ function renderStoresPage(root){
    <div class="spacer"></div>
    <span style="font-size:12px;color:var(--text-3)" id="s-count"></span>
   </div>
+  <div class="bulk-bar" id="s-bulk" hidden></div>
   <div class="content-scroll"><div class="ptable-wrap"><table class="grid"><thead><tr>
+   <th style="width:38px"><span class="checkbox" id="s-all" role="checkbox" aria-label="전체 선택">${IC.check}</span></th>
    <th>매장</th><th>담당자</th><th>화면</th><th>번호호출</th><th>마지막 연결</th><th style="width:40px"></th>
   </tr></thead><tbody id="s-tbody"></tbody></table></div></div>`;
  attachSearchUX(root.querySelector('#s-q'),q=>{sFlt.q=q;drawStores()});
  root.querySelector('#s-region').onchange=e=>{sFlt.region=e.target.value;drawStores()};
  root.querySelector('#btn-add-store').onclick=openStoreModal;
+ root.querySelector('#s-all').onclick=()=>{const arr=storesFiltered();const all=arr.every(s=>sChecked.has(s.id));arr.forEach(s=>all?sChecked.delete(s.id):sChecked.add(s.id));drawStores()};
  drawStores();
 }
 const callBadge=s=>{
@@ -780,25 +790,26 @@ function drawStores(){
  const chips=$('#s-call-chips');if(!chips)return;
  chips.innerHTML=[['all','전체'],['on','번호호출 사용'],['off','미사용']].map(([k,l])=>`<button class="chip ${sFlt.call===k?'on':''}" data-sc="${k}">${l}${k==='on'?`<span class="cnt num">${STORES.filter(s=>s.call.on).length}</span>`:''}</button>`).join('');
  chips.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{sFlt.call=b.dataset.sc;drawStores()});
- const arr=STORES.filter(s=>
-  (sFlt.region==='all'||s.region===sFlt.region)&&
-  (sFlt.call==='all'||(sFlt.call==='on'?s.call.on:!s.call.on))&&
-  (!sFlt.q||s.name.includes(sFlt.q)||s.addr.includes(sFlt.q)));
+ const arr=storesFiltered();
  $('#s-count').textContent=`${arr.length}개 매장`;
+ const sa=$('#s-all');if(sa)sa.classList.toggle('on',!!arr.length&&arr.every(s=>sChecked.has(s.id)));
  $('#s-tbody').innerHTML=arr.map(s=>{
   const bad=s.panels.on<s.panels.total;
   return `<tr data-srow="${s.id}" style="cursor:pointer">
+   <td><span class="checkbox ${sChecked.has(s.id)?'on':''}" data-schk="${s.id}" role="checkbox" aria-label="${s.name} 선택">${IC.check}</span></td>
    <td><b>${s.name}</b><div style="font-size:11.5px;color:var(--text-3)">${s.region}${s.addr?' · '+s.addr:''}</div></td>
    <td>${s.mgrs.length?`<span class="mgr-chips">${s.mgrs.slice(0,3).map(id=>{const u=userOf(id);return u?`<span class="avatar" style="background:${u.c}" title="${u.name}">${u.name[0]}</span>`:''}).join('')}${s.mgrs.length>3?`<span class="more">+${s.mgrs.length-3}</span>`:''}</span>`:'<span style="color:var(--text-3);font-size:12.5px">미지정</span>'}</td>
    <td><span style="display:inline-flex;align-items:center;gap:7px;font-size:13px"><span class="dot ${bad?'err':'on'}"></span><b class="num">${s.panels.on}</b><span style="color:var(--text-3)">/ ${s.panels.total} 온라인</span></span></td>
    <td>${callBadge(s)}</td>
    <td style="font-size:12.5px;color:var(--text-3)">${s.panels.last}</td>
    <td><button class="icon-btn" data-sm="${s.id}">${IC.dots}</button></td></tr>`;
- }).join('')||`<tr><td colspan="6">${STORES.length===0?`<div class="empty"><b>아직 등록된 매장이 없어요</b><span>첫 번째 매장을 등록하고 지역·담당자를 정리해보세요</span><button class="btn btn-primary btn-sm" onclick="openStoreModal()">${IC.plus}첫 매장 등록하기</button></div>`:sFlt.q?searchEmptyHtml(sFlt.q):`<div class="empty"><b>조건에 맞는 매장이 없어요</b><button class="btn btn-tonal btn-sm" onclick="openStoreModal()">첫 매장 등록하기</button></div>`}</td></tr>`;
+ }).join('')||`<tr><td colspan="7">${STORES.length===0?`<div class="empty"><b>아직 등록된 매장이 없어요</b><span>첫 번째 매장을 등록하고 지역·담당자를 정리해보세요</span><button class="btn btn-primary btn-sm" onclick="openStoreModal()">${IC.plus}첫 매장 등록하기</button></div>`:sFlt.q?searchEmptyHtml(sFlt.q):`<div class="empty"><b>조건에 맞는 매장이 없어요</b><button class="btn btn-tonal btn-sm" onclick="openStoreModal()">첫 매장 등록하기</button></div>`}</td></tr>`;
  {const _q=document.getElementById('s-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
   const _r=document.querySelector('#s-tbody [data-se-reset]');if(_r)_r.onclick=()=>{sFlt.q='';if(_q)_q.value='';drawStores();_q&&_q.focus();};
   const _c=document.querySelector('#s-tbody [data-se-cta]');if(_c)_c.onclick=()=>openStoreModal();}
- $$('#s-tbody [data-srow]').forEach(tr=>tr.addEventListener('click',e=>{if(e.target.closest('[data-sm]'))return;openStoreDrawer(STORES.find(s=>s.id===tr.dataset.srow))}));
+ $$('#s-tbody [data-srow]').forEach(tr=>tr.addEventListener('click',e=>{if(e.target.closest('[data-sm],[data-schk]'))return;openStoreDrawer(STORES.find(s=>s.id===tr.dataset.srow))}));
+ $$('#s-tbody [data-schk]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.schk;sChecked.has(id)?sChecked.delete(id):sChecked.add(id);drawStores();});
+ drawStoresBulk();
  $$('#s-tbody [data-sm]').forEach(b=>b.onclick=()=>{
   const s=STORES.find(x=>x.id===b.dataset.sm);
   popMenu(b,[
@@ -808,6 +819,27 @@ function drawStores(){
    {label:'매장 삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${s.name}' 삭제`,desc:`연결된 화면 ${s.panels.total}개는 미배정 상태가 돼요. 콘텐츠는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{STORES=STORES.filter(x=>x!==s);drawStores();toast('매장을 삭제했어요')}})},
   ]);
  });
+}
+/* 매장 일괄 작업 바 — 리스트 공통 표준(bulk-bar) 재사용 */
+function drawStoresBulk(){
+ const bulk=$('#s-bulk');if(!bulk)return;
+ bulk.hidden=!sChecked.size;
+ if(!sChecked.size)return;
+ bulk.innerHTML=`<b>${sChecked.size}개</b> 선택됨
+  <button class="btn" id="sb-mgr">담당자 지정</button><button class="btn danger-t" id="sb-del">삭제</button>
+  <button class="close icon-btn" id="sb-x" aria-label="선택 해제">${IC.x}</button>`;
+ bulk.querySelector('#sb-x').onclick=()=>{sChecked.clear();drawStores()};
+ bulk.querySelector('#sb-mgr').onclick=e=>popMenu(e.currentTarget,USERS.filter(u=>u.status==='active').map(u=>({label:`${u.name} (${ROLE_META[u.role][0]})`,onClick:()=>{
+  sChecked.forEach(id=>{const s=STORES.find(x=>x.id===id);if(s&&!s.mgrs.includes(u.id))s.mgrs.push(u.id)});
+  const n=sChecked.size;sChecked.clear();drawStores();toast(`${n}개 매장에 '${u.name}' 담당자를 지정했어요`);
+ }})));
+ bulk.querySelector('#sb-del').onclick=()=>{
+  const list=[...sChecked].map(id=>STORES.find(x=>x.id===id)).filter(Boolean);
+  const pn=list.reduce((a,s)=>a+s.panels.total,0);
+  confirmDialog({title:`매장 ${list.length}개 삭제`,desc:`연결된 화면 ${pn}개는 미배정 상태가 돼요. 콘텐츠는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{
+   STORES=STORES.filter(s=>!sChecked.has(s.id));sChecked.clear();drawStores();toast('매장을 삭제했어요');
+  }});
+ };
 }
 function openStoreModal(){
  openModal(`
@@ -1753,11 +1785,11 @@ renderLogin(false);
     <div class="onboard" id="onboard">
       <div class="lead"><b>메뉴판 송출까지 3단계면 끝나요</b><p>상품을 등록해두면 메뉴판이 자동으로 만들어져요.</p></div>
       <div class="onboard-steps">
-        <span class="ob-step done" id="ob1"><span class="n">1</span>상품 등록</span>
+        <span class="wiz-step done" id="ob1"><span class="n">1</span>상품 등록</span>
         <svg class="ob-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
-        <span class="ob-step cur" id="ob2"><span class="n">2</span>메뉴판 제작</span>
+        <span class="wiz-step cur" id="ob2"><span class="n">2</span>메뉴판 제작</span>
         <svg class="ob-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
-        <span class="ob-step" id="ob3"><span class="n">3</span>화면 송출</span>
+        <span class="wiz-step" id="ob3"><span class="n">3</span>화면 송출</span>
       </div>
       <button class="btn btn-tonal" data-goto-editor>에디터에서 메뉴판 만들기</button>
       <button class="icon-btn" id="onboard-close" aria-label="배너 닫기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
@@ -1915,7 +1947,6 @@ renderLogin(false);
     </div>
 
     <div class="bulk-bar" id="bulk-bar" hidden>
-      <span class="checkbox on" id="bulk-all" role="checkbox" aria-label="페이지 전체 선택"></span>
       <b id="bulk-count">0개</b> 선택됨
       <button class="btn" id="bulk-schedule">일정 등록</button>
       <button class="btn" id="bulk-share">일정 따라가기 설정</button>
@@ -2122,13 +2153,14 @@ function openFolderMenu(anchor,cfg,f){
  else
   items.push({label:'새 하위 폴더 (3단계 제한)',icon:IC.plus,onClick:()=>toast('폴더는 최대 3단계까지만 만들 수 있어요',{err:true})});
  items.push({label:'이름 변경',icon:IC.edit,onClick:()=>folderNameModal({title:'폴더 이름 변경',initial:f.name,onSave:nm=>{f.name=nm;cfg.onChanged();toast('폴더 이름을 변경했어요')}})});
- const desc=fDescIds(fs,f.id);
- const targets=[{id:null,name:'최상위로',depth:0},...fFlat(fs).filter(({f:t})=>!desc.includes(t.id)).map(({f:t,depth})=>({id:t.id,name:t.name,depth}))]
-  .filter(t=>t.id!==(f.parent||null))
-  .filter(t=>(t.id===null?0:fDepth(fs,t.id))+fSubDepth(fs,f.id)<=F_MAX);
- if(targets.length){
-  items.push({title:'폴더 이동'});
-  targets.slice(0,8).forEach(t=>items.push({label:t.id===null?'최상위로':fIndent(t.depth+1)+t.name,icon:t.id===null?IC.folder:'',onClick:()=>{f.parent=t.id;cfg.onChanged();toast(`'${f.name}' 폴더를 이동했어요`)}}));
+ /* 폴더 이동 — 메뉴에는 액션만, 대상 선택은 공용 폴더 이동 모달에서 (인라인 목록 펼침 금지) */
+ {
+  const desc=fDescIds(fs,f.id);
+  const canPick=fid=>fid!==f.id&&!desc.includes(fid)&&(fid===null?0:fDepth(fs,fid))+fSubDepth(fs,f.id)<=F_MAX;
+  items.push({label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({
+   fs,current:f.parent||null,withNone:true,canPick,title:'폴더 이동',
+   onMove:fid=>{f.parent=fid;cfg.onChanged();toast(`'${f.name}' 폴더를 ${fid?`'${fPath(fs,fid)}'(으)로`:'최상위로'} 이동했어요`)}
+  })});
  }
  items.push('sep',{label:'폴더 삭제',icon:IC.trash,danger:true,onClick:()=>{
   const kids=fKids(fs,f.id).length,n=cfg.itemsIn?cfg.itemsIn(f.id):0;
@@ -2142,16 +2174,10 @@ function openFolderMenu(anchor,cfg,f){
  }});
  popMenu(anchor,items);
 }
-function folderMoveMenuItems(fs,onPick,withNone){
- const items=[];
- if(withNone)items.push({label:'폴더 없음 (전체)',icon:IC.folder,onClick:()=>onPick(null)});
- fFlat(fs).forEach(({f,depth})=>items.push({label:fIndent(depth)+f.name,onClick:()=>onPick(f.id)}));
- return items;
-}
 /* ═══ 폴더 이동 모달 — 대량 폴더(최대 3Depth) 운영 환경용 ═══
    더보기 메뉴는 액션만 담고, 폴더 선택은 이 모달에서: 트리 탐색 + 검색 + 현재 위치 표시 + 선택 확인.
    current: 폴더 id | null(최상위) | undefined(여러 항목 이동 등 현재 위치 표시 안 함) */
-function folderMoveModal({fs,current,withNone=false,onMove,title='폴더 이동',count=1}){
+function folderMoveModal({fs,current,withNone=false,onMove,title='폴더 이동',count=1,canPick}){
  const KEY_ROOT='__root__';
  const key=v=>v==null?KEY_ROOT:v;
  const curKey=current===undefined?undefined:key(current);
@@ -2171,9 +2197,10 @@ function folderMoveModal({fs,current,withNone=false,onMove,title='폴더 이동'
   const list=q?rows.filter(r=>r.name.toLowerCase().includes(q.toLowerCase())):rows;
   ov.querySelector('#fm-tree').innerHTML=list.map(r=>{
    const isCur=r.k===curKey;
-   return `<div class="fr-item ${sel===r.k?'on':''} ${isCur?'fm-cur':''}" data-fm="${r.k}" role="button" tabindex="0" aria-disabled="${isCur?'true':'false'}" style="padding-left:${q?10:10+(r.depth-1)*18}px">${IC.folder}<span class="fr-nm">${q?r.path:r.name}</span>${isCur?'<span class="cnt">현재 위치</span>':''}</div>`;
+   const blocked=!isCur&&canPick&&!canPick(r.k===KEY_ROOT?null:r.k);
+   return `<div class="fr-item ${sel===r.k?'on':''} ${isCur?'fm-cur':''} ${blocked?'fm-dis':''}" data-fm="${r.k}" ${blocked?'data-fm-dis="1"':''} role="button" tabindex="${blocked?-1:0}" aria-disabled="${isCur||blocked?'true':'false'}" style="padding-left:${q?10:10+(r.depth-1)*18}px">${IC.folder}<span class="fr-nm">${q?r.path:r.name}</span>${isCur?'<span class="cnt">현재 위치</span>':blocked?'<span class="cnt">이동 불가</span>':''}</div>`;
   }).join('')||`<div style="padding:16px;font-size:12.5px;color:var(--text-3)">${q?'검색 결과가 없어요 — 다른 이름으로 검색해보세요':'아직 만들어 둔 폴더가 없어요'}</div>`;
-  const pick=el=>{if(el.dataset.fm===curKey)return;sel=el.dataset.fm;draw();};
+  const pick=el=>{if(el.dataset.fm===curKey||el.dataset.fmDis)return;sel=el.dataset.fm;draw();};
   ov.querySelector('#fm-tree').querySelectorAll('[data-fm]').forEach(el=>{
    el.onclick=()=>pick(el);
    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(el);}};

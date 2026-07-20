@@ -66,7 +66,7 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 .checkbox{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-2);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;transition:all .12s;flex:none;color:transparent;cursor:pointer}
 .checkbox.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .seg{display:inline-flex;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-md);padding:3px;gap:2px}
-.seg button{height:30px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;gap:6px}
+.seg button{height:30px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;line-height:1;gap:6px}
 .seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
 .dot{width:8px;height:8px;border-radius:50%;flex:none}
 .dot.on{background:var(--green)}.dot.off{background:#B4BCC9}.dot.err{background:var(--red)}
@@ -79,6 +79,26 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 .menu-pop .sep{height:1px;background:var(--border);margin:5px 4px}
 .menu-pop .mp-title{font-size:11.5px;font-weight:700;color:var(--text-3);padding:7px 11px 3px;letter-spacing:.03em}
 @keyframes pop{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+/* ── Date Range Picker ── */
+.drp-field{display:flex;align-items:center;gap:7px;width:100%;cursor:pointer;text-align:left;color:var(--text)}
+.drp-field svg{color:var(--text-3);flex:none}
+.drp-pop{width:284px;padding:12px;max-height:none;overflow:visible}
+.drp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.drp-head b{font-size:13.5px}
+.drp-nav{width:28px;height:28px;border-radius:var(--r-md);font-size:16px;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center}
+.drp-nav:hover{background:var(--sunken)}
+.drp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px 0}
+.drp-grid.wd span{font-size:11px;font-weight:600;color:var(--text-3);text-align:center;padding:4px 0}
+.drp-day{height:32px;border-radius:0;font-size:12.5px;font-weight:500;color:var(--text);display:inline-flex;align-items:center;justify-content:center;padding:0;width:100%}
+.drp-day.pad{pointer-events:none}
+.drp-day:not(.pad):hover{background:var(--blue-50)}
+.drp-day.today{font-weight:800;color:var(--blue)}
+.drp-day.in{background:var(--blue-50)}
+.drp-day.sel{background:var(--blue);color:#fff;font-weight:700}
+.drp-day.sel.s{border-radius:8px 0 0 8px}
+.drp-day.sel.e{border-radius:0 8px 8px 0}
+.drp-day.sel.s.e{border-radius:8px}
+.drp-foot{margin-top:10px;font-size:11.5px;color:var(--text-3);text-align:center}
 .overlay{position:fixed;inset:0;background:rgba(15,23,42,.44);z-index:200;display:flex;align-items:center;justify-content:center;animation:fade .18s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .modal{background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--sh-lg);display:flex;flex-direction:column;max-height:min(88vh,820px);animation:rise .22s cubic-bezier(.2,.9,.3,1);overflow:hidden}
@@ -141,6 +161,8 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 #screen-auth{display:flex;height:100vh}
 .auth-brand{width:44%;min-width:380px;background:linear-gradient(160deg,#1B2C55 0%,#12224a 45%,#0D1730 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:60px 56px;position:relative;overflow:hidden}
 .auth-brand .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;position:absolute;top:36px;left:56px}
+/* 다크 네이비 브랜드 영역 — 단일 로고 에셋을 화이트로 반전해 사용 */
+.auth-brand .logo img{filter:brightness(0) invert(1)}
 .auth-brand .logo .mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#5B9BFF,#2563EB);position:relative;overflow:hidden}
 .auth-brand .logo .mark::after{content:"";position:absolute;inset:5px 5px 5px 9px;background:#fff;clip-path:polygon(0 0,100% 50%,0 100%)}
 .auth-brand h1{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.35;margin:0 0 12px;text-wrap:balance}
@@ -167,14 +189,9 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 .form-banner{display:flex;gap:9px;align-items:flex-start;background:var(--red-bg);border:1px solid #F6C7C9;border-radius:var(--r-md);padding:11px 13px;font-size:12.5px;color:#B3261E;line-height:1.5;margin-bottom:16px}
 
 /* 온보딩 */
-#screen-onboard{display:flex;flex-direction:column;align-items:center;height:100vh;overflow-y:auto;background:var(--bg);padding:44px 20px}
-.ob-steps{display:flex;gap:8px;margin-bottom:28px}
-.ob-step{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--text-3);padding:6px 12px;border-radius:99px}
-.ob-step .n{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-.ob-step.cur{background:var(--surface);color:var(--blue);box-shadow:var(--sh-sm)}
-.ob-step.cur .n{background:var(--blue);border-color:var(--blue);color:#fff}
-.ob-step.done .n{background:var(--green);border-color:var(--green);color:#fff;font-size:0}
-.ob-step.done .n::after{content:"✓";font-size:11px}
+#screen-onboard{display:flex;flex-direction:column;align-items:center;height:100vh;overflow-y:auto;background:#ffffff;padding:44px 20px}
+/* 온보딩 Stepper — 표준 .wiz-steps 컴포넌트 사용, 배치(중앙·하단 여백)만 이 화면에서 조정 */
+.ob-steps{padding:0;margin-bottom:28px;justify-content:center}
 .ob-card{width:560px;max-width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-md);padding:34px 36px}
 .ob-card h2{margin:0 0 6px;font-size:21px;font-weight:800;letter-spacing:-.02em}
 .ob-card .sub{font-size:13.5px;color:var(--text-2);margin-bottom:24px;line-height:1.6}
@@ -231,10 +248,12 @@ table.grid th{white-space:nowrap}
 .toolbar .search-wrap{width:260px}
 .toolbar .spacer{flex:1}
 .content-scroll{flex:1;overflow-y:auto;padding:4px 24px 28px;min-height:0}
-.bulk-bar{display:flex;align-items:center;gap:10px;margin:0 24px 10px;padding:10px 16px;background:#242B38;color:#fff;font-size:13.5px;border-radius:var(--r-lg);flex:none;animation:pop .15s ease;flex-wrap:wrap}
+/* 일괄 작업 바 — 서비스 공통 표준: 리스트 상단 부착형 · 직각(콘텐츠 관리 기준) */
+.bulk-bar{display:flex;align-items:center;gap:10px;margin:0;padding:10px 16px;background:#242B38;color:#fff;font-size:13.5px;border-radius:0;flex:none;animation:pop .15s ease;flex-wrap:wrap}
 .bulk-bar b{color:#8AB4FF}
 .bulk-bar .btn{height:32px;padding:0 12px;font-size:13px;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);color:#fff}
 .bulk-bar .btn:hover{background:rgba(255,255,255,.16)}
+.bulk-bar .btn.danger-t{color:#FCA5A5}
 .bulk-bar .close{margin-left:auto;color:#96A0B5}
 .ptable-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:auto}
 table.grid{width:100%;border-collapse:collapse;min-width:900px}
@@ -257,6 +276,8 @@ table.grid tr.checked td{background:var(--blue-50)}
 .fr-item.on svg{color:var(--blue)}
 .fr-item .cnt{margin-left:auto;font-size:11.5px;color:var(--text-3);font-weight:500}
 .fr-item.drop-ok{outline:2px dashed var(--blue);outline-offset:-2px}
+.fr-item.fm-dis{opacity:.45;cursor:not-allowed}
+.fr-item.fm-dis:hover{background:none}
 .rail-layout{flex:1;display:flex;gap:14px;padding:2px 24px 24px;min-height:0}
 .rail-main{flex:1;min-width:0;display:flex;flex-direction:column}
 /* ─── 표준 관리 레이아웃 (상품 관리 기준) ───
@@ -264,7 +285,6 @@ table.grid tr.checked td{background:var(--blue-50)}
    좌측은 탐색(폴더/카테고리)만, 검색·필터·정렬·보기·선택은 모두 우측 카드 상단에서 제어 */
 .rail-main.std{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
 .rail-main.std .content-scroll{padding:18px}
-.rail-main.std .bulk-bar{margin:0;border-radius:0}
 /* 툴바 전체 선택 — Grid/List 어느 보기에서든 동일하게 동작하는 공통 컨트롤 */
 .sel-all{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--text-2);cursor:pointer;flex:none;white-space:nowrap}
 .sel-all:hover{color:var(--text)}
@@ -504,7 +524,7 @@ svg{display:block;flex:none}
 .checkbox{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-2);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;transition:all .12s;flex:none;color:transparent}
 .checkbox.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .seg{display:inline-flex;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-md);padding:3px;gap:2px}
-.seg button{height:30px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text-2)}
+.seg button{height:30px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;line-height:1}
 .seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
 .tooltip{position:relative}
 
@@ -548,11 +568,7 @@ svg{display:block;flex:none}
 .onboard .lead b{font-size:15px;letter-spacing:-.01em}
 .onboard .lead p{margin:3px 0 0;font-size:12.5px;color:var(--text-2)}
 .onboard-steps{display:flex;align-items:center;gap:0;flex:1;min-width:0}
-.ob-step{display:flex;align-items:center;gap:9px;padding:7px 13px;border-radius:99px;font-size:13px;font-weight:600;color:var(--text-2);white-space:nowrap}
-.ob-step .n{width:22px;height:22px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border-2);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
-.ob-step.done .n{background:var(--green);border-color:var(--green);color:#fff}
-.ob-step.cur{background:var(--surface);box-shadow:var(--sh-sm);color:var(--text)}
-.ob-step.cur .n{background:var(--blue);border-color:var(--blue);color:#fff}
+.onboard-steps .wiz-step{white-space:nowrap}
 .ob-arrow{color:var(--border-2);margin:0 2px}
 .onboard .btn{flex:none}
 .onboard .icon-btn{flex:none}
@@ -590,7 +606,7 @@ svg{display:block;flex:none}
 .view-toggle button+button{border-left:1px solid var(--border-2)}
 
 /* 벌크 바 */
-.bulk-bar{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#242B38;color:#fff;font-size:13.5px;flex:none;animation:pop .15s ease}
+.bulk-bar{display:flex;align-items:center;gap:10px;margin:0;padding:10px 16px;background:#242B38;color:#fff;font-size:13.5px;border-radius:0;flex:none;animation:pop .15s ease;flex-wrap:wrap}
 .bulk-bar b{color:#8AB4FF}
 .bulk-bar .btn{height:32px;padding:0 12px;font-size:13px;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);color:#fff}
 .bulk-bar .btn:hover{background:rgba(255,255,255,.16)}
@@ -1127,7 +1143,7 @@ svg{display:block;flex:none}
 .checkbox{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-2);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;transition:all .12s;flex:none;color:transparent;cursor:pointer}
 .checkbox.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .seg{display:inline-flex;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-md);padding:3px;gap:2px}
-.seg button{height:30px;padding:0 13px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;gap:6px}
+.seg button{height:30px;padding:0 13px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;line-height:1;gap:6px}
 .seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
 .dot{width:8px;height:8px;border-radius:50%;flex:none}
 .dot.on{background:var(--green)}.dot.off{background:#B4BCC9}.dot.err{background:var(--red)}
@@ -1241,10 +1257,11 @@ svg{display:block;flex:none}
 .view-toggle button+button{border-left:1px solid var(--border-2)}
 
 /* 벌크 바 */
-.bulk-bar{display:flex;align-items:center;gap:10px;margin:0 24px;padding:10px 16px;background:#242B38;color:#fff;font-size:13.5px;border-radius:var(--r-lg);flex:none;animation:pop .15s ease;flex-wrap:wrap}
+.bulk-bar{display:flex;align-items:center;gap:10px;margin:0;padding:10px 16px;background:#242B38;color:#fff;font-size:13.5px;border-radius:0;flex:none;animation:pop .15s ease;flex-wrap:wrap}
 .bulk-bar b{color:#8AB4FF}
 .bulk-bar .btn{height:32px;padding:0 12px;font-size:13px;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);color:#fff}
 .bulk-bar .btn:hover{background:rgba(255,255,255,.16)}
+.bulk-bar .btn.danger-t{color:#FCA5A5}
 .bulk-bar .close{margin-left:auto;color:#96A0B5}
 
 /* 모니터링 그리드 */
@@ -1386,13 +1403,16 @@ table.grid tr.checked td{background:var(--blue-50)}
 .cal-block.conflict{outline:2px solid var(--red);outline-offset:1px}
 .cal-block:hover{filter:brightness(1.08)}
 .cal-block.urgent::before{content:"긴급";position:absolute;right:5px;top:4px;font-size:8.5px;background:rgba(53,61,74,.12);padding:1px 5px;border-radius:4px}
+.cal-block.wall::before{content:"비디오월";position:absolute;right:5px;top:4px;font-size:8.5px;background:rgba(53,61,74,.12);padding:1px 5px;border-radius:4px}
 .now-line{position:absolute;left:56px;right:0;height:2px;background:var(--red);z-index:5;pointer-events:none}
 .now-line::before{content:"";position:absolute;left:-5px;top:-3.5px;width:9px;height:9px;border-radius:50%;background:var(--red)}
 /* 일정 등록 사이드 */
 .sc-side{width:340px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex:none;min-height:0}
 .sc-side-head{padding:16px 20px 0;flex:none}
 .sc-side-head h2{margin:0 0 12px;font-size:15.5px;font-weight:800;display:flex;align-items:center;gap:8px}
-.sc-side-body{flex:1;overflow-y:auto;padding:4px 20px 24px}
+.sc-side-body{flex:1;overflow-y:auto;padding:4px 20px 24px;display:flex;flex-direction:column;gap:20px}
+.sc-side-body>.f-row{margin:0}
+.sc-side-body>#conflict-area:empty{display:none}
 .sc-side-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex:none}
 .content-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cp-card{border:1.5px solid var(--border);border-radius:var(--r-md);overflow:hidden;cursor:pointer;transition:all .12s}
@@ -1502,7 +1522,6 @@ table.grid tr.checked td{background:var(--blue-50)}
 #flow-guide.min .fg-body{display:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 /* ═══ 통합 셸 정합 패치 ═══ */
-.prod-area .bulk-bar{margin:0;border-radius:0}
 #mp-embed .admin-head{padding-left:24px;padding-right:24px}
 #mp-embed .onboard{margin:14px 24px 0}
 #mp-embed .admin-content{padding:14px 24px 20px}
