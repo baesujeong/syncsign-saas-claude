@@ -146,6 +146,8 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 .search-wrap.sux .input{padding-right:30px}
 .search-clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text-3);background:var(--sunken)}
 .search-clear:hover{color:var(--text);background:var(--border)}
+/* .search-wrap svg(돋보기 absolute 배치) 규칙이 X 아이콘까지 밀어내지 않게 원복 */
+.search-wrap .search-clear svg{position:static;left:auto;color:inherit}
 @keyframes sux-spin{to{transform:rotate(360deg)}}
 .search-wrap.searching>svg:first-of-type{animation:sux-spin .7s linear infinite}
 .search-count{font-size:12px;font-weight:600;color:var(--text-3);white-space:nowrap;margin-left:2px}
@@ -161,8 +163,6 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 #screen-auth{display:flex;height:100vh}
 .auth-brand{width:44%;min-width:380px;background:linear-gradient(160deg,#1B2C55 0%,#12224a 45%,#0D1730 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:60px 56px;position:relative;overflow:hidden}
 .auth-brand .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;position:absolute;top:36px;left:56px}
-/* 다크 네이비 브랜드 영역 — 단일 로고 에셋을 화이트로 반전해 사용 */
-.auth-brand .logo img{filter:brightness(0) invert(1)}
 .auth-brand .logo .mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#5B9BFF,#2563EB);position:relative;overflow:hidden}
 .auth-brand .logo .mark::after{content:"";position:absolute;inset:5px 5px 5px 9px;background:#fff;clip-path:polygon(0 0,100% 50%,0 100%)}
 .auth-brand h1{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.35;margin:0 0 12px;text-wrap:balance}
