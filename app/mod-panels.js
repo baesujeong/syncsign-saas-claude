@@ -1852,7 +1852,7 @@ window.__regionStats=()=>REGIONS.map(r=>{
  const ps=r.storeIds.flatMap(sid=>panelsOf(sid));
  return {name:r.name,stores:r.storeIds.length,panels:ps.length,on:ps.filter(p=>p.status==='on').length,issue:ps.filter(p=>p.status!=='on'||!p.stb).length};
 }).sort((a,b)=>b.panels-a.panels);
-/* 온보딩 4단계(화면 연결)에서 등록한 화면을 화면 모듈 데이터에도 반영 */
+/* 온보딩 마지막 단계(화면 연결)에서 등록한 화면을 화면 모듈 데이터에도 반영 */
 window.__addPanel=(sid,name,code)=>{
  PANELS.unshift({id:'p'+(pSeq++),store:sid,name:name||'첫 화면',status:'on',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.6',stb:{sn:'STB-'+String(pSeq).padStart(6,'0')}});
  try{renderAll();}catch(e){}
