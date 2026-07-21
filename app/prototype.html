@@ -408,15 +408,14 @@ const canSee=page=>{if(!previewRole)return true;return(ROLE_PERMS[previewRole][p
 const canEdit=page=>{if(!previewRole)return true;return(ROLE_PERMS[previewRole][page]??3)>=2};
 
 /* ═══════════ 인증 ═══════════ */
-function renderLogin(err){
+function renderLogin(err,email){
  $('#auth-card').innerHTML=`
   <h2>다시 만나서 반가워요</h2>
   <div class="sub">계정이 없으신가요? <a id="go-signup">회원가입</a></div>
-  ${err?`<div class="form-banner">${IC.x}<span><b>이메일 또는 비밀번호가 올바르지 않아요.</b><br>5회 이상 실패하면 계정이 잠시 잠겨요. <a id="li-reset-link" style="color:var(--blue);font-weight:600;cursor:pointer">비밀번호 재설정</a></span></div>`:''}
   <button class="btn btn-google" id="google-login">${IC.google}Google로 계속하기</button>
   <div class="auth-div">또는 이메일로</div>
-  <div class="f-row"><label>이메일</label><input class="input ${err?'error':''}" id="li-email" placeholder="you@company.com" value="${err?'mk.kim@greedish.com':''}"></div>
-  <div class="f-row"><label>비밀번호 <a id="li-forgot" style="margin-left:auto;color:var(--blue);font-weight:600;cursor:pointer;font-size:12px">비밀번호 찾기</a></label><input class="input ${err?'error':''}" id="li-pw" type="password" placeholder="••••••••"></div>
+  <div class="f-row"><label>이메일</label><input class="input ${err?'error':''}" id="li-email" placeholder="you@company.com" value="${err?(email||''):''}"></div>
+  <div class="f-row"><label>비밀번호 <a id="li-forgot" style="margin-left:auto;color:var(--blue);font-weight:600;cursor:pointer;font-size:12px">비밀번호 찾기</a></label><input class="input ${err?'error':''}" id="li-pw" type="password" placeholder="••••••••">${err?`<div class="ferr">이메일 또는 비밀번호가 일치하지 않아요.</div>`:''}</div>
   <button class="btn btn-primary btn-lg" id="li-submit" style="width:100%;margin-top:6px">로그인</button>
   <div class="foot" style="margin-top:14px;font-size:12px;color:var(--text-3)">프로토타입: 아무 이메일로나 로그인돼요 · 비밀번호에 <b>error</b>를 입력하면 오류 상태를 볼 수 있어요</div>`;
  $('#go-signup').onclick=renderSignup;
@@ -424,12 +423,11 @@ function renderLogin(err){
  $('#li-submit').onclick=()=>{
   const em=$('#li-email').value.trim(),pw=$('#li-pw').value;
   if(!em||!pw){toast('이메일과 비밀번호를 입력해주세요',{err:true});return}
-  if(pw==='error'){renderLogin(true);return}
+  if(pw==='error'){renderLogin(true,em);return}
   enterApp(false,'로그인했어요');
  };
  $('#li-pw')?.addEventListener('keydown',e=>e.key==='Enter'&&$('#li-submit').click());
  $('#li-forgot')?.addEventListener('click',()=>renderForgot($('#li-email').value.trim()));
- $('#li-reset-link')?.addEventListener('click',()=>renderForgot($('#li-email').value.trim()));
 }
 /* ═══════════ 비밀번호 찾기 / 재설정 ═══════════ */
 function renderForgot(prefill){
