@@ -382,13 +382,23 @@ table.grid tr.checked td{background:var(--blue-50)}
 .lib-card .nm{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lib-card .sub{font-size:11px;color:var(--text-3);margin-top:1px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .lib-card.err-card{border-color:#F6C7C9}
-.lib-card .errover{position:absolute;inset:0;background:rgba(229,72,77,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.lib-card .errover{position:absolute;inset:0;background:rgba(16,19,26,.55);display:flex;align-items:center;justify-content:center}
+.lib-card .err-flag{position:absolute;top:8px;right:10px;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.lib-card .err-flag svg{flex:none}
+.lib-card .err-actions{display:flex;flex-direction:column;gap:8px;align-items:stretch;width:130px;transform:translateY(8px)}
+.lib-card .err-actions .btn{width:100%;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.lib-card .err-actions .btn-danger:hover{background:var(--red);border-color:var(--red);color:#fff;filter:brightness(.93)}
+.lib-card.err-card .check{display:none}
+.lib-card.err-card:hover .type{opacity:1}
 .dropzone-overlay{position:fixed;inset:0;z-index:400;background:rgba(37,99,235,.12);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;pointer-events:none}
 .dropzone-overlay .box{border:2.5px dashed var(--blue);border-radius:var(--r-xl);background:rgba(255,255,255,.95);padding:44px 64px;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:16px;font-weight:700;color:var(--blue)}
 .up-progress{border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;font-size:12.5px}
 .up-progress .row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .up-progress .bar{height:5px;border-radius:99px;background:var(--sunken);overflow:hidden}
 .up-progress .bar i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .3s}
+.up-progress .st{display:flex;align-items:center;gap:8px;flex:none}
+#upload-tray .tr-head .tr-fail{margin-left:auto}
+.up-progress.err .bar i{background:var(--red)}
 #upload-tray{position:fixed;right:20px;bottom:20px;width:300px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);z-index:260;overflow:hidden} /* 드로어(150)·모달(200) 위, 토스트(300) 아래 — 편성 드로어에서 즉시 업로드 시 진행 상황이 보여야 함 */
 #upload-tray .tr-head{display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border)}
 #upload-tray .tr-body{padding:10px 12px;max-height:230px;overflow-y:auto}

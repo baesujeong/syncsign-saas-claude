@@ -1397,7 +1397,7 @@ function drawLib(){
   sc.innerHTML=`<div class="lib-grid">${arr.map(c=>`
    <div class="lib-card ${lChecked.has(c.id)?'checked':''} ${c.error?'err-card':''}" data-lib="${c.id}" draggable="true">
     <div class="thumb" style="background:${c.g}">
-     ${c.error?`<div class="errover"><span class="badge badge-red">업로드 실패</span><span style="font-size:11px;color:var(--red)">지원하지 않는 색 프로필이에요</span><span style="display:flex;gap:6px"><button class="btn btn-sm" data-retry="${c.id}">다시 시도</button><button class="btn btn-sm btn-danger-t" data-lrm="${c.id}">삭제</button></span></div>`
+     ${c.error?`<div class="errover"><span class="err-flag" title="지원하지 않는 색 프로필이에요"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5"/><path d="M12 16.3h.01"/></svg>업로드 실패</span><div class="err-actions"><button class="btn btn-sm" data-retry="${c.id}">다시 시도</button><button class="btn btn-sm btn-danger" data-lrm="${c.id}">삭제</button></div></div>`
      :`${c.type==='video'?`<span class="play">${IC.play}</span><span class="dur num">${durFmt(c.dur)}</span>`:''}`}
      <span class="type">${typeBadge(c)}</span>
     </div>
@@ -1437,6 +1437,7 @@ function bindLib(){
  });
  $$('[data-lm]').forEach(b=>b.onclick=e=>{e.stopPropagation();
   const c=libOf(b.dataset.lm);
+  if(c.error){popMenu(b,[{label:'삭제',icon:IC.trash,danger:true,onClick:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요')}}]);return;}
   popMenu(b,[
    {label:'미리보기',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',onClick:()=>openLibPreview(c)},
    {label:'재생목록에 추가',icon:IC.plus,onClick:()=>addToPlaylistMenu(b,[c.id])},
@@ -1540,31 +1541,49 @@ function openUrlModal(onDone){
 function simulateUpload(onDone){
  if(!canEdit('library')){toast('보기 권한으로는 업로드할 수 없어요',{err:true});return}
  const files=[['매장 포스터 7월.png','image','2.4MB',G.g6,'🪧'],['신메뉴 촬영컷.jpg','image','3.8MB',G.g1,'📸'],['프로모션 클립 20s.mp4','video','31MB',G.g4,'🎞️']];
+ const total=files.length;
  let tray=$('#upload-tray');
  if(!tray){tray=document.createElement('div');tray.id='upload-tray';document.body.appendChild(tray);}
- tray.innerHTML=`<div class="tr-head">${IC.upload}업로드 중 — ${files.length}개 파일<button class="icon-btn" style="margin-left:auto;width:24px;height:24px" id="tray-x">${IC.xs}</button></div>
-  <div class="tr-body">${files.map((f,i)=>`<div class="up-progress" id="up-${i}"><div class="row"><span style="flex:1;font-weight:600">${f[0]}</span><span class="num" style="color:var(--text-3)" id="up-pct-${i}">0%</span></div><div class="bar"><i id="up-bar-${i}" style="width:0%"></i></div></div>`).join('')}</div>`;
+ tray.innerHTML=`<div class="tr-head">${IC.upload}<span id="tray-title">업로드 중 — ${total}개 파일</span><span id="tray-fail" class="tr-fail"></span><button class="icon-btn" style="width:24px;height:24px" id="tray-x">${IC.xs}</button></div>
+  <div class="tr-body">${files.map((f,i)=>`<div class="up-progress" id="up-${i}"><div class="row"><span style="flex:1;font-weight:600">${f[0]}</span><span class="st" id="up-st-${i}"><span class="num" style="color:var(--text-3)">0%</span></span></div><div class="bar"><i id="up-bar-${i}" style="width:0%"></i></div></div>`).join('')}</div>`;
  tray.querySelector('#tray-x').onclick=()=>tray.remove();
- files.forEach((f,i)=>{
+ const state=files.map(()=>({done:false,failed:false}));
+ const finish=()=>{
+  if(state.some(s=>!s.done&&!s.failed))return;
+  const failed=state.filter(s=>s.failed).length;
+  const title=$('#tray-title');
+  if(failed){if(title)title.textContent='업로드 완료';const ff=$('#tray-fail');if(ff)ff.innerHTML=`<span style="color:var(--red);font-weight:700">${failed}개 실패</span>`;return;}
+  obDone.upload=true;renderObBanner();
+  setTimeout(()=>{tray.remove();
+   if(typeof onDone==='function')onDone(total);
+   else toast(`${total}개 파일을 업로드했어요`,{action:'재생목록 만들기',onAction:()=>openPlaylistEditor(null)});
+  },600);
+ };
+ const run=(i,noFail)=>{
+  const f=files[i];state[i]={done:false,failed:false};
+  const failAt=(!noFail&&window.__upFail&&(window.__upFail===true?i===1:window.__upFail===i+1))?(30+Math.random()*35):101;
+  const st=$('#up-st-'+i),bar=$('#up-bar-'+i);
+  const cell=$('#up-'+i);if(cell)cell.classList.remove('err');
+  if(st)st.innerHTML='<span class="num" style="color:var(--text-3)">0%</span>';
+  if(bar)bar.style.width='0%';
   let p=0;
   const iv=setInterval(()=>{
    p=Math.min(100,p+8+Math.random()*18);
-   const bar=$('#up-bar-'+i),pct=$('#up-pct-'+i);
-   if(bar){bar.style.width=p+'%';pct.textContent=Math.floor(p)+'%'}
-   if(p>=100){clearInterval(iv);
-    if(pct)pct.innerHTML='<span style="color:var(--green)">완료</span>';
+   const pct=st&&st.querySelector('.num');
+   if(p>=failAt&&!state[i].failed){clearInterval(iv);state[i].failed=true;
+    if(cell)cell.classList.add('err');
+    if(bar)bar.style.width=Math.floor(failAt)+'%';
+    if(st)st.innerHTML=`<span style="color:var(--red);font-weight:700">업로드 실패</span>`;
+    finish();return;}
+   if(bar)bar.style.width=p+'%';if(pct)pct.textContent=Math.floor(p)+'%';
+   if(p>=100){clearInterval(iv);state[i].done=true;
+    if(st)st.innerHTML='<span style="color:var(--green);font-weight:700">완료</span>';
     LIB.unshift(C('c'+(cSeq++),f[0],f[1],lFolder==='all'?'lf3':lFolder,[],f[2],f[1]==='video'?20:0,f[3],f[4],0,0));
     if(curPage==='library'){drawLibFolders();drawLib();}
-    if(i===files.length-1){
-     obDone.upload=true;renderObBanner();
-     setTimeout(()=>{tray.remove();
-      if(typeof onDone==='function')onDone(files.length);
-      else toast(`${files.length}개 파일을 업로드했어요`,{action:'재생목록 만들기',onAction:()=>openPlaylistEditor(null)});
-     },600);
-    }
-   }
+    finish();}
   },160+i*60);
- });
+ };
+ files.forEach((_,i)=>run(i));
 }
 /* 전역 드래그앤드롭 업로드 오버레이 */
 let dragDepth=0;
@@ -2691,7 +2710,13 @@ function renderDashboard(root){
 }
 </script>
 <script>
-/* ═══ 딥링크 라우터: #dash #products #editor #panels #walls #schedule #schedule-month #library #playlists #pledit #templates #stores #users #mypage #support #signup #forgot #reset #onboarding #tour ═══ */
+/* ═══ 딥링크 라우터: #dash #products #editor #panels #walls #schedule #schedule-month #library #playlists #pledit #templates #stores #users #mypage #support #signup #forgot #reset #onboarding #tour · 데모 #demo-cardfail #demo-upfail ═══ */
+window.__runDemo=function(h){
+ if(h==='demo-cardfail'){showPage('library');setTimeout(()=>{const c=LIB.find(x=>x.type==='image');if(c){c.name='바리스타 챔피언십.jpg';c.size='5.1MB';c.error=true;c.g='linear-gradient(135deg,#2A2F36,#15181D)';LIB=[c,...LIB.filter(x=>x!==c)];drawLib();}},250);return true;}
+ if(h==='demo-upfail'){showPage('library');setTimeout(()=>{window.__upFail=true;simulateUpload();},350);return true;}
+ return false;
+};
+window.addEventListener('hashchange',()=>{if(!$('#app').hidden)window.__runDemo((location.hash||'').replace(/^#/,'').trim());});
 (function(){
  const h=(location.hash||'').replace(/^#/,'').trim();
  if(!h||h==='login')return;
@@ -2704,6 +2729,7 @@ function renderDashboard(root){
    if(h==='onboarding'){session.first=true;startOnboard();return}
    enterApp(false);
    if(h==='tour'){showPage('dash');return} /* 신규 가입 직후 빈 상태(EMPTY_MODE)를 안내 배너 없이 그대로 확인 */
+   if(window.__runDemo&&window.__runDemo(h))return; /* 데모: #demo-cardfail / #demo-upfail */
    if(h==='editor')openMenuEditorInline();
    else if(h==='schedule')openPanelScheduleInline();
    else if(h==='schedule-month'){document.getElementById('mod-products').hidden=true;document.getElementById('mod-panels').hidden=false;(window.__openPanelScheduleMonth||openPanelScheduleInline)();}
