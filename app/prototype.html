@@ -1044,13 +1044,13 @@ function openStoreDrawer(s,tab='info'){
   }else{
    drawCallTab(body,s,wrap);
    wrap.querySelector('#st-cancel').onclick=()=>wrap.remove();
-   wrap.querySelector('#st-reg').onclick=()=>{const d=wrap.__cd||{on:s.call.on,method:s.call.method||'manual'};s.call.on=d.on;s.call.method=d.on?d.method:null;s.call.requested=false;drawStores();wrap.remove();toast(d.on?'번호호출 설정을 저장했어요':'번호호출을 껐어요');};
+   wrap.querySelector('#st-reg').onclick=()=>{const d=wrap.__cd||{on:s.call.on,method:s.call.method||'manual',requested:!!s.call.requested};s.call.on=d.on;s.call.method=d.on?d.method:null;s.call.requested=d.on?!!d.requested:false;drawStores();wrap.remove();toast(d.on?'번호호출 설정을 저장했어요':'번호호출을 껐어요');};
   }
  };
  draw(tab);
 }
 function drawCallTab(body,s,wrap){
- if(!wrap.__cd)wrap.__cd={on:s.call.on,method:s.call.method||'manual'};
+ if(!wrap.__cd)wrap.__cd={on:s.call.on,method:s.call.method||'manual',requested:!!s.call.requested};
  const d=wrap.__cd;
  const NM={manual:'수동 입력',pos:'POS 연동',kds:'KDS 연동'};
  const METHODS=[
@@ -1077,7 +1077,7 @@ function drawCallTab(body,s,wrap){
   :`<div class="empty" style="padding:36px 12px"><b>번호호출 기능이 꺼져 있어요</b><span>주문 번호를 매장 화면에 실시간으로 띄우는 기능이에요.<br>켜면 수동 입력 방식이 기본으로 활성화돼요.</span></div>`}`;
  body.querySelector('#call-sw').onclick=()=>{d.on=!d.on;if(d.on&&!d.method)d.method='manual';drawCallTab(body,s,wrap)};
  body.querySelector('#copy-url')?.addEventListener('click',()=>toast('호출 사이트 주소를 복사했어요'));
- body.querySelectorAll('[data-cm]').forEach(c=>c.onclick=e=>{if(e.target.closest('#copy-url'))return;d.method=c.dataset.cm;drawCallTab(body,s,wrap)});
+ body.querySelectorAll('[data-cm]').forEach(c=>c.onclick=e=>{if(e.target.closest('#copy-url'))return;const m=c.dataset.cm;if(m===d.method)return;if(m==='manual'){d.method='manual';d.requested=false;drawCallTab(body,s,wrap);return}openCallRequestModal(s,m,()=>{d.method=m;d.requested=true;drawCallTab(body,s,wrap)})});
 }
 function openCallRequestModal(s,m,onDone){
  const label=m==='pos'?'POS':'KDS';
@@ -1094,8 +1094,7 @@ function openCallRequestModal(s,m,onDone){
   ov.querySelector('#cr-ok').onclick=()=>{
    const tel=ov.querySelector('#cr-tel');
    if(!tel.value.trim()){tel.classList.add('error');return}
-   s.call.method=m;s.call.requested=true;
-   ov.remove();onDone();
+   ov.remove();onDone&&onDone();
    toast(`${label} 연동을 신청했어요 — 담당자가 곧 연락드려요`);
   };
  }});
