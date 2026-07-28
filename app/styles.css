@@ -449,7 +449,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 .ple-item .im{width:76px;height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;flex:none;position:relative}
 .ple-item .tx{flex:1;min-width:0}
 .ple-item .nm{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ple-item .sub{font-size:11.5px;color:var(--text-3)}
+.ple-item .sub{font-size:11.5px;color:var(--text-3);margin-left:8px}
 .dur-ctl{display:flex;align-items:center;gap:5px}
 .dur-ctl .step{display:inline-flex;align-items:center;border:1px solid var(--border-2);border-radius:var(--r-sm);overflow:hidden}
 .dur-ctl .step button{width:26px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--text-2)}

@@ -1737,8 +1737,26 @@ function openPlaylistEditor(plId,seedIds){
  $('#ple-name').value=pleDraft.name;
  $('#ple-repeat').classList.toggle('on',pleDraft.repeat);
  drawPleLib();drawPleList();
+ pleMarkSaved(); /* 열람 시점을 '저장 상태' 기준으로 스냅샷 */
 }
-$('#ple-back').onclick=()=>{$('#screen-pledit').hidden=true;$('#app').hidden=false;showPage('playlists')};
+/* ── 미저장 이탈 방지 (Unsaved Changes) ── */
+let plePersisted='';
+function pleSerialize(){return pleDraft?JSON.stringify({n:pleDraft.name,r:pleDraft.repeat,i:pleDraft.items.map(x=>({c:x.c,d:x.d}))}):''}
+function pleMarkSaved(){plePersisted=pleSerialize()}
+function isPleDirty(){
+ const sc=$('#screen-pledit');
+ if(!sc||sc.hidden||!pleDraft)return false;
+ if(pleSrc)return pleSerialize()!==plePersisted; /* 기존 재생목록: 저장 상태와 달라졌을 때만 */
+ return pleDraft.items.length>0;                 /* 새 재생목록(미저장): 콘텐츠가 하나라도 있으면 미저장 */
+}
+function pleLeaveConfirm(onLeave){
+ openModal(`<div class="modal-head"><div><h2>저장되지 않은 변경사항이 있어요</h2><div class="sub">지금 나가면 저장하지 않은 편집 내용이 모두 사라져요.</div></div></div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" id="ple-leave">나가기</button><button class="btn btn-primary" data-close>계속 편집</button></div>`,
+ {width:'420px',onMount:ov=>ov.querySelector('#ple-leave').onclick=()=>{ov.remove();onLeave()}});
+}
+function guardLeavePle(proceed){isPleDirty()?pleLeaveConfirm(proceed):proceed()}
+$('#ple-back').onclick=()=>guardLeavePle(()=>{$('#screen-pledit').hidden=true;$('#app').hidden=false;showPage('playlists')});
+window.addEventListener('beforeunload',e=>{if(isPleDirty()){e.preventDefault();e.returnValue=''}});
 $('#ple-repeat').onclick=()=>{pleDraft.repeat=!pleDraft.repeat;$('#ple-repeat').classList.toggle('on',pleDraft.repeat)};
 $('#ple-name').addEventListener('input',e=>pleDraft.name=e.target.value);
 $('#ple-lib-q').addEventListener('input',e=>{pleQ=e.target.value.trim();drawPleLib()});
@@ -1830,6 +1848,7 @@ function savePle(silent){
  if(pleSrc){Object.assign(pleSrc,{name:pleDraft.name,repeat:pleDraft.repeat,items:pleDraft.items.map(i=>({...i})),mod:'07.04'});}
  else{const np={id:'pl'+(plSeq++),name:pleDraft.name,repeat:pleDraft.repeat,items:pleDraft.items.map(i=>({...i})),panels:0,mod:'07.05',folder:(typeof plFolder!=='undefined'&&plFolder!=='all')?plFolder:null};PLAYLISTS.unshift(np);pleSrc=np;}
  obDone.playlist=true;
+ pleMarkSaved(); /* 저장 완료 → 현재 상태를 저장 기준으로 갱신(clean) */
  if(!silent)toast(`'${pleDraft.name}'을 저장했어요`);
 }
 /* 저장 방식 통일: 저장 클릭 → 이름 입력 모달 → 저장 */
