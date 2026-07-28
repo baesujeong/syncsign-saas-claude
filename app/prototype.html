@@ -59,8 +59,7 @@
     <span class="meta"><span id="ple-total"></span><span class="divider-v"></span>반복 재생 <span class="switch" id="ple-repeat" role="switch" tabindex="0"></span></span>
     <div class="actions">
       <button class="btn" id="ple-preview"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>미리보기</button>
-      <button class="btn" id="ple-save">저장</button>
-      <button class="btn btn-primary" id="ple-broadcast">송출하기</button>
+      <button class="btn btn-primary" id="ple-save">저장</button>
     </div>
   </div>
   <div class="ple-body">
@@ -1667,14 +1666,14 @@ function drawPlArea(){
  const emptyHtml=plQ?`<div style="grid-column:1/-1">${searchEmptyHtml(plQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${plFolder==='all'?'아직 재생목록이 없어요':'이 폴더는 비어 있어요'}</b><span>재생목록을 만들면 ${plFolder==='all'?'여기에 표시돼요':'현재 폴더에 담겨요'}</span><button class="btn btn-primary btn-sm" id="pl-empty-new">재생목록 만들기</button></div>`;
  if(plView==='grid'){
   area.innerHTML=`<div class="tpl-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
-   ${arr.map(pl=>`
+   ${arr.map(pl=>{const c0=pl.items.length?libOf(pl.items[0].c):null;return `
     <div class="pl-card ${plChecked.has(pl.id)?'checked':''}" data-pl="${pl.id}">
-     <div class="pl-strip">${pl.items.slice(0,4).map(it=>{const c=libOf(it.c);return c?`<i style="background:${c.g}"></i>`:''}).join('')||'<i style="grid-column:1/5;color:#5C6577;font-size:12px">비어 있음</i>'}</div>
+     <div class="pl-cover${c0?'':' empty'}"${c0?` style="background:${c0.g}"`:''}>${c0?`<span class="e">${c0.e}</span>`:'비어 있음'}</div>
      <span class="checkbox check ${plChecked.has(pl.id)?'on':''}" data-plc="${pl.id}" role="checkbox" aria-label="${pl.name} 선택">${IC.check}</span>
      <div class="body"><div class="nm">${pl.name}</div>
       <div class="sub"><span class="num">${pl.items.length}개 콘텐츠</span>·<span class="num">${durFmt(plDur(pl))}</span>·${pl.repeat?'반복':'1회'}
       <button class="icon-btn" data-plm="${pl.id}" style="margin-left:auto;width:26px;height:26px" aria-label="더보기">${IC.dots}</button></div></div>
-    </div>`).join('')||emptyHtml}
+    </div>`;}).join('')||emptyHtml}
     ${arr.length?`<button class="pl-card" id="pl-new-card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;color:var(--text-3);font-weight:600">${IC.plus}새 재생목록</button>`:''}
    </div>`;
  }else{
@@ -1682,17 +1681,17 @@ function drawPlArea(){
    <th style="width:38px"><span class="checkbox ${arr.every(pl=>plChecked.has(pl.id))?'on':''}" id="pl-all" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span></th>
    <th>재생목록</th><th>폴더</th><th>콘텐츠</th><th>총 재생시간</th><th>반복</th><th>수정일</th><th style="width:40px"></th>
   </tr></thead><tbody>
-  ${arr.map(pl=>`<tr class="${plChecked.has(pl.id)?'checked':''}" data-pl="${pl.id}" style="cursor:pointer">
+  ${arr.map(pl=>{const c0=pl.items.length?libOf(pl.items[0].c):null;return `<tr class="${plChecked.has(pl.id)?'checked':''}" data-pl="${pl.id}" style="cursor:pointer">
    <td><span class="checkbox ${plChecked.has(pl.id)?'on':''}" data-plc="${pl.id}" role="checkbox" aria-label="${pl.name} 선택">${IC.check}</span></td>
    <td><div style="display:flex;align-items:center;gap:11px">
-    <span style="display:inline-grid;grid-template-columns:repeat(3,17px);gap:2px;flex:none">${pl.items.slice(0,3).map(it=>{const c=libOf(it.c);return c?`<i style="height:17px;border-radius:3px;background:${c.g}"></i>`:''}).join('')||'<i style="height:17px;grid-column:1/4;border-radius:3px;background:var(--sunken);border:1px solid var(--border)"></i>'}</span>
+    <span class="pl-cover-sm"${c0?` style="background:${c0.g}"`:''}>${c0?c0.e:''}</span>
     <b style="font-size:13.5px">${pl.name}</b></div></td>
    <td style="font-size:12.5px;color:var(--text-2)">${pl.folder?(fPath(PL_FOLDERS,pl.folder)||'—'):'—'}</td>
    <td class="num" style="font-size:13px">${pl.items.length}개</td>
    <td class="num" style="font-size:13px">${durFmt(plDur(pl))}</td>
    <td>${pl.repeat?'<span class="badge badge-blue">반복</span>':'<span class="badge badge-gray">1회</span>'}</td>
    <td class="num" style="font-size:12.5px;color:var(--text-3)">2026.${pl.mod}</td>
-   <td><button class="icon-btn" data-plm="${pl.id}" aria-label="더보기">${IC.dots}</button></td></tr>`).join('')}
+   <td><button class="icon-btn" data-plm="${pl.id}" aria-label="더보기">${IC.dots}</button></td></tr>`;}).join('')}
   </tbody></table></div>`:emptyHtml;
  }
  area.querySelector('#pl-new-card')?.addEventListener('click',()=>{if(canEdit('playlists'))openPlaylistEditor(null);else toast('보기 권한으로는 만들 수 없어요',{err:true})});
@@ -1814,11 +1813,16 @@ function drawPleList(){
  list.ondrop=e=>{list.classList.remove('drop-ready');const src=e.dataTransfer.getData('text/plsrc');if(src){e.preventDefault();addPleItem(src)}};
 }
 /* 즉시 업로드 (에디터 안에서) */
-$('#ple-upload').onclick=()=>{
- const n=LIB.length;
- simulateUpload();
- const iv=setInterval(()=>{if(LIB.length>=n+3){clearInterval(iv);drawPleLib();toast('업로드한 콘텐츠가 라이브러리 목록에 추가됐어요 — 끌어다 놓아보세요')}},400);
- setTimeout(()=>clearInterval(iv),8000);
+$('#ple-upload').onclick=e=>{
+ popMenu(e.currentTarget,[
+  {label:'URL 업로드',onClick:()=>openUrlModal(nm=>{drawPleLib();toast(`'${nm}'을 라이브러리에 추가했어요 — 끌어다 놓아보세요`)})},
+  {label:'파일 업로드',onClick:()=>{
+   const n=LIB.length;
+   simulateUpload();
+   const iv=setInterval(()=>{if(LIB.length>=n+3){clearInterval(iv);drawPleLib();toast('업로드한 콘텐츠가 라이브러리 목록에 추가됐어요 — 끌어다 놓아보세요')}},400);
+   setTimeout(()=>clearInterval(iv),8000);
+  }},
+ ]);
 };
 /* 저장/미리보기/송출 */
 function savePle(silent){
@@ -1837,50 +1841,39 @@ let prevTimer=null;
 $('#ple-preview').onclick=()=>{
  if(!pleDraft.items.length){toast('미리볼 콘텐츠가 없어요',{err:true});return}
  const items=pleDraft.items.map(it=>({...libOf(it.c),d:it.d}));
+ const total=durFmt(items.reduce((n,i)=>n+i.d,0));
+ let idx=0,pvSpeed=2; /* 재생속도 배율 — 1 / 2 / 5 · 열람 시 기본 2배속 */
+ const SPEEDS=[1,2,5];
  const ov=openModal(`
-  <div class="modal-head"><div><h2>미리보기</h2><div class="sub">실제 재생 흐름을 5배속으로 재생해요 · 총 ${durFmt(items.reduce((n,i)=>n+i.d,0))}${pleDraft.repeat?' · 반복':''}</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
+  <div class="modal-head">
+   <div><h2>미리보기</h2><div class="sub">재생시간 총 ${total}</div></div>
+   <div class="seg" id="pv-speed" role="group" aria-label="재생 속도" style="align-self:center;margin-left:auto">${SPEEDS.map(s=>`<button type="button" data-spd="${s}"${s===pvSpeed?' class="on"':''} aria-pressed="${s===pvSpeed}">${s}x</button>`).join('')}</div>
+   <button class="icon-btn" data-close aria-label="닫기" style="margin-left:10px">${IC.x}</button></div>
   <div class="modal-body" style="padding-bottom:20px"><div class="play-stage" id="pv-stage"></div></div>`,
  {width:'640px',onMount:o=>{
   o.addEventListener('mousedown',e=>{if(e.target===o)stopPrev()});
   o.querySelector('[data-close]').addEventListener('click',stopPrev);
+  o.querySelectorAll('#pv-speed [data-spd]').forEach(b=>b.onclick=()=>{
+   pvSpeed=+b.dataset.spd;
+   o.querySelectorAll('#pv-speed [data-spd]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on)});
+   stopPrev();playCur(); /* 재생 중에도 즉시 반영 — 현재 콘텐츠를 새 속도로 다시 시작 */
+  });
  }});
  function stopPrev(){if(prevTimer){clearTimeout(prevTimer);prevTimer=null}}
- let idx=0;
  const stage=ov.querySelector('#pv-stage');
- const playNext=()=>{
+ const playCur=()=>{
   if(!document.body.contains(stage)){stopPrev();return}
   const c=items[idx%items.length];
-  const ms=Math.min(4000,Math.max(900,c.d*200));
+  const ms=Math.max(500,Math.round(c.d*1000/pvSpeed)); /* 실제 재생시간 ÷ 배속 */
   stage.innerHTML=`<span class="e">${c.e}</span><span class="cap">${c.name}</span><span class="idx num">${(idx%items.length)+1} / ${items.length} · ${c.d}초</span><span class="play-prog" id="pv-prog"></span>`;
   stage.style.background=c.g;
   requestAnimationFrame(()=>{const p=stage.querySelector('#pv-prog');if(p){p.style.transition=`width ${ms}ms linear`;p.style.width='100%'}});
-  idx++;
-  if(idx<items.length||pleDraft.repeat)prevTimer=setTimeout(playNext,ms);
+  if(idx<items.length-1||pleDraft.repeat)prevTimer=setTimeout(()=>{idx++;playCur()},ms);
   else prevTimer=setTimeout(()=>{stage.innerHTML='<span style="font-size:15px;color:#8B94A5">재생이 끝났어요 (반복 꺼짐)</span>'},ms);
  };
- playNext();
+ playCur();
 };
-$('#ple-broadcast').onclick=()=>{
- if(!pleDraft.items.length){toast('송출할 콘텐츠가 없어요',{err:true});return}
- savePle(true);
- openModal(`
-  <div class="modal-head"><div><h2>송출하기</h2><div class="sub">'${pleDraft.name}' — ${pleDraft.items.length}개 콘텐츠 · ${durFmt(pleDraft.items.reduce((n,i)=>n+i.d,0))} ${pleDraft.repeat?'반복':'1회'} 재생</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
-  <div class="modal-body">
-   <div class="f-row"><label>대상 매장</label><select class="select" id="bc-store">${STORES.map(s=>`<option value="${s.id}">${s.name} — 화면 ${s.panels.total}대</option>`).join('')}</select></div>
-   <div class="sync-note">${IC.info}<span>재생목록을 수정하면 송출 중인 화면에도 <b>재송출 없이 자동 반영</b>돼요. 세부 화면은 화면 관리에서 선택해요.</span></div>
-  </div>
-  <div class="modal-foot"><button class="btn" id="bc-panels">화면 관리에서 선택</button><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="bc-go">송출 시작</button></div>`,
- {width:'480px',onMount:ov=>{
-  ov.querySelector('#bc-panels').onclick=()=>{ov.remove();$('#ple-back').click();showPage('panels')};
-  ov.querySelector('#bc-go').onclick=()=>{
-   const s=STORES.find(x=>x.id===ov.querySelector('#bc-store').value);
-   if(pleSrc)pleSrc.panels=s.panels.total;
-   obDone.cast=true;
-   ov.remove();
-   toast(`'${s.name}' 화면 ${s.panels.total}대에 송출을 시작했어요 🎉`);
-  };
- }});
-};
+/* 송출(편성)은 '편성일정'에서만 진행 — 재생목록 편집 화면의 송출하기 기능 제거됨 */
 
 /* ═══════════ 초기화 ═══════════ */
 renderLogin(false);

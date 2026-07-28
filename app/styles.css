@@ -406,8 +406,10 @@ table.grid tr.checked td{background:var(--blue-50)}
 /* ─── 재생목록 ─── */
 .pl-card{position:relative;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:all .15s}
 .pl-card:hover{box-shadow:var(--sh-md);border-color:var(--border-2)}
-.pl-strip{aspect-ratio:16/6;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:#0F131A;padding:6px}
-.pl-strip i{border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff}
+.pl-cover{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;color:#fff;overflow:hidden;background:var(--sunken)}
+.pl-cover .e{font-size:34px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.pl-cover.empty{background:var(--sunken);color:var(--text-3);font-size:12px;font-weight:600}
+.pl-cover-sm{width:46px;aspect-ratio:16/9;flex:none;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:#fff;overflow:hidden;background:var(--sunken)}
 .pl-card .body{padding:11px 14px 12px}
 .pl-card .nm{font-weight:700;font-size:14px}
 .pl-card .sub{font-size:12px;color:var(--text-3);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -424,7 +426,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 .ple-lib{width:320px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex:none;min-height:0}
 .ple-lib-head{padding:14px 16px 10px;flex:none;display:flex;flex-direction:column;gap:9px}
 .ple-lib-head h3{margin:0;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
-.ple-lib-list{flex:1;overflow-y:auto;padding:4px 12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:9px;align-content:start}
+.ple-lib-list{flex:1;overflow-y:auto;padding:4px 12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:9px;align-content:start;align-items:start;grid-auto-rows:max-content}
 .ple-src{border:1.5px solid var(--border);border-radius:var(--r-md);overflow:hidden;cursor:grab;transition:all .12s;background:var(--surface)}
 .ple-src:hover{border-color:var(--blue-200);box-shadow:var(--sh-sm)}
 .ple-src.dragging{opacity:.4}
@@ -644,12 +646,12 @@ table.grid tr.checked td{background:var(--blue-50)}
 .muted{color:var(--text-3)}
 
 /* 카드 뷰 */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:18px;overflow-y:auto;flex:1;align-content:start}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:18px;overflow-y:auto;flex:1;align-content:start;align-items:start;grid-auto-rows:max-content}
 .p-card{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--surface);transition:box-shadow .15s,border-color .15s;position:relative;display:flex;flex-direction:column}
 .p-card:hover{box-shadow:var(--sh-md);border-color:var(--border-2)}
-.p-card .img{height:120px;display:flex;align-items:center;justify-content:center;font-size:44px;flex:none}
+.p-card .img{aspect-ratio:16/9;width:100%;display:flex;align-items:center;justify-content:center;font-size:44px;flex:none}
 .p-card .body{padding:11px 14px 12px;flex:1;display:flex;flex-direction:column;min-height:0}
-.p-card .nm{font-weight:700;font-size:14px}
+.p-card .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p-card .ds{font-size:12px;color:var(--text-3);margin:2px 0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .p-card .row{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
 /* 상태 배지는 우상단 — 좌상단은 선택 체크박스 자리(전 페이지 공통 패턴) */
