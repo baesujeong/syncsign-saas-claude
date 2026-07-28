@@ -921,7 +921,7 @@ function drawStores(){
    {label:'매장 상세',icon:IC.monitor,onClick:()=>openStoreDrawer(s)},
    {label:'번호호출 설정',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>',onClick:()=>openStoreDrawer(s,'call')},
    'sep',
-   {label:'매장 삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${s.name}' 삭제`,desc:`연결된 화면 ${s.panels.total}개는 미배정 상태가 돼요. 콘텐츠는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{STORES=STORES.filter(x=>x!==s);drawStores();toast('매장을 삭제했어요')}})},
+   {label:'매장 삭제',icon:IC.trash,danger:true,onClick:()=>deleteStores([s])},
   ]);
  });
 }
@@ -938,13 +938,48 @@ function drawStoresBulk(){
   sChecked.forEach(id=>{const s=STORES.find(x=>x.id===id);if(s&&!s.mgrs.includes(u.id))s.mgrs.push(u.id)});
   const n=sChecked.size;sChecked.clear();drawStores();toast(`${n}개 매장에 '${u.name}' 담당자를 지정했어요`);
  }})));
- bulk.querySelector('#sb-del').onclick=()=>{
-  const list=[...sChecked].map(id=>STORES.find(x=>x.id===id)).filter(Boolean);
-  const pn=list.reduce((a,s)=>a+s.panels.total,0);
-  confirmDialog({title:`매장 ${list.length}개 삭제`,desc:`연결된 화면 ${pn}개는 미배정 상태가 돼요. 콘텐츠는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{
-   STORES=STORES.filter(s=>!sChecked.has(s.id));sChecked.clear();drawStores();toast('매장을 삭제했어요');
-  }});
- };
+ bulk.querySelector('#sb-del').onclick=()=>deleteStores([...sChecked].map(id=>STORES.find(x=>x.id===id)).filter(Boolean));
+}
+/* 매장 삭제 정책: 화면(패널)은 반드시 하나의 매장에 소속 — '미배정' 상태 없음.
+   삭제 시 연결된 화면·편성일정도 함께 삭제하거나, 다른 매장으로 옮긴 뒤 삭제. 콘텐츠(공용 자산)는 유지. */
+function deleteStores(list){
+ list=(list||[]).filter(Boolean);if(!list.length)return;
+ const ids=new Set(list.map(s=>s.id));
+ const panelSum=list.reduce((a,s)=>a+s.panels.total,0);
+ const onSum=list.reduce((a,s)=>a+s.panels.on,0);
+ const label=list.length===1?`'${list[0].name}'`:`매장 ${list.length}개`;
+ const finish=msg=>{STORES=STORES.filter(s=>!ids.has(s.id));ids.forEach(id=>sChecked.delete(id));drawStores();toast(msg);};
+ if(panelSum===0){
+  confirmDialog({title:`${label} 삭제`,desc:'삭제하면 되돌릴 수 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>finish('매장을 삭제했어요')});
+  return;
+ }
+ const others=STORES.filter(s=>!ids.has(s.id));
+ const nameHtml=list.length===1?`<b>${list[0].name}</b>`:`<b>매장 ${list.length}개</b>`;
+ openModal(`
+  <div class="modal-head"><div><h2>이 매장에는 연결된 화면이 있어요</h2><div class="sub" style="margin-top:8px">${nameHtml}에 연결된 화면 ${panelSum}대를 다른 매장으로 옮길까요? 모두 삭제하면 화면과 등록된 일정도 모두 삭제돼요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
+  <div style="padding:6px 24px 22px;display:flex;flex-direction:column;gap:8px">
+   ${others.length?'<button class="btn btn-primary" id="sd-move" style="width:100%">다른 매장으로 이동</button>':''}
+   <button class="btn btn-danger-t" id="sd-all" style="width:100%">모두 삭제</button>
+   <button class="btn" data-close style="width:100%">취소</button>
+  </div>`,
+ {width:'400px',onMount:ov=>{
+  ov.querySelector('#sd-all').onclick=()=>{ov.remove();finish(`${label} 매장과 화면 ${panelSum}대를 삭제했어요`);};
+  const mv=ov.querySelector('#sd-move');
+  if(mv)mv.onclick=()=>{ov.remove();
+   openModal(`
+    <div class="modal-head"><div><h2>화면을 옮길 매장 선택</h2><div class="sub">연결된 화면 ${panelSum}대를 선택한 매장으로 옮긴 뒤 ${label} 매장을 삭제해요. 편성 일정은 그대로 유지돼요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
+    <div class="modal-body"><div class="f-row"><label>옮길 매장</label><select class="select" id="mv-store">${others.map(s=>`<option value="${s.id}">${s.name} · ${s.region} — 화면 ${s.panels.total}대</option>`).join('')}</select></div></div>
+    <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="mv-go">이동 후 삭제</button></div>`,
+   {width:'460px',onMount:ov2=>{
+    ov2.querySelector('#mv-go').onclick=()=>{
+     const t=STORES.find(s=>s.id===ov2.querySelector('#mv-store').value);
+     if(t){t.panels.total+=panelSum;t.panels.on+=onSum;t.panels.last='방금 전';}
+     ov2.remove();
+     finish(`화면 ${panelSum}대를 '${t?t.name:''}'(으)로 옮기고 매장을 삭제했어요`);
+    };
+   }});
+  };
+ }});
 }
 function openStoreModal(){
  openModal(`
@@ -976,12 +1011,13 @@ function openStoreDrawer(s,tab='info'){
  const wrap=openDrawer('',{});
  const draw=t=>{
   wrap.querySelector('.drawer').innerHTML=`
-   <div class="drawer-head"><div><h2>${s.name} ${callBadge(s)}</h2><span class="sub">${s.region}${s.addr?' · '+s.addr:''}</span></div>
+   <div class="drawer-head"><div><h2>${s.name}</h2><span class="sub">${s.region}${s.addr?' · '+s.addr:''}</span></div>
     <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
    <div class="drawer-body">
     <div class="dtabs">${[['info','정보'],['panels','화면 '+s.panels.total],['call','번호호출']].map(([k,l])=>`<button class="${t===k?'on':''}" data-st="${k}">${l}</button>`).join('')}</div>
     <div id="st-body"></div>
-   </div>`;
+   </div>
+   ${t==='call'?`<div class="drawer-foot"><span style="flex:1"></span><button class="btn" id="st-cancel">취소</button><button class="btn btn-primary" id="st-reg">등록</button></div>`:''}`;
   wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
   wrap.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>draw(b.dataset.st));
   const body=wrap.querySelector('#st-body');
@@ -1006,69 +1042,42 @@ function openStoreDrawer(s,tab='info'){
    body.querySelector('#pn-add').onclick=()=>{s.panels.total++;s.panels.on++;s.panels.last='방금 전';obDone.panel=true;renderObBanner();draw('panels');drawStores();toast('화면이 연결됐어요')};
    body.querySelector('#pn-goto').onclick=()=>{wrap.remove();showPage('panels')};
   }else{
-   drawCallTab(body,s,wrap,draw);
+   drawCallTab(body,s,wrap);
+   wrap.querySelector('#st-cancel').onclick=()=>wrap.remove();
+   wrap.querySelector('#st-reg').onclick=()=>{const d=wrap.__cd||{on:s.call.on,method:s.call.method||'manual'};s.call.on=d.on;s.call.method=d.on?d.method:null;s.call.requested=false;drawStores();wrap.remove();toast(d.on?'번호호출 설정을 저장했어요':'번호호출을 껐어요');};
   }
  };
  draw(tab);
 }
-function drawCallTab(body,s,wrap,redraw){
- const method=s.call.method;
+function drawCallTab(body,s,wrap){
+ if(!wrap.__cd)wrap.__cd={on:s.call.on,method:s.call.method||'manual'};
+ const d=wrap.__cd;
+ const NM={manual:'수동 입력',pos:'POS 연동',kds:'KDS 연동'};
+ const METHODS=[
+  {k:'manual',e:'⌨️',badge:'<svg width="84" height="22" viewBox="0 0 84 22" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex:none"><rect x="0.5" y="0.5" width="83" height="21" rx="10.5" fill="white"/><rect x="0.5" y="0.5" width="83" height="21" rx="10.5" stroke="url(#pbadge0)"/><path d="M16.6484 5.44922V9.48047H18.2773V10.582H16.6484V16.043H15.3477V5.44922H16.6484ZM10.0156 6.31641V8.96484H12.5117V6.31641H13.8125V13.5586H8.72656V6.31641H10.0156ZM10.0156 12.4922H12.5117V9.98438H10.0156V12.4922ZM28.4023 13.7344V14.8125H18.7227V13.7344H22.8945V12.0117H19.8711V8.54297H25.9648V7.23047H19.8477V6.17578H27.2539V9.57422H21.1719V10.9453H27.5V12.0117H24.1836V13.7344H28.4023ZM35.7266 7.99219C35.7148 9.87891 36.6641 11.8008 38.3047 12.5859L37.5078 13.6289C36.3594 13.0488 35.5332 11.9297 35.082 10.582C34.6191 12.0234 33.752 13.2188 32.5391 13.8281L31.7422 12.7852C33.4414 11.9766 34.4141 9.94922 34.4258 7.99219V6.30469H35.7266V7.99219ZM40.2383 5.44922V9.59766H41.8672V10.7109H40.2383V16.043H38.9375V5.44922H40.2383ZM51.9688 10.5469V11.5898H42.3125V10.5469H44.5625V9.19922C43.7656 8.86523 43.3086 8.33203 43.3086 7.64062C43.3086 6.375 44.7969 5.625 47.1289 5.625C49.4609 5.625 50.9375 6.375 50.9492 7.64062C50.9434 8.33789 50.4863 8.87109 49.6836 9.19922V10.5469H51.9688ZM47.1289 12.2344C49.4141 12.2227 50.7852 12.9023 50.7969 14.1211C50.7852 15.3516 49.4141 16.0195 47.1289 16.0195C44.8203 16.0195 43.4375 15.3516 43.4375 14.1211C43.4375 12.9023 44.8203 12.2227 47.1289 12.2344ZM47.1289 13.2188C45.582 13.2188 44.75 13.5234 44.7617 14.1211C44.75 14.7188 45.582 15.0352 47.1289 15.0352C48.6406 15.0352 49.4844 14.7188 49.4961 14.1211C49.4844 13.5234 48.6406 13.2188 47.1289 13.2188ZM47.1289 6.63281C45.5586 6.63281 44.6562 6.98438 44.668 7.64062C44.6562 8.28516 45.5586 8.625 47.1289 8.625C48.6875 8.625 49.6016 8.28516 49.6016 7.64062C49.6016 6.98438 48.6875 6.63281 47.1289 6.63281ZM45.875 10.5469H48.3828V9.53906C48.002 9.5918 47.5801 9.62109 47.1289 9.62109C46.6777 9.62109 46.2559 9.5918 45.875 9.53906V10.5469ZM63.8281 5.44922V9.58594H65.3984V10.6758H63.8281V16.0195H62.5273V5.44922H63.8281ZM61.0273 6.55078C61.0273 9.66797 59.7383 12.3984 56.2109 14.1328L55.4727 13.125C58.0508 11.8418 59.4453 10.0371 59.7148 7.62891H56.0469V6.55078H61.0273ZM74.4688 8.20312V9.25781H67.1562V5.63672H68.457V8.20312H74.4688ZM75.5703 10.2773V11.332H65.9023V10.2773H75.5703ZM70.7188 12.0938C73.0039 12.1055 74.375 12.8086 74.3867 14.0508C74.375 15.293 73.0039 15.9961 70.7188 15.9961C68.4102 15.9961 67.0273 15.293 67.0273 14.0508C67.0273 12.8086 68.4102 12.1055 70.7188 12.0938ZM70.7188 13.1133C69.1719 13.125 68.3398 13.418 68.3516 14.0508C68.3398 14.6602 69.1719 15 70.7188 15C72.2305 15 73.0742 14.6602 73.0859 14.0508C73.0742 13.418 72.2305 13.125 70.7188 13.1133Z" fill="url(#pbadge1)"/><defs><linearGradient id="pbadge0" x1="-8.03135" y1="18.7917" x2="96.8363" y2="13.2384" gradientUnits="userSpaceOnUse"><stop stop-color="#02BEFF"/><stop offset="0.49" stop-color="#3085FF"/><stop offset="1" stop-color="#525CFF"/></linearGradient><linearGradient id="pbadge1" x1="1.49843" y1="17.375" x2="86.3963" y2="12.9268" gradientUnits="userSpaceOnUse"><stop stop-color="#02BEFF"/><stop offset="0.49" stop-color="#3085FF"/><stop offset="1" stop-color="#525CFF"/></linearGradient></defs></svg>',desc:'전용 웹사이트에서 매장 계정으로 로그인만 하면 바로 사용할 수 있어요. 연동 개발은 필요 없어요.'},
+  {k:'pos',e:'🧾',badge:'<span class="badge badge-gray" style="border-radius:99px">구축형</span>',desc:'POS에서 주문번호가 생성되면 자동으로 호출돼요. 저희 팀이 연동 작업을 진행해 드려요.'},
+  {k:'kds',e:'👨‍🍳',badge:'<span class="badge badge-gray" style="border-radius:99px">구축형</span>',desc:'주방 디스플레이(KDS)에서 조리 완료 시 자동으로 호출돼요. 별도 구축 작업이 필요해요.'},
+ ];
  body.innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-   <b style="font-size:14px">번호호출 시스템</b>${callBadge(s)}
-   <span class="switch ${s.call.on?'on':''}" id="call-sw" role="switch" tabindex="0" style="margin-left:auto"></span>
+   <b style="font-size:15px">번호호출 시스템</b>${d.on?`<span class="badge badge-green">${NM[d.method]} 사용중</span>`:''}
+   <span class="switch ${d.on?'on':''}" id="call-sw" role="switch" tabindex="0" style="margin-left:auto"></span>
   </div>
-  ${s.call.on?`
-  <div id="call-methods">
-   <div class="call-method ${method==='manual'?'on':''}" data-cm="manual">
-    <span class="ic">⌨️</span>
-    <span style="flex:1"><b>수동 입력 <span class="badge badge-green">기본 제공 · 바로 사용</span></b>
-    <p>전용 웹사이트에서 매장 계정으로 로그인해 번호만 입력하면 실시간으로 호출돼요. 연동 개발이 필요 없어요.</p>
-    ${method==='manual'?`<span class="call-url"><code>call.syncsign.io/${s.id}</code><button class="btn btn-sm" id="copy-url">복사</button></span>
-    <p style="margin-top:8px">매장 코드: <b class="num">${s.id.toUpperCase()}-CALL</b></p>`:''}</span>
-    <span class="radio ${method==='manual'?'on':''}"></span>
-   </div>
-   <div class="call-method ${method==='pos'?'on':''}" data-cm="pos">
-    <span class="ic">🧾</span>
-    <span style="flex:1"><b>POS 연동 <span class="badge badge-violet">구축형</span></b>
-    <p>POS에서 주문번호가 생성되면 자동으로 호출돼요. 저희 팀이 연동 작업을 진행해 드려요.</p>
-    ${method==='pos'&&!s.call.requested?'<p style="color:var(--green);font-weight:600;margin-top:5px">✓ 연동 완료 · 정상 동작 중</p>':''}
-    ${s.call.requested&&method==='pos'?'<p style="color:var(--amber);font-weight:600;margin-top:5px">연동 신청됨 · 영업일 3일 내 담당자가 연락드려요</p>':''}</span>
-    <span class="radio ${method==='pos'?'on':''}"></span>
-   </div>
-   <div class="call-method ${method==='kds'?'on':''}" data-cm="kds">
-    <span class="ic">👨‍🍳</span>
-    <span style="flex:1"><b>KDS 연동 <span class="badge badge-violet">구축형</span></b>
-    <p>주방 디스플레이(KDS)에서 조리 완료 시 자동으로 호출돼요. 별도 구축 작업이 필요해요.</p>
-    ${s.call.requested&&method==='kds'?'<p style="color:var(--amber);font-weight:600;margin-top:5px">연동 신청됨 · 영업일 3일 내 담당자가 연락드려요</p>':''}</span>
-    <span class="radio ${method==='kds'?'on':''}"></span>
-   </div>
-  </div>
-  <h3 style="margin:18px 0 6px;font-size:13.5px;font-weight:700">화면에 표시하려면</h3>
-  <div class="call-flow">
-   <div class="cf"><span class="e">🧩</span><b>① 위젯 배치</b>에디터에서 번호호출 위젯을 화면에 추가</div>
-   <span class="ar">›</span>
-   <div class="cf"><span class="e">📺</span><b>② 송출</b>그 콘텐츠를 이 매장 화면에 송출</div>
-   <span class="ar">›</span>
-   <div class="cf"><span class="e">🔔</span><b>③ 호출</b>번호를 입력하면 즉시 화면에 표시</div>
-  </div>
-  <div class="sync-note" style="margin-top:12px">${IC.info}<span>번호호출 위젯이 없는 화면은 호출해도 표시되지 않아요. 템플릿 갤러리의 <b>'번호호출'</b> 카테고리에서 시작해 보세요.</span></div>`
+  ${d.on?METHODS.map(m=>`
+   <div class="call-method ${d.method===m.k?'on':''}" data-cm="${m.k}">
+    <span class="ic">${m.e}</span>
+    <div style="flex:1;min-width:0">
+     <b>${NM[m.k]} ${m.badge}</b>
+     <p>${m.desc}</p>
+     ${m.k==='manual'&&d.method==='manual'?`<div class="call-url"><div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--text-3);margin-bottom:1px">사이트</div><a href="https://sdm.el-bigs.com/register" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none;word-break:break-all">https://sdm.el-bigs.com/register</a></div><button class="btn btn-sm" id="copy-url" style="flex:none">복사</button></div>`:''}
+    </div>
+    <span class="radio ${d.method===m.k?'on':''}"></span>
+   </div>`).join('')
+  +`<div class="info-note" style="margin-top:4px">${IC.info}<span>번호호출 위젯을 사용하지 않은 화면은 호출해도 표시되지 않아요. 번호호출 위젯이 사용된 템플릿을 화면에 송출해야 사용 가능해요.</span></div>`
   :`<div class="empty" style="padding:36px 12px"><b>번호호출 기능이 꺼져 있어요</b><span>주문 번호를 매장 화면에 실시간으로 띄우는 기능이에요.<br>켜면 수동 입력 방식이 기본으로 활성화돼요.</span></div>`}`;
- body.querySelector('#call-sw').onclick=()=>{
-  s.call.on=!s.call.on;
-  if(s.call.on&&!s.call.method)s.call.method='manual';
-  if(!s.call.on){s.call.method=null;s.call.requested=false;}
-  drawCallTab(body,s,wrap,redraw);drawStores();
-  toast(s.call.on?'번호호출을 켰어요 — 수동 입력 방식이 기본 적용돼요':'번호호출을 껐어요');
- };
+ body.querySelector('#call-sw').onclick=()=>{d.on=!d.on;if(d.on&&!d.method)d.method='manual';drawCallTab(body,s,wrap)};
  body.querySelector('#copy-url')?.addEventListener('click',()=>toast('호출 사이트 주소를 복사했어요'));
- body.querySelectorAll('[data-cm]').forEach(c=>c.onclick=e=>{
-  if(e.target.closest('#copy-url'))return;
-  const m=c.dataset.cm;
-  if(m===s.call.method)return;
-  if(m==='manual'){s.call.method='manual';s.call.requested=false;drawCallTab(body,s,wrap,redraw);drawStores();toast('수동 입력 방식으로 변경했어요');return}
-  openCallRequestModal(s,m,()=>{drawCallTab(body,s,wrap,redraw);drawStores()});
- });
+ body.querySelectorAll('[data-cm]').forEach(c=>c.onclick=e=>{if(e.target.closest('#copy-url'))return;d.method=c.dataset.cm;drawCallTab(body,s,wrap)});
 }
 function openCallRequestModal(s,m,onDone){
  const label=m==='pos'?'POS':'KDS';
