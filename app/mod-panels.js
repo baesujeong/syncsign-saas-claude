@@ -566,8 +566,8 @@ function deletePanel(p,after){
  if(fN)warns.push(`이 화면을 따라가는 <b>${fN}개 화면</b>의 따라가기가 해제돼요 — 각자 마지막 일정의 복사본으로 운영`);
  if(p.stb)warns.push(`연결된 셋탑(<span class="num">${p.stb.sn}</span>)은 해제되어 다른 화면에 다시 연결할 수 있어요`);
  confirmDialog({
-  title:'화면 삭제',
-  desc:`'${storeOf(p.store).name} · ${p.name}' 화면을 삭제할까요?${warns.length?'<br><br>'+warns.map(w=>'· '+w).join('<br>'):''}`,
+  title:`'${storeOf(p.store).name} · ${p.name}' 화면을 삭제할까요?`,
+  desc:`삭제한 화면은 복구할 수 없습니다.${warns.length?'<br><br>'+warns.map(w=>'· '+w).join('<br>'):''}`,
   confirmText:'삭제',danger:true,
   onConfirm:()=>{
    const idx=PANELS.indexOf(p);
@@ -1673,7 +1673,7 @@ function openWallGuideModal(){
  /* 단일 뷰 안내 모달 — 제목 + 온보딩 영상(루프) + 설명 한 문단 + [비디오월 만들기] */
  const ov=openModal(`
   <div class="modal-head"><div><h2 style="font-size:24px">비디오월이란?</h2>
-   <div class="sub" style="font-size:16px;line-height:1.6;margin-top:10px"><b style="color:var(--text)">여러 대의 화면을 하나의 큰 화면처럼 이어 붙여 운영하는 기능</b>이에요.<br>설치된 화면 여러 대를 비디오월 1개로 묶으면, 콘텐츠가 화면 경계를 넘어 하나의 화면으로 이어져 보여요.</div></div>
+   <div class="sub" style="font-size:16px;line-height:1.6;margin-top:12px"><b style="color:var(--text)">여러 대의 화면을 하나의 큰 화면처럼 이어 붙여 운영하는 기능</b>이에요.<br>설치된 화면 여러 대를 비디오월 1개로 묶으면, 콘텐츠가 화면 경계를 넘어 하나의 화면으로 이어져 보여요.</div></div>
    <button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body" style="padding-top:10px">
    <div style="aspect-ratio:16/9;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:#F6F8FC">

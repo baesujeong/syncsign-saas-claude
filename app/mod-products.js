@@ -150,7 +150,7 @@ function editCat(id){
 }
 function delCat(id){
  const c=catOf(id);const n=products.filter(p=>p.cat===id).length;
- confirmDialog({title:`'${c.name}' 카테고리 삭제`,desc:n?`카테고리에 속한 상품 ${n}개는 '미분류'로 이동해요. 메뉴판 연동도 해제돼요.`:'비어 있는 카테고리예요. 바로 삭제할 수 있어요.',onConfirm:()=>{toast(`'${c.name}' 카테고리를 삭제했어요`,{action:'실행 취소'});}});
+ confirmDialog({title:`'${c.name}' 카테고리를 삭제할까요?`,desc:n?`삭제한 카테고리는 복구할 수 없습니다. 카테고리에 속한 상품 ${n}개는 '미분류'로 이동하고, 메뉴판 연동도 해제돼요.`:'삭제한 카테고리는 복구할 수 없습니다. 이 카테고리에 속한 상품은 없어요.',onConfirm:()=>{toast(`'${c.name}' 카테고리를 삭제했어요`,{action:'실행 취소'});}});
 }
 $('#cat-add-btn').onclick=()=>{
  openModal(`
@@ -237,7 +237,7 @@ function bindRows(){
    'sep',
    {label:'삭제',icon:IC.trash,danger:true,onClick:()=>{
     const u=usedIn(p);
-    confirmDialog({title:`'${p.name}' 삭제`,desc:u?`이 상품은 '${u}' 메뉴판에서 사용 중이에요. 삭제하면 메뉴판에서도 함께 제거돼요.`:'삭제한 상품은 복구할 수 없어요.',onConfirm:()=>{products=products.filter(x=>x.id!==p.id);if(widget)widget.items=widget.items.filter(i=>i!==p.id);renderCats();renderProducts();renderBoard();toast('상품을 삭제했어요')}});
+    confirmDialog({title:`'${p.name}' 상품을 삭제할까요?`,desc:u?`삭제한 상품은 복구할 수 없습니다. 이 상품은 '${u}' 메뉴판에서 사용 중이며, 삭제하면 메뉴판에서도 함께 제거돼요.`:'삭제한 상품은 복구할 수 없습니다. 이 상품을 사용 중인 메뉴판은 없어요.',onConfirm:()=>{products=products.filter(x=>x.id!==p.id);if(widget)widget.items=widget.items.filter(i=>i!==p.id);renderCats();renderProducts();renderBoard();toast('상품을 삭제했어요')}});
    }},
   ]);
  });
@@ -264,7 +264,7 @@ $('#bulk-close').onclick=()=>{checked.clear();renderProducts()};
 $('#bulk-status').onclick=()=>{checked.forEach(id=>prodOf(id)&&(prodOf(id).status='soldout'));const n=checked.size;checked.clear();renderProducts();renderBoard();toast(`${n}개 상품을 품절 처리했어요 — 메뉴판에 자동 반영돼요`)};
 $('#bulk-del').onclick=()=>{
  const n=checked.size;const usedN=[...checked].filter(id=>usedIn(prodOf(id))).length;
- confirmDialog({title:`상품 ${n}개 삭제`,desc:usedN?`선택한 상품 중 ${usedN}개는 메뉴판에서 사용 중이에요. 삭제하면 메뉴판에서도 함께 제거돼요.`:'삭제한 상품은 복구할 수 없어요.',onConfirm:()=>{products=products.filter(p=>!checked.has(p.id));if(widget)widget.items=widget.items.filter(i=>!checked.has(i));checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 삭제했어요`)}});
+ confirmDialog({title:`상품 ${n}개를 삭제할까요?`,desc:usedN?`삭제한 상품은 복구할 수 없습니다. 선택한 상품 중 ${usedN}개는 메뉴판에서 사용 중이며, 삭제하면 메뉴판에서도 함께 제거돼요.`:'삭제한 상품은 복구할 수 없습니다. 선택한 상품을 사용 중인 메뉴판은 없어요.',onConfirm:()=>{products=products.filter(p=>!checked.has(p.id));if(widget)widget.items=widget.items.filter(i=>!checked.has(i));checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 삭제했어요`)}});
 };
 $('#bulk-cat').onclick=e=>{
  popMenu(e.currentTarget,CATS.map(c=>({label:c.emoji+' '+c.name,onClick:()=>{checked.forEach(id=>prodOf(id)&&(prodOf(id).cat=c.id));const n=checked.size;checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 '${c.name}'(으)로 이동했어요`)}})));

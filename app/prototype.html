@@ -185,7 +185,7 @@ function tagManageModal({label,tags,usageOf,onCreate,onRename,onDelete}){
   const listEl=ov.querySelector('#tm-list');
   const draw=()=>{
    listEl.innerHTML=tags.length?tags.map(t=>`<div class="tm-row" data-row="${t}"><span class="tp-dot"></span><span class="tm-nm">${t}</span><span class="tm-cnt num">${usageOf?usageOf(t):0}</span><span class="tm-tools"><button class="icon-btn" data-edit="${t}" aria-label="이름 변경">${IC.edit}</button><button class="icon-btn" data-del="${t}" aria-label="삭제">${IC.trash}</button></span></div>`).join(''):'<div class="tp-empty" style="padding:26px 0">아직 태그가 없어요. 위 입력창에서 첫 태그를 만들어보세요.</div>';
-   listEl.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const t=b.dataset.del;const n=usageOf?usageOf(t):0;confirmDialog({title:`'${t}' 태그 삭제`,desc:n?`이 태그가 붙은 ${n}개 항목에서 태그만 제거돼요. 항목 자체는 삭제되지 않아요.`:'이 태그를 삭제해요.',confirmText:'삭제',danger:true,onConfirm:()=>{onDelete(t);draw();}});});
+   listEl.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const t=b.dataset.del;const n=usageOf?usageOf(t):0;confirmDialog({title:`'${t}' 태그를 삭제할까요?`,desc:n?`삭제한 태그는 복구할 수 없습니다. 이 태그가 붙은 ${n}개 항목에서 태그만 제거되고, 항목 자체는 삭제되지 않아요.`:'삭제한 태그는 복구할 수 없습니다. 이 태그가 붙은 항목은 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{onDelete(t);draw();}});});
    listEl.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const t=b.dataset.edit;const cell=listEl.querySelector('[data-row="'+t+'"] .tm-nm');cell.innerHTML='<input class="input input-sm" id="tm-edit" value="'+t.replace(/"/g,'&quot;')+'" maxlength="20">';const inp=cell.querySelector('#tm-edit');inp.focus();inp.select();const commit=()=>{const v=inp.value.trim();if(v&&v!==t){if(tags.includes(v)){toast('같은 이름의 태그가 이미 있어요',{err:true});draw();return;}onRename(t,v);}draw();};inp.onblur=commit;inp.onkeydown=e=>{if(e.key==='Enter')commit();else if(e.key==='Escape')draw();};});
   };
   const add=()=>{const i=ov.querySelector('#tm-new');const v=i.value.trim();if(!v)return;if(tags.includes(v)){toast('이미 있는 태그예요',{err:true});return;}onCreate(v);i.value='';draw();i.focus();};
@@ -958,15 +958,16 @@ function deleteStores(list){
  const panelSum=list.reduce((a,s)=>a+s.panels.total,0);
  const onSum=list.reduce((a,s)=>a+s.panels.on,0);
  const label=list.length===1?`'${list[0].name}'`:`매장 ${list.length}개`;
+ const askLabel=list.length===1?`'${list[0].name}' 매장을`:`매장 ${list.length}개를`;
  const finish=msg=>{STORES=STORES.filter(s=>!ids.has(s.id));ids.forEach(id=>sChecked.delete(id));drawStores();toast(msg);};
  if(panelSum===0){
-  confirmDialog({title:`${label} 삭제`,desc:'삭제하면 되돌릴 수 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>finish('매장을 삭제했어요')});
+  confirmDialog({title:`${askLabel} 삭제할까요?`,desc:'삭제한 매장은 복구할 수 없습니다. 매장 정보와 담당자 설정이 모두 삭제돼요.',confirmText:'삭제',danger:true,onConfirm:()=>finish('매장을 삭제했어요')});
   return;
  }
  const others=STORES.filter(s=>!ids.has(s.id));
  const nameHtml=list.length===1?`<b>${list[0].name}</b>`:`<b>매장 ${list.length}개</b>`;
  openModal(`
-  <div class="modal-head"><div><h2>이 매장에는 연결된 화면이 있어요</h2><div class="sub" style="margin-top:8px">${nameHtml}에 연결된 화면 ${panelSum}대를 다른 매장으로 옮길까요? 모두 삭제하면 화면과 등록된 일정도 모두 삭제돼요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
+  <div class="modal-head"><div><h2>이 매장에는 연결된 화면이 있어요</h2><div class="sub">${nameHtml}에 연결된 화면 ${panelSum}대를 다른 매장으로 옮길까요? 모두 삭제하면 화면과 등록된 일정도 모두 삭제돼요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div style="padding:6px 24px 22px;display:flex;flex-direction:column;gap:8px">
    ${others.length?'<button class="btn btn-primary" id="sd-move" style="width:100%">다른 매장으로 이동</button>':''}
    <button class="btn btn-danger-t" id="sd-all" style="width:100%">모두 삭제</button>
@@ -1223,7 +1224,7 @@ function tplMenu(b,t){
   {label:'이름 변경',icon:IC.edit,onClick:()=>openModal(`<div class="modal-head"><h2>이름 변경</h2></div><div class="modal-body"><div class="f-row"><input class="input" id="rn" value="${t.name}"></div></div><div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="rn-ok">저장</button></div>`,{width:'400px',onMount:ov=>{const i=ov.querySelector('#rn');i.focus();i.select();ov.querySelector('#rn-ok').onclick=()=>{t.name=i.value.trim()||t.name;ov.remove();drawTplGrid();toast('이름을 변경했어요')}}})},
   {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:MY_FOLDERS,current:t.folder,onMove:fid=>{t.folder=fid;drawTplFolders();drawTplGrid();toast(`'${fPath(MY_FOLDERS,fid)}'(으)로 이동했어요`)}})},
   'sep',
-  {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${t.name}' 삭제`,desc:'이 템플릿을 사용하는 편성일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(x=>x!==t);drawTplFolders();drawTplGrid();toast('삭제했어요',{action:'실행 취소',onAction:()=>{MY_TPLS.unshift(t);drawTplFolders();drawTplGrid()}})}})},
+  {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${t.name}' 템플릿을 삭제할까요?`,desc:'삭제한 템플릿은 복구할 수 없습니다. 이 템플릿을 사용하는 편성일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(x=>x!==t);drawTplFolders();drawTplGrid();toast('삭제했어요',{action:'실행 취소',onAction:()=>{MY_TPLS.unshift(t);drawTplFolders();drawTplGrid()}})}})},
  ]);
 }
 function drawTplBulk(){
@@ -1233,7 +1234,7 @@ function drawTplBulk(){
   bulk.innerHTML=`<b>${tChecked.size}개</b> 선택됨 <button class="btn" id="tb-mv">폴더 이동</button><button class="btn danger-t" id="tb-del">삭제</button><button class="close icon-btn" id="tb-x" aria-label="선택 해제">${IC.x}</button>`;
   bulk.querySelector('#tb-x').onclick=()=>{tChecked.clear();drawTplGrid()};
   bulk.querySelector('#tb-mv').onclick=()=>folderMoveModal({fs:MY_FOLDERS,count:tChecked.size,onMove:fid=>{tChecked.forEach(id=>{const t=MY_TPLS.find(x=>x.id===id);if(t)t.folder=fid});tChecked.clear();drawTplFolders();drawTplGrid();toast(`'${fPath(MY_FOLDERS,fid)}'(으)로 이동했어요`)}});
-  bulk.querySelector('#tb-del').onclick=()=>confirmDialog({title:`템플릿 ${tChecked.size}개 삭제`,desc:'삭제한 템플릿은 복구할 수 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(t=>!tChecked.has(t.id));tChecked.clear();drawTplFolders();drawTplGrid();toast('삭제했어요')}});
+  bulk.querySelector('#tb-del').onclick=()=>confirmDialog({title:`템플릿 ${tChecked.size}개를 삭제할까요?`,desc:'삭제한 템플릿은 복구할 수 없습니다. 이 템플릿을 사용하는 편성일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(t=>!tChecked.has(t.id));tChecked.clear();drawTplFolders();drawTplGrid();toast('삭제했어요')}});
  }
 }
 function drawTplList(grid,arr){
@@ -1467,7 +1468,7 @@ function bindLib(){
    {label:'다운로드',icon:IC.upload,onClick:()=>toast('다운로드를 시작했어요')},
    {label:'삭제',icon:IC.trash,danger:true,onClick:()=>{
     const used=c.used.pl+c.used.tp;
-    confirmDialog({title:`'${c.name}' 삭제`,desc:used?`이 콘텐츠는 재생목록·템플릿 ${used}곳에서 사용 중이에요. 삭제하면 해당 위치에서 빈 화면이 될 수 있어요.`:'삭제한 콘텐츠는 복구할 수 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요')}});
+    confirmDialog({title:`'${c.name}' 콘텐츠를 삭제할까요?`,desc:used?`삭제한 콘텐츠는 복구할 수 없습니다. 이 콘텐츠는 재생목록·템플릿 ${used}곳에서 사용 중이며, 삭제하면 해당 위치에서 빈 화면이 될 수 있어요.`:'삭제한 콘텐츠는 복구할 수 없습니다. 이 콘텐츠를 사용 중인 재생목록·템플릿은 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요')}});
    }},
   ]);
  });
@@ -1487,7 +1488,7 @@ function drawLibBulk(){
   onToggle:t=>{lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`선택한 콘텐츠에 '${t}' 태그를 추가했어요`);},
   onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`'${t}' 태그를 만들어 추가했어요`);},
   onManage:openLibTagManager});
- bulk.querySelector('#lb-del').onclick=()=>confirmDialog({title:`콘텐츠 ${lChecked.size}개 삭제`,desc:'사용 중인 콘텐츠가 포함되어 있으면 해당 화면이 비어 보일 수 있어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(c=>!lChecked.has(c.id));lChecked.clear();drawLibFolders();drawLib();toast('삭제했어요')}});
+ bulk.querySelector('#lb-del').onclick=()=>confirmDialog({title:`콘텐츠 ${lChecked.size}개를 삭제할까요?`,desc:'삭제한 콘텐츠는 복구할 수 없습니다. 사용 중인 콘텐츠가 포함되어 있으면 해당 화면이 비어 보일 수 있어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(c=>!lChecked.has(c.id));lChecked.clear();drawLibFolders();drawLib();toast('삭제했어요')}});
 }
 function addToPlaylistMenu(anchor,ids){
  popMenu(anchor,[{title:'재생목록 선택'},...PLAYLISTS.map(pl=>({label:pl.name,onClick:()=>{
@@ -1729,7 +1730,7 @@ function drawPlArea(){
    {label:'복제',icon:IC.copy,onClick:()=>{PLAYLISTS.unshift({...pl,id:'pl'+(plSeq++),name:pl.name+' (복사)',items:pl.items.map(i=>({...i})),panels:0,mod:'07.05'});drawPlFolders();drawPlArea();toast('재생목록을 복제했어요')}},
    {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:PL_FOLDERS,current:pl.folder||null,withNone:true,onMove:fid=>{pl.folder=fid;drawPlFolders();drawPlArea();toast(fid?`'${fPath(PL_FOLDERS,fid)}'(으)로 이동했어요`:'최상위로 이동했어요')}})},
    'sep',
-   {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${pl.name}' 삭제`,desc:'삭제한 재생목록은 복구할 수 없어요. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(x=>x!==pl);drawPlFolders();drawPlArea();toast('삭제했어요')}})},
+   {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${pl.name}' 재생목록을 삭제할까요?`,desc:'삭제한 재생목록은 복구할 수 없습니다. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(x=>x!==pl);drawPlFolders();drawPlArea();toast('삭제했어요')}})},
   ]);
  });
 }
@@ -1743,7 +1744,7 @@ function drawPlBulk(){
   <button class="close icon-btn" id="plb-x" aria-label="선택 해제">${IC.x}</button>`;
  bulk.querySelector('#plb-x').onclick=()=>{plChecked.clear();drawPlArea()};
  bulk.querySelector('#plb-mv').onclick=()=>folderMoveModal({fs:PL_FOLDERS,withNone:true,count:plChecked.size,onMove:fid=>{plChecked.forEach(id=>{const pl=PLAYLISTS.find(x=>x.id===id);if(pl)pl.folder=fid});plChecked.clear();drawPlFolders();drawPlArea();toast(fid?`'${fPath(PL_FOLDERS,fid)}'(으)로 이동했어요`:'최상위로 이동했어요')}});
- bulk.querySelector('#plb-del').onclick=()=>confirmDialog({title:`재생목록 ${plChecked.size}개 삭제`,desc:'삭제한 재생목록은 복구할 수 없어요. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(pl=>!plChecked.has(pl.id));plChecked.clear();drawPlFolders();drawPlArea();toast('삭제했어요')}});
+ bulk.querySelector('#plb-del').onclick=()=>confirmDialog({title:`재생목록 ${plChecked.size}개를 삭제할까요?`,desc:'삭제한 재생목록은 복구할 수 없습니다. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(pl=>!plChecked.has(pl.id));plChecked.clear();drawPlFolders();drawPlArea();toast('삭제했어요')}});
 }
 /* ═══════════ 재생목록 에디터 ═══════════ */
 let pleDraft=null,pleSrc=null,pleQ='',pleType='all';
@@ -2319,7 +2320,7 @@ function openFolderMenu(anchor,cfg,f){
  }
  items.push('sep',{label:'폴더 삭제',icon:IC.trash,danger:true,onClick:()=>{
   const kids=fKids(fs,f.id).length,n=cfg.itemsIn?cfg.itemsIn(f.id):0;
-  confirmDialog({title:`'${f.name}' 폴더 삭제`,desc:`${kids?`하위 폴더 ${kids}개는 한 단계 위로 이동하고, `:''}폴더 안 항목 ${n}개는 ${f.parent?'상위 폴더':'폴더 없음(전체)'}(으)로 이동해요. 항목은 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{
+  confirmDialog({title:`'${f.name}' 폴더를 삭제할까요?`,desc:`삭제한 폴더는 복구할 수 없습니다. ${kids?`하위 폴더 ${kids}개는 한 단계 위로 이동하고, `:''}폴더 안 항목 ${n}개는 ${f.parent?'상위 폴더':'폴더 없음(전체)'}(으)로 이동하며, 항목 자체는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{
    fKids(fs,f.id).forEach(k=>k.parent=f.parent||null);
    cfg.rehome&&cfg.rehome(f.id,f.parent||null);
    fs.splice(fs.indexOf(f),1);
