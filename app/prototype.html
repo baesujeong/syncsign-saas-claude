@@ -773,7 +773,7 @@ function drawUsers(){
   if(u.status==='invited')items.push({label:'초대 메일 재발송',icon:IC.copy,onClick:()=>toast(`${u.email}로 초대 메일을 다시 보냈어요`)});
   if(u.status==='active'&&u.role!=='owner')items.push({label:'비활성화',icon:IC.x,onClick:()=>{u.status='inactive';drawUsers();toast(`${u.name}님을 비활성화했어요 — 로그인할 수 없어요`)}});
   if(u.status==='inactive')items.push({label:'다시 활성화',icon:IC.checkBig,onClick:()=>{u.status='active';drawUsers();toast(`${u.name}님을 활성화했어요`)}});
-  if(u.role!=='owner')items.push({label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`${u.name}님 삭제`,desc:'삭제하면 즉시 접근 권한이 사라져요. 이 사용자가 만든 콘텐츠는 유지돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(x=>x!==u);drawUsers();toast('사용자를 삭제했어요')}})});
+  if(u.role!=='owner')items.push({label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${u.name}' 사용자를 삭제할까요?`,desc:'삭제한 사용자는 복구할 수 없습니다. 사용자 정보와 권한이 모두 삭제되며, 다시 사용하려면 새로 초대해야 해요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(x=>x!==u);drawUsers();toast('사용자를 삭제했어요')}})});
   popMenu(b,items);
  });
  const ua=$('#u-all');if(ua){const arr=usersFiltered();ua.classList.toggle('on',!!arr.length&&arr.every(u=>uChecked.has(u.id)));}
@@ -785,7 +785,7 @@ function drawUsers(){
   bulk.querySelector('#ub-x').onclick=()=>{uChecked.clear();drawUsers()};
   bulk.querySelector('#ub-role').onclick=e=>popMenu(e.currentTarget,['admin','editor','viewer'].map(r=>({label:ROLE_META[r][0],onClick:()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.role=r});uChecked.clear();drawUsers();toast('역할을 변경했어요')}})));
   bulk.querySelector('#ub-off').onclick=()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.status='inactive'});uChecked.clear();drawUsers();toast('선택한 사용자를 비활성화했어요')};
-  bulk.querySelector('#ub-del').onclick=()=>confirmDialog({title:`사용자 ${uChecked.size}명 삭제`,desc:'삭제하면 즉시 접근 권한이 사라져요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(u=>!uChecked.has(u.id)||u.role==='owner');uChecked.clear();drawUsers();toast('삭제했어요')}});
+  bulk.querySelector('#ub-del').onclick=()=>confirmDialog({title:`사용자 ${uChecked.size}명을 삭제할까요?`,desc:'삭제한 사용자는 복구할 수 없습니다. 사용자 정보와 권한이 모두 삭제되며, 다시 사용하려면 새로 초대해야 해요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(u=>!uChecked.has(u.id)||u.role==='owner');uChecked.clear();drawUsers();toast('삭제했어요')}});
  }
 }
 function openInviteModal(){
