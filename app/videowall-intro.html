@@ -59,7 +59,7 @@ body.paused *{ animation-play-state: paused !important; }
 }
 .panel::after{ /* 대기 상태 LED */
   content:""; position:absolute; left:50%; top:50%;
-  width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%;
+  width:6px; height:6px; margin:-4px 0 0 -4px; border-radius:50%;
   background: var(--brand);
   box-shadow: 0 0 10px 2px rgba(59,102,241,.55);
   opacity:0;
@@ -138,9 +138,9 @@ body.paused *{ animation-play-state: paused !important; }
 
 /* 좌측: 타이포 블록 */
 #txtL{ position:absolute; left:36px; top:50%; transform:translateY(-50%); color:#fff; }
-#txtL .eyebrow{ font-size:10.5px; font-weight:700; letter-spacing:.22em; opacity:.78; }
+#txtL .eyebrow{ font-size:12px; font-weight:700; letter-spacing:.22em; opacity:.78; }
 #txtL .title{ font-size:40px; font-weight:800; letter-spacing:.01em; line-height:1.05; margin-top:8px; }
-#txtL .sub{ font-size:10px; font-weight:600; letter-spacing:.18em; opacity:.72; margin-top:9px; }
+#txtL .sub{ font-size:12px; font-weight:600; letter-spacing:.18em; opacity:.72; margin-top:8px; }
 
 /* 중앙: 콜드브루 일러스트 */
 #glass{
@@ -181,13 +181,13 @@ body.paused *{ animation-play-state: paused !important; }
   position:absolute; left:498px; top:56px; width:58px; height:58px;
   border:2px solid rgba(255,255,255,.8); border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  color:#fff; font-size:12.5px; font-weight:700; letter-spacing:.1em;
+  color:#fff; font-size:13px; font-weight:700; letter-spacing:.1em;
 }
 
 /* 우측: 카피 */
 #txtR{ position:absolute; left:592px; top:50%; transform:translateY(-50%); color:#fff; }
 #txtR .l1{ font-size:14px; font-weight:500; opacity:.85; }
-#txtR .l2{ font-size:21px; font-weight:800; letter-spacing:-0.01em; margin-top:7px; }
+#txtR .l2{ font-size:21px; font-weight:800; letter-spacing:-0.01em; margin-top:8px; }
 
 /* 패널 경계선(시임): 3개 패널이 하나의 콘텐츠를 나눠 재생 중임을 표시 */
 .seam{ position:absolute; top:0; bottom:0; width:2px; background:rgba(10,20,40,.30); z-index:6; }
@@ -211,7 +211,7 @@ body.paused *{ animation-play-state: paused !important; }
 #floor{ position:absolute; left:0; right:0; top:464px; height:76px; background:#E9EEF6; border-top:2px solid #DCE3F0; }
 .pendant{ position:absolute; top:-8px; width:2px; background:#C9D3E6; }
 .pendant .lamp{
-  position:absolute; left:50%; bottom:-16px; width:18px; height:18px; margin-left:-9px;
+  position:absolute; left:50%; bottom:-16px; width:18px; height:18px; margin-left:-8px;
   border-radius:50%; background:#17253F;
 }
 .pendant .lamp::after{ content:""; position:absolute; left:6px; top:6px; width:5px; height:5px; border-radius:50%; background:#8FA8FF; }

@@ -521,7 +521,7 @@ try { (() => {
         const bad = ps.some(p => p.status !== 'on');
         return `<button class="store-row ${flt.store === s.id ? 'on' : ''}" data-store="${s.id}"><span class="dot ${bad ? 'err' : 'on'}" style="width:6px;height:6px"></span>${s.name}<span class="cnt num">${ps.length}</span></button>`;
       }).join('')}
-   ${stores.length > 60 ? `<div style="font-size:11px;color:var(--text-3);padding:5px 10px">외 ${stores.length - 60}개 매장 — 검색으로 찾기</div>` : ''}
+   ${stores.length > 60 ? `<div style="font-size:12px;color:var(--text-3);padding:4px 10px">외 ${stores.length - 60}개 매장 — 검색으로 찾기</div>` : ''}
   </div></div>`;
     }).join('');
     $$('[data-region]').forEach(b => b.onclick = () => b.classList.toggle('open'));
@@ -1085,7 +1085,7 @@ try { (() => {
    <div class="dpreview" style="background:#0B0E13">
     ${wallCellsHtml(w, w.cells.map(id => {
       const p = panelOf(id);
-      return `<div style="background:${c.g};border-radius:5px;position:relative;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:9px;color:rgba(255,255,255,.75);font-weight:700">${p.name}</span><span class="dot ${p.status === 'on' ? 'on' : 'err'}" style="position:absolute;right:6px;top:6px"></span></div>`;
+      return `<div style="background:${c.g};border-radius:5px;position:relative;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:12px;color:rgba(255,255,255,.75);font-weight:700">${p.name}</span><span class="dot ${p.status === 'on' ? 'on' : 'err'}" style="position:absolute;right:6px;top:6px"></span></div>`;
     }).join(''), '4px')}
    </div>
    <div class="sync-note">${IC.info}<span>비디오월에 콘텐츠를 편성하면 <b>각 패널이 자기 위치의 화면 조각을 자동으로 나눠</b> 재생해요. 일정은 비디오월 단위로 관리돼요.</span></div>
@@ -1371,7 +1371,7 @@ try { (() => {
     </div></div>
    <div class="f-row"><label>유형 ${IC.info}</label>
     <div class="seg" style="width:100%"><button class="${sel.type === 'normal' ? 'on' : ''}" data-ty="normal" style="flex:1">일반</button><button class="${sel.type === 'urgent' ? 'on' : ''}" data-ty="urgent" style="flex:1">긴급 (즉시 교체)</button></div>
-    ${sel.type === 'urgent' ? '<p style="font-size:12px;color:var(--amber);margin:7px 0 0">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>' : ''}</div>
+    ${sel.type === 'urgent' ? '<p style="font-size:12px;color:var(--amber);margin:8px 0 0">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>' : ''}</div>
    ${cfg.edit ? `<div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-sm" id="side-copy" style="flex:1">다음 날로 복사</button><button class="btn btn-sm" id="side-del" style="flex:1;color:var(--red)">삭제</button></div>` : ''}
    <div id="conflict-area"></div>`;
       body.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => {
@@ -1487,7 +1487,7 @@ try { (() => {
     const ov = openModal(`
   <div class="modal-head"><div><h2>일정 따라가기 설정</h2><div class="sub">기준 패널 하나의 일정을 여러 패널이 그대로 따라가요. 기준을 바꾸면 모두 함께 바뀌어요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body">
-   <div style="display:flex;align-items:center;gap:12px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px 16px;margin-bottom:16px">
+   <div style="display:flex;align-items:center;gap:12px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px">
     <span class="badge badge-violet" style="height:26px">${IC.link}기준 패널</span>
     <svg width="26" height="14" viewBox="0 0 26 14" fill="none" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20m0 0-5-5m5 5-5 5"/></svg>
     <span class="badge badge-blue" style="height:26px">따라가는 패널 <b id="sh-cnt">${fset.size}</b>개</span>
@@ -1497,7 +1497,7 @@ try { (() => {
    <div class="f-row"><label>② 따라갈 패널 <span style="font-weight:500;color:var(--text-3)">— 패널 관리에서 선택한 ${fmt(fset.size)}개</span></label>
     <div class="tag-row" id="sh-followers"></div></div>
   </div>
-  <div class="modal-foot"><span style="font-size:12.5px;color:var(--text-2)" id="sh-summary"></span><span class="grow"></span>
+  <div class="modal-foot"><span style="font-size:13px;color:var(--text-2)" id="sh-summary"></span><span class="grow"></span>
    <button class="btn" data-close>취소</button><button class="btn btn-primary" id="sh-ok">적용</button></div>`, {
       width: '560px'
     });
@@ -1515,7 +1515,7 @@ try { (() => {
       ov.querySelector('#sh-followers').innerHTML = [...fset].slice(0, 12).map(id => {
         const p = panelOf(id);
         return `<span class="chip on">${p.name} · ${storeOf(p.store).name}<button data-shrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button></span>`;
-      }).join('') + (fset.size > 12 ? `<span class="chip">+${fset.size - 12}개</span>` : '') || '<span style="font-size:12.5px;color:var(--text-3)">패널 관리 목록에서 패널을 선택한 뒤 다시 열어주세요</span>';
+      }).join('') + (fset.size > 12 ? `<span class="chip">+${fset.size - 12}개</span>` : '') || '<span style="font-size:13px;color:var(--text-3)">패널 관리 목록에서 패널을 선택한 뒤 다시 열어주세요</span>';
       ov.querySelectorAll('[data-shrm]').forEach(b => b.onclick = () => {
         fset.delete(b.dataset.shrm);
         draw();
@@ -1680,7 +1680,7 @@ try { (() => {
           return `<div class="pool-item ${used ? 'used' : ''} ${pickPid === p.id ? '' : ''}" draggable="${!used}" data-pool="${p.id}" ${pickPid === p.id ? 'style="background:var(--blue-50)"' : ''}><span class="dot ${p.status === 'on' ? 'on' : 'err'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used ? '<span class="badge badge-blue">배치됨</span>' : ''}</div>`;
         }).join('') || '<div style="padding:14px;font-size:12px;color:var(--text-3)">이 매장에 배치 가능한 패널이 없어요</div>'}</div>
      <button class="btn btn-sm" id="wb-auto">빈 칸 자동 배치</button>
-     <p style="font-size:11.5px;color:var(--text-3);margin:0;line-height:1.5">패널을 끌어서 원하는 칸에 놓거나, 패널을 클릭한 뒤 칸을 클릭해도 돼요.</p>
+     <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5">패널을 끌어서 원하는 칸에 놓거나, 패널을 클릭한 뒤 칸을 클릭해도 돼요.</p>
     </div>
     <div class="wb-grid-wrap">
      <div class="wb-grid" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr);aspect-ratio:${orient === '세로형' ? cols * 9 + '/' + rows * 16 : cols * 16 + '/' + rows * 9};${orient === '세로형' ? 'height:340px;width:auto;margin:0 auto' : ''}">
@@ -3104,7 +3104,7 @@ try { (() => {
   <div class="modal-head"><div><h2>메뉴판에 넣을 상품 선택</h2><div class="sub">상품 정보가 바뀌면 메뉴판에도 자동으로 반영돼요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="picker-mode"><div class="mode-cards">
    <button class="mode-card ${mode === 'manual' ? 'on' : ''}" data-mode="manual"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span><span><b>직접 선택</b><p>원하는 상품만 골라 메뉴판을 구성해요.</p></span></button>
-   <button class="mode-card ${mode === 'category' ? 'on' : ''}" data-mode="category"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1a3 3 0 0 1 4.9 2.3V19a3 3 0 0 1-4.9 2.3M7 2.1A3 3 0 0 0 2.1 4.4V19A3 3 0 0 0 7 21.3"/><path d="M12 8v8m-4-4h8"/></svg></span><span><b>카테고리 연동 <span class="badge badge-blue" style="height:17px;font-size:10px">자동 업데이트</span></b><p>카테고리에 상품을 추가하면 메뉴판도 자동으로 늘어나요.</p></span></button>
+   <button class="mode-card ${mode === 'category' ? 'on' : ''}" data-mode="category"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1a3 3 0 0 1 4.9 2.3V19a3 3 0 0 1-4.9 2.3M7 2.1A3 3 0 0 0 2.1 4.4V19A3 3 0 0 0 7 21.3"/><path d="M12 8v8m-4-4h8"/></svg></span><span><b>카테고리 연동 <span class="badge badge-blue" style="height:17px;font-size:12px">자동 업데이트</span></b><p>카테고리에 상품을 추가하면 메뉴판도 자동으로 늘어나요.</p></span></button>
   </div></div>
   <div class="picker-main" id="pk-main"></div>
   <div class="modal-foot" style="border-top:1px solid var(--border)">
@@ -3124,7 +3124,7 @@ try { (() => {
    <div class="picker-body">
     <div class="picker-tools">
      <div class="search-wrap" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input input-sm" id="pk-q" placeholder="상품명 검색" value="${pq}"></div>
-     <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-2);cursor:pointer"><span class="checkbox ${saleOnly ? 'on' : ''}" id="pk-sale">${IC.check}</span>판매중만</label>
+     <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2);cursor:pointer"><span class="checkbox ${saleOnly ? 'on' : ''}" id="pk-sale">${IC.check}</span>판매중만</label>
      <button class="btn btn-sm" id="pk-all">현재 목록 전체 선택</button>
     </div>
     <div class="picker-grid" id="pk-grid"></div>
@@ -3401,7 +3401,7 @@ try { (() => {
    <span class="grip">${IC.grip}</span><span class="th" style="${thumbStyle(p)}">${mimg(p).e}</span>
    <span class="tx"><span class="nm">${p.name}${p.status === 'soldout' ? '<span class="badge badge-red">품절</span>' : ''}${p.discount ? '<span class="badge badge-blue">할인</span>' : ''}</span><span class="pr num">${fmt(p.discount || p.price)}원</span></span>
    <button class="icon-btn rm" data-plrm="${id}" aria-label="${p.name} 빼기">${IC.x}</button></div>`;
-    }).join('') || '<div style="font-size:12.5px;color:var(--text-3);text-align:center;padding:14px 0">표시할 상품이 없어요</div>';
+    }).join('') || '<div style="font-size:13px;color:var(--text-3);text-align:center;padding:14px 0">표시할 상품이 없어요</div>';
     list.querySelectorAll('[data-plrm]').forEach(b => b.onclick = () => {
       const id = b.dataset.plrm;
       if (widget.mode === 'category') widget.excluded.push(id);else widget.items = widget.items.filter(x => x !== id);

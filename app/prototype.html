@@ -70,7 +70,7 @@
         <div style="display:flex;gap:6px" id="ple-lib-chips"></div>
       </div>
       <div class="ple-lib-list" id="ple-lib-list"></div>
-      <div style="padding:10px 16px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-3)">콘텐츠를 오른쪽 목록으로 끌어다 놓거나 ＋ 버튼으로 추가하세요</div>
+      <div style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);word-break:keep-all">콘텐츠를 오른쪽 목록으로 끌어다 놓거나 ＋ 버튼으로 추가하세요</div>
     </aside>
     <div class="ple-main">
       <div class="ple-list-head">
@@ -467,7 +467,7 @@ function renderResetEmail(email){
  const s=$('#screen-email');s.hidden=false;s.scrollTop=0;
  s.innerHTML=`
   <div style="position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:12px 20px;background:#fff;border-bottom:1px solid #E5E7EB;z-index:2">
-   <button id="me-back" style="border:1px solid #D1D5DB;background:#fff;border-radius:8px;padding:7px 12px;font:600 13px/1 inherit;color:#374151;cursor:pointer">← 받은 편지함</button>
+   <button id="me-back" style="border:1px solid #D1D5DB;background:#fff;border-radius:8px;padding:8px 12px;font:600 13px/1 inherit;color:#374151;cursor:pointer">← 받은 편지함</button>
    <span style="font-size:12px;color:#9CA3AF">프로토타입 미리보기 — 실제로는 사용자 메일함에 도착하는 이메일이에요</span>
   </div>
   <div style="max-width:600px;margin:40px auto 56px;padding:0 16px">
@@ -475,7 +475,7 @@ function renderResetEmail(email){
     <img src="../uploads/Logo-Horizontal-Light.svg" alt="syncsign" style="height:28px;width:auto;display:block;margin-bottom:40px">
     <h1 style="margin:0 0 12px;font-size:32px;line-height:1.3;font-weight:800;color:#243859;letter-spacing:-0.02em">${nm}님, 안녕하세요.</h1>
     <p style="margin:0 0 32px;font-size:16px;line-height:1.75;color:#353D4A">Syncsign 계정(<b style="color:#243859">${em}</b>)의 비밀번호 재설정 요청을 받았어요. 아래 버튼을 눌러 새 비밀번호를 설정해 주세요.</p>
-    <a id="me-reset" style="display:inline-block;background:#1367F4;color:#fff;font-weight:700;font-size:16px;padding:15px 34px;border-radius:12px;text-decoration:none;cursor:pointer">비밀번호 재설정</a>
+    <a id="me-reset" style="display:inline-block;background:#1367F4;color:#fff;font-weight:700;font-size:16px;padding:16px 34px;border-radius:12px;text-decoration:none;cursor:pointer">비밀번호 재설정</a>
     <p style="margin:28px 0 0;font-size:14px;line-height:1.7;color:#6D7683">이 링크는 <b style="color:#1367F4">30분 후</b> 만료돼요. 만료됐다면 로그인 화면에서 다시 요청해 주세요.</p>
     <div style="height:1px;background:#E5E7EB;margin:28px 0"></div>
     <p style="margin:0;font-size:14px;line-height:1.7;color:#6D7683">본인이 요청하지 않았다면 이 메일을 무시해주세요.<br>기존 비밀번호가 유지됩니다.</p>
@@ -522,7 +522,7 @@ function renderSignup(){
   <div class="f-row"><label>이메일 <span class="req">*</span></label><input class="input" id="su-email" placeholder="you@company.com"></div>
   <div class="f-row"><label>비밀번호 <span class="req">*</span></label><input class="input" id="su-pw" type="password" placeholder="8자 이상">
    <div class="pw-hint" id="pw-hint"><span id="ph1">○ 8자 이상</span><span id="ph2">○ 영문+숫자 조합</span></div></div>
-  <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--text-2);margin:4px 0 14px;cursor:pointer"><span class="checkbox" id="su-terms">${IC.check}</span><span><a style="color:var(--blue)">이용약관</a>과 <a style="color:var(--blue)">개인정보 처리방침</a>에 동의합니다</span></label>
+  <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--text-2);margin:4px 0 14px;cursor:pointer"><span class="checkbox" id="su-terms">${IC.check}</span><span><a style="color:var(--blue)">이용약관</a>과 <a style="color:var(--blue)">개인정보 처리방침</a>에 동의합니다</span></label>
   <button class="btn btn-primary btn-lg" id="su-submit" style="width:100%">무료로 시작하기</button>`;
  $('#go-login').onclick=()=>renderLogin(false);
  $('#google-signup').onclick=()=>{session.first=true;startOnboard('Google 계정으로 가입했어요! 초기 설정을 시작할게요');};
@@ -576,7 +576,7 @@ function renderOnboard(){
   card.querySelector('#ob-prev').onclick=()=>{obStep=1;renderOnboard()};
  }else if(obStep===3){
   card.innerHTML=`<h2>어떤 형태로 운영하시나요?</h2><div class="sub">운영 형태에 맞춰 대시보드와 관리 도구를 준비해 드려요. 나중에 설정에서 바꿀 수 있어요.</div>
-   <div class="biz-grid" style="grid-template-columns:1fr 1fr">${OB_TYPES.map(([k,e,t,d,s])=>`<button class="biz-card ${obType===k?'on':''}" data-obtype="${k}" style="align-items:flex-start;text-align:left;padding:18px"><span class="e">${e}</span><b style="font-size:15px">${t}</b><span style="font-size:12.5px;color:var(--text-2);font-weight:500;line-height:1.45">${d}</span><span class="badge badge-gray" style="margin-top:8px">${s}</span></button>`).join('')}</div>
+   <div class="biz-grid" style="grid-template-columns:1fr 1fr">${OB_TYPES.map(([k,e,t,d,s])=>`<button class="biz-card ${obType===k?'on':''}" data-obtype="${k}" style="align-items:flex-start;text-align:left;padding:18px"><span class="e">${e}</span><b style="font-size:15px">${t}</b><span style="font-size:13px;color:var(--text-2);font-weight:500;line-height:1.45">${d}</span><span class="badge badge-gray" style="margin-top:8px">${s}</span></button>`).join('')}</div>
    <div class="ob-foot"><button class="btn" id="ob-prev">이전</button><span style="flex:1"></span><button class="btn btn-primary btn-lg" id="ob-next" ${obType?'':'disabled'} style="min-width:140px">다음</button></div>`;
   card.querySelectorAll('[data-obtype]').forEach(b=>b.onclick=()=>{obType=b.dataset.obtype;renderOnboard()});
   card.querySelector('#ob-prev').onclick=()=>{obStep=2;renderOnboard()};
@@ -754,10 +754,10 @@ function drawUsers(){
   const st=u.status==='active'?'<span class="badge badge-green">활성</span>':u.status==='invited'?'<span class="badge badge-amber">초대 대기</span>':'<span class="badge badge-gray">비활성</span>';
   return `<tr class="${uChecked.has(u.id)?'checked':''}">
    <td><span class="checkbox ${uChecked.has(u.id)?'on':''}" data-uc="${u.id}">${IC.check}</span></td>
-   <td><div class="u-cell"><span class="avatar" style="background:${u.c}">${u.name[0]}</span><div><div class="nm">${u.name}${u.id==='u1'?' <span class="badge badge-gray" style="height:17px;font-size:10px">나</span>':''}</div><div class="em">${u.email}</div></div></div></td>
+   <td><div class="u-cell"><span class="avatar" style="background:${u.c}">${u.name[0]}</span><div><div class="nm">${u.name}${u.id==='u1'?' <span class="badge badge-gray" style="height:17px;font-size:12px">나</span>':''}</div><div class="em">${u.email}</div></div></div></td>
    <td><span class="role-pill ${ROLE_META[u.role][1]}">${ROLE_META[u.role][0]}</span></td>
    <td style="font-size:13px">${u.scope}</td><td>${st}</td>
-   <td style="font-size:12.5px;color:var(--text-3)">${u.last}</td>
+   <td style="font-size:13px;color:var(--text-3)">${u.last}</td>
    <td><button class="icon-btn" data-um="${u.id}">${IC.dots}</button></td></tr>`;
  }).join('')||`<tr><td colspan="7">${uFlt.q?searchEmptyHtml(uFlt.q):`<div class="empty"><b>조건에 맞는 사용자가 없어요</b><span>필터를 바꿔보세요</span></div>`}</td></tr>`;
  {const _q=document.getElementById('u-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
@@ -791,31 +791,41 @@ function drawUsers(){
 function openInviteModal(){
  openModal(`
   <div class="modal-head"><div><h2>사용자 초대</h2><div class="sub">초대 메일의 링크로 가입하면 바로 팀에 합류돼요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
-  <div class="modal-body">
-   <div class="f-row"><label>이메일 <span class="req">*</span> <span style="font-weight:500;color:var(--text-3)">쉼표로 여러 명 초대</span></label>
-    <input class="input" id="iv-emails" placeholder="staff1@company.com, staff2@company.com"></div>
+  <div class="modal-body iv-form">
+   <div class="f-row"><label for="iv-email">이메일 <span class="req">*</span></label>
+    <input class="input" id="iv-email" type="email" inputmode="email" autocomplete="off" spellcheck="false" placeholder="name@company.com">
+    <div class="ferr" id="iv-err" style="display:none"></div></div>
    <div class="f-row"><label>역할</label>
     <div id="iv-roles">${['admin','editor','viewer'].map((r,i)=>`
-     <label class="call-method ${i===1?'on':''}" data-ivr="${r}" style="padding:11px 14px;margin-bottom:8px">
+     <label class="call-method ${i===1?'on':''}" data-ivr="${r}">
       <span style="flex:1"><b><span class="role-pill ${ROLE_META[r][1]}" style="height:22px">${ROLE_META[r][0]}</span></b>
       <p>${r==='admin'?'매장·사용자를 포함한 대부분의 기능을 관리해요.':r==='editor'?'콘텐츠·재생목록·템플릿을 만들고 편성할 수 있어요.':'모든 화면을 볼 수만 있어요. 수정은 할 수 없어요.'}</p></span>
       <span class="radio ${i===1?'on':''}"></span></label>`).join('')}</div>
-   <div class="f-row"><label>담당 매장</label><select class="select" id="iv-scope"><option>전체 매장</option>${STORES.map(s=>`<option>${s.name}</option>`).join('')}</select></div>
+   </div>
+   <div class="f-row"><label for="iv-scope">담당 매장</label><select class="select" id="iv-scope"><option>전체 매장</option>${STORES.map(s=>`<option>${s.name}</option>`).join('')}</select></div>
   </div>
-  <div class="modal-foot"><span style="font-size:12px;color:var(--text-3)">세부 권한은 [역할 및 권한]에서 페이지 단위로 조정할 수 있어요</span><span class="grow"></span>
+  <div class="modal-foot"><span class="iv-hint">세부 권한은 [역할 및 권한]에서 조정할 수 있어요</span>
    <button class="btn" data-close>취소</button><button class="btn btn-primary" id="iv-send">초대 보내기</button></div>`,
  {width:'520px',onMount:ov=>{
   let role='editor';
+  const inp=ov.querySelector('#iv-email'),err=ov.querySelector('#iv-err');
+  const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const fail=msg=>{inp.classList.add('error');err.textContent=msg;err.style.display='flex';inp.focus()};
+  inp.oninput=()=>{inp.classList.remove('error');err.style.display='none'};
   ov.querySelectorAll('[data-ivr]').forEach(c=>c.onclick=()=>{role=c.dataset.ivr;ov.querySelectorAll('[data-ivr]').forEach(x=>{x.classList.toggle('on',x===c);x.querySelector('.radio').classList.toggle('on',x===c)})});
-  ov.querySelector('#iv-send').onclick=()=>{
-   const raw=ov.querySelector('#iv-emails').value.trim();
-   const ems=raw.split(',').map(s=>s.trim()).filter(s=>s.includes('@'));
-   if(!ems.length){ov.querySelector('#iv-emails').classList.add('error');toast('올바른 이메일을 입력해주세요',{err:true});return}
+  const send=()=>{
+   const em=inp.value.trim();
+   if(!em)return fail('이메일을 입력해주세요.');
+   if(!EMAIL_RE.test(em))return fail('올바른 이메일 형식이 아니에요.');
+   if(USERS.some(u=>u.email.toLowerCase()===em.toLowerCase()))return fail('이미 등록되었거나 초대한 이메일이에요.');
    const scope=ov.querySelector('#iv-scope').value;
-   ems.forEach(em=>USERS.push({id:'u'+(uSeq++),name:em.split('@')[0],email:em,role,scope,status:'invited',last:'—',c:AV[uSeq%8]}));
+   USERS.push({id:'u'+(uSeq++),name:em.split('@')[0],email:em,role,scope,status:'invited',last:'—',c:AV[uSeq%8]});
    ov.remove();drawUsers();
-   toast(`${ems.length}명에게 초대 메일을 보냈어요`,{action:'재발송',onAction:()=>toast('초대 메일을 다시 보냈어요')});
+   toast(`${em}으로 초대 메일을 보냈어요`,{action:'재발송',onAction:()=>toast('초대 메일을 다시 보냈어요')});
   };
+  ov.querySelector('#iv-send').onclick=send;
+  inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();send()}};
+  setTimeout(()=>inp.focus(),0);
  }});
 }
 function openUserEdit(u){
@@ -902,11 +912,11 @@ function drawStores(){
   const bad=s.panels.on<s.panels.total;
   return `<tr data-srow="${s.id}" style="cursor:pointer">
    <td><span class="checkbox ${sChecked.has(s.id)?'on':''}" data-schk="${s.id}" role="checkbox" aria-label="${s.name} 선택">${IC.check}</span></td>
-   <td><b>${s.name}</b><div style="font-size:11.5px;color:var(--text-3)">${s.region}${s.addr?' · '+s.addr:''}</div></td>
-   <td>${s.mgrs.length?`<span class="mgr-chips">${s.mgrs.slice(0,3).map(id=>{const u=userOf(id);return u?`<span class="avatar" style="background:${u.c}" title="${u.name}">${u.name[0]}</span>`:''}).join('')}${s.mgrs.length>3?`<span class="more">+${s.mgrs.length-3}</span>`:''}</span>`:'<span style="color:var(--text-3);font-size:12.5px">미지정</span>'}</td>
-   <td><span style="display:inline-flex;align-items:center;gap:7px;font-size:13px"><span class="dot ${bad?'err':'on'}"></span><b class="num">${s.panels.on}</b><span style="color:var(--text-3)">/ ${s.panels.total} 온라인</span></span></td>
+   <td><b>${s.name}</b><div style="font-size:12px;color:var(--text-3)">${s.region}${s.addr?' · '+s.addr:''}</div></td>
+   <td>${s.mgrs.length?`<span class="mgr-chips">${s.mgrs.slice(0,3).map(id=>{const u=userOf(id);return u?`<span class="avatar" style="background:${u.c}" title="${u.name}">${u.name[0]}</span>`:''}).join('')}${s.mgrs.length>3?`<span class="more">+${s.mgrs.length-3}</span>`:''}</span>`:'<span style="color:var(--text-3);font-size:13px">미지정</span>'}</td>
+   <td><span style="display:inline-flex;align-items:center;gap:8px;font-size:13px"><span class="dot ${bad?'err':'on'}"></span><b class="num">${s.panels.on}</b><span style="color:var(--text-3)">/ ${s.panels.total} 온라인</span></span></td>
    <td>${callBadge(s)}</td>
-   <td style="font-size:12.5px;color:var(--text-3)">${s.panels.last}</td>
+   <td style="font-size:13px;color:var(--text-3)">${s.panels.last}</td>
    <td><button class="icon-btn" data-sm="${s.id}">${IC.dots}</button></td></tr>`;
  }).join('')||`<tr><td colspan="7">${STORES.length===0?`<div class="empty"><b>아직 등록된 매장이 없어요</b><span>첫 번째 매장을 등록하고 지역·담당자를 정리해보세요</span><button class="btn btn-primary btn-sm" onclick="openStoreModal()">${IC.plus}첫 매장 등록하기</button></div>`:sFlt.q?searchEmptyHtml(sFlt.q):`<div class="empty"><b>조건에 맞는 매장이 없어요</b><button class="btn btn-tonal btn-sm" onclick="openStoreModal()">첫 매장 등록하기</button></div>`}</td></tr>`;
  {const _q=document.getElementById('s-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
@@ -1024,12 +1034,12 @@ function openStoreDrawer(s,tab='info'){
   if(t==='info'){
    body.innerHTML=`
     <dl class="kv"><dt>매장명</dt><dd>${s.name}</dd><dt>지역</dt><dd>${s.region}</dd><dt>주소</dt><dd>${s.addr||'—'}</dd><dt>등록일</dt><dd>2025.11.02</dd></dl>
-    <div style="margin-bottom:18px"><h3 style="margin:0 0 9px;font-size:13.5px;font-weight:700">담당자</h3>
+    <div style="margin-bottom:18px"><h3 style="margin:0 0 8px;font-size:14px;font-weight:700">담당자</h3>
      <div class="tag-row" style="display:flex;gap:6px;flex-wrap:wrap">
       ${s.mgrs.map(id=>{const u=userOf(id);return u?`<span class="chip on">${u.name}<button data-mgrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button></span>`:''}).join('')}
       <button class="chip" id="mgr-add">${IC.plus}담당자 연결</button>
      </div>
-     <p style="font-size:11.5px;color:var(--text-3);margin:7px 0 0">담당자는 이 매장의 화면·콘텐츠만 관리할 수 있어요.</p></div>`;
+     <p style="font-size:12px;color:var(--text-3);margin:8px 0 0">담당자는 이 매장의 화면·콘텐츠만 관리할 수 있어요.</p></div>`;
    body.querySelectorAll('[data-mgrm]').forEach(b=>b.onclick=()=>{s.mgrs=s.mgrs.filter(x=>x!==b.dataset.mgrm);draw('info');drawStores();});
    body.querySelector('#mgr-add').onclick=e=>popMenu(e.currentTarget,USERS.filter(u=>u.status==='active'&&!s.mgrs.includes(u.id)).map(u=>({label:`${u.name} · ${ROLE_META[u.role][0]}`,onClick:()=>{s.mgrs.push(u.id);draw('info');drawStores();toast(`${u.name}님을 담당자로 연결했어요`)}})));
   }else if(t==='panels'){
@@ -1069,7 +1079,7 @@ function drawCallTab(body,s,wrap){
     <div style="flex:1;min-width:0">
      <b>${NM[m.k]} ${m.badge}</b>
      <p>${m.desc}</p>
-     ${m.k==='manual'&&d.method==='manual'?`<div class="call-url"><div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--text-3);margin-bottom:1px">사이트</div><a href="https://sdm.el-bigs.com/register" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none;word-break:break-all">https://sdm.el-bigs.com/register</a></div><button class="btn btn-sm" id="copy-url" style="flex:none">복사</button></div>`:''}
+     ${m.k==='manual'&&d.method==='manual'?`<div class="call-url"><div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text-3);margin-bottom:1px">사이트</div><a href="https://sdm.el-bigs.com/register" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none;word-break:break-all">https://sdm.el-bigs.com/register</a></div><button class="btn btn-sm" id="copy-url" style="flex:none">복사</button></div>`:''}
     </div>
     <span class="radio ${d.method===m.k?'on':''}"></span>
    </div>`).join('')
@@ -1107,7 +1117,7 @@ let gInd='all',gCat='all',gRatio='all';
 function renderTemplatesPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.templates.t')}</h1>
-   <div class="seg" style="margin-left:6px"><button class="${tTab==='mine'?'on':''}" data-tt="mine">내 템플릿</button><button class="${tTab==='gallery'?'on':''}" data-tt="gallery">템플릿 갤러리 <span class="badge badge-blue" style="height:17px;font-size:10px">${GALLERY.length}</span></button></div>
+   <div class="seg" style="margin-left:6px"><button class="${tTab==='mine'?'on':''}" data-tt="mine">내 템플릿</button><button class="${tTab==='gallery'?'on':''}" data-tt="gallery">템플릿 갤러리 <span class="badge badge-blue" style="height:17px;font-size:12px">${GALLERY.length}</span></button></div>
    <div class="actions">
     ${tTab==='mine'?`<button class="btn btn-primary" id="btn-new-tpl" ${canEdit('templates')?'':'disabled'}>${IC.plus}새 템플릿 만들기</button>`:''}
    </div></header>
@@ -1240,11 +1250,11 @@ function drawTplList(grid,arr){
  </tr></thead><tbody>
  ${arr.map(t=>`<tr class="${tChecked.has(t.id)?'checked':''}" data-tpl="${t.id}" style="cursor:pointer">
   <td><span class="checkbox ${tChecked.has(t.id)?'on':''}" data-tc="${t.id}" role="checkbox" aria-label="${t.name} 선택">${IC.check}</span></td>
-  <td><div style="display:flex;align-items:center;gap:11px"><span style="width:58px;height:33px;border-radius:5px;background:${t.g};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex:none">${t.e}</span><b style="font-size:13.5px">${t.name}</b></div></td>
+  <td><div style="display:flex;align-items:center;gap:12px"><span style="width:58px;height:33px;border-radius:5px;background:${t.g};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex:none">${t.e}</span><b style="font-size:14px">${t.name}</b></div></td>
   <td style="font-size:13px">${t.folder?(fPath(MY_FOLDERS,t.folder)||'—'):'—'}</td>
   <td><span class="badge badge-gray">${t.ratio}</span></td>
   <td style="font-size:13px">${t.by||'김민규'}</td>
-  <td class="num" style="font-size:12.5px;color:var(--text-3)">2026.${t.mod}</td>
+  <td class="num" style="font-size:13px;color:var(--text-3)">2026.${t.mod}</td>
   <td style="text-align:center"><button class="icon-btn" data-tfav="${t.id}" style="width:26px;height:26px;color:${t.fav?'#F5B301':'var(--text-3)'}" aria-label="${t.name} 즐겨찾기">${t.fav?IC.star:IC.starO}</button></td>
   <td><button class="icon-btn" data-tm="${t.id}" aria-label="더보기">${IC.dots}</button></td></tr>`).join('')}
  </tbody></table></div>`;
@@ -1304,7 +1314,7 @@ function openGalPreview(g){
     <div style="background:${g.g};border-radius:10px;${g.ratio==='9:16'?'height:340px;aspect-ratio:9/16':'aspect-ratio:16/9'};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff">
      <span style="font-size:52px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4))">${g.e}</span>
      <b style="letter-spacing:.18em;font-size:14px">${g.cat.toUpperCase?g.cat:''}</b>
-     <span style="font-size:11px;color:rgba(255,255,255,.6)">텍스트·이미지·위젯을 자유롭게 수정할 수 있어요</span>
+     <span style="font-size:12px;color:rgba(255,255,255,.6)">텍스트·이미지·위젯을 자유롭게 수정할 수 있어요</span>
     </div>
    </div>
   </div>
@@ -1327,7 +1337,7 @@ function renderLibraryPage(root){
   <div class="rail-layout" style="padding-top:10px">
    <aside class="folder-rail"><div class="fr-head">폴더<button class="icon-btn" id="lf-add" style="width:24px;height:24px" aria-label="새 폴더">${IC.plus}</button></div>
     <div class="fr-list" id="lf-list"></div>
-    <div style="padding:10px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3)">파일을 화면 어디에나 끌어다 놓으면 현재 폴더로 업로드돼요</div></aside>
+    <div style="padding:10px 12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);word-break:keep-all">파일을 화면 어디에나 끌어다 놓으면 현재 폴더로 업로드돼요</div></aside>
    <div class="rail-main std">
     <div class="prod-toolbar">
      <div class="search-wrap">${IC.search}<input class="input input-sm" id="l-q" placeholder="${t('ph.library')}" value="${lQ}"></div>
@@ -1420,8 +1430,8 @@ function drawLib(){
    ${arr.map(c=>`<tr class="${lChecked.has(c.id)?'checked':''}" data-lib="${c.id}">
     <td><span class="checkbox ${lChecked.has(c.id)?'on':''}" data-lc="${c.id}" role="checkbox" aria-label="${c.name} 선택">${IC.check}</span></td>
     <td><div style="display:flex;align-items:center;gap:10px"><span style="width:52px;height:30px;border-radius:5px;background:${c.g};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none"></span><b style="font-size:13px">${c.name}</b>${c.error?'<span class="badge badge-red">실패</span>':''}</div></td>
-    <td>${typeBadge(c)}</td><td class="num" style="font-size:12.5px">${c.size}</td>
-    <td>${c.tags.map(t=>`<span class="badge badge-gray" style="margin-right:3px">${t}</span>`).join('')||'—'}</td>
+    <td>${typeBadge(c)}</td><td class="num" style="font-size:13px">${c.size}</td>
+    <td>${c.tags.map(t=>`<span class="badge badge-gray" style="margin-right:4px">${t}</span>`).join('')||'—'}</td>
     <td class="num" style="font-size:12px;color:var(--text-3)">${c.date}</td>
     <td><button class="icon-btn" data-lm="${c.id}" aria-label="더보기">${IC.dots}</button></td></tr>`).join('')}
   </tbody></table></div>`;
@@ -1599,7 +1609,7 @@ document.addEventListener('dragenter',e=>{
  if(e.dataTransfer.types.includes('text/lib'))return;
  dragDepth++;
  if(!$('#dz-overlay')){const o=document.createElement('div');o.id='dz-overlay';o.className='dropzone-overlay';
-  o.innerHTML=`<div class="box">${IC.upload}여기에 놓아 업로드<span style="font-size:12.5px;font-weight:500;color:var(--text-2)">'${lFolder==='all'?'전체 콘텐츠':LIB_FOLDERS.find(f=>f.id===lFolder)?.name}' 폴더에 추가돼요</span></div>`;
+  o.innerHTML=`<div class="box">${IC.upload}여기에 놓아 업로드<span style="font-size:13px;font-weight:500;color:var(--text-2)">'${lFolder==='all'?'전체 콘텐츠':LIB_FOLDERS.find(f=>f.id===lFolder)?.name}' 폴더에 추가돼요</span></div>`;
   document.body.appendChild(o);}
 });
 document.addEventListener('dragleave',()=>{dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)$('#dz-overlay')?.remove()});
@@ -1691,14 +1701,14 @@ function drawPlArea(){
   </tr></thead><tbody>
   ${arr.map(pl=>{const c0=pl.items.length?libOf(pl.items[0].c):null;return `<tr class="${plChecked.has(pl.id)?'checked':''}" data-pl="${pl.id}" style="cursor:pointer">
    <td><span class="checkbox ${plChecked.has(pl.id)?'on':''}" data-plc="${pl.id}" role="checkbox" aria-label="${pl.name} 선택">${IC.check}</span></td>
-   <td><div style="display:flex;align-items:center;gap:11px">
+   <td><div style="display:flex;align-items:center;gap:12px">
     <span class="pl-cover-sm"${c0?` style="background:${c0.g}"`:''}>${c0?c0.e:''}</span>
-    <b style="font-size:13.5px">${pl.name}</b></div></td>
-   <td style="font-size:12.5px;color:var(--text-2)">${pl.folder?(fPath(PL_FOLDERS,pl.folder)||'—'):'—'}</td>
+    <b style="font-size:14px">${pl.name}</b></div></td>
+   <td style="font-size:13px;color:var(--text-2)">${pl.folder?(fPath(PL_FOLDERS,pl.folder)||'—'):'—'}</td>
    <td class="num" style="font-size:13px">${pl.items.length}개</td>
    <td class="num" style="font-size:13px">${durFmt(plDur(pl))}</td>
    <td>${pl.repeat?'<span class="badge badge-blue">반복</span>':'<span class="badge badge-gray">1회</span>'}</td>
-   <td class="num" style="font-size:12.5px;color:var(--text-3)">2026.${pl.mod}</td>
+   <td class="num" style="font-size:13px;color:var(--text-3)">2026.${pl.mod}</td>
    <td><button class="icon-btn" data-plm="${pl.id}" aria-label="더보기">${IC.dots}</button></td></tr>`;}).join('')}
   </tbody></table></div>`:emptyHtml;
  }
@@ -1769,7 +1779,7 @@ $('#ple-repeat').onclick=()=>{pleDraft.repeat=!pleDraft.repeat;$('#ple-repeat').
 $('#ple-name').addEventListener('input',e=>pleDraft.name=e.target.value);
 $('#ple-lib-q').addEventListener('input',e=>{pleQ=e.target.value.trim();drawPleLib()});
 function drawPleLib(){
- $('#ple-lib-chips').innerHTML=[['all','전체'],['image','이미지'],['video','동영상'],['url','URL']].map(([k,l])=>`<button class="chip ${pleType===k?'on':''}" data-pt="${k}" style="height:26px;font-size:11.5px;padding:0 10px">${l}</button>`).join('');
+ $('#ple-lib-chips').innerHTML=[['all','전체'],['image','이미지'],['video','동영상'],['url','URL']].map(([k,l])=>`<button class="chip ${pleType===k?'on':''}" data-pt="${k}" style="height:26px;font-size:12px;padding:0 10px">${l}</button>`).join('');
  $$('#ple-lib-chips [data-pt]').forEach(b=>b.onclick=()=>{pleType=b.dataset.pt;drawPleLib()});
  const arr=LIB.filter(c=>!c.error&&(pleType==='all'||c.type===pleType)&&(!pleQ||c.name.toLowerCase().includes(pleQ.toLowerCase())));
  $('#ple-lib-list').innerHTML=arr.map(c=>`
@@ -2222,7 +2232,7 @@ function folderNameModal({title,initial='',onSave}){
 }
 function railFolderHtml(fs,cur,countOf){
  return fFlat(fs).map(({f,depth})=>`
-  <div class="fr-item ${cur===f.id?'on':''}" data-fid="${f.id}" role="button" tabindex="0" style="padding-left:${9+(depth-1)*16}px">
+  <div class="fr-item ${cur===f.id?'on':''}" data-fid="${f.id}" role="button" tabindex="0" style="padding-left:${8+(depth-1)*16}px">
    ${IC.folder}<span class="fr-nm">${f.name}</span><span class="cnt num">${countOf(f.id)}</span>
    <span class="fr-tools"><button class="icon-btn" data-fmenu="${f.id}" aria-label="'${f.name}' 폴더 관리">${IC.dots}</button></span>
   </div>`).join('');
@@ -2343,8 +2353,8 @@ function folderMoveModal({fs,current,withNone=false,onMove,title='폴더 이동'
   ov.querySelector('#fm-tree').innerHTML=list.map(r=>{
    const isCur=r.k===curKey;
    const blocked=!isCur&&canPick&&!canPick(r.k===KEY_ROOT?null:r.k);
-   return `<div class="fr-item ${sel===r.k?'on':''} ${isCur?'fm-cur':''} ${blocked?'fm-dis':''}" data-fm="${r.k}" ${blocked?'data-fm-dis="1"':''} role="button" tabindex="${blocked?-1:0}" aria-disabled="${isCur||blocked?'true':'false'}" style="padding-left:${q?10:10+(r.depth-1)*18}px">${IC.folder}<span class="fr-nm">${q?r.path:r.name}</span>${isCur?'<span class="cnt">현재 위치</span>':blocked?'<span class="cnt">이동 불가</span>':''}</div>`;
-  }).join('')||`<div style="padding:16px;font-size:12.5px;color:var(--text-3)">${q?'검색 결과가 없어요 — 다른 이름으로 검색해보세요':'아직 만들어 둔 폴더가 없어요'}</div>`;
+   return `<div class="fr-item ${sel===r.k?'on':''} ${isCur?'fm-cur':''} ${blocked?'fm-dis':''}" data-fm="${r.k}" ${blocked?'data-fm-dis="1"':''} role="button" tabindex="${blocked?-1:0}" aria-disabled="${isCur||blocked?'true':'false'}" style="padding-left:${q?8:8+(r.depth-1)*16}px">${IC.folder}<span class="fr-nm">${q?r.path:r.name}</span>${isCur?'<span class="cnt">현재 위치</span>':blocked?'<span class="cnt">이동 불가</span>':''}</div>`;
+  }).join('')||`<div style="padding:16px;font-size:13px;color:var(--text-3)">${q?'검색 결과가 없어요 — 다른 이름으로 검색해보세요':'아직 만들어 둔 폴더가 없어요'}</div>`;
   const pick=el=>{if(el.dataset.fm===curKey||el.dataset.fmDis)return;sel=el.dataset.fm;draw();};
   ov.querySelector('#fm-tree').querySelectorAll('[data-fm]').forEach(el=>{
    el.onclick=()=>pick(el);
@@ -2393,14 +2403,14 @@ function renderMyPage(root){
    </div>
    <div class="set-card"><h3>구독 플랜 ${SUB.cancelled?'<span class="badge badge-amber">해지 예약됨</span>':`<span class="badge badge-blue">${pnm}</span>`}</h3>
     <div class="set-row"><span class="lbl">현재 플랜</span><span class="val"><b style="font-size:16px">${pnm}</b><span class="num">${ppr}<span style="font-size:12px;color:var(--text-3)"> /월 (VAT 별도)</span></span></span><button class="btn btn-sm btn-tonal" id="mp-plan">플랜 변경</button></div>
-    <div class="set-row"><span class="lbl">화면 사용량</span><span class="val"><span class="usage-bar"><i style="width:62%"></i></span><span class="num" style="font-size:12.5px">31 / 50대</span></span></div>
-    <div class="set-row"><span class="lbl">스토리지</span><span class="val"><span class="usage-bar"><i style="width:6%"></i></span><span class="num" style="font-size:12.5px">6.2 / 100GB</span></span></div>
+    <div class="set-row"><span class="lbl">화면 사용량</span><span class="val"><span class="usage-bar"><i style="width:62%"></i></span><span class="num" style="font-size:13px">31 / 50대</span></span></div>
+    <div class="set-row"><span class="lbl">스토리지</span><span class="val"><span class="usage-bar"><i style="width:6%"></i></span><span class="num" style="font-size:13px">6.2 / 100GB</span></span></div>
     <div class="set-row"><span class="lbl">다음 결제</span><span class="val">${SUB.cancelled?`<span style="color:var(--amber)">결제 없음 — ${SUB.nextBill}까지 이용 가능</span>`:`<span class="num">${SUB.nextBill}</span><span style="font-size:12px;color:var(--text-3);font-weight:500">${ppr} 자동 결제</span>`}</span></div>
     <div class="set-row"><span class="lbl">결제 수단</span><span class="val">💳 ${SUB.card}</span><button class="btn btn-sm" id="mp-card">변경</button></div>
    </div>
    <div class="set-card"><h3>결제 내역</h3>
     <div class="ptable-wrap" style="border:0"><table class="grid" style="min-width:0"><thead><tr><th>결제일</th><th>내용</th><th style="text-align:right">금액</th><th>상태</th><th></th></tr></thead><tbody>
-    ${PAYMENTS.map(([d,t,a])=>`<tr><td class="num" style="font-size:12.5px">${d}</td><td style="font-size:13px">${t}</td><td class="num" style="text-align:right;font-weight:700">${a}</td><td><span class="badge badge-green">결제 완료</span></td><td><button class="icon-btn" data-receipt aria-label="영수증"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg></button></td></tr>`).join('')}
+    ${PAYMENTS.map(([d,t,a])=>`<tr><td class="num" style="font-size:13px">${d}</td><td style="font-size:13px">${t}</td><td class="num" style="text-align:right;font-weight:700">${a}</td><td><span class="badge badge-green">결제 완료</span></td><td><button class="icon-btn" data-receipt aria-label="영수증"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg></button></td></tr>`).join('')}
     </tbody></table></div>
    </div>
    <div class="set-card danger-zone"><h3 style="color:var(--red)">구독 해지</h3>
@@ -2510,7 +2520,7 @@ let TICKETS=[
 function renderSupportPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.support.t')}</h1><span class="desc">${t('page.support.d')}</span>
-   <div class="seg" style="margin-left:10px"><button class="${supTab==='new'?'on':''}" data-sp="new">문의 등록</button><button class="${supTab==='list'?'on':''}" data-sp="list">문의 내역 <span class="badge badge-blue" style="height:17px;font-size:10px">${TICKETS.length}</span></button></div>
+   <div class="seg" style="margin-left:10px"><button class="${supTab==='new'?'on':''}" data-sp="new">문의 등록</button><button class="${supTab==='list'?'on':''}" data-sp="list">문의 내역 <span class="badge badge-blue" style="height:17px;font-size:12px">${TICKETS.length}</span></button></div>
   </header>
   <div class="content-scroll" style="padding-top:16px" id="sup-body"></div>`;
  root.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{supTab=b.dataset.sp;renderSupportPage(root)});
@@ -2560,9 +2570,9 @@ function renderSupportPage(root){
    <th>상태</th><th>유형</th><th>제목</th><th>등록일</th><th style="width:40px"></th></tr></thead><tbody>
    ${TICKETS.map(t=>`<tr data-tk="${t.id}" style="cursor:pointer">
     <td><span class="badge ${TK_ST[t.status][1]}">${TK_ST[t.status][0]}</span></td>
-    <td style="font-size:12.5px;color:var(--text-2)">${t.type}</td>
-    <td><b style="font-size:13.5px">${t.title}</b>${t.files.length?` <span style="font-size:11.5px;color:var(--text-3)">📎${t.files.length}</span>`:''}</td>
-    <td class="num" style="font-size:12.5px;color:var(--text-3)">2026.${t.date}</td>
+    <td style="font-size:13px;color:var(--text-2)">${t.type}</td>
+    <td><b style="font-size:14px">${t.title}</b>${t.files.length?` <span style="font-size:12px;color:var(--text-3)">📎${t.files.length}</span>`:''}</td>
+    <td class="num" style="font-size:13px;color:var(--text-3)">2026.${t.date}</td>
     <td><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></td></tr>`).join('')}
   </tbody></table></div>`;
   body.querySelectorAll('[data-tk]').forEach(tr=>tr.onclick=()=>openTicketDrawer(TICKETS.find(t=>t.id===tr.dataset.tk)));

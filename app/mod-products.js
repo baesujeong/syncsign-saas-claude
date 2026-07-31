@@ -525,7 +525,7 @@ function openPicker({mode='manual',addTo=false}={}){
   <div class="modal-head"><div><h2>메뉴판에 넣을 상품 선택</h2><div class="sub">상품 정보가 바뀌면 메뉴판에도 자동으로 반영돼요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="picker-mode"><div class="mode-cards">
    <button class="mode-card ${mode==='manual'?'on':''}" data-mode="manual"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span><span><b>직접 선택</b><p>원하는 상품만 골라 메뉴판을 구성해요.</p></span></button>
-   <button class="mode-card ${mode==='category'?'on':''}" data-mode="category"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1a3 3 0 0 1 4.9 2.3V19a3 3 0 0 1-4.9 2.3M7 2.1A3 3 0 0 0 2.1 4.4V19A3 3 0 0 0 7 21.3"/><path d="M12 8v8m-4-4h8"/></svg></span><span><b>카테고리 연동 <span class="badge badge-blue" style="height:17px;font-size:10px">자동 업데이트</span></b><p>카테고리에 상품을 추가하면 메뉴판도 자동으로 늘어나요.</p></span></button>
+   <button class="mode-card ${mode==='category'?'on':''}" data-mode="category"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1a3 3 0 0 1 4.9 2.3V19a3 3 0 0 1-4.9 2.3M7 2.1A3 3 0 0 0 2.1 4.4V19A3 3 0 0 0 7 21.3"/><path d="M12 8v8m-4-4h8"/></svg></span><span><b>카테고리 연동 <span class="badge badge-blue" style="height:17px;font-size:12px">자동 업데이트</span></b><p>카테고리에 상품을 추가하면 메뉴판도 자동으로 늘어나요.</p></span></button>
   </div></div>
   <div class="picker-main" id="pk-main"></div>
   <div class="modal-foot" style="border-top:1px solid var(--border)">
@@ -541,7 +541,7 @@ function openPicker({mode='manual',addTo=false}={}){
    <div class="picker-body">
     <div class="picker-tools">
      <div class="search-wrap" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input input-sm" id="pk-q" placeholder="상품명 검색" value="${pq}"></div>
-     <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-2);cursor:pointer"><span class="checkbox ${saleOnly?'on':''}" id="pk-sale">${IC.check}</span>판매중만</label>
+     <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2);cursor:pointer"><span class="checkbox ${saleOnly?'on':''}" id="pk-sale">${IC.check}</span>판매중만</label>
      <button class="btn btn-sm" id="pk-all">현재 목록 전체 선택</button>
     </div>
     <div class="picker-grid" id="pk-grid"></div>
@@ -830,7 +830,7 @@ function widgetInnerHtml(o){
  return'';
 }
 function menuInnerHtml(){
- if(!widget)return `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#8B94A5;font-size:12.5px">메뉴 위젯을 설정해주세요</div>`;
+ if(!widget)return `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#8B94A5;font-size:13px">메뉴 위젯을 설정해주세요</div>`;
  const ids=widgetItemIds();
  const s=widget.show;
  const item=p=>{
@@ -1179,7 +1179,7 @@ function renderGraphicLib(el){
   <div class="ed-panel-body">
    <div class="search-wrap" style="margin-bottom:10px">${IC.search}<input class="input input-sm" id="glib-q" placeholder="${gLibTab==='content'?'콘텐츠 검색':'재생목록 검색'}" value="${gLibQ}"></div>
    <div id="glib-list" style="display:flex;flex-direction:column;gap:8px"></div>
-   <p style="font-size:11.5px;color:var(--text-3);margin:10px 0 0;line-height:1.5">클릭하면 캔버스 가운데에 추가되고, 끌어다 놓으면 원하는 위치에 바로 배치돼요.</p>
+   <p style="font-size:12px;color:var(--text-3);margin:10px 0 0;line-height:1.5">클릭하면 캔버스 가운데에 추가되고, 끌어다 놓으면 원하는 위치에 바로 배치돼요.</p>
   </div>`;
  el.querySelector('#glib-q').addEventListener('input',e=>{gLibQ=e.target.value.trim();drawGlibList()});
  el.querySelectorAll('[data-glt]').forEach(b=>b.onclick=()=>{gLibTab=b.dataset.glt;renderGraphicLib(el)});
@@ -1245,7 +1245,7 @@ function drawWgBody(body,hasMenu){
  }else{
   const DEFS=wgTab==='call'?CALL_STYLES:wgTab==='weather'?WEATHER_STYLES:NEWS_STYLES;
   const label=wgTab==='call'?'대기·호출 위젯':wgTab==='weather'?'날씨 위젯':'뉴스 위젯';
-  body.innerHTML=`<p style="font-size:12.5px;color:var(--text-2);margin:0 0 12px;line-height:1.6">${wgTab==='call'?'번호 호출 시스템과 연동되는 위젯이에요. 스타일을 골라 캔버스에 추가해보세요.':wgTab==='weather'?'선택한 지역의 날씨 정보를 보여주는 위젯이에요.':'실시간 뉴스 헤드라인을 보여주는 위젯이에요.'}</p>
+  body.innerHTML=`<p style="font-size:13px;color:var(--text-2);margin:0 0 12px;line-height:1.6">${wgTab==='call'?'번호 호출 시스템과 연동되는 위젯이에요. 스타일을 골라 캔버스에 추가해보세요.':wgTab==='weather'?'선택한 지역의 날씨 정보를 보여주는 위젯이에요.':'실시간 뉴스 헤드라인을 보여주는 위젯이에요.'}</p>
    <div style="display:flex;flex-direction:column;gap:10px">
    ${DEFS.map(d=>`<button class="wlib-card" style="margin:0" data-wgadd="${d.id}"><div class="prev" style="height:96px;background:#1B212B">${widgetInnerHtml({kind:wgTab,styleId:d.id,region:'서울'})}</div><div class="cap"><b>${label} · ${d.name}</b></div></button>`).join('')}
    </div>`;
@@ -1404,7 +1404,7 @@ function renderTypeProps(o,el){
   el.innerHTML=`<div class="ed-sec open"><button class="ed-sec-head" data-acc>스타일<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
    <div class="ed-sec-body"><div style="display:flex;flex-direction:column;gap:8px">
    ${DEFS.map(d=>`<button class="layout-card ${o.styleId===d.id?'on':''}" style="flex-direction:row;align-items:center;gap:10px;padding:8px 10px" data-wstyle="${d.id}">
-    <span class="lc-prev" style="width:56px;height:36px;flex:none;background:#1B212B;overflow:hidden">${widgetInnerHtml({kind:o.kind,styleId:d.id,region:o.region})}</span><b style="font-size:12.5px">${d.name}</b></button>`).join('')}
+    <span class="lc-prev" style="width:56px;height:36px;flex:none;background:#1B212B;overflow:hidden">${widgetInnerHtml({kind:o.kind,styleId:d.id,region:o.region})}</span><b style="font-size:13px">${d.name}</b></button>`).join('')}
    </div>
    ${o.kind==='weather'?`
     <div class="ctl-row" style="margin-top:12px"><label>국가</label><select class="select select-sm" id="wg-country">${Object.keys(WEATHER_REGIONS).map(c=>`<option ${o.country===c?'selected':''}>${c}</option>`).join('')}</select></div>
@@ -1523,7 +1523,7 @@ function drawSettings(){
    <span class="grip">${IC.grip}</span><span class="th" style="${thumbStyle(p)}">${mimg(p).e}</span>
    <span class="tx"><span class="nm">${p.name}${p.status==='soldout'?'<span class="badge badge-red">품절</span>':''}${p.discount?'<span class="badge badge-blue">할인</span>':''}</span><span class="pr num">${money(p.discount||p.price,p.cur)}</span></span>
    <button class="icon-btn rm" data-plrm="${id}" aria-label="${p.name} 빼기">${IC.x}</button></div>`}).join('')
-  ||'<div style="font-size:12.5px;color:var(--text-3);text-align:center;padding:14px 0">표시할 상품이 없어요</div>';
+  ||'<div style="font-size:13px;color:var(--text-3);text-align:center;padding:14px 0">표시할 상품이 없어요</div>';
  list.querySelectorAll('[data-plrm]').forEach(b=>b.onclick=()=>{
   const id=b.dataset.plrm;
   if(widget.mode==='category')widget.excluded.push(id);

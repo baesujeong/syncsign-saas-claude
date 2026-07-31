@@ -290,7 +290,7 @@ function renderRail(){
   <div class="store-list">${stores.slice(0,60).map(s=>{
    const ps=panelsOf(s.id);const bad=ps.some(p=>p.status!=='on');
    return `<button class="store-row ${flt.store===s.id?'on':''}" data-store="${s.id}"><span class="dot ${bad?'err':'on'}" style="width:6px;height:6px"></span>${s.name}<span class="cnt num">${ps.length}</span></button>`}).join('')}
-   ${stores.length>60?`<div style="font-size:11px;color:var(--text-3);padding:5px 10px">외 ${stores.length-60}개 매장 — 검색으로 찾기</div>`:''}
+   ${stores.length>60?`<div style="font-size:12px;color:var(--text-3);padding:4px 10px">외 ${stores.length-60}개 매장 — 검색으로 찾기</div>`:''}
   </div></div>`;
  }).join('');
  $$('[data-region]').forEach(b=>b.onclick=()=>b.classList.toggle('open'));
@@ -522,7 +522,7 @@ function openStbModal(p,reconnect){
     <div class="sync-note" style="margin-bottom:14px">${IC.info}<span>셋탑을 교체했거나 네트워크를 다시 설정했다면 새 셋탑의 <b>6자리 연결 코드</b>로 재연결하세요. 기존 일정과 태그는 그대로 유지돼요.</span></div>`
    :`<div class="sync-note" style="margin-bottom:14px">${STB_IC(14)}<span><b>연결 코드 확인 방법</b><br>① 셋탑박스를 TV(화면)에 연결 ② 전원 켜기 ③ 화면에 표시되는 <b>6자리 연결 코드</b>를 아래에 입력하세요.</span></div>`}
    <div class="f-row"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F8-2KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px"></div>
-   ${p.stb?`<button class="lnk" id="stb-detach" style="color:var(--red);font-weight:600;font-size:12.5px;cursor:pointer;background:none;border:0;padding:0">셋탑 연결 해제 — 화면을 '미연결' 상태로 전환</button>`:''}
+   ${p.stb?`<button class="lnk" id="stb-detach" style="color:var(--red);font-weight:600;font-size:13px;cursor:pointer;background:none;border:0;padding:0">셋탑 연결 해제 — 화면을 '미연결' 상태로 전환</button>`:''}
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="stb-ok">${p.stb?'재연결':'연결'}</button></div>`,
  {width:'440px',onMount:ov=>{
@@ -683,7 +683,7 @@ function openPanelDrawer(p,tab='overview'){
      <dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd>
     </dl></div>
    <div class="dsec"><h3>셋탑 관리</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm" id="if-stb-info">연결 코드 확인</button><button class="btn btn-sm" id="if-stb-re">${STB_IC(13)}셋탑 재연결</button>`:`<button class="btn btn-sm btn-primary" id="if-stb-connect">${STB_IC(13)}셋탑 연결하기</button>`}</div></div>
-   <div class="dsec"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3><div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:12.5px;color:var(--text-3)">지정된 태그가 없어요 — <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>
+   <div class="dsec"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3><div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요 — <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>
    <div class="dsec danger-sec"><h3>위험 작업</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm btn-danger-t" id="if-stb-detach">셋탑 연결 해제</button>`:''}<button class="btn btn-sm btn-danger-t" id="if-del">${IC.x}화면 삭제</button></div>
     <p class="dsec-note">${p.stb?'연결 해제 시 화면 정보·일정·태그는 유지되고 다른 셋탑으로 다시 연결할 수 있어요. ':''}삭제하면 편성 일정도 함께 삭제되니 주의하세요.</p></div>`;
    const _si=body.querySelector('#if-stb-info');if(_si)_si.onclick=()=>{wrap.remove();openStbInfo(p)};
@@ -710,7 +710,7 @@ function openWallDrawer(w){
   <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
   <div class="drawer-body">
    <div class="dpreview" style="background:#0B0E13">
-    ${wallCellsHtml(w,t=>{const p=panelOf(t.p);const tc=wallTileContent(w,t);return `<div style="background:${tc.g};border-radius:5px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:9px;color:rgba(255,255,255,.75);font-weight:700">${p?p.name:'빈 칸'}</span><span class="dot ${p&&p.status==='on'?'on':'err'}" style="position:absolute;right:6px;top:6px"></span></div>`},'4px')}
+    ${wallCellsHtml(w,t=>{const p=panelOf(t.p);const tc=wallTileContent(w,t);return `<div style="background:${tc.g};border-radius:5px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:12px;color:rgba(255,255,255,.75);font-weight:700">${p?p.name:'빈 칸'}</span><span class="dot ${p&&p.status==='on'?'on':'err'}" style="position:absolute;right:6px;top:6px"></span></div>`},'4px')}
    </div>
    <div class="sync-note">${IC.info}<span><b>일정은 비디오월 단위, 콘텐츠는 화면별</b>로 편성돼요. 각 화면은 자기 타일 영역만 재생하고, 프레임은 자동으로 동기화돼요.</span></div>
    <dl class="kv">
@@ -753,7 +753,7 @@ const periodField=(sd,ed,noEnd,pfx)=>`
    ${IC.cal}<span class="num">${fmtDot(sd)}</span><span style="color:var(--text-3)">–</span>
    ${noEnd?'<span style="color:var(--text-2);font-weight:600">무기한</span>':ed?`<span class="num">${fmtDot(ed)}</span>`:'<span style="color:var(--text-3)">종료일 선택</span>'}
   </button>
-  <label style="display:flex;gap:7px;align-items:center;font-size:12.5px;color:var(--text-2);margin:10px 0 0;cursor:pointer"><span class="checkbox ${noEnd?'on':''}" id="${pfx}-noend" role="checkbox" aria-checked="${noEnd}" tabindex="0">${IC.check}</span>종료일 없음 (무기한 송출)</label></div>`;
+  <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-2);margin:10px 0 0;cursor:pointer"><span class="checkbox ${noEnd?'on':''}" id="${pfx}-noend" role="checkbox" aria-checked="${noEnd}" tabindex="0">${IC.check}</span>종료일 없음 (무기한 송출)</label></div>`;
 /* 기간 필드 이벤트 바인딩 */
 const bindPeriod=(root,pfx,st,redraw)=>{
  root.querySelector(`#${pfx}-range`).onclick=e=>openRangePicker(e.currentTarget,st,redraw);
@@ -992,7 +992,7 @@ function openAssetPicker(current,onPick){
   const totalN=tab==='lib'?A.lib.filter(c=>!c.error).length:tab==='tpl'?A.tpls.length:A.pls.length;
   wrap.querySelector('#apk-folders').innerHTML=
    `<div class="fr-item ${folder==='all'?'on':''}" data-apkf="all" role="button" tabindex="0">${IC.folder}<span class="fr-nm">전체</span><span class="cnt num">${totalN}</span></div>`
-   +(A.fFlat?A.fFlat(fs).map(({f,depth})=>`<div class="fr-item ${folder===f.id?'on':''}" data-apkf="${f.id}" role="button" tabindex="0" style="padding-left:${9+(depth-1)*15}px">${IC.folder}<span class="fr-nm">${f.name}</span><span class="cnt num">${countIn(f.id)}</span></div>`).join(''):'')
+   +(A.fFlat?A.fFlat(fs).map(({f,depth})=>`<div class="fr-item ${folder===f.id?'on':''}" data-apkf="${f.id}" role="button" tabindex="0" style="padding-left:${8+(depth-1)*16}px">${IC.folder}<span class="fr-nm">${f.name}</span><span class="cnt num">${countIn(f.id)}</span></div>`).join(''):'')
    +(tab==='tpl'?`<div class="fr-item ${folder==='__shared__'?'on':''}" data-apkf="__shared__" role="button" tabindex="0" style="margin-top:6px;border-top:1px solid var(--border);padding-top:8px">${IC.starO}<span class="fr-nm">공유 템플릿</span><span class="cnt num">${A.gals.length}</span></div>`:'');
   const typEl=wrap.querySelector('#apk-type');
   typEl.innerHTML=tab==='lib'?[['all','전체'],['image','이미지'],['video','동영상'],['url','웹 URL']].map(([k,l])=>`<button class="chip ${typ===k?'on':''}" data-apkty="${k}">${l}</button>`).join(''):'';
@@ -1066,7 +1066,7 @@ function openSide(cfg){
     ${wallTilesW.map(t=>{const p=panelOf(t.p);const ref=sel.contentMap[t.p];const a=ref?contentOf(ref):null;
      return `<div class="scp-row ${a?'on':''}" data-wcp="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'var(--sunken)'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'} <span style="font-weight:500;color:var(--text-3)">· ${t.w}×${t.h}</span></b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')}
     </div>
-    <p style="font-size:11.5px;color:var(--text-3);margin:7px 0 0;line-height:1.5">일정(요일·시간)은 비디오월 전체에 하나로 적용되고, 콘텐츠는 화면마다 다르게 지정할 수 있어요.</p></div>`
+    <p style="font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.5">일정(요일·시간)은 비디오월 전체에 하나로 적용되고, 콘텐츠는 화면마다 다르게 지정할 수 있어요.</p></div>`
   :`
    <div class="f-row"><label>콘텐츠</label>
     ${cur?`<div class="scp-row on" style="width:100%;cursor:default"><span class="cthumb" style="background:${cur.g};flex:none">${cur.e}</span><span class="tx" style="flex:1;min-width:0"><b>${cur.name}</b><span>${kindL}</span></span><button class="btn btn-sm" id="cp-change">변경</button></div>`
@@ -1085,7 +1085,7 @@ function openSide(cfg){
    ${scWall?`<div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요 — 같은 시간의 일반 일정보다 먼저 재생됩니다.</span></div>`
    :`<div class="f-row"><label>유형 ${IC.info}</label>
     <div class="seg" style="width:100%"><button class="${sel.type==='normal'?'on':''}" data-ty="normal" style="flex:1">일반</button><button class="${sel.type==='urgent'?'on':''}" data-ty="urgent" style="flex:1">긴급 (즉시 교체)</button></div>
-    ${sel.type==='urgent'?'<p style="font-size:12px;color:var(--amber);margin:7px 0 0">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>`}
+    ${sel.type==='urgent'?'<p style="font-size:12px;color:var(--amber);margin:8px 0 0">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>`}
    ${cfg.edit?`<div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-sm" id="side-copy" style="flex:1">다음 날로 복사</button><button class="btn btn-sm btn-danger-t" id="side-del" style="flex:1">삭제</button></div>`:''}
    <div id="conflict-area"></div>`;
   const _pk=body.querySelector('#cp-pick')||body.querySelector('#cp-change');
@@ -1165,7 +1165,7 @@ function openShareModal(followerIds){
  const ov=openModal(`
   <div class="modal-head"><div><h2>일정 따라가기 설정</h2><div class="sub">기준 화면 하나의 일정을 여러 화면이 그대로 따라가요. 기준을 바꾸면 모두 함께 바뀌어요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
-   <div style="display:flex;align-items:center;gap:12px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px 16px;margin-bottom:16px">
+   <div style="display:flex;align-items:center;gap:12px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px">
     <span class="badge badge-violet" style="height:26px">${IC.link}기준 화면</span>
     <svg width="26" height="14" viewBox="0 0 26 14" fill="none" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20m0 0-5-5m5 5-5 5"/></svg>
     <span class="badge badge-blue" style="height:26px">따라가는 화면 <b id="sh-cnt">${fset.size}</b>개</span>
@@ -1175,7 +1175,7 @@ function openShareModal(followerIds){
    <div class="f-row"><label>② 따라갈 화면 <span style="font-weight:500;color:var(--text-3)">— 화면 관리에서 선택한 ${fmt(fset.size)}개</span></label>
     <div class="tag-row" id="sh-followers"></div></div>
   </div>
-  <div class="modal-foot"><span style="font-size:12.5px;color:var(--text-2)" id="sh-summary"></span><span class="grow"></span>
+  <div class="modal-foot"><span style="font-size:13px;color:var(--text-2)" id="sh-summary"></span><span class="grow"></span>
    <button class="btn" data-close>취소</button><button class="btn btn-primary" id="sh-ok">적용</button></div>`,
  {width:'560px'});
  const draw=()=>{
@@ -1186,7 +1186,7 @@ function openShareModal(followerIds){
    </button>`).join('');
   ov.querySelectorAll('[data-shm]').forEach(b=>b.onclick=()=>{masterId=b.dataset.shm;fset.delete(masterId);draw()});
   ov.querySelector('#sh-followers').innerHTML=[...fset].slice(0,12).map(id=>{const p=panelOf(id);
-   return `<span class="chip on">${p.name} · ${storeOf(p.store).name}<button data-shrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button></span>`}).join('')+(fset.size>12?`<span class="chip">+${fset.size-12}개</span>`:'')||'<span style="font-size:12.5px;color:var(--text-3)">화면 관리 목록에서 화면을 선택한 뒤 다시 열어주세요</span>';
+   return `<span class="chip on">${p.name} · ${storeOf(p.store).name}<button data-shrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button></span>`}).join('')+(fset.size>12?`<span class="chip">+${fset.size-12}개</span>`:'')||'<span style="font-size:13px;color:var(--text-3)">화면 관리 목록에서 화면을 선택한 뒤 다시 열어주세요</span>';
   ov.querySelectorAll('[data-shrm]').forEach(b=>b.onclick=()=>{fset.delete(b.dataset.shrm);draw()});
   ov.querySelector('#sh-cnt').textContent=fset.size;
   const m=masterId?panelOf(masterId):null;
@@ -1320,7 +1320,7 @@ function openWallWizard(existing,opts={}){
     </div>
     ${MY_WALL_LAYOUTS.length?`<div class="scp-sec" style="padding-left:2px;margin-top:16px">내 레이아웃 — 저장해 둔 배치 재사용</div>
     <div class="layout-cards">${MY_WALL_LAYOUTS.map(L=>`
-      <button class="layout-card" data-mylayout="${L.id}" style="position:relative"><span class="lc-prev" style="grid-template-columns:repeat(${L.gw},1fr);grid-template-rows:repeat(${L.gh},1fr)">${L.tiles.map(([x,y,w,h])=>`<i style="grid-column:${x+1}/span ${w};grid-row:${y+1}/span ${h}"></i>`).join('')}</span><b>${L.name}</b><span>${L.tiles.length}칸 · ${L.gw}×${L.gh}</span><span class="lnk" data-mydel="${L.id}" style="position:absolute;right:10px;top:8px;font-size:11px">삭제</span></button>`).join('')}</div>`:''}
+      <button class="layout-card" data-mylayout="${L.id}" style="position:relative"><span class="lc-prev" style="grid-template-columns:repeat(${L.gw},1fr);grid-template-rows:repeat(${L.gh},1fr)">${L.tiles.map(([x,y,w,h])=>`<i style="grid-column:${x+1}/span ${w};grid-row:${y+1}/span ${h}"></i>`).join('')}</span><b>${L.name}</b><span>${L.tiles.length}칸 · ${L.gw}×${L.gh}</span><span class="lnk" data-mydel="${L.id}" style="position:absolute;right:10px;top:8px;font-size:12px">삭제</span></button>`).join('')}</div>`:''}
     <div class="sync-note" style="margin-top:16px">${IC.info}<span>매장마다 설치 환경이 달라도 괜찮아요. 캔버스에서 <b>칸 추가·삭제·이동·크기 변경(1×1~2×2)</b>이 자유롭고, 최대 ${GMAX}×${GMAX}까지 구성할 수 있어요.</span></div></div>`;
    body.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.preset;
@@ -1348,11 +1348,11 @@ function openWallWizard(existing,opts={}){
      <div class="pool-list">${pool.map(p=>{const used=tiles.some(t=>t.p===p.id);
       return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'err'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||'<div style="padding:14px;font-size:12px;color:var(--text-3)">이 매장에 배치 가능한 화면이 없어요 — 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요</div>'}</div>
      <button class="btn btn-sm" id="wb-auto">남은 화면 자동 배치</button>
-     <p style="font-size:11.5px;color:var(--text-3);margin:0;line-height:1.5">① 화면을 캔버스로 끌어다 놓거나, 빈 칸(＋)을 눌러 자리부터 잡아도 돼요.<br>② 타일을 클릭하면 크기 변경·제거, 끌면 위치 이동·맞바꾸기가 돼요.</p>
+     <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5">① 화면을 캔버스로 끌어다 놓거나, 빈 칸(＋)을 눌러 자리부터 잡아도 돼요.<br>② 타일을 클릭하면 크기 변경·제거, 끌면 위치 이동·맞바꾸기가 돼요.</p>
     </div>
     <div class="wb-grid-wrap">
      <div class="vwb-toolbar">
-      <span style="font-size:12.5px;font-weight:600;color:var(--text-2)">캔버스</span>
+      <span style="font-size:13px;font-weight:600;color:var(--text-2)">캔버스</span>
       <div class="seg"><button data-cv="gw-" aria-label="열 줄이기">−</button><button disabled style="opacity:1;color:var(--text)">${gw}열</button><button data-cv="gw+" aria-label="열 늘리기">＋</button></div>
       <div class="seg"><button data-cv="gh-" aria-label="행 줄이기">−</button><button disabled style="opacity:1;color:var(--text)">${gh}행</button><button data-cv="gh+" aria-label="행 늘리기">＋</button></div>
       <div class="seg" id="wz-orient"><button data-o="가로형" class="${orient==='가로형'?'on':''}">가로형</button><button data-o="세로형" class="${orient==='세로형'?'on':''}">세로형</button></div>
@@ -1382,7 +1382,7 @@ function openWallWizard(existing,opts={}){
       <dt>캔버스</dt><dd class="num">${gw}×${gh} · ${orient}</dd>
       <dt>해상도</dt><dd>${res}</dd>
      </dl>
-     <div class="sync-note" style="margin-top:10px;font-size:11.5px">${IC.info}<span>만든 뒤 [일정 편집]에서 <b>일정은 비디오월 단위</b>로, <b>콘텐츠는 화면별</b>로 지정할 수 있어요.</span></div>
+     <div class="sync-note" style="margin-top:10px;font-size:12px">${IC.info}<span>만든 뒤 [일정 편집]에서 <b>일정은 비디오월 단위</b>로, <b>콘텐츠는 화면별</b>로 지정할 수 있어요.</span></div>
     </div></div>`;
    /* 캔버스 실측 사이징 — 그리드는 콘텐츠 크기가 없으면 붕괴하므로, 스테이지 크기에 맞춰
       비율(가로형 16:9 유닛 / 세로형 9:16 유닛)을 유지한 실제 px 크기를 계산해 지정 */
@@ -1480,16 +1480,16 @@ function openWallWizard(existing,opts={}){
    const times=[];for(let h=7;h<=23;h+=.5)times.push(h);
    body.innerHTML=`<div class="wall-build" style="align-items:stretch">
     <div class="rail-main std" style="flex:1.25;min-width:0">
-     <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:13.5px">화면별 콘텐츠</b><span style="font-size:12px;color:var(--text-3)">${an} / ${placed.length} 지정</span><span class="spacer"></span><button class="btn btn-sm" id="w3-fill" ${placed.length?'':'disabled'}>전체 같은 콘텐츠</button></div>
+     <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">화면별 콘텐츠</b><span style="font-size:12px;color:var(--text-3)">${an} / ${placed.length} 지정</span><span class="spacer"></span><button class="btn btn-sm" id="w3-fill" ${placed.length?'':'disabled'}>전체 같은 콘텐츠</button></div>
      <div class="content-scroll" style="padding:10px;display:flex;flex-direction:column;gap:2px">
       ${placed.map(t=>{const p=panelOf(t.p);const ref=cm[t.p];const a=ref?contentOf(ref):null;
        return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'var(--sunken)'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'} <span style="font-weight:500;color:var(--text-3)">· ${t.w}×${t.h}</span></b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요</span></div>'}
-      <p style="font-size:11.5px;color:var(--text-3);margin:8px 4px 0;line-height:1.5">화면마다 서로 다른 콘텐츠를 지정할 수 있어요. 지정하지 않은 화면은 검은 화면으로 대기해요.</p>
+      <p style="font-size:12px;color:var(--text-3);margin:8px 4px 0;line-height:1.5">화면마다 서로 다른 콘텐츠를 지정할 수 있어요. 지정하지 않은 화면은 검은 화면으로 대기해요.</p>
      </div>
     </div>
     <div class="vwb-side plain" style="width:340px;overflow-y:auto">
      <div class="rail-main std" style="flex:none">
-      <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:13.5px">일정 설정</b><span style="font-size:12px;color:var(--text-3)">비디오월 전체에 하나로 적용</span></div>
+      <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">일정 설정</b><span style="font-size:12px;color:var(--text-3)">비디오월 전체에 하나로 적용</span></div>
       <div style="padding:14px 16px;display:flex;flex-direction:column;gap:20px">
        ${periodField(scPd.sd,scPd.ed,scPd.noEnd,'w3')}
        <div class="f-row" style="margin:0"><label>송출 시간</label><div class="time-row">
@@ -1497,14 +1497,14 @@ function openWallWizard(existing,opts={}){
         <span style="color:var(--text-3)">–</span>
         <select class="select select-sm" id="w3-e" aria-label="종료 시간">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===scE?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
        <div class="f-row" style="margin:0"><label>반복 주기</label><div class="day-chips">${['월','화','수','목','금','토','일'].map((d,i)=>`<button class="day-chip ${scDays.includes(i)?'on':''}" data-w3d="${i}">${d}</button>`).join('')}</div></div>
-       <div class="sync-note" style="margin:0;font-size:11.5px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요 — 같은 시간의 일반 일정보다 먼저 재생됩니다.</span></div>
+       <div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요 — 같은 시간의 일반 일정보다 먼저 재생됩니다.</span></div>
       </div>
      </div>
      <div class="scp-sec" style="padding:12px 2px 4px">미리보기</div>
      <div style="display:grid;grid-template-columns:repeat(${gw},1fr);grid-template-rows:repeat(${gh},1fr);gap:2px;aspect-ratio:${orient==='세로형'?gw*9+'/'+gh*16:gw*16+'/'+gh*9};background:#0B0E13;padding:6px;border-radius:8px;max-height:170px;width:100%">
       ${tiles.map(t=>{const a=t.p&&cm[t.p]?contentOf(cm[t.p]):null;return `<div style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h};background:${a?a.g:t.p?'#2A3B52':'transparent'};border:${t.p?'1px solid rgba(255,255,255,.15)':'1px dashed #39424F'};border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px">${a?a.e:''}</div>`}).join('')}
      </div>
-     <div class="sync-note" style="margin-top:12px;font-size:11.5px">${IC.info}<span>[${existing?'저장':'비디오월 만들기'}]를 누르면 <b>비디오월 생성과 편성 등록이 한 번에</b> 완료돼요. 콘텐츠를 하나도 지정하지 않으면 레이아웃만 저장돼요.</span></div>
+     <div class="sync-note" style="margin-top:12px;font-size:12px">${IC.info}<span>[${existing?'저장':'비디오월 만들기'}]를 누르면 <b>비디오월 생성과 편성 등록이 한 번에</b> 완료돼요. 콘텐츠를 하나도 지정하지 않으면 레이아웃만 저장돼요.</span></div>
     </div></div>`;
    body.querySelectorAll('[data-w3c]').forEach(rowEl=>rowEl.onclick=()=>{
     const pid=rowEl.dataset.w3c;
