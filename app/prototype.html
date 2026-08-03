@@ -486,7 +486,7 @@ function renderResetEmail(email){
 }
 /* 관리자가 사용자를 초대했을 때 도착하는 초대 이메일 (미리보기)
    — renderResetEmail과 동일한 레이아웃·타이포·컬러 값을 사용해 메일 톤을 통일 */
-function renderInviteEmail({email,role='editor',scope='전체 매장',back}={}){
+function renderInviteEmail({email,role='editor',scope='전체 매장',expired=false,back}={}){
  const em=email||'you@company.com';
  const brand=(typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.brand)?PROFILE.brand:'우리 팀';
  const inviter=(typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name)?PROFILE.name:'관리자';
@@ -499,12 +499,13 @@ function renderInviteEmail({email,role='editor',scope='전체 매장',back}={}){
  s.innerHTML=`
   <div style="position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:12px 20px;background:#fff;border-bottom:1px solid #E5E7EB;z-index:2">
    <button id="ie-back" style="border:1px solid #D1D5DB;background:#fff;border-radius:8px;padding:8px 12px;font:600 13px/1 inherit;color:#374151;cursor:pointer">← 받은 편지함</button>
-   <span style="font-size:12px;color:#9CA3AF">프로토타입 미리보기 — 실제로는 초대받은 사용자 메일함에 도착하는 이메일이에요</span>
+   <span style="font-size:12px;color:#9CA3AF">프로토타입 미리보기 — 실제로는 초대받은 사용자 메일함에 도착하는 이메일이에요${expired?' · <b style="color:#A9763B">현재 링크 만료 상태</b>':''}</span>
+   <a id="ie-toggle" style="margin-left:auto;flex:none;font-size:12px;font-weight:600;color:#1367F4;cursor:pointer;white-space:nowrap">${expired?'유효한 링크로 보기':'만료된 링크로 보기'}</a>
   </div>
   <div style="max-width:600px;margin:40px auto 56px;padding:0 16px">
    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:48px 44px">
     <img src="../uploads/Logo-Horizontal-Light.svg" alt="syncsign" style="height:28px;width:auto;display:block;margin-bottom:40px">
-    <h1 style="margin:0 0 12px;font-size:32px;line-height:1.3;font-weight:800;color:#243859;letter-spacing:-0.02em;word-break:keep-all">${brand} 팀에 초대받았어요.</h1>
+    <h1 style="margin:0 0 12px;font-size:32px;line-height:1.3;font-weight:800;color:#243859;letter-spacing:-0.02em;word-break:keep-all">${brand} 팀에 초대되었어요.</h1>
     <p style="margin:0 0 24px;font-size:16px;line-height:1.75;color:#353D4A;word-break:keep-all"><b style="color:#243859">${inviter}</b>님이 <b style="color:#243859">${em}</b> 주소로 ${brand}의 Syncsign 워크스페이스에 초대했어요. 아래 버튼을 눌러 초대를 수락하고 계정을 만들어 주세요.</p>
     <div style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:12px;padding:14px 20px;margin:0 0 32px">
      ${row('역할',roleLabel)}
@@ -521,7 +522,26 @@ function renderInviteEmail({email,role='editor',scope='전체 매장',back}={}){
    </div>
   </div>`;
  $('#ie-back').onclick=()=>{s.hidden=true;if(back)back();else{$('#screen-auth').hidden=false;renderLogin(false)}};
- $('#ie-accept').onclick=()=>{s.hidden=true;$('#screen-auth').hidden=false;renderSignup()};
+ $('#ie-toggle').onclick=()=>renderInviteEmail({email:em,role,scope,expired:!expired,back});
+ $('#ie-accept').onclick=()=>{if(expired){renderInviteExpired();return}s.hidden=true;$('#screen-auth').hidden=false;renderSignup()};
+}
+/* 초대 링크 만료 안내 — 만료된 초대 메일의 [초대 수락하기]를 눌렀을 때 열리는 화면.
+   메일이 아니라 링크를 클릭해 도착하는 웹 화면이므로 인증 카드(#auth-card)를 사용 */
+function renderInviteExpired(){
+ $('#screen-auth').hidden=true;$('#screen-onboard').hidden=true;$('#app').hidden=true;
+ const s=$('#screen-email');s.hidden=false;s.scrollTop=0;
+ s.innerHTML=`
+  <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px 20px">
+   <div style="width:100%;max-width:460px;text-align:center">
+    <svg width="64" height="64" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 28px"><circle cx="24" cy="24" r="24" fill="#9AA3B2"/><rect x="22" y="11" width="4" height="17" rx="2" fill="#fff"/><circle cx="24" cy="34" r="3" fill="#fff"/></svg>
+    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.02em;word-break:keep-all">초대 링크가 만료되었습니다.</h1>
+    <p style="margin:0 0 32px;font-size:15px;line-height:1.6;color:var(--text-2);word-break:keep-all">관리자에게 다시 초대를 요청해주세요.</p>
+    <button class="btn btn-lg" id="ix-tologin" style="width:100%">로그인으로 돌아가기</button>
+    <div style="margin-top:14px;font-size:12px;color:var(--text-3)">프로토타입: <a id="ix-valid" style="color:var(--blue);font-weight:600;cursor:pointer">유효한 링크로 열기</a>를 눌러 정상 수락 화면을 확인할 수 있어요</div>
+   </div>
+  </div>`;
+ $('#ix-tologin').onclick=()=>{s.hidden=true;$('#screen-auth').hidden=false;renderLogin(false)};
+ $('#ix-valid').onclick=()=>{s.hidden=true;$('#screen-auth').hidden=false;renderSignup()};
 }
 function renderReset(){
  $('#auth-card').innerHTML=`
@@ -2797,6 +2817,7 @@ window.addEventListener('hashchange',()=>{if(!$('#app').hidden)window.__runDemo(
    if(h==='forgot'){renderForgot();return}
    if(h==='reset-email'){renderResetEmail();return}
    if(h==='invite-email'){renderInviteEmail();return}
+   if(h==='invite-expired'){renderInviteExpired();return}
    if(h==='reset'){renderReset();return}
    if(h==='onboarding'){session.first=true;startOnboard();return}
    enterApp(false);
