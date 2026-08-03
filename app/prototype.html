@@ -303,21 +303,20 @@ let uSeq=10;
 let USERS=[
  {id:'u1',name:'김민규',email:'mk.kim@greedish.com',role:'owner',scope:'전체 매장',status:'active',last:'방금 전',c:AV[0]},
  {id:'u2',name:'박서연',email:'sy.park@greedish.com',role:'admin',scope:'전체 매장',status:'active',last:'10분 전',c:AV[1]},
- {id:'u3',name:'이준호',email:'jh.lee@greedish.com',role:'editor',scope:'강남대로점',status:'active',last:'2시간 전',c:AV[2]},
- {id:'u4',name:'최다은',email:'de.choi@greedish.com',role:'editor',scope:'인천공항 1터미널',status:'invited',last:'—',c:AV[3]},
- {id:'u5',name:'정우성',email:'ws.jung@greedish.com',role:'editor',scope:'잠실롯데월드점',status:'inactive',last:'34일 전',c:AV[4]},
+ {id:'u3',name:'이준호',email:'jh.lee@greedish.com',role:'admin',scope:'강남대로점',status:'active',last:'2시간 전',c:AV[2]},
+ {id:'u4',name:'최다은',email:'de.choi@greedish.com',role:'admin',scope:'인천공항 1터미널',status:'invited',last:'—',c:AV[3]},
+ {id:'u5',name:'정우성',email:'ws.jung@greedish.com',role:'admin',scope:'잠실롯데월드점',status:'inactive',last:'34일 전',c:AV[4]},
  {id:'u6',name:'한지민',email:'jm.han@greedish.com',role:'viewer',scope:'부산 전체',status:'active',last:'1일 전',c:AV[5]},
  {id:'u7',name:'오세훈',email:'sh.oh@greedish.com',role:'viewer',scope:'서면점',status:'active',last:'3일 전',c:AV[6]},
- {id:'u8',name:'윤가영',email:'gy.yoon@greedish.com',role:'editor',scope:'홍대입구점',status:'invited',last:'—',c:AV[7]},
+ {id:'u8',name:'윤가영',email:'gy.yoon@greedish.com',role:'admin',scope:'홍대입구점',status:'invited',last:'—',c:AV[7]},
 ];
-const ROLE_META={owner:['최고관리자','role-owner'],admin:['관리자','role-admin'],editor:['편집자','role-editor'],viewer:['뷰어','role-viewer']};
-const PERM_PAGES=[['library','콘텐츠 관리'],['playlists','재생목록'],['templates','템플릿'],['products','상품 관리'],['panels','화면 관리'],['schedule','편성일정'],['stores','매장 관리'],['users','사용자 관리']];
+const ROLE_META={owner:['최고관리자','role-owner'],admin:['관리자','role-admin'],viewer:['뷰어','role-viewer']};
+const PERM_PAGES=[['library','콘텐츠 관리'],['playlists','재생목록'],['templates','템플릿'],['products','상품 관리'],['panels','화면 관리'],['walls','비디오월'],['schedule','편성일정'],['stores','매장 관리'],['users','사용자 관리']];
 let ROLE_PERMS={
- admin:{library:3,playlists:3,templates:3,products:3,panels:3,schedule:3,stores:3,users:2},
- editor:{library:2,playlists:2,templates:2,products:2,panels:1,schedule:2,stores:0,users:0},
- viewer:{library:1,playlists:1,templates:1,products:1,panels:1,schedule:1,stores:0,users:0},
+ admin:{library:2,playlists:2,templates:2,products:2,panels:2,walls:2,schedule:2,stores:2,users:2},
+ viewer:{library:1,playlists:1,templates:1,products:1,panels:1,walls:1,schedule:1,stores:0,users:0},
 };
-const PERM_LV=['없음','보기','편집','관리'];
+const PERM_LV=['없음','보기','편집'];
 let STORES=[
  {id:'s1',name:'강남대로점',region:'서울',addr:'서울 강남구 강남대로 396',mgrs:['u3'],panels:{on:6,total:7,last:'방금 전'},call:{on:true,method:'manual'}},
  {id:'s2',name:'인천공항 1터미널',region:'인천',addr:'인천 중구 공항로 272',mgrs:['u4'],panels:{on:12,total:12,last:'방금 전'},call:{on:true,method:'pos'}},
@@ -399,12 +398,40 @@ if(window.EMPTY_MODE){
 /* ═══════════ 세션/권한 상태 ═══════════ */
 /* userType: 'single'(개인·소상공인) | 'multi'(프랜차이즈·기업) — 온보딩에서 선택, 대시보드 차별화 기준 */
 let session={name:'김민규',brand:'그리디쉬프라이',first:false,country:'대한민국',userType:window.EMPTY_MODE?'single':'multi'};
-let previewRole=null; /* null | 'editor' | 'viewer' */
+let previewRole=null; /* null | 'admin' | 'viewer' */
 let obDone={store:false,panel:false,upload:false,playlist:false,cast:false};
 let obDismissed=false;
 const EXT_LINKS={products:'https://claude.ai/code/artifact/42bb6422-bd40-435d-b2d8-982415dcd2d1',panels:'https://claude.ai/code/artifact/572494b2-90cf-4a7d-a62f-10022edd64f8'};
-const canSee=page=>{if(!previewRole)return true;return(ROLE_PERMS[previewRole][page]??3)>0};
-const canEdit=page=>{if(!previewRole)return true;return(ROLE_PERMS[previewRole][page]??3)>=2};
+const canSee=page=>{if(!previewRole)return true;return(ROLE_PERMS[previewRole][page]??2)>0};
+const canEdit=page=>{if(!previewRole)return true;return(ROLE_PERMS[previewRole][page]??2)>=2};
+/* 권한 미리보기 읽기 전용 잠금.
+   편집 권한이 없는 페이지에서는 body에 .perm-ro를 걸어 편집 진입점을 한 번에 차단한다.
+   페이지 단위 버튼을 개별로 막는 방식은 모듈(mod-panels/mod-products)의 중첩 모달·드로어를
+   빠뜨리기 쉬우므로, body 기준으로 잠가 오버레이까지 함께 덮는다. 탐색·검색·닫기는 유지. */
+function syncPermLock(){
+ document.body.classList.toggle('perm-ro',!!previewRole&&!canEdit(curPage));
+}
+/* 잠금 대상 선택자 — styles.css 의 body.perm-ro 규칙과 동일하게 유지해야 한다.
+   CSS(시각적 비활성) + 아래 캡처 가드(실제 차단) 2단으로 막는다. */
+const RO_BLOCK=['.btn-primary','.btn-tonal','.btn-danger','.btn-danger-t','.danger-t','.switch','.checkbox','.perm-lock','.fr-tools',
+ '#btn-make-group','#btn-make-wall','#rail-add-group','#cat-add-btn','.cat-add','#sc-save','#sc-add-target',
+ '#lf-add','#pf-add','#tf-add','#btn-optman','#sc-copy-week',
+ '[data-menu]','[data-pmenu]','[data-wallmenu]','[data-um]','[data-sm]','[data-lm]','[data-plm]','[data-tm]',
+ '[data-tfav]','[data-fmenu]','[data-catedit]','[data-catdel]','[data-check]','[data-status]','[data-del]',
+ '[data-fg]','[data-fav]','[data-vw-edit]','[data-vw-menu]','[data-vw-sched]','[data-vwc]',
+ '.sel-all','#btn-add-url','#btn-upload','#btn-invite','#btn-add-store','#btn-new-tpl','#btn-new-pl','[data-lc]','[data-retry]','[data-lrm]','.stb-sec','.danger-sec','[data-ptag-edit]','.ro-foot',
+ '#cal-grid .slot','[data-block]'].join(',');
+const RO_ALLOW='[data-close],#perm-exit,.ro-ok';
+/* CSS pointer-events 만으로는 키보드(Enter/Space)·프로그램적 클릭을 막을 수 없어
+   캡처 단계에서 한 번 더 차단하고 이유를 알려준다. */
+['click','keydown','change'].forEach(ev=>document.addEventListener(ev,e=>{
+ if(!document.body.classList.contains('perm-ro'))return;
+ const el=e.target&&e.target.closest?e.target.closest(RO_BLOCK):null;
+ if(!el||e.target.closest(RO_ALLOW))return;
+ if(ev==='keydown'&&e.key!=='Enter'&&e.key!==' ')return;
+ e.preventDefault();e.stopImmediatePropagation();
+ toast(`${previewRole?ROLE_META[previewRole][0]:'이'} 권한에서는 편집할 수 없어요`,{err:true});
+},true));
 
 /* ═══════════ 인증 ═══════════ */
 function renderLogin(err,email){
@@ -486,7 +513,7 @@ function renderResetEmail(email){
 }
 /* 관리자가 사용자를 초대했을 때 도착하는 초대 이메일 (미리보기)
    — renderResetEmail과 동일한 레이아웃·타이포·컬러 값을 사용해 메일 톤을 통일 */
-function renderInviteEmail({email,role='editor',scope='전체 매장',expired=false,back}={}){
+function renderInviteEmail({email,role='viewer',scope='전체 매장',expired=false,back}={}){
  const em=email||'you@company.com';
  const brand=(typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.brand)?PROFILE.brand:'우리 팀';
  const inviter=(typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name)?PROFILE.name:'관리자';
@@ -724,13 +751,13 @@ function renderShell(){
   return `<a data-nav="${n.id}" class="${curPage===n.id?'on':''}">${t(n.k)}</a>`;
  }).join('');
  $$('#lnb-nav [data-nav]').forEach(a=>a.onclick=()=>{
-  if(a.dataset.nav==='schedule'){openPanelScheduleInline();return}
+  if(a.dataset.nav==='schedule'){document.body.classList.toggle('perm-ro',!!previewRole&&!canEdit('schedule'));openPanelScheduleInline();return}
   showPage(a.dataset.nav);
  });
  $('#foot-role').textContent=previewRole?ROLE_META[previewRole][0]+' (미리보기)':'최고관리자';
  const pb=$('#perm-banner');
  pb.hidden=!previewRole;
- if(previewRole){pb.innerHTML=`${IC.info} <b>${ROLE_META[previewRole][0]}</b> 권한으로 화면을 미리보는 중이에요 — 볼 수 없는 메뉴는 숨겨지고, 편집 버튼은 비활성화돼요<button id="perm-exit">미리보기 종료</button>`;
+ if(previewRole){pb.innerHTML=`${IC.info} <b>${ROLE_META[previewRole][0]}</b> 권한으로 화면을 미리보는 중이에요<button id="perm-exit">미리보기 종료</button>`;
   pb.querySelector('#perm-exit').onclick=()=>{previewRole=null;renderShell();if(!canSee(curPage))curPage='library';showPage(curPage);};}
  renderObBanner();
 }
@@ -751,7 +778,7 @@ window.__applyLang=()=>{
  applyI18nDom();
 }
 function showPage(id){
- curPage=id;renderShell();
+ curPage=id;renderShell();syncPermLock();
  $$('#lnb-nav [data-nav]').forEach(a=>a.classList.toggle('on',a.dataset.nav===id));
  const root=$('#page-root');
  if(typeof stashLegacy==='function')stashLegacy();
@@ -827,7 +854,7 @@ function drawUsers(){
   const items=[
    {label:'정보 수정',icon:IC.edit,onClick:()=>openUserEdit(u)},
    {title:'역할 변경'},
-   ...['admin','editor','viewer'].map(r=>({label:ROLE_META[r][0],checked:u.role===r,onClick:()=>{if(u.role==='owner'){toast('최고관리자는 변경할 수 없어요',{err:true});return}u.role=r;drawUsers();toast(`${u.name}님의 역할을 '${ROLE_META[r][0]}'(으)로 변경했어요`)}})),
+   ...['admin','viewer'].map(r=>({label:ROLE_META[r][0],checked:u.role===r,onClick:()=>{if(u.role==='owner'){toast('최고관리자는 변경할 수 없어요',{err:true});return}u.role=r;drawUsers();toast(`${u.name}님의 역할을 '${ROLE_META[r][0]}'(으)로 변경했어요`)}})),
    'sep'];
   if(u.status==='invited')items.push({label:'초대 메일 재발송',icon:IC.copy,onClick:()=>toast(`${u.email}로 초대 메일을 다시 보냈어요`)});
   if(u.status==='invited')items.push({label:'초대 메일 미리보기',icon:IC.ext,onClick:()=>renderInviteEmail({email:u.email,role:u.role,scope:u.scope,back:()=>{$('#app').hidden=false;}})});
@@ -843,7 +870,7 @@ function drawUsers(){
    <button class="btn" id="ub-role">역할 변경</button><button class="btn" id="ub-off">비활성화</button><button class="btn danger-t" id="ub-del">삭제</button>
    <button class="close icon-btn" id="ub-x" aria-label="선택 해제">${IC.x}</button>`;
   bulk.querySelector('#ub-x').onclick=()=>{uChecked.clear();drawUsers()};
-  bulk.querySelector('#ub-role').onclick=e=>popMenu(e.currentTarget,['admin','editor','viewer'].map(r=>({label:ROLE_META[r][0],onClick:()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.role=r});uChecked.clear();drawUsers();toast('역할을 변경했어요')}})));
+  bulk.querySelector('#ub-role').onclick=e=>popMenu(e.currentTarget,['admin','viewer'].map(r=>({label:ROLE_META[r][0],onClick:()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.role=r});uChecked.clear();drawUsers();toast('역할을 변경했어요')}})));
   bulk.querySelector('#ub-off').onclick=()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.status='inactive'});uChecked.clear();drawUsers();toast('선택한 사용자를 비활성화했어요')};
   bulk.querySelector('#ub-del').onclick=()=>confirmDialog({title:`사용자 ${uChecked.size}명을 삭제할까요?`,desc:'삭제한 사용자는 복구할 수 없습니다. 사용자 정보와 권한이 모두 삭제되며, 다시 사용하려면 새로 초대해야 해요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(u=>!uChecked.has(u.id)||u.role==='owner');uChecked.clear();drawUsers();toast('삭제했어요')}});
  }
@@ -856,10 +883,10 @@ function openInviteModal(){
     <input class="input" id="iv-email" type="email" inputmode="email" autocomplete="off" spellcheck="false" placeholder="name@company.com">
     <div class="ferr" id="iv-err" style="display:none"></div></div>
    <div class="f-row"><label>역할</label>
-    <div id="iv-roles">${['admin','editor','viewer'].map((r,i)=>`
+    <div id="iv-roles">${['admin','viewer'].map((r,i)=>`
      <label class="call-method ${i===1?'on':''}" data-ivr="${r}">
       <span style="flex:1"><b><span class="role-pill ${ROLE_META[r][1]}" style="height:22px">${ROLE_META[r][0]}</span></b>
-      <p>${r==='admin'?'매장·사용자를 포함한 대부분의 기능을 관리해요.':r==='editor'?'콘텐츠·재생목록·템플릿을 만들고 편성할 수 있어요.':'모든 화면을 볼 수만 있어요. 수정은 할 수 없어요.'}</p></span>
+      <p>${r==='admin'?'콘텐츠·화면·매장·사용자를 모두 편집할 수 있어요.':'모든 화면을 볼 수만 있어요. 수정은 할 수 없어요.'}</p></span>
       <span class="radio ${i===1?'on':''}"></span></label>`).join('')}</div>
    </div>
    <div class="f-row"><label for="iv-scope">담당 매장</label><select class="select" id="iv-scope"><option>전체 매장</option>${STORES.map(s=>`<option>${s.name}</option>`).join('')}</select></div>
@@ -867,7 +894,7 @@ function openInviteModal(){
   <div class="modal-foot"><span class="iv-hint">세부 권한은 [역할 및 권한]에서 조정할 수 있어요</span>
    <button class="btn" data-close>취소</button><button class="btn btn-primary" id="iv-send">초대 보내기</button></div>`,
  {width:'520px',onMount:ov=>{
-  let role='editor';
+  let role='viewer';
   const inp=ov.querySelector('#iv-email'),err=ov.querySelector('#iv-err');
   const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const fail=msg=>{inp.classList.add('error');err.textContent=msg;err.style.display='flex';inp.focus()};
@@ -900,25 +927,24 @@ function openUserEdit(u){
  {width:'420px',onMount:ov=>ov.querySelector('#ue-ok').onclick=()=>{u.name=ov.querySelector('#ue-nm').value.trim()||u.name;u.scope=ov.querySelector('#ue-scope').value;ov.remove();drawUsers();toast('저장했어요')}});
 }
 function openRolesDrawer(){
- let cur='editor';
+ let cur='admin';
  openDrawer(`
-  <div class="drawer-head"><div><h2>역할 및 권한</h2><span class="sub">페이지 단위로 보기·편집·관리 권한을 설정해요.</span></div><button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
+  <div class="drawer-head"><div><h2>역할 및 권한</h2><span class="sub">페이지 단위로 보기·편집 권한을 설정해요.</span></div><button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
   <div class="drawer-body" id="rd-body"></div>
   <div class="drawer-foot"><button class="btn" id="rd-preview" style="flex:1">이 역할로 화면 미리보기</button><button class="btn btn-primary" id="rd-save" style="flex:1">저장</button></div>`,
  {onMount:wrap=>{
   const draw=()=>{
    wrap.querySelector('#rd-body').innerHTML=`
-    <div class="role-tabs">${['admin','editor','viewer'].map(r=>`<button class="chip ${cur===r?'on':''}" data-rt="${r}">${ROLE_META[r][0]}<span class="cnt num">${USERS.filter(u=>u.role===r).length}명</span></button>`).join('')}</div>
+    <div class="role-tabs">${['admin','viewer'].map(r=>`<button class="chip ${cur===r?'on':''}" data-rt="${r}">${ROLE_META[r][0]}<span class="cnt num">${USERS.filter(u=>u.role===r).length}명</span></button>`).join('')}</div>
     <div class="sync-note">${IC.info}<span><b>${ROLE_META[cur][0]}</b> 역할의 기본 권한이에요. 바꾸면 이 역할의 모든 사용자에게 적용돼요.</span></div>
     <table class="perm-table"><thead><tr><th>페이지</th>${PERM_LV.map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>
-    ${PERM_PAGES.map(([pid,pname])=>`<tr><td>${pname}${pid==='users'?'<span class="sub">관리는 최고관리자만</span>':''}</td>
-     ${PERM_LV.map((l,lv)=>`<td><span class="radio ${ROLE_PERMS[cur][pid]===lv?'on':''} ${pid==='users'&&lv===3?'lock':''}" data-perm="${pid}:${lv}" role="radio" tabindex="0"></span></td>`).join('')}</tr>`).join('')}
+    ${PERM_PAGES.map(([pid,pname])=>`<tr><td>${pname}${pid==='users'?'<span class="sub">최고관리자 계정은 변경·삭제할 수 없어요</span>':''}</td>
+     ${PERM_LV.map((l,lv)=>`<td><span class="radio ${ROLE_PERMS[cur][pid]===lv?'on':''}" data-perm="${pid}:${lv}" role="radio" tabindex="0"></span></td>`).join('')}</tr>`).join('')}
     </tbody></table>`;
    wrap.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>{cur=b.dataset.rt;draw()});
    wrap.querySelectorAll('[data-perm]').forEach(r=>r.onclick=()=>{
     const[pid,lv]=r.dataset.perm.split(':');
-    if(pid==='users'&&+lv===3){toast('사용자 관리 권한은 최고관리자만 가질 수 있어요',{err:true});return}
-    ROLE_PERMS[cur][pid]=+lv;draw();
+    ROLE_PERMS[cur][pid]=+lv;draw();syncPermLock();
    });
   };
   draw();

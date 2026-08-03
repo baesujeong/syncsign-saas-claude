@@ -624,7 +624,7 @@ function openPanelDrawer(p,tab='overview'){
     </div>
     <div id="dtab-body"></div>
    </div>
-   <div class="drawer-foot">
+   <div class="drawer-foot ro-foot">
     ${p.stb?`<button class="btn btn-icon" id="d-more" aria-label="더보기">${IC.dots}</button>
     <button class="btn btn-primary" id="d-sched" style="flex:1">${IC.cal}일정 편집</button>`
     :`<button class="btn btn-primary" id="d-stb-connect" style="flex:1">${STB_IC(14)}셋탑 연결하기</button>`}
@@ -682,7 +682,7 @@ function openPanelDrawer(p,tab='overview'){
      <dt>네트워크</dt><dd>${!p.stb?'—':p.status==='off'?'연결 끊김':'유선 · 32ms'}</dd>
      <dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd>
     </dl></div>
-   <div class="dsec"><h3>셋탑 관리</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm" id="if-stb-info">연결 코드 확인</button><button class="btn btn-sm" id="if-stb-re">${STB_IC(13)}셋탑 재연결</button>`:`<button class="btn btn-sm btn-primary" id="if-stb-connect">${STB_IC(13)}셋탑 연결하기</button>`}</div></div>
+   <div class="dsec stb-sec"><h3>셋탑 관리</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm" id="if-stb-info">연결 코드 확인</button><button class="btn btn-sm" id="if-stb-re">${STB_IC(13)}셋탑 재연결</button>`:`<button class="btn btn-sm btn-primary" id="if-stb-connect">${STB_IC(13)}셋탑 연결하기</button>`}</div></div>
    <div class="dsec"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3><div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요 — <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>
    <div class="dsec danger-sec"><h3>위험 작업</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm btn-danger-t" id="if-stb-detach">셋탑 연결 해제</button>`:''}<button class="btn btn-sm btn-danger-t" id="if-del">${IC.x}화면 삭제</button></div>
     <p class="dsec-note">${p.stb?'연결 해제 시 화면 정보·일정·태그는 유지되고 다른 셋탑으로 다시 연결할 수 있어요. ':''}삭제하면 편성 일정도 함께 삭제되니 주의하세요.</p></div>`;
@@ -723,7 +723,7 @@ function openWallDrawer(w){
      return `<div class="tl-item"><span class="cthumb" style="background:${a?a.g:c.g}">${a?a.e:''}</span><span class="nm">${p?p.name:'빈 칸'} <span style="color:var(--text-3);font-weight:500">· ${t.w}×${t.h}</span></span><span style="font-size:12px;color:var(--text-2);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%">${a?a.name:c.name}</span></div>`}).join('')}
    </div>
   </div>
-  <div class="drawer-foot">
+  <div class="drawer-foot ro-foot">
    <button class="btn" id="w-edit">레이아웃 편집</button>
    <button class="btn btn-danger-t" id="w-disband">그룹 해제</button>
    <button class="btn btn-primary" id="w-sched" style="flex:1">${IC.cal}일정 편집</button>

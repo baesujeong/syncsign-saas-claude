@@ -312,6 +312,76 @@ table.grid tr.checked td{background:var(--blue-50)}
 .iv-form #iv-roles .call-method{margin-bottom:0;padding:14px}
 /* 하단 안내 문구: 콘텐츠와 동일한 좌우 여백(24px) 기준으로 정렬 + 어절 단위 줄바꿈 */
 .modal-foot .iv-hint{flex:1;min-width:0;padding-right:8px;font-size:12px;line-height:1.55;color:var(--text-3);word-break:keep-all}
+/* ── 권한 미리보기 읽기 전용 잠금 ──
+   편집 권한이 없는 페이지에서 body.perm-ro가 걸린다.
+   조회 전용 역할에는 비활성(Disabled) 편집 UI를 보여주지 않고 아예 숨긴다(Hidden).
+   탐색(LNB)·검색·필터칩·정렬·뷰 전환·페이지네이션·닫기는 그대로 둔다.
+   body 기준이라 모달·드로어 오버레이까지 함께 덮인다.
+   ※ prototype.html 의 RO_BLOCK 목록과 동일하게 유지할 것. */
+body.perm-ro .btn-primary,
+body.perm-ro .btn-tonal,
+body.perm-ro .btn-danger,
+body.perm-ro .btn-danger-t,
+body.perm-ro .danger-t,
+body.perm-ro .switch,
+body.perm-ro .checkbox,
+body.perm-ro .perm-lock,
+body.perm-ro .fr-tools,
+body.perm-ro [data-menu],
+body.perm-ro [data-pmenu],
+body.perm-ro [data-wallmenu],
+body.perm-ro [data-um],
+body.perm-ro [data-sm],
+body.perm-ro [data-lm],
+body.perm-ro [data-plm],
+body.perm-ro [data-tm],
+body.perm-ro [data-tfav],
+body.perm-ro [data-fmenu],
+body.perm-ro [data-catedit],
+body.perm-ro [data-catdel],
+body.perm-ro [data-check],
+body.perm-ro [data-status],
+body.perm-ro [data-del],
+body.perm-ro #btn-make-group,
+body.perm-ro #btn-make-wall,
+body.perm-ro #rail-add-group,
+body.perm-ro #cat-add-btn,
+body.perm-ro .cat-add,
+body.perm-ro #sc-save,
+body.perm-ro #sc-add-target,
+body.perm-ro #lf-add,
+body.perm-ro #pf-add,
+body.perm-ro #tf-add,
+body.perm-ro #btn-optman,
+body.perm-ro #sc-copy-week,
+body.perm-ro [data-fg],
+body.perm-ro [data-fav],
+body.perm-ro [data-vw-edit],
+body.perm-ro [data-vw-menu],
+body.perm-ro [data-vw-sched],
+body.perm-ro body.perm-ro [data-vwc],
+body.perm-ro .sel-all,
+body.perm-ro #btn-add-url,
+body.perm-ro #btn-upload,
+body.perm-ro #btn-invite,
+body.perm-ro #btn-add-store,
+body.perm-ro #btn-new-tpl,
+body.perm-ro #btn-new-pl,
+body.perm-ro [data-lc],
+body.perm-ro [data-retry],
+body.perm-ro [data-lrm],
+body.perm-ro .stb-sec,
+body.perm-ro .danger-sec,
+body.perm-ro [data-ptag-edit],
+body.perm-ro .ro-foot{display:none!important}
+/* 읽기 전용에서도 보이고 눌려야 하는 것 — 닫기/미리보기 종료/명시적 허용 */
+body.perm-ro [data-close],
+body.perm-ro #perm-exit,
+body.perm-ro .ro-ok{display:inline-flex!important;opacity:1!important;pointer-events:auto!important;cursor:pointer!important}
+/* 정보·구조 표시 요소는 숨기면 조회 자체가 불가능해지므로 클릭만 막는다.
+   (편성 캘린더의 시간 슬롯·등록된 일정 블록 — 뷰어도 일정 내용은 봐야 한다) */
+body.perm-ro #cal-grid .slot,
+body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important}
 .perm-table{width:100%;border-collapse:collapse;font-size:13px}
 .perm-table th{text-align:center;font-size:12px;font-weight:700;color:var(--text-3);padding:8px 4px;border-bottom:1px solid var(--border)}
 .perm-table th:first-child{text-align:left}
