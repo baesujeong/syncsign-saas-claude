@@ -476,7 +476,7 @@ function openAddPanelModal(opts){
  openModal(`
  <div class="modal-head"><div><h2>화면 추가</h2><div class="sub">화면은 매장에 설치된 디스플레이 1대예요. 셋탑박스가 준비됐다면 연결 코드까지 입력하고 바로 연결하세요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
  <div class="modal-body">
-  <div class="f-row"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F8-2KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px">
+  <div class="f-row"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px">
    <div class="sync-note" style="margin-top:8px">${IC.info}<span>셋탑박스를 TV에 연결하고 전원을 켜면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 <b>나중에 연결하기</b>를 선택하세요.</span></div></div>
   <div class="f-row"><label>설치 매장 <span class="req">*</span></label>${STORES.length?`<select class="select" id="ap-store">${STORES.slice(0,50).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>`:`<div class="ferr" style="margin-top:2px">아직 등록된 매장이 없어요 — 먼저 <b>매장 관리</b>에서 매장을 등록해주세요.</div>`}</div>
   <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"></div>
@@ -496,11 +496,12 @@ function openAddPanelModal(opts){
    PANELS.unshift(p);ov.remove();renderScope();renderRail();renderList();
    return p;
   };
-  ov.querySelector('#ap-code').focus();
+  const apCode=bindStbCodeInput(ov.querySelector('#ap-code'));apCode.focus();
   const nmField=ov.querySelector('#ap-name');nmField.addEventListener('input',()=>nmField.classList.remove('error'));
   ov.querySelector('#ap-ok').onclick=()=>{
-   const code=ov.querySelector('#ap-code').value.trim();
-   if(!code){ov.querySelector('#ap-code').classList.add('error');toast('연결 코드를 입력해주세요 — 셋탑박스가 아직 없다면 [나중에 연결하기]를 선택하세요',{err:true});return}
+   const code=normStbCode(apCode.value);
+   if(!code){apCode.classList.add('error');apCode.focus();toast('연결 코드를 입력해주세요 — 셋탑박스가 아직 없다면 [나중에 연결하기]를 선택하세요',{err:true});return}
+   if(code.length<STB_CODE_LEN){apCode.classList.add('error');apCode.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요`,{err:true});return}
    const p=create(true);
    if(p){if(opts.onCreated)opts.onCreated(p);else toast('화면이 연결됐어요 — 목록 맨 위에서 확인하세요');}
   };
@@ -521,15 +522,16 @@ function openStbModal(p,reconnect){
    ${p.stb?`<dl class="kv" style="margin-bottom:14px"><dt>현재 셋탑</dt><dd class="num">${p.stb.sn}</dd><dt>연결 상태</dt><dd>${p.status==='on'?'<span class="badge badge-green">온라인</span>':p.status==='off'?'<span class="badge badge-gray">오프라인</span>':'<span class="badge badge-red">오류</span>'}</dd></dl>
     <div class="sync-note" style="margin-bottom:14px">${IC.info}<span>셋탑을 교체했거나 네트워크를 다시 설정했다면 새 셋탑의 <b>6자리 연결 코드</b>로 재연결하세요. 기존 일정과 태그는 그대로 유지돼요.</span></div>`
    :`<div class="sync-note" style="margin-bottom:14px">${STB_IC(14)}<span><b>연결 코드 확인 방법</b><br>① 셋탑박스를 TV(화면)에 연결 ② 전원 켜기 ③ 화면에 표시되는 <b>6자리 연결 코드</b>를 아래에 입력하세요.</span></div>`}
-   <div class="f-row"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F8-2KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px"></div>
+   <div class="f-row"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F82KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px"></div>
    ${p.stb?`<button class="lnk" id="stb-detach" style="color:var(--red);font-weight:600;font-size:13px;cursor:pointer;background:none;border:0;padding:0">셋탑 연결 해제 — 화면을 '미연결' 상태로 전환</button>`:''}
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="stb-ok">${p.stb?'재연결':'연결'}</button></div>`,
  {width:'440px',onMount:ov=>{
-  const input=ov.querySelector('#stb-code');input.focus();
+  const input=bindStbCodeInput(ov.querySelector('#stb-code'));input.focus();
   ov.querySelector('#stb-ok').onclick=()=>{
-   const code=input.value.trim();
-   if(!code){input.classList.add('error');toast('연결 코드를 입력해주세요',{err:true});return}
+   const code=normStbCode(input.value);
+   if(!code){input.classList.add('error');input.focus();toast('연결 코드를 입력해주세요',{err:true});return}
+   if(code.length<STB_CODE_LEN){input.classList.add('error');input.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요`,{err:true});return}
    const wasRe=!!p.stb;
    p.stb={sn:'STB-'+String(++pSeq).padStart(6,'0')};
    p.status='on';p.lastMin=0;if(p.res==='—'){p.res='1920×1080 · 가로';p.fw='v3.6';}
@@ -589,9 +591,25 @@ function deletePanel(p,after){
  });
 }
 /* 연결 코드 확인 (연결된 셋탑의 S/N·코드 안내 + 코드 재발급) */
-const genStbCode=()=>{const s=((pSeq++)*7919%46656).toString(36).toUpperCase().padStart(3,'0');const t=((pSeq)*104729%46656).toString(36).toUpperCase().padStart(3,'0');return `${s}-${t}`;};
+/* 셋탑 연결 코드 생성 — 영문(A-Z)·숫자(0-9) 혼용 6자리, 구분 기호 없음(prototype.html의 STB_CODE_LEN 규칙).
+   데모 재현성을 위해 난수 대신 pSeq 기반 결정적 생성. 영문·숫자가 한쪽만 나오면 마지막 자리를 반대 종류로 교체한다. */
+const genStbCode=()=>{
+ const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ',D='0123456789',S=A+D;
+ /* xorshift32로 비트를 확산시켜 연속 발급된 코드도 서로 무관해 보이게 한다 */
+ let h=((pSeq++)*0x9E3779B1+0x85EBCA77)>>>0;
+ const nx=()=>{h^=h<<13;h>>>=0;h^=h>>>17;h^=h<<5;h>>>=0;return h};
+ nx();nx();
+ let out='';
+ for(let i=0;i<STB_CODE_LEN;i++)out+=S[nx()%36];
+ /* 영문·숫자 혼용 보장 — 한쪽만 나왔다면 마지막 한 자리를 반대 종류로 교체 */
+ if(!/[A-Z]/.test(out))out=out.slice(0,-1)+A[nx()%26];
+ else if(!/[0-9]/.test(out))out=out.slice(0,-1)+D[nx()%10];
+ return out;
+};
 function openStbInfo(p){
- const code=p.stb.code||`${p.stb.sn.slice(-6,-3)}-${p.stb.sn.slice(-3)}Q`;
+ /* 코드가 아직 없는 셋탑은 이 시점에 발급해 보관한다 — 재렌더 때마다 코드가 바뀌지 않도록 */
+ if(!p.stb.code)p.stb.code=genStbCode();
+ const code=p.stb.code;
  openModal(`
   <div class="modal-head"><div><h2>연결 코드 확인</h2><div class="sub">'${p.name}' · ${storeOf(p.store).name}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
@@ -1854,7 +1872,8 @@ window.__regionStats=()=>REGIONS.map(r=>{
 }).sort((a,b)=>b.panels-a.panels);
 /* 온보딩 마지막 단계(화면 연결)에서 등록한 화면을 화면 모듈 데이터에도 반영 */
 window.__addPanel=(sid,name,code)=>{
- PANELS.unshift({id:'p'+(pSeq++),store:sid,name:name||'첫 화면',status:'on',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.6',stb:{sn:'STB-'+String(pSeq).padStart(6,'0')}});
+ /* 온보딩에서 입력한 연결 코드를 그대로 보관해 [연결 코드 확인]에서 동일하게 보이도록 한다 */
+ PANELS.unshift({id:'p'+(pSeq++),store:sid,name:name||'첫 화면',status:'on',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.6',stb:{sn:'STB-'+String(pSeq).padStart(6,'0'),code:normStbCode(code)||null}});
  try{renderAll();}catch(e){}
 };
 /* 편성일정은 화면이 없어도 항상 진입 가능 — 빈 상태에서는 캘린더 위 안내 오버레이가 화면 등록 → 첫 편성을 이어줌 */
