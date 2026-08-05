@@ -357,7 +357,7 @@ function renderList(){
      <div class="sub">${storeOf(p.store).name} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
      <div class="badges">${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}${shareBadge(p)}</div>
     </div></div>`;
-  }).join('')||`<div style="grid-column:1/-1">${PANELS.length===0?`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>${STORES.length===0?'먼저 매장을 등록한 뒤, 셋탑박스의 6자리 연결 코드로 첫 화면을 연결해보세요':'셋탑박스 화면의 6자리 연결 코드로 첫 화면을 연결해보세요'}</span>${STORES.length===0?`<button class="btn btn-tonal btn-sm" onclick="showPage('stores')">매장 관리로 이동</button>`:`<button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button>`}</div>`:flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요</span></div>`}</div>`;
+  }).join('')||`<div style="grid-column:1/-1">${PANELS.length===0?`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>${STORES.length===0?'먼저 매장을 등록한 뒤, 셋탑박스의 6자리 연결 코드로 첫 화면을 연결해보세요':'셋탑박스 화면의 6자리 연결 코드로 첫 화면을 연결해보세요'}</span>${STORES.length===0?`<button class="btn btn-tonal btn-sm" onclick="showPage('stores')">매장 관리로 이동</button>`:`<button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button>`}</div>`:flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
  }else{
   $('#pgrid').hidden=true;$('#ptable-wrap').hidden=false;
   $('#ptbody').innerHTML=slice.map(p=>{
@@ -380,7 +380,7 @@ function renderList(){
     <td>${shareBadge(p)||'<span style="color:var(--text-3)">—</span>'}</td>
     <td class="num" style="color:var(--text-3)">${ago(p.lastMin)}</td>
     <td><button class="icon-btn" data-pmenu="${p.id}">${IC.dots}</button></td></tr>`;
-  }).join('')||`<tr><td colspan="10">${PANELS.length===0?`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>${STORES.length===0?'먼저 매장을 등록한 뒤 첫 화면을 연결해보세요':'셋탑박스의 6자리 연결 코드로 첫 화면을 연결해보세요'}</span>${STORES.length===0?`<button class="btn btn-tonal btn-sm" onclick="showPage('stores')">매장 관리로 이동</button>`:`<button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button>`}</div>`:flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요</span></div>`}</td></tr>`;
+  }).join('')||`<tr><td colspan="10">${PANELS.length===0?`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>${STORES.length===0?'먼저 매장을 등록한 뒤 첫 화면을 연결해보세요':'셋탑박스의 6자리 연결 코드로 첫 화면을 연결해보세요'}</span>${STORES.length===0?`<button class="btn btn-tonal btn-sm" onclick="showPage('stores')">매장 관리로 이동</button>`:`<button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button>`}</div>`:flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  }
  $('#pagi').innerHTML=`<span class="num">${arr.length?fmt((page-1)*per+1)+'–'+fmt(Math.min(page*per,arr.length)):0} / ${fmt(arr.length)}개</span>
   <button class="icon-btn" id="pg-prev" ${page<=1?'disabled':''} aria-label="이전 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
@@ -411,7 +411,7 @@ function bindListEvents(){
    'sep',
    {label:'연결 코드 확인',icon:STB_IC(14),onClick:()=>openStbInfo(p)},
    {label:'셋탑 재연결',icon:IC.restart,onClick:()=>openStbModal(p)},
-   {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요`)},
+   {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요.`)},
    'sep',
    {label:'셋탑 연결 해제',icon:IC.x,danger:true,onClick:()=>detachStb(p)},
    {label:'화면 삭제',icon:IC.x,danger:true,onClick:()=>deletePanel(p)},
@@ -444,18 +444,18 @@ $('#th-check')?.addEventListener('click',()=>{
 });
 $('#bulk-schedule').onclick=()=>openSchedule([...checked]);
 $('#bulk-share').onclick=()=>openShareModal([...checked]);
-$('#bulk-restart').onclick=()=>confirmDialog({title:`화면 ${fmt(checked.size)}개 재시작`,desc:'재시작 중 약 30초간 화면이 꺼져요. 영업시간에는 주의하세요.',confirmText:'재시작',danger:true,onConfirm:()=>{toast(`${fmt(checked.size)}개 화면에 재시작 명령을 보냈어요`);checked.clear();renderList();}});
+$('#bulk-restart').onclick=()=>confirmDialog({title:`화면 ${fmt(checked.size)}개 재시작`,desc:'재시작 중 약 30초간 화면이 꺼져요. 영업시간에는 주의하세요.',confirmText:'재시작',danger:true,onConfirm:()=>{toast(`${fmt(checked.size)}개 화면에 재시작 명령을 보냈어요.`);checked.clear();renderList();}});
 $('#bulk-group').onclick=e=>{
  popMenu(e.currentTarget,[
   {title:'그룹에 추가'},
-  ...GROUPS.map(g=>({label:g.name,onClick:()=>{const n=checked.size;g.ids=[...new Set([...g.ids,...checked])];renderRail();toast(`${fmt(n)}개 화면을 '${g.name}'에 추가했어요`);fg[4]=true;renderFg();}})),
+  ...GROUPS.map(g=>({label:g.name,onClick:()=>{const n=checked.size;g.ids=[...new Set([...g.ids,...checked])];renderRail();toast(`${fmt(n)}개 화면을 '${g.name}'에 추가했어요.`);fg[4]=true;renderFg();}})),
   'sep',
   {label:'＋ 새 그룹 만들기',onClick:()=>openGroupModal([...checked])},
  ]);
 };
 $('#bulk-tag').onclick=e=>tagPickerMenu(e.currentTarget,{tags:TAGS,selected:()=>false,keepOpen:true,
- onToggle:t=>{checked.forEach(id=>{const p=panelOf(id);if(p&&!p.tags.includes(t))p.tags.push(t)});toast(`선택한 화면에 '${t}' 태그를 추가했어요`);renderList();},
- onCreate:t=>{if(!TAGS.includes(t))TAGS.push(t);checked.forEach(id=>{const p=panelOf(id);if(p&&!p.tags.includes(t))p.tags.push(t)});toast(`'${t}' 태그를 만들어 추가했어요`);renderList();},
+ onToggle:t=>{checked.forEach(id=>{const p=panelOf(id);if(p&&!p.tags.includes(t))p.tags.push(t)});toast(`선택한 화면에 '${t}' 태그를 추가했어요.`);renderList();},
+ onCreate:t=>{if(!TAGS.includes(t))TAGS.push(t);checked.forEach(id=>{const p=panelOf(id);if(p&&!p.tags.includes(t))p.tags.push(t)});toast(`'${t}' 태그를 만들어 추가했어요.`);renderList();},
  onManage:openPanelTagManager});
 /* 툴바 */
 attachSearchUX($('#panel-search'),q=>{flt.q=q;page=1;renderList();renderScope();});
@@ -478,7 +478,7 @@ function openAddPanelModal(opts){
  <div class="modal-body">
   <div class="f-row"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px">
    <div class="sync-note" style="margin-top:8px">${IC.info}<span>셋탑박스를 TV에 연결하고 전원을 켜면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 <b>나중에 연결하기</b>를 선택하세요.</span></div></div>
-  <div class="f-row"><label>설치 매장 <span class="req">*</span></label>${STORES.length?`<select class="select" id="ap-store">${STORES.slice(0,50).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>`:`<div class="ferr" style="margin-top:2px">아직 등록된 매장이 없어요 — 먼저 <b>매장 관리</b>에서 매장을 등록해주세요.</div>`}</div>
+  <div class="f-row"><label>설치 매장 <span class="req">*</span></label>${STORES.length?`<select class="select" id="ap-store">${STORES.slice(0,50).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>`:`<div class="ferr" style="margin-top:2px">아직 등록된 매장이 없어요. 먼저 <b>매장 관리</b>에서 매장을 등록해주세요.</div>`}</div>
   <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"></div>
  </div>
  <div class="modal-foot"><button class="btn" data-close>취소</button><span class="grow"></span><button class="btn" id="ap-later">나중에 연결하기</button><button class="btn btn-primary" id="ap-ok">지금 연결하기</button></div>`,
@@ -486,10 +486,10 @@ function openAddPanelModal(opts){
   const create=stb=>{
    if(!STORES.length){ov.remove();
     if(!$('#screen-schedule').hidden){$('#screen-schedule').hidden=true;$('#app').style.display='flex';} /* 편성일정 전체화면에서 진입한 경우 앱 셸 복원 후 이동 */
-    toast('먼저 매장을 등록해주세요',{err:true});showPage('stores');return null;}
+    toast('먼저 매장을 등록해주세요.',{err:true});showPage('stores');return null;}
    const sid=ov.querySelector('#ap-store').value;
    const nmIn=ov.querySelector('#ap-name'),nm=(nmIn.value||'').trim();
-   if(!nm){nmIn.classList.add('error');nmIn.focus();toast('화면 이름을 입력해주세요 — 설치 위치를 알 수 있는 이름이 좋아요',{err:true});return null}
+   if(!nm){nmIn.classList.add('error');nmIn.focus();toast('화면 이름을 입력해주세요. 설치 위치를 알 수 있는 이름이 좋아요.',{err:true});return null}
    const p=stb
     ?{id:'p'+(pSeq++),store:sid,name:nm,status:'on',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.6',stb:{sn:'STB-'+String(pSeq).padStart(6,'0')}}
     :{id:'p'+(pSeq++),store:sid,name:nm,status:'off',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'—',fw:'—',stb:null};
@@ -500,14 +500,14 @@ function openAddPanelModal(opts){
   const nmField=ov.querySelector('#ap-name');nmField.addEventListener('input',()=>nmField.classList.remove('error'));
   ov.querySelector('#ap-ok').onclick=()=>{
    const code=normStbCode(apCode.value);
-   if(!code){apCode.classList.add('error');apCode.focus();toast('연결 코드를 입력해주세요 — 셋탑박스가 아직 없다면 [나중에 연결하기]를 선택하세요',{err:true});return}
-   if(code.length<STB_CODE_LEN){apCode.classList.add('error');apCode.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요`,{err:true});return}
+   if(!code){apCode.classList.add('error');apCode.focus();toast('연결 코드를 입력해주세요. 셋탑박스가 아직 없다면 [나중에 연결하기]를 선택하세요.',{err:true});return}
+   if(code.length<STB_CODE_LEN){apCode.classList.add('error');apCode.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return}
    const p=create(true);
-   if(p){if(opts.onCreated)opts.onCreated(p);else toast('화면이 연결됐어요 — 목록 맨 위에서 확인하세요');}
+   if(p){if(opts.onCreated)opts.onCreated(p);else toast('화면이 연결됐어요. 목록 맨 위에서 확인하세요.');}
   };
   ov.querySelector('#ap-later').onclick=()=>{
    const p=create(false);
-   if(p){if(opts.onCreated)opts.onCreated(p);else toast(`'${p.name}' 화면을 만들었어요 — 셋탑박스가 준비되면 [셋탑 연결하기]로 연결하세요`,{action:'지금 연결',onAction:()=>openStbModal(p)});}
+   if(p){if(opts.onCreated)opts.onCreated(p);else toast(`'${p.name}' 화면을 만들었어요. 셋탑박스가 준비되면 [셋탑 연결하기]로 연결하세요.`,{action:'지금 연결',onAction:()=>openStbModal(p)});}
   };
  }});
 }
@@ -530,13 +530,13 @@ function openStbModal(p,reconnect){
   const input=bindStbCodeInput(ov.querySelector('#stb-code'));input.focus();
   ov.querySelector('#stb-ok').onclick=()=>{
    const code=normStbCode(input.value);
-   if(!code){input.classList.add('error');input.focus();toast('연결 코드를 입력해주세요',{err:true});return}
-   if(code.length<STB_CODE_LEN){input.classList.add('error');input.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요`,{err:true});return}
+   if(!code){input.classList.add('error');input.focus();toast('연결 코드를 입력해주세요.',{err:true});return}
+   if(code.length<STB_CODE_LEN){input.classList.add('error');input.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return}
    const wasRe=!!p.stb;
    p.stb={sn:'STB-'+String(++pSeq).padStart(6,'0')};
    p.status='on';p.lastMin=0;if(p.res==='—'){p.res='1920×1080 · 가로';p.fw='v3.6';}
    ov.remove();renderAll();
-   toast(wasRe?`'${p.name}' 셋탑이 재연결됐어요 — 기존 일정으로 송출을 다시 시작해요`:`'${p.name}'에 셋탑이 연결됐어요 — 이제 콘텐츠를 편성할 수 있어요`,{action:'일정 편집',onAction:()=>openSchedule([p.id])});
+   toast(wasRe?`'${p.name}' 셋탑이 재연결됐어요. 기존 일정으로 송출을 다시 시작해요.`:`'${p.name}'에 셋탑이 연결됐어요. 이제 콘텐츠를 편성할 수 있어요.`,{action:'일정 편집',onAction:()=>openSchedule([p.id])});
   };
   const det=ov.querySelector('#stb-detach');
   if(det)det.onclick=()=>{ov.remove();detachStb(p);};
@@ -547,7 +547,7 @@ function openStbModal(p,reconnect){
 function detachStb(p,after){
  confirmDialog({title:'셋탑 연결 해제',desc:`'${p.name}'의 셋탑 연결을 해제하면 송출이 중단되고 화면은 '셋탑 미연결' 상태가 돼요.<br>화면 정보와 일정·태그 설정은 그대로 유지되고, 언제든 다른 셋탑박스의 연결 코드로 다시 연결할 수 있어요.`,confirmText:'연결 해제',danger:true,onConfirm:()=>{
   p.stb=null;p.status='off';p.content=null;p.lastMin=0;renderAll();
-  toast(`'${p.name}' 셋탑 연결을 해제했어요 — 화면 정보는 유지돼요`,{action:'다시 연결',onAction:()=>openStbModal(p)});
+  toast(`'${p.name}' 셋탑 연결을 해제했어요. 화면 정보는 유지돼요.`,{action:'다시 연결',onAction:()=>openStbModal(p)});
   after&&after();
  }});
 }
@@ -556,20 +556,20 @@ function detachStb(p,after){
 function deletePanel(p,after){
  if(p.wall){
   const w=WALLS.find(x=>x.id===p.wall);
-  toast(`'${w?w.name:'비디오월'}'에 속한 화면이에요 — 먼저 비디오월 그룹을 해제해주세요`,{err:true,action:'비디오월 관리',onAction:()=>{if(w)openWallDrawer(w)}});
+  toast(`'${w?w.name:'비디오월'}'에 속한 화면이에요. 먼저 비디오월 그룹을 해제해주세요.`,{err:true,action:'비디오월 관리',onAction:()=>{if(w)openWallDrawer(w)}});
   return;
  }
  const live=!!p.stb&&p.status==='on'&&!p.unsch&&p.content;
  const schedN=p.unsch?0:(p.schedN||0);
  const fN=followerCnt(p);
  const warns=[];
- if(live)warns.push(`지금 <b>'${(contentOf(p.content)||{name:'콘텐츠'}).name}' 송출 중</b>이에요 — 삭제하면 송출이 즉시 중단돼요`);
- if(schedN)warns.push(`편성된 일정 <b>${schedN}건</b>이 함께 삭제돼요`);
- if(fN)warns.push(`이 화면을 따라가는 <b>${fN}개 화면</b>의 따라가기가 해제돼요 — 각자 마지막 일정의 복사본으로 운영`);
- if(p.stb)warns.push(`연결된 셋탑(<span class="num">${p.stb.sn}</span>)은 해제되어 다른 화면에 다시 연결할 수 있어요`);
+ if(live)warns.push(`지금 <b>'${(contentOf(p.content)||{name:'콘텐츠'}).name}' 송출 중</b>이에요. 삭제하면 송출이 즉시 중단돼요.`);
+ if(schedN)warns.push(`편성된 일정 <b>${schedN}건</b>이 함께 삭제돼요.`);
+ if(fN)warns.push(`이 화면을 따라가는 <b>${fN}개 화면</b>의 따라가기가 해제돼요. 각 화면은 마지막 일정의 복사본으로 운영돼요.`);
+ if(p.stb)warns.push(`연결된 셋탑(<span class="num">${p.stb.sn}</span>)은 해제되어 다른 화면에 다시 연결할 수 있어요.`);
  confirmDialog({
   title:`'${storeOf(p.store).name} · ${p.name}' 화면을 삭제할까요?`,
-  desc:`삭제한 화면은 복구할 수 없습니다.${warns.length?'<br><br>'+warns.map(w=>'· '+w).join('<br>'):''}`,
+  desc:`삭제한 화면은 복구할 수 없어요.${warns.length?'<br><br>'+warns.map(w=>'· '+w).join('<br>'):''}`,
   confirmText:'삭제',danger:true,
   onConfirm:()=>{
    const idx=PANELS.indexOf(p);
@@ -581,10 +581,10 @@ function deletePanel(p,after){
    GROUPS.forEach(g=>{if(g.ids)g.ids=g.ids.filter(id=>id!==p.id)});
    scTargets=scTargets.filter(id=>id!==p.id);
    renderAll();
-   toast(`'${p.name}' 화면을 삭제했어요`,{action:'실행 취소',onAction:()=>{
+   toast(`'${p.name}' 화면을 삭제했어요.`,{action:'실행 취소',onAction:()=>{
     PANELS.splice(Math.min(idx,PANELS.length),0,p);
     followers.forEach(x=>x.follow=p.id);
-    renderAll();toast(`'${p.name}' 화면을 복구했어요`);
+    renderAll();toast(`'${p.name}' 화면을 복구했어요.`);
    }});
    after&&after();
   }
@@ -619,7 +619,7 @@ function openStbInfo(p){
   <div class="modal-foot"><button class="btn" id="stb-re">${STB_IC(14)}셋탑 재연결</button><span class="grow"></span><button class="btn btn-primary" data-close>확인</button></div>`,
  {width:'420px',onMount:ov=>{
   ov.querySelector('#stb-re').onclick=()=>{ov.remove();openStbModal(p);};
-  ov.querySelector('#stb-reissue').onclick=()=>{p.stb.code=genStbCode();ov.remove();openStbInfo(p);toast('새 연결 코드를 발급했어요 — 기존 코드는 만료됐어요');};
+  ov.querySelector('#stb-reissue').onclick=()=>{p.stb.code=genStbCode();ov.remove();openStbInfo(p);toast('새 연결 코드를 발급했어요. 기존 코드는 만료됐어요.');};
  }});
 }
 
@@ -650,7 +650,7 @@ function openPanelDrawer(p,tab='overview'){
   wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
   wrap.querySelectorAll('[data-dtab]').forEach(b=>b.onclick=()=>draw(b.dataset.dtab));
   const _more=wrap.querySelector('#d-more');if(_more)_more.onclick=()=>popMenu(_more,[
-   {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요`)},
+   {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요.`)},
    {label:'일정 따라가기 설정',icon:IC.link,onClick:()=>{wrap.remove();openShareModal([p.id])}},
   ]);
   const _dsc=wrap.querySelector('#d-sched');if(_dsc)_dsc.onclick=()=>{wrap.remove();openSchedule([p.id])};
@@ -670,7 +670,7 @@ function openPanelDrawer(p,tab='overview'){
      <dt>일정 공유</dt><dd>${isMaster(p)?`<span class="badge badge-violet">${IC.link}기준 화면</span> ${followerCnt(p)}개 화면이 따라감`:p.follow?`<span class="badge badge-blue">${IC.link}따라가는 중</span> ${panelOf(p.follow).name}`:'사용 안 함'}</dd>
      <dt>태그</dt><dd><span class="tag-badges">${p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join('')||'—'}</span></dd>
     </dl>`;
-   const _rf=body.querySelector('.refresh');if(_rf)_rf.onclick=()=>toast('미리보기를 새로고침했어요');
+   const _rf=body.querySelector('.refresh');if(_rf)_rf.onclick=()=>toast('미리보기를 새로고침했어요.');
    const _oc=body.querySelector('#ov-stb-connect');if(_oc)_oc.onclick=()=>{wrap.remove();openStbModal(p)};
   }else if(tab==='schedule'){
    const items=[['08:00 – 11:30','c2',false],['11:30 – 14:00','c1',true],['14:00 – 18:00','c3',false],['18:00 – 22:00','c6',false]];
@@ -678,17 +678,17 @@ function openPanelDrawer(p,tab='overview'){
     ${p.follow?`<div class="sync-note">${IC.link}<span><b>'${panelOf(p.follow).name}' 일정을 따라가는 중</b><br>기준 화면의 일정이 바뀌면 이 화면도 자동으로 함께 바뀌어요.<br><button class="lnk" id="unfollow" style="color:var(--blue);font-weight:600;margin-top:4px;cursor:pointer">따라가기 해제</button></span></div>`:''}
     ${isMaster(p)?`<div class="sync-note">${IC.spark}<span><b>이 화면은 기준 화면이에요</b><br>${followerCnt(p)}개 화면이 이 일정을 그대로 따라가요. 여기서 일정을 바꾸면 모두 함께 반영돼요.</span></div>`:''}
     <div class="dsec"><h3>오늘 일정 <span class="lnk" id="go-cal">캘린더에서 편집</span></h3>
-    ${p.unsch?'<div class="empty" style="padding:26px"><b>편성된 일정이 없어요</b><span>일정 편집에서 콘텐츠를 편성해 보세요</span></div>':items.slice(0,p.schedN||4).map(([tm,cid,now])=>{const c=contentOf(cid);
+    ${p.unsch?'<div class="empty" style="padding:26px"><b>편성된 일정이 없어요</b><span>일정 편집에서 콘텐츠를 편성해 보세요.</span></div>':items.slice(0,p.schedN||4).map(([tm,cid,now])=>{const c=contentOf(cid);
      return `<div class="tl-item ${now?'now':''}"><span class="tm num">${tm}</span><span class="cthumb" style="background:${c.g}">${c.e}</span><span class="nm">${c.name}</span>${now?'<span class="badge badge-blue">지금</span>':''}</div>`}).join('')}
     </div>`;
    body.querySelector('#go-cal').onclick=()=>{wrap.remove();openSchedule([p.id])};
    body.querySelector('#unfollow')?.addEventListener('click',()=>{
-    confirmDialog({title:'따라가기 해제',desc:`해제하면 이 화면은 자체 일정으로 운영돼요. 현재 일정은 복사본으로 남아요.`,confirmText:'해제',onConfirm:()=>{p.follow=null;wrap.remove();renderList();toast('따라가기를 해제했어요');}});
+    confirmDialog({title:'따라가기 해제',desc:`해제하면 이 화면은 자체 일정으로 운영돼요. 현재 일정은 복사본으로 남아요.`,confirmText:'해제',onConfirm:()=>{p.follow=null;wrap.remove();renderList();toast('따라가기를 해제했어요.');}});
    });
   }else if(tab==='info'){
    const tagEdit=e=>tagPickerMenu(e.currentTarget,{tags:TAGS,selected:p.tags,keepOpen:true,
     onToggle:t=>{p.tags.includes(t)?p.tags=p.tags.filter(x=>x!==t):p.tags.push(t);draw('info');renderList();},
-    onCreate:t=>{if(!TAGS.includes(t))TAGS.push(t);if(!p.tags.includes(t))p.tags.push(t);draw('info');renderList();toast(`'${t}' 태그를 추가했어요`);},
+    onCreate:t=>{if(!TAGS.includes(t))TAGS.push(t);if(!p.tags.includes(t))p.tags.push(t);draw('info');renderList();toast(`'${t}' 태그를 추가했어요.`);},
     onManage:openPanelTagManager});
    body.innerHTML=`
    <div class="dsec"><h3>화면 정보</h3>
@@ -701,7 +701,7 @@ function openPanelDrawer(p,tab='overview'){
      <dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd>
     </dl></div>
    <div class="dsec stb-sec"><h3>셋탑 관리</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm" id="if-stb-info">연결 코드 확인</button><button class="btn btn-sm" id="if-stb-re">${STB_IC(13)}셋탑 재연결</button>`:`<button class="btn btn-sm btn-primary" id="if-stb-connect">${STB_IC(13)}셋탑 연결하기</button>`}</div></div>
-   <div class="dsec"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3><div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요 — <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>
+   <div class="dsec"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3><div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요. <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>
    <div class="dsec danger-sec"><h3>위험 작업</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm btn-danger-t" id="if-stb-detach">셋탑 연결 해제</button>`:''}<button class="btn btn-sm btn-danger-t" id="if-del">${IC.x}화면 삭제</button></div>
     <p class="dsec-note">${p.stb?'연결 해제 시 화면 정보·일정·태그는 유지되고 다른 셋탑으로 다시 연결할 수 있어요. ':''}삭제하면 편성 일정도 함께 삭제되니 주의하세요.</p></div>`;
    const _si=body.querySelector('#if-stb-info');if(_si)_si.onclick=()=>{wrap.remove();openStbInfo(p)};
@@ -756,7 +756,7 @@ function openWallDrawer(w){
 function disbandWall(w){
  confirmDialog({title:`'${w.name}' 그룹 해제`,desc:'해제하면 각 화면이 다시 개별 화면로 돌아가요. 화면과 일정 데이터는 삭제되지 않아요.',confirmText:'해제',danger:true,onConfirm:()=>{
   w.cells.forEach(id=>panelOf(id).wall=null);
-  WALLS.splice(WALLS.indexOf(w),1);renderRail();renderList();wallsRefresh();toast(`'${w.name}'을 해제했어요`,{action:'실행 취소'});
+  WALLS.splice(WALLS.indexOf(w),1);renderRail();renderList();wallsRefresh();toast(`'${w.name}'을 해제했어요.`,{action:'실행 취소'});
  }});
 }
 /* ═══════════ 일정 관리 ═══════════ */
@@ -804,7 +804,7 @@ function openRangePicker(anchor,st,redraw){
    </div>
    <div class="drp-grid wd">${['월','화','수','목','금','토','일'].map(d=>`<span>${d}</span>`).join('')}</div>
    <div class="drp-grid">${cells.join('')}</div>
-   <div class="drp-foot">${st.noEnd?'시작일을 선택하세요 — 종료일 없이 계속 송출돼요':picking?'종료일을 선택하세요':'시작일부터 선택하세요'}</div>`;
+   <div class="drp-foot">${st.noEnd?'시작일을 선택하세요. 종료일 없이 계속 송출돼요.':picking?'종료일을 선택하세요':'시작일부터 선택하세요'}</div>`;
   m.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{let ny=y,nm=mo+ +b.dataset.nav;if(nm<1){nm=12;ny--}if(nm>12){nm=1;ny++}ym=`${ny}-${String(nm).padStart(2,'0')}`;draw()});
   m.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{
    const dt=b.dataset.d;
@@ -853,10 +853,10 @@ function addPanelFromSchedule(){
  openAddPanelModal({onCreated:p=>{
   pushRecent(p.id);
   openSchedule([p.id]);
-  toast(`'${p.name}' 화면이 준비됐어요 — 캘린더의 빈 시간을 클릭해 첫 일정을 등록해보세요`);
+  toast(`'${p.name}' 화면이 준비됐어요. 캘린더의 빈 시간을 클릭해 첫 일정을 등록해보세요.`);
  }});
 }
-const noTargetToast=()=>toast('먼저 편성할 화면을 등록해주세요',{action:'화면 등록하기',onAction:addPanelFromSchedule});
+const noTargetToast=()=>toast('먼저 편성할 화면을 등록해주세요.',{action:'화면 등록하기',onAction:addPanelFromSchedule});
 function renderTargets(){
  const t=$('#sc-targets');
  if(!scTargets.length){
@@ -873,7 +873,7 @@ function renderTargets(){
   <button class="chip" id="sc-add-target">＋ 화면 추가</button>
   <span style="font-size:12px;color:var(--text-3);margin-left:auto">여기서 등록하는 일정은 대상 전체에 한 번에 적용돼요</span>`;
  t.querySelectorAll('[data-rmt]').forEach(b=>b.onclick=()=>{scTargets=scTargets.filter(x=>x!==b.dataset.rmt);renderTargets();renderScPanels();});
- t.querySelector('#sc-add-target').onclick=()=>{const q=$('#scp-q');if(q)q.focus();toast('왼쪽 목록에서 ＋ 버튼을 누르면 대상에 추가돼요');};
+ t.querySelector('#sc-add-target').onclick=()=>{const q=$('#scp-q');if(q)q.focus();toast('왼쪽 목록에서 ＋ 버튼을 누르면 대상에 추가돼요.');};
 }
 /* 대상 화면이 없을 때 캘린더 위에 얹는 블러 오버레이 — 캘린더가 아직 사용할 수 없는 영역임을
    시각적으로만 전달(문구 없음). 화면 등록 유도는 상단 대상 바·좌측 레일의 CTA가 담당하고,
@@ -913,7 +913,7 @@ function renderCal(){
    if(!scTargets.length){noTargetToast();return}
    calMode='week';renderCal();
    openSide({days:[+cell.dataset.cmd],s:9,e:11,content:null,type:'normal'});
-   toast('주 보기로 전환했어요 — 선택한 요일로 일정 등록을 시작해요');
+   toast('주 보기로 전환했어요. 선택한 요일로 일정 등록을 시작해요.');
   });
   return;
  }
@@ -945,7 +945,7 @@ function renderCal(){
    {label:'수정',icon:IC.cal,onClick:()=>openSide({days:[b.day],s:b.s,e:b.e,content:b.content,type:b.type,edit:b})},
    {label:'다음 날로 복사',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9" stroke-linecap="round"/></svg>',onClick:()=>copyBlock(b)},
    'sep',
-   {label:'삭제',icon:IC.x,danger:true,onClick:()=>{SCHED=SCHED.filter(x=>x!==b);renderCal();toast('일정을 삭제했어요',{action:'실행 취소',onAction:()=>{SCHED.push(b);renderCal();}});}},
+   {label:'삭제',icon:IC.x,danger:true,onClick:()=>{SCHED=SCHED.filter(x=>x!==b);renderCal();toast('일정을 삭제했어요.',{action:'실행 취소',onAction:()=>{SCHED.push(b);renderCal();}});}},
   ]);
  });
  const scroll=$('#cal-scroll');if(scroll&&!scroll._scrolled){scroll.scrollTop=30;scroll._scrolled=true;}
@@ -953,9 +953,9 @@ function renderCal(){
 function copyBlock(b){
  const nd=(b.day+1)%7;
  const conflict=SCHED.some(o=>o.day===nd&&o.s<b.e&&b.s<o.e);
- if(conflict){toast(`${DAYS[nd].split(' ')[0]}요일 같은 시간에 이미 일정이 있어요`,{err:true});return}
+ if(conflict){toast(`${DAYS[nd].split(' ')[0]}요일 같은 시간에 이미 일정이 있어요.`,{err:true});return}
  const nb=SB(nd,b.s,b.e,b.content,b.type);if(b.cm)nb.cm={...b.cm};
- SCHED.push(nb);renderCal();toast(`${DAYS[nd].split(' ')[0]}요일로 복사했어요`);
+ SCHED.push(nb);renderCal();toast(`${DAYS[nd].split(' ')[0]}요일로 복사했어요.`);
 }
 /* ═══════════ 편성 콘텐츠 선택기 — 우측 Drawer(넓은 작업 공간) + 폴더 트리 탐색 ═══════════
    모달 대비 정보량이 많아도 답답하지 않도록 Drawer로 제공: 탭(콘텐츠/템플릿/재생목록) ×
@@ -966,7 +966,7 @@ function openAssetPicker(current,onPick){
  let q='',typ='all',folder='all';
  const wrap=document.createElement('div');wrap.className='drawer-wrap';
  wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true" style="width:min(760px,94vw)">
-  <div class="drawer-head"><div><h2>편성할 콘텐츠 선택</h2><span class="sub">폴더를 탐색하며 이 시간에 송출할 자산을 선택하세요 — 수정하면 재송출 없이 자동 반영돼요</span></div>
+  <div class="drawer-head"><div><h2>편성할 콘텐츠 선택</h2><span class="sub">폴더를 탐색하며 이 시간에 송출할 자산을 선택하세요. 수정하면 재송출 없이 자동 반영돼요.</span></div>
    <button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button></div>
   <div class="drawer-body" style="display:flex;flex-direction:column;padding-bottom:0">
    <div class="dtabs" id="apk-tabs" style="margin:0 0 12px"></div>
@@ -1019,9 +1019,9 @@ function openAssetPicker(current,onPick){
   if(tab==='lib'){
    const items=A.lib.filter(c=>!c.error&&inFolder(c.folder)&&(typ==='all'||c.type===typ)&&(match(c.name)||(c.tags||[]).some(t=>t.includes(q))));
    list.innerHTML=items.map(c=>row('L:'+c.id,c.g,c.e,c.name,`${c.type==='video'?'동영상 · '+durFmt(c.dur):c.type==='url'?'웹 URL':'이미지'} · ${c.size}${folder==='all'&&c.folder&&A.fPath?` · ${A.fPath(A.lf,c.folder)}`:''}`)).join('')
-    ||(A.lib.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 콘텐츠가 없어요</b><span>다른 폴더나 검색어를 확인해보세요</span></div>'
+    ||(A.lib.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 콘텐츠가 없어요</b><span>다른 폴더나 검색어를 확인해보세요.</span></div>'
      /* 콘텐츠 빈 상태: 페이지 이동 없이 드로어 안에서 바로 업로드·URL 등록 — 완료 즉시 목록 갱신되어 이어서 선택 */
-     :`<div class="empty" style="padding:40px 20px"><b>아직 등록된 콘텐츠가 없어요</b><span>이미지·동영상·웹 URL을 등록하면 여기서 바로 편성에 사용할 수 있어요</span><div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-primary btn-sm" data-apk-upload>${IC.upload}업로드</button><button class="btn btn-tonal btn-sm" data-apk-url>${IC.link}웹 URL 추가</button></div></div>`);
+     :`<div class="empty" style="padding:40px 20px"><b>아직 등록된 콘텐츠가 없어요</b><span>이미지·동영상·웹 URL을 등록하면 여기서 바로 편성에 사용할 수 있어요.</span><div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-primary btn-sm" data-apk-upload>${IC.upload}업로드</button><button class="btn btn-tonal btn-sm" data-apk-url>${IC.link}웹 URL 추가</button></div></div>`);
   }else if(tab==='tpl'){
    if(folder==='__shared__'){
     const shared=A.gals.filter(t=>match(t.name)).sort((a,b)=>b.uses-a.uses);
@@ -1030,12 +1030,12 @@ function openAssetPicker(current,onPick){
    }else{
     const mine=A.tpls.filter(t=>inFolder(t.folder)&&match(t.name));
     list.innerHTML=mine.map(t=>row('T:'+t.id,t.g,t.e,t.name,`${t.ratio} · 수정 ${t.mod}${folder==='all'&&t.folder&&A.fPath?` · ${A.fPath(A.tf,t.folder)}`:''}`)).join('')
-     ||(A.tpls.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 템플릿이 없어요</b><span>다른 폴더나 검색어를 확인해보세요</span></div>':emptyBox('아직 사용할 템플릿이 없어요','템플릿 갤러리에서 우리 매장에 맞는 템플릿을 만들어보세요','templates'));
+     ||(A.tpls.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 템플릿이 없어요</b><span>다른 폴더나 검색어를 확인해보세요.</span></div>':emptyBox('아직 사용할 템플릿이 없어요','템플릿 갤러리에서 우리 매장에 맞는 템플릿을 만들어보세요','templates'));
    }
   }else{
    const items=A.pls.filter(p=>inFolder(p.folder)&&match(p.name));
    list.innerHTML=items.map(p=>row('P:'+p.id,contentOf('P:'+p.id).g,contentOf('P:'+p.id).e,p.name,`콘텐츠 ${p.items.length}개 · ${durFmt(A.plDur(p))}${p.repeat?' · 반복 재생':''}`)).join('')
-    ||(A.pls.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 재생목록이 없어요</b><span>다른 폴더나 검색어를 확인해보세요</span></div>':emptyBox('아직 만든 재생목록이 없어요','여러 콘텐츠를 순서대로 묶어 하나의 일정으로 송출해보세요','playlists'));
+    ||(A.pls.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 재생목록이 없어요</b><span>다른 폴더나 검색어를 확인해보세요.</span></div>':emptyBox('아직 만든 재생목록이 없어요','여러 콘텐츠를 순서대로 묶어 하나의 일정으로 송출해보세요','playlists'));
   }
   wrap.querySelectorAll('[data-apkt]').forEach(b=>b.onclick=()=>{tab=b.dataset.apkt;typ='all';folder='all';draw()});
   wrap.querySelectorAll('[data-apkf]').forEach(b=>b.onclick=()=>{folder=b.dataset.apkf;draw()});
@@ -1050,13 +1050,13 @@ function openAssetPicker(current,onPick){
   /* 콘텐츠 빈 상태의 즉시 등록 — 드로어를 유지한 채 업로드/URL 등록하고, 완료되면 목록을 다시 그려 바로 선택 가능 */
   const upBtn=wrap.querySelector('[data-apk-upload]');
   if(upBtn)upBtn.onclick=()=>{
-   if(!window.simulateUpload){toast('업로드는 콘텐츠 관리에서 할 수 있어요',{err:true});return}
-   window.simulateUpload(n=>{draw();toast(`${n}개 파일을 업로드했어요 — 목록에서 바로 선택하세요`);});
+   if(!window.simulateUpload){toast('업로드는 콘텐츠 관리에서 할 수 있어요.',{err:true});return}
+   window.simulateUpload(n=>{draw();toast(`${n}개 파일을 업로드했어요. 목록에서 바로 선택하세요.`);});
   };
   const urlBtn=wrap.querySelector('[data-apk-url]');
   if(urlBtn)urlBtn.onclick=()=>{
-   if(!window.openUrlModal){toast('웹 URL 등록은 콘텐츠 관리에서 할 수 있어요',{err:true});return}
-   window.openUrlModal(nm=>{typ='all';draw();toast(`'${nm}'을 추가했어요 — 목록에서 바로 선택하세요`);});
+   if(!window.openUrlModal){toast('웹 URL 등록은 콘텐츠 관리에서 할 수 있어요.',{err:true});return}
+   window.openUrlModal(nm=>{typ='all';draw();toast(`'${nm}'을 추가했어요. 목록에서 바로 선택하세요.`);});
   };
  };
  draw();
@@ -1100,7 +1100,7 @@ function openSide(cfg){
     </div></div>
    <div class="f-row"><label>반복 주기</label>
     <div class="day-chips">${['월','화','수','목','금','토','일'].map((d,i)=>`<button class="day-chip ${sel.days.includes(i)?'on':''}" data-dc="${i}">${d}</button>`).join('')}</div></div>
-   ${scWall?`<div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요 — 같은 시간의 일반 일정보다 먼저 재생됩니다.</span></div>`
+   ${scWall?`<div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요. 같은 시간의 일반 일정보다 먼저 재생돼요.</span></div>`
    :`<div class="f-row"><label>유형 ${IC.info}</label>
     <div class="seg" style="width:100%"><button class="${sel.type==='normal'?'on':''}" data-ty="normal" style="flex:1">일반</button><button class="${sel.type==='urgent'?'on':''}" data-ty="urgent" style="flex:1">긴급 (즉시 교체)</button></div>
     ${sel.type==='urgent'?'<p style="font-size:12px;color:var(--amber);margin:8px 0 0">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>`}
@@ -1113,14 +1113,14 @@ function openSide(cfg){
    openAssetPicker(sel.contentMap[pid]||null,ref=>{sel.contentMap[pid]=ref;draw()});
   });
   const _fa=body.querySelector('#cp-fill-all');
-  if(_fa)_fa.onclick=()=>openAssetPicker(null,ref=>{wallTiles(scWall).forEach(t=>{if(t.p)sel.contentMap[t.p]=ref});draw();toast('모든 화면에 같은 콘텐츠를 지정했어요 — 필요한 화면만 개별로 바꿔보세요');});
+  if(_fa)_fa.onclick=()=>openAssetPicker(null,ref=>{wallTiles(scWall).forEach(t=>{if(t.p)sel.contentMap[t.p]=ref});draw();toast('모든 화면에 같은 콘텐츠를 지정했어요. 필요한 화면만 개별로 바꿔보세요.');});
   body.querySelectorAll('[data-dc]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dc;sel.days.includes(i)?sel.days=sel.days.filter(x=>x!==i):sel.days.push(i);draw()});
   bindPeriod(body,'sc',sel,draw);
   body.querySelector('#t-s').onchange=e=>sel.s=+e.target.value;
   body.querySelector('#t-e').onchange=e=>sel.e=+e.target.value;
   body.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{sel.type=b.dataset.ty;draw()});
   body.querySelector('#side-copy')?.addEventListener('click',()=>copyBlock(cfg.edit));
-  body.querySelector('#side-del')?.addEventListener('click',()=>{SCHED=SCHED.filter(x=>x!==cfg.edit);closeSide();renderCal();toast('일정을 삭제했어요');});
+  body.querySelector('#side-del')?.addEventListener('click',()=>{SCHED=SCHED.filter(x=>x!==cfg.edit);closeSide();renderCal();toast('일정을 삭제했어요.');});
  };
  draw();
  $('#sc-side-close').onclick=closeSide;$('#sc-cancel').onclick=closeSide;
@@ -1128,11 +1128,11 @@ function openSide(cfg){
  $('#sc-apply').onclick=()=>{
   if(scWall){
    const tw=wallTiles(scWall),an=tw.filter(t=>sel.contentMap[t.p]).length;
-   if(!an){toast('화면에 콘텐츠를 한 개 이상 지정해주세요 — [전체 같은 콘텐츠]로 한 번에 채울 수도 있어요',{err:true});return}
-  }else if(!sel.content){toast('편성할 콘텐츠를 선택해주세요 — 보유한 콘텐츠·템플릿·재생목록에서 고를 수 있어요',{err:true});return}
+   if(!an){toast('화면에 콘텐츠를 한 개 이상 지정해주세요. [전체 같은 콘텐츠]로 한 번에 채울 수도 있어요.',{err:true});return}
+  }else if(!sel.content){toast('편성할 콘텐츠를 선택해주세요. 보유한 콘텐츠·템플릿·재생목록에서 고를 수 있어요.',{err:true});return}
   const pdErr=periodError(sel);if(pdErr){toast(pdErr,{err:true});return}
   if(sel.e<=sel.s){toast('종료 시간이 시작 시간보다 빨라요',{err:true});return}
-  if(!sel.days.length){toast('반복 요일을 선택해주세요',{err:true});return}
+  if(!sel.days.length){toast('반복 요일을 선택해주세요.',{err:true});return}
   const conflicts=[];
   sel.days.forEach(d=>SCHED.forEach(o=>{if(o!==cfg.edit&&o.day===d&&o.s<sel.e&&sel.s<o.e)conflicts.push(o)}));
   const commit=()=>{
@@ -1156,15 +1156,15 @@ function openSide(cfg){
     ${[...new Set(conflicts.map(c=>`${['월','화','수','목','금','토','일'][c.day]} ${hLabel(c.s)}–${hLabel(c.e)} '${contentOf(c.content).name}'`))].slice(0,3).join('<br>')}
     <div class="opts"><button class="btn btn-sm btn-danger" id="cf-replace">겹친 일정 교체</button><button class="btn btn-sm" id="cf-skip">겹친 요일 건너뛰기</button></div></div>`;
    $('#cf-replace').onclick=()=>{SCHED=SCHED.filter(o=>!conflicts.includes(o));commit();};
-   $('#cf-skip').onclick=()=>{sel.days=sel.days.filter(d=>!conflicts.some(c=>c.day===d));if(!sel.days.length){toast('등록할 수 있는 요일이 없어요',{err:true});return}commit();};
+   $('#cf-skip').onclick=()=>{sel.days=sel.days.filter(d=>!conflicts.some(c=>c.day===d));if(!sel.days.length){toast('등록할 수 있는 요일이 없어요.',{err:true});return}commit();};
    return;
   }
   commit();
  };
 }
-$('#sc-save').onclick=()=>{if(!scTargets.length){noTargetToast();return}fg[3]=true;renderFg();toast(`일정을 저장했어요 — ${scWallName||fmt(scTargets.length)+'개 화면'}에 동기화됐어요`);};
+$('#sc-save').onclick=()=>{if(!scTargets.length){noTargetToast();return}fg[3]=true;renderFg();toast(`일정을 저장했어요. ${scWallName||fmt(scTargets.length)+'개 화면'}에 동기화됐어요.`);};
 $('#sc-copy-week').onclick=e=>{if(!scTargets.length){noTargetToast();return}popMenu(e.currentTarget,[
- {label:'다음 주로 복사',icon:IC.cal,onClick:()=>toast('이번 주 일정을 다음 주로 복사했어요')},
+ {label:'다음 주로 복사',icon:IC.cal,onClick:()=>toast('이번 주 일정을 다음 주로 복사했어요.')},
  {label:'다른 화면에 그대로 적용',icon:IC.link,onClick:()=>openShareModal(scTargets)},
 ])};
 $('#sc-broadcast').onclick=()=>{
@@ -1172,7 +1172,7 @@ $('#sc-broadcast').onclick=()=>{
  openModal(`<div class="modal-head"><div><h2>송출하기</h2><div class="sub">저장된 일정으로 ${scWallName?`'${scWallName}' 비디오월`:`${fmt(scTargets.length)}개 화면`}의 송출을 시작해요.</div></div></div>
   <div class="modal-body"><div class="sync-note">${IC.info}<span>이후 일정을 수정하면 <b>재송출 없이 자동 반영</b>돼요. 따라가기로 연결된 화면도 함께 갱신돼요.</span></div></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="bc-ok">송출 시작</button></div>`,
- {width:'440px',onMount:ov=>ov.querySelector('#bc-ok').onclick=()=>{ov.remove();fg[3]=true;fg[5]=true;renderFg();toast(`${scWallName||fmt(scTargets.length)+'개 화면'}에 송출을 시작했어요`);}});
+ {width:'440px',onMount:ov=>ov.querySelector('#bc-ok').onclick=()=>{ov.remove();fg[3]=true;fg[5]=true;renderFg();toast(`${scWallName||fmt(scTargets.length)+'개 화면'}에 송출을 시작했어요.`);}});
 };
 
 /* ═══════════ 일정 공유(따라가기) ═══════════ */
@@ -1215,7 +1215,7 @@ function openShareModal(followerIds){
  ov.querySelector('#sh-ok').onclick=()=>{
   fset.forEach(id=>panelOf(id).follow=masterId);
   ov.remove();checked.clear();renderAll();fg[3]=true;renderFg();
-  toast(`${fset.size}개 화면이 '${panelOf(masterId).name}' 일정을 따라가요`,{action:'기준 일정 열기',onAction:()=>openSchedule([masterId])});
+  toast(`${fset.size}개 화면이 '${panelOf(masterId).name}' 일정을 따라가요.`,{action:'기준 일정 열기',onAction:()=>openSchedule([masterId])});
  };
 }
 
@@ -1234,10 +1234,10 @@ function openGroupModal(ids){
  {width:'440px',onMount:ov=>{
   const i=ov.querySelector('#g-nm');i.focus();
   ov.querySelector('#g-ok').onclick=()=>{
-   const v=i.value.trim();if(!v){i.focus();toast('그룹 이름을 입력해주세요',{err:true});return}
+   const v=i.value.trim();if(!v){i.focus();toast('그룹 이름을 입력해주세요.',{err:true});return}
    GROUPS.push({id:'g'+Date.now(),name:v,ids:[...ids]});
    ov.remove();checked.clear();renderAll();fg[4]=true;renderFg();
-   toast(`'${v}' 그룹을 만들었어요 — 좌측 그룹 목록에서 확인하세요`);
+   toast(`'${v}' 그룹을 만들었어요. 좌측 그룹 목록에서 확인하세요.`);
   };
  }});
 }
@@ -1270,7 +1270,7 @@ function openWallWizard(existing,opts={}){
     페이지 이동 없이 이 자리에서 화면 등록을 안내하고, 등록이 끝나면 위저드를 이어 연다.
     (매장 자체는 온보딩 첫 단계에서 확보됨) */
  if(!existing&&!PANELS.length){
-  toast('비디오월은 매장에 설치된 화면을 묶어서 만들어요 — 먼저 화면을 1개 이상 등록해주세요',{action:'화면 등록하기',onAction:()=>openAddPanelModal({onCreated:()=>openWallWizard()})});
+  toast('비디오월은 매장에 설치된 화면을 묶어서 만들어요. 먼저 화면을 1개 이상 등록해주세요.',{action:'화면 등록하기',onAction:()=>openAddPanelModal({onCreated:()=>openWallWizard()})});
   return;
  }
  let step=schedOnly?3:existing?2:1;
@@ -1353,7 +1353,7 @@ function openWallWizard(existing,opts={}){
     selTile=null;step=2;draw();
    });
    body.querySelectorAll('[data-mydel]').forEach(el=>el.onclick=e=>{e.stopPropagation();
-    MY_WALL_LAYOUTS=MY_WALL_LAYOUTS.filter(x=>x.id!==el.dataset.mydel);draw();toast('레이아웃을 삭제했어요');
+    MY_WALL_LAYOUTS=MY_WALL_LAYOUTS.filter(x=>x.id!==el.dataset.mydel);draw();toast('레이아웃을 삭제했어요.');
    });
   }else if(step===2){
    /* ── 캔버스 편집 ── */
@@ -1364,7 +1364,7 @@ function openWallWizard(existing,opts={}){
     <div class="wb-pool">
      <select class="select select-sm" id="wb-store">${STORES.slice(0,30).map(s=>`<option value="${s.id}" ${s.id===storeId?'selected':''}>${s.name}</option>`).join('')}</select>
      <div class="pool-list">${pool.map(p=>{const used=tiles.some(t=>t.p===p.id);
-      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'err'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||'<div style="padding:14px;font-size:12px;color:var(--text-3)">이 매장에 배치 가능한 화면이 없어요 — 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요</div>'}</div>
+      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'err'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||'<div style="padding:14px;font-size:12px;color:var(--text-3)">이 매장에 배치 가능한 화면이 없어요. 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요.</div>'}</div>
      <button class="btn btn-sm" id="wb-auto">남은 화면 자동 배치</button>
      <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5">① 화면을 캔버스로 끌어다 놓거나, 빈 칸(＋)을 눌러 자리부터 잡아도 돼요.<br>② 타일을 클릭하면 크기 변경·제거, 끌면 위치 이동·맞바꾸기가 돼요.</p>
     </div>
@@ -1442,7 +1442,7 @@ function openWallWizard(existing,opts={}){
      if(dragTile!=null){const t=tiles[dragTile];
       if(canPlace(x,y,t.w,t.h,dragTile)){t.x=x;t.y=y;}
       else if(canPlace(Math.min(x,gw-t.w),Math.min(y,gh-t.h),t.w,t.h,dragTile)){t.x=Math.min(x,gw-t.w);t.y=Math.min(y,gh-t.h);}
-      else toast('그 자리는 다른 타일과 겹쳐요 — 먼저 주변 타일을 옮기거나 크기를 줄여주세요',{err:true});
+      else toast('그 자리는 다른 타일과 겹쳐요. 먼저 주변 타일을 옮기거나 크기를 줄여주세요.',{err:true});
       dragTile=null;draw();}
     });
    });
@@ -1454,7 +1454,7 @@ function openWallWizard(existing,opts={}){
      const sz=e.target.closest('[data-sz]');
      if(sz){const[w,h]=sz.dataset.sz.split('x').map(Number);const t=tiles[i];
       if(canPlace(t.x,t.y,w,h,i)){t.w=w;t.h=h;draw()}
-      else toast('캔버스를 벗어나거나 다른 타일과 겹쳐요 — 캔버스를 늘리거나 주변을 정리해주세요',{err:true});
+      else toast('캔버스를 벗어나거나 다른 타일과 겹쳐요. 캔버스를 늘리거나 주변을 정리해주세요.',{err:true});
       return}
      selTile=selTile===i?null:i;draw();
     };
@@ -1472,8 +1472,8 @@ function openWallWizard(existing,opts={}){
     const cut=(ngw,ngh)=>tiles.some(t=>t.x+t.w>ngw||t.y+t.h>ngh);
     if(k==='gw+'&&gw<GMAX)gw++;
     else if(k==='gh+'&&gh<GMAX)gh++;
-    else if(k==='gw-'&&gw>1){if(cut(gw-1,gh)){toast('줄이려는 열에 타일이 있어요 — 먼저 타일을 옮기거나 제거해주세요',{err:true});return}gw--;}
-    else if(k==='gh-'&&gh>1){if(cut(gw,gh-1)){toast('줄이려는 행에 타일이 있어요 — 먼저 타일을 옮기거나 제거해주세요',{err:true});return}gh--;}
+    else if(k==='gw-'&&gw>1){if(cut(gw-1,gh)){toast('줄이려는 열에 타일이 있어요. 먼저 타일을 옮기거나 제거해주세요.',{err:true});return}gw--;}
+    else if(k==='gh-'&&gh>1){if(cut(gw,gh-1)){toast('줄이려는 행에 타일이 있어요. 먼저 타일을 옮기거나 제거해주세요.',{err:true});return}gh--;}
     draw();
    });
    body.querySelectorAll('#wz-orient button').forEach(b=>b.onclick=()=>{orient=b.dataset.o;draw()});
@@ -1481,7 +1481,7 @@ function openWallWizard(existing,opts={}){
    body.querySelector('#vwb-compact').onclick=()=>{compact();selTile=null;draw()};
    body.querySelector('#vwb-save-layout').onclick=()=>{
     if(!tiles.length)return;
-    const save=nm=>{MY_WALL_LAYOUTS.push({id:'wl'+(++wlSeq),name:nm,gw,gh,tiles:tiles.map(t=>[t.x,t.y,t.w,t.h])});toast(`'${nm}' 레이아웃을 저장했어요 — 다음 비디오월부터 시작점에서 바로 쓸 수 있어요`)};
+    const save=nm=>{MY_WALL_LAYOUTS.push({id:'wl'+(++wlSeq),name:nm,gw,gh,tiles:tiles.map(t=>[t.x,t.y,t.w,t.h])});toast(`'${nm}' 레이아웃을 저장했어요. 다음 비디오월부터 시작점에서 바로 쓸 수 있어요.`)};
     if(window.folderNameModal)folderNameModal({title:'레이아웃 저장',initial:`${gw}×${gh} ${tiles.length}칸 레이아웃`,onSave:save});
     else save(`${gw}×${gh} ${tiles.length}칸 레이아웃`);
    };
@@ -1501,7 +1501,7 @@ function openWallWizard(existing,opts={}){
      <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">화면별 콘텐츠</b><span style="font-size:12px;color:var(--text-3)">${an} / ${placed.length} 지정</span><span class="spacer"></span><button class="btn btn-sm" id="w3-fill" ${placed.length?'':'disabled'}>전체 같은 콘텐츠</button></div>
      <div class="content-scroll" style="padding:10px;display:flex;flex-direction:column;gap:2px">
       ${placed.map(t=>{const p=panelOf(t.p);const ref=cm[t.p];const a=ref?contentOf(ref):null;
-       return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'var(--sunken)'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'} <span style="font-weight:500;color:var(--text-3)">· ${t.w}×${t.h}</span></b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요</span></div>'}
+       return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'var(--sunken)'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'} <span style="font-weight:500;color:var(--text-3)">· ${t.w}×${t.h}</span></b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요.</span></div>'}
       <p style="font-size:12px;color:var(--text-3);margin:8px 4px 0;line-height:1.5">화면마다 서로 다른 콘텐츠를 지정할 수 있어요. 지정하지 않은 화면은 검은 화면으로 대기해요.</p>
      </div>
     </div>
@@ -1515,7 +1515,7 @@ function openWallWizard(existing,opts={}){
         <span style="color:var(--text-3)">–</span>
         <select class="select select-sm" id="w3-e" aria-label="종료 시간">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===scE?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
        <div class="f-row" style="margin:0"><label>반복 주기</label><div class="day-chips">${['월','화','수','목','금','토','일'].map((d,i)=>`<button class="day-chip ${scDays.includes(i)?'on':''}" data-w3d="${i}">${d}</button>`).join('')}</div></div>
-       <div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요 — 같은 시간의 일반 일정보다 먼저 재생됩니다.</span></div>
+       <div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요. 같은 시간의 일반 일정보다 먼저 재생돼요.</span></div>
       </div>
      </div>
      <div class="scp-sec" style="padding:12px 2px 4px">미리보기</div>
@@ -1529,7 +1529,7 @@ function openWallWizard(existing,opts={}){
     openAssetPicker(cm[pid]||null,ref=>{cm[pid]=ref;draw()});
    });
    const _wf=body.querySelector('#w3-fill');
-   if(_wf)_wf.onclick=()=>openAssetPicker(null,ref=>{placed.forEach(t=>{cm[t.p]=ref});draw();toast('모든 화면에 같은 콘텐츠를 지정했어요 — 필요한 화면만 개별로 바꿔보세요');});
+   if(_wf)_wf.onclick=()=>openAssetPicker(null,ref=>{placed.forEach(t=>{cm[t.p]=ref});draw();toast('모든 화면에 같은 콘텐츠를 지정했어요. 필요한 화면만 개별로 바꿔보세요.');});
    body.querySelectorAll('[data-w3d]').forEach(b=>b.onclick=()=>{const i=+b.dataset.w3d;scDays.includes(i)?scDays=scDays.filter(x=>x!==i):scDays.push(i);scDays.sort();draw()});
    bindPeriod(body,'w3',scPd,draw);
    body.querySelector('#w3-s').onchange=e=>scS=+e.target.value;
@@ -1540,7 +1540,7 @@ function openWallWizard(existing,opts={}){
  ov.querySelector('#wz-next').onclick=()=>{
   const placed=tiles.filter(t=>t.p);
   if(step===2){
-   if(!placed.length){toast('화면을 한 개 이상 배치해주세요 — 왼쪽 목록에서 화면을 캔버스로 끌어다 놓으세요',{err:true});return}
+   if(!placed.length){toast('화면을 한 개 이상 배치해주세요. 왼쪽 목록에서 화면을 캔버스로 끌어다 놓으세요.',{err:true});return}
    Object.keys(cm).forEach(pid=>{if(!placed.some(t=>t.p===pid))delete cm[pid]});
    step=3;selTile=null;draw();return;
   }
@@ -1549,7 +1549,7 @@ function openWallWizard(existing,opts={}){
   if(an){
    const pdErr=periodError(scPd);if(pdErr){toast(pdErr,{err:true});return}
    if(scE<=scS){toast('종료 시간이 시작 시간보다 빨라요',{err:true});return}
-   if(!scDays.length){toast('반복 요일을 선택해주세요',{err:true});return}
+   if(!scDays.length){toast('반복 요일을 선택해주세요.',{err:true});return}
   }
   const doSave=nm=>{
    name=nm;
@@ -1575,10 +1575,10 @@ function openWallWizard(existing,opts={}){
    }
    ov.remove();renderAll();fg[4]=true;renderFg();wallsRefresh();
    toast(schedOnly
-    ?`'${name}' 비디오월 일정을 수정했어요 — 화면 ${an}개 콘텐츠 지정 · ${hLabel(scS)}–${hLabel(scE)} 주 ${scDays.length}회`
+    ?`'${name}' 비디오월 일정을 수정했어요. 화면 ${an}개에 콘텐츠를 지정하고 ${hLabel(scS)}–${hLabel(scE)} 주 ${scDays.length}회로 편성했어요.`
     :an
-    ?`'${name}' 비디오월이 준비됐어요 — 화면 ${an}개 콘텐츠 지정 · ${hLabel(scS)}–${hLabel(scE)} 주 ${scDays.length}회 편성까지 완료${ghostN?` (빈 칸 ${ghostN}개 제외)`:''}`
-    :`'${name}' 레이아웃을 저장했어요 — 콘텐츠·일정은 [일정 편집]에서 언제든 등록할 수 있어요`);
+    ?`'${name}' 비디오월이 준비됐어요. 화면 ${an}개에 콘텐츠를 지정하고 ${hLabel(scS)}–${hLabel(scE)} 주 ${scDays.length}회로 편성했어요${ghostN?` (빈 칸 ${ghostN}개 제외)`:''}.`
+    :`'${name}' 레이아웃을 저장했어요. 콘텐츠·일정은 [일정 편집]에서 언제든 등록할 수 있어요.`);
   };
   if(schedOnly){doSave(name);return} /* 일정 수정만 — 이름 재입력 없이 바로 저장 */
   if(window.saveNameModal)saveNameModal({title:existing?'비디오월 저장':'비디오월 만들기',label:'비디오월 이름',initial:name||storeName()+' 미디어월',placeholder:'예) 로비 미디어월',confirmText:existing?'저장':'만들기',onSave:doSave});
@@ -1597,8 +1597,8 @@ $('#fg-toggle').onclick=()=>$('#flow-guide').classList.toggle('min');
 $$('.fg-step').forEach(s=>s.onclick=()=>{
  const n=+s.dataset.fg;
  const backToMain=()=>{$('#screen-schedule').hidden=true;$('#app').style.display='flex';};
- if(n===1){backToMain();flt={...flt,view:'attention',store:null,region:null,group:null,status:'all'};fg[1]=true;page=1;renderAll();renderFg();toast('주의가 필요한 화면만 모아서 보여드려요');}
- else if(n===2){backToMain();const arr=sorted(collapseWalls(baseFiltered())).filter(p=>!p.wall).slice(0,5);arr.forEach(p=>checked.add(p.id));fg[2]=true;renderList();renderFg();toast('상단 목록에서 체크박스로 화면을 선택해보세요 — 5개를 미리 선택했어요');}
+ if(n===1){backToMain();flt={...flt,view:'attention',store:null,region:null,group:null,status:'all'};fg[1]=true;page=1;renderAll();renderFg();toast('주의가 필요한 화면만 모아서 보여드려요.');}
+ else if(n===2){backToMain();const arr=sorted(collapseWalls(baseFiltered())).filter(p=>!p.wall).slice(0,5);arr.forEach(p=>checked.add(p.id));fg[2]=true;renderList();renderFg();toast('상단 목록에서 체크박스로 화면을 선택해보세요. 5개를 미리 선택했어요.');}
  else if(n===3){openSchedule(PANELS.length?(checked.size?[...checked]:[masterP.id]):[]);}
  else if(n===4){backToMain();openWallWizard();}
  else{if(!$('#screen-schedule').hidden)$('#sc-broadcast').click();else if(!PANELS.length)openSchedule([]); /* 빈 상태 진입 — 오버레이가 화면 등록부터 안내 */
@@ -1641,11 +1641,11 @@ function renderScPanels(){
   if(scTargets.length===1&&scTargets[0]===id)return;
   scTargets=[id];scWallName=null;scWall=null;pushRecent(id);
   renderTargets();renderScPanels();closeSide();
-  toast(`'${storeOf(panelOf(id).store).name} · ${panelOf(id).name}' 일정으로 전환했어요`);
+  toast(`'${storeOf(panelOf(id).store).name} · ${panelOf(id).name}' 일정으로 전환했어요.`);
  }));
  el.querySelectorAll('[data-scpadd]').forEach(b=>b.onclick=e=>{e.stopPropagation();
   const id=b.dataset.scpadd;
-  if(!scTargets.includes(id)){scTargets.push(id);renderTargets();renderScPanels();toast(`'${panelOf(id).name}'을 적용 대상에 추가했어요 — 등록하는 일정이 함께 적용돼요`)}
+  if(!scTargets.includes(id)){scTargets.push(id);renderTargets();renderScPanels();toast(`'${panelOf(id).name}'을 적용 대상에 추가했어요. 등록하는 일정이 함께 적용돼요.`)}
  });
 }
 attachSearchUX($('#scp-q'),q=>{scpQ=q;renderScPanels()});
@@ -1775,7 +1775,7 @@ function renderWallsPage(root){
    const w=WALLS.find(x=>x.id===b.getAttribute('data-vw-menu'));
    popMenu(b,[
     {label:'상세 보기',icon:IC.monitor,onClick:()=>openWallDrawer(w)},
-    {label:'이름 변경',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.5 20.5 7 8 19.5 3.5 20.5 4.5 16 17 3.5Z"/></svg>',onClick:()=>{if(window.folderNameModal)folderNameModal({title:'비디오월 이름 변경',initial:w.name,onSave:nm=>{w.name=nm;wallsRefresh();toast('이름을 변경했어요')}})}},
+    {label:'이름 변경',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.5 20.5 7 8 19.5 3.5 20.5 4.5 16 17 3.5Z"/></svg>',onClick:()=>{if(window.folderNameModal)folderNameModal({title:'비디오월 이름 변경',initial:w.name,onSave:nm=>{w.name=nm;wallsRefresh();toast('이름을 변경했어요.')}})}},
     'sep',
     {label:'그룹 해제',icon:IC.x,danger:true,onClick:()=>disbandWall(w)},
    ]);
@@ -1800,7 +1800,7 @@ function renderWallsPage(root){
       <button class="btn btn-sm" data-vw-edit="${w.id}" style="flex:1">레이아웃 편집</button>
       <button class="icon-btn" data-vw-menu="${w.id}" aria-label="더보기">${IC.dots}</button>
      </div></div></div>`;
-  }).join('')||`<div style="grid-column:1/-1">${wallsQ?searchEmptyHtml(wallsQ):`<div class="empty"><b>조건에 맞는 비디오월이 없어요</b><span>필터를 바꿔보세요</span></div>`}</div>`;
+  }).join('')||`<div style="grid-column:1/-1">${wallsQ?searchEmptyHtml(wallsQ):`<div class="empty"><b>조건에 맞는 비디오월이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
   const _gse=grid.querySelector('[data-se-reset]');if(_gse)_gse.onclick=()=>{wallsQ='';renderWallsPage(root);root.querySelector('#vw-q')?.focus();};
   bindWallRows(grid);
  }
@@ -1827,7 +1827,7 @@ function renderWallsPage(root){
       <button class="icon-btn" data-vw-menu="${w.id}" aria-label="더보기">${IC.dots}</button>
      </div></td></tr>`;
    }).join('')}
-  </tbody></table></div>`:(wallsQ?searchEmptyHtml(wallsQ):`<div class="empty"><b>조건에 맞는 비디오월이 없어요</b><span>필터를 바꿔보세요</span></div>`);
+  </tbody></table></div>`:(wallsQ?searchEmptyHtml(wallsQ):`<div class="empty"><b>조건에 맞는 비디오월이 없어요</b><span>필터를 바꿔보세요.</span></div>`);
   const _lse=list.querySelector('[data-se-reset]');if(_lse)_lse.onclick=()=>{wallsQ='';renderWallsPage(root);root.querySelector('#vw-q')?.focus();};
   const _va=list.querySelector('#vw-all');
   if(_va)_va.onclick=()=>{const all=arr.length&&arr.every(w=>wallsChecked.has(w.id));arr.forEach(w=>all?wallsChecked.delete(w.id):wallsChecked.add(w.id));renderWallsPage(root);};
@@ -1846,7 +1846,7 @@ function renderWallsPage(root){
     const n=wallsChecked.size;
     confirmDialog({title:`비디오월 ${n}개 그룹 해제`,desc:'해제하면 각 화면이 다시 개별 화면로 돌아가요. 화면과 일정 데이터는 삭제되지 않아요.',confirmText:'해제',danger:true,onConfirm:()=>{
      [...wallsChecked].forEach(id=>{const w=WALLS.find(x=>x.id===id);if(w){w.cells.forEach(cid=>{const p=panelOf(cid);if(p)p.wall=null});WALLS.splice(WALLS.indexOf(w),1);}});
-     wallsChecked.clear();renderRail();renderList();renderWallsPage(root);toast(`비디오월 ${n}개를 해제했어요`);
+     wallsChecked.clear();renderRail();renderList();renderWallsPage(root);toast(`비디오월 ${n}개를 해제했어요.`);
     }});
    };
   }

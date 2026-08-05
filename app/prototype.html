@@ -9,7 +9,7 @@
   <aside class="auth-brand">
     <div class="logo"><img src="../uploads/Logo-Horizontal-Dark.svg" alt="syncsign" style="height:28px;width:auto;display:block"></div>
     <h1>매장의 모든 화면을<br>한 곳에서 관리하세요</h1>
-    <p>메뉴판·광고·안내 화면을 웹에서 만들고, 전국 매장의 화면에 원격으로 송출하는 디지털 사이니지 클라우드입니다.</p>
+    <p>메뉴판·광고·안내 화면을 웹에서 만들고, 전국 매장의 화면에 원격으로 송출하는 디지털 사이니지 클라우드예요.</p>
     <div class="auth-mock"><div class="bar"><i></i><i></i><i></i></div>
       <div class="scr">
         <i style="background:linear-gradient(135deg,#7A1E1E,#3D0E0E)">🍅</i>
@@ -185,10 +185,10 @@ function tagManageModal({label,tags,usageOf,onCreate,onRename,onDelete}){
   const listEl=ov.querySelector('#tm-list');
   const draw=()=>{
    listEl.innerHTML=tags.length?tags.map(t=>`<div class="tm-row" data-row="${t}"><span class="tp-dot"></span><span class="tm-nm">${t}</span><span class="tm-cnt num">${usageOf?usageOf(t):0}</span><span class="tm-tools"><button class="icon-btn" data-edit="${t}" aria-label="이름 변경">${IC.edit}</button><button class="icon-btn" data-del="${t}" aria-label="삭제">${IC.trash}</button></span></div>`).join(''):'<div class="tp-empty" style="padding:26px 0">아직 태그가 없어요. 위 입력창에서 첫 태그를 만들어보세요.</div>';
-   listEl.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const t=b.dataset.del;const n=usageOf?usageOf(t):0;confirmDialog({title:`'${t}' 태그를 삭제할까요?`,desc:n?`삭제한 태그는 복구할 수 없습니다. 이 태그가 붙은 ${n}개 항목에서 태그만 제거되고, 항목 자체는 삭제되지 않아요.`:'삭제한 태그는 복구할 수 없습니다. 이 태그가 붙은 항목은 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{onDelete(t);draw();}});});
-   listEl.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const t=b.dataset.edit;const cell=listEl.querySelector('[data-row="'+t+'"] .tm-nm');cell.innerHTML='<input class="input input-sm" id="tm-edit" value="'+t.replace(/"/g,'&quot;')+'" maxlength="20">';const inp=cell.querySelector('#tm-edit');inp.focus();inp.select();const commit=()=>{const v=inp.value.trim();if(v&&v!==t){if(tags.includes(v)){toast('같은 이름의 태그가 이미 있어요',{err:true});draw();return;}onRename(t,v);}draw();};inp.onblur=commit;inp.onkeydown=e=>{if(e.key==='Enter')commit();else if(e.key==='Escape')draw();};});
+   listEl.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const t=b.dataset.del;const n=usageOf?usageOf(t):0;confirmDialog({title:`'${t}' 태그를 삭제할까요?`,desc:n?`삭제한 태그는 복구할 수 없어요. 이 태그가 붙은 ${n}개 항목에서 태그만 제거되고, 항목 자체는 삭제되지 않아요.`:'삭제한 태그는 복구할 수 없어요. 이 태그가 붙은 항목은 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{onDelete(t);draw();}});});
+   listEl.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const t=b.dataset.edit;const cell=listEl.querySelector('[data-row="'+t+'"] .tm-nm');cell.innerHTML='<input class="input input-sm" id="tm-edit" value="'+t.replace(/"/g,'&quot;')+'" maxlength="20">';const inp=cell.querySelector('#tm-edit');inp.focus();inp.select();const commit=()=>{const v=inp.value.trim();if(v&&v!==t){if(tags.includes(v)){toast('같은 이름의 태그가 이미 있어요.',{err:true});draw();return;}onRename(t,v);}draw();};inp.onblur=commit;inp.onkeydown=e=>{if(e.key==='Enter')commit();else if(e.key==='Escape')draw();};});
   };
-  const add=()=>{const i=ov.querySelector('#tm-new');const v=i.value.trim();if(!v)return;if(tags.includes(v)){toast('이미 있는 태그예요',{err:true});return;}onCreate(v);i.value='';draw();i.focus();};
+  const add=()=>{const i=ov.querySelector('#tm-new');const v=i.value.trim();if(!v)return;if(tags.includes(v)){toast('이미 있는 태그예요.',{err:true});return;}onCreate(v);i.value='';draw();i.focus();};
   ov.querySelector('#tm-add').onclick=add;
   ov.querySelector('#tm-new').addEventListener('keydown',e=>{if(e.key==='Enter')add();});
   draw();
@@ -438,7 +438,7 @@ const RO_ALLOW='[data-close],#perm-exit,.ro-ok';
  if(!el||e.target.closest(RO_ALLOW))return;
  if(ev==='keydown'&&e.key!=='Enter'&&e.key!==' ')return;
  e.preventDefault();e.stopImmediatePropagation();
- toast(`${previewRole?ROLE_META[previewRole][0]:'이'} 권한에서는 편집할 수 없어요`,{err:true});
+ toast(`${previewRole?ROLE_META[previewRole][0]:'이'} 권한에서는 편집할 수 없어요.`,{err:true});
 },true));
 
 /* ═══════════ 인증 ═══════════ */
@@ -456,7 +456,7 @@ function renderLogin(err,email){
  $('#google-login').onclick=()=>enterApp(false,'Google 계정으로 로그인했어요');
  $('#li-submit').onclick=()=>{
   const em=$('#li-email').value.trim(),pw=$('#li-pw').value;
-  if(!em||!pw){toast('이메일과 비밀번호를 입력해주세요',{err:true});return}
+  if(!em||!pw){toast('이메일과 비밀번호를 입력해주세요.',{err:true});return}
   if(pw==='error'){renderLogin(true,em);return}
   enterApp(false,'로그인했어요');
  };
@@ -476,7 +476,7 @@ function renderForgot(prefill){
   const em=$('#fg-email').value.trim();
   const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
   $('#fg-email').classList.toggle('error',!ok);
-  if(!ok){toast('올바른 이메일을 입력해주세요',{err:true});return}
+  if(!ok){toast('올바른 이메일을 입력해주세요.',{err:true});return}
   renderForgotSent(em);
  };
  $('#fg-submit').onclick=submit;
@@ -490,7 +490,7 @@ function renderForgotSent(email){
   <div class="sync-note" style="margin-top:16px">${IC.info}<span>메일이 보이지 않으면 스팸함을 확인하거나, 잠시 후 <a id="fg-resend" style="color:var(--blue);font-weight:600;cursor:pointer">다시 보내기</a>를 눌러주세요.</span></div>
   <button class="btn btn-lg" id="fg-tologin" style="width:100%;margin-top:16px">로그인으로 돌아가기</button>
   <div class="foot" style="margin-top:14px;font-size:12px;color:var(--text-3)">프로토타입: <a id="fg-openlink" style="color:var(--blue);font-weight:600;cursor:pointer">재설정 링크 열기</a>를 눌러 다음 화면을 확인할 수 있어요</div>`;
- $('#fg-resend').onclick=()=>toast('재설정 링크를 다시 보냈어요');
+ $('#fg-resend').onclick=()=>toast('재설정 링크를 다시 보냈어요.');
  $('#fg-tologin').onclick=()=>renderLogin(false);
  $('#fg-openlink').onclick=()=>renderResetEmail(email);
 }
@@ -513,7 +513,7 @@ function renderResetEmail(email){
     <a id="me-reset" style="display:inline-block;background:#1367F4;color:#fff;font-weight:700;font-size:16px;padding:16px 34px;border-radius:12px;text-decoration:none;cursor:pointer">비밀번호 재설정</a>
     <p style="margin:28px 0 0;font-size:14px;line-height:1.7;color:#6D7683">이 링크는 <b style="color:#1367F4">30분 후</b> 만료돼요. 만료됐다면 로그인 화면에서 다시 요청해 주세요.</p>
     <div style="height:1px;background:#E5E7EB;margin:28px 0"></div>
-    <p style="margin:0;font-size:14px;line-height:1.7;color:#6D7683">본인이 요청하지 않았다면 이 메일을 무시해주세요.<br>기존 비밀번호가 유지됩니다.</p>
+    <p style="margin:0;font-size:14px;line-height:1.7;color:#6D7683">본인이 요청하지 않았다면 이 메일을 무시해주세요.<br>기존 비밀번호가 유지돼요.</p>
    </div>
   </div>`;
  $('#me-back').onclick=()=>{s.hidden=true;$('#screen-auth').hidden=false;renderForgotSent(em);};
@@ -570,7 +570,7 @@ function renderInviteExpired(inv){
   <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px 20px">
    <div style="width:100%;max-width:460px;text-align:center">
     <svg width="64" height="64" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 28px"><circle cx="24" cy="24" r="24" fill="#9AA3B2"/><rect x="22" y="11" width="4" height="17" rx="2" fill="#fff"/><circle cx="24" cy="34" r="3" fill="#fff"/></svg>
-    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.02em;word-break:keep-all">초대 링크가 만료되었습니다.</h1>
+    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.02em;word-break:keep-all">초대 링크가 만료됐어요.</h1>
     <p style="margin:0 0 32px;font-size:15px;line-height:1.6;color:var(--text-2);word-break:keep-all">관리자에게 다시 초대를 요청해주세요.</p>
     <button class="btn btn-lg" id="ix-tologin" style="width:100%">로그인으로 돌아가기</button>
     <div style="margin-top:14px;font-size:12px;color:var(--text-3)">프로토타입: <a id="ix-valid" style="color:var(--blue);font-weight:600;cursor:pointer">유효한 링크로 열기</a>를 눌러 정상 수락 화면을 확인할 수 있어요</div>
@@ -598,12 +598,12 @@ function renderReset(){
   const v=pw.value,v2=$('#rs-pw2').value;
   const lenOk=v.length>=8;
   $('#rs-pw').classList.toggle('error',!lenOk);
-  if(!lenOk){toast('비밀번호는 8자 이상이어야 해요',{err:true});return}
+  if(!lenOk){toast('비밀번호는 8자 이상이어야 해요.',{err:true});return}
   const match=v===v2;
   $('#rs-pw2').classList.toggle('error',!match);
-  if(!match){toast('비밀번호가 일치하지 않아요',{err:true});return}
+  if(!match){toast('비밀번호가 일치하지 않아요.',{err:true});return}
   renderLogin(false);
-  toast('비밀번호가 변경됐어요. 새 비밀번호로 로그인해 주세요');
+  toast('비밀번호가 변경됐어요. 새 비밀번호로 로그인해 주세요.');
  };
  $('#rs-submit').onclick=submit;
  $('#rs-pw2').addEventListener('keydown',e=>e.key==='Enter'&&submit());
@@ -647,8 +647,8 @@ function renderSignup(invite){
   let bad=false;
   const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
   [['#su-name',!!nm],['#su-email',emailOk],['#su-pw',pw.value.length>=8]].forEach(([sel,ok])=>{$(sel).classList.toggle('error',!ok);if(!ok)bad=true});
-  if(bad){toast('필수 항목을 확인해주세요',{err:true});$('#auth-card .input.error')?.focus();return}
-  if(!$('#su-terms').classList.contains('on')){toast('약관에 동의해주세요',{err:true});return}
+  if(bad){toast('필수 항목을 확인해주세요.',{err:true});$('#auth-card .input.error')?.focus();return}
+  if(!$('#su-terms').classList.contains('on')){toast('약관에 동의해주세요.',{err:true});return}
   completeSignup({name:nm,email:em,invite:inv,via:'email'});
  };
  nameInp.focus();
@@ -672,7 +672,7 @@ function renderGoogleSignup(invite){
  $('#gs-terms').onclick=e=>e.currentTarget.classList.toggle('on');
  $('#gs-back').onclick=()=>renderSignup(inv);
  $('#gs-submit').onclick=()=>{
-  if(!$('#gs-terms').classList.contains('on')){toast('약관에 동의해주세요',{err:true});return}
+  if(!$('#gs-terms').classList.contains('on')){toast('약관에 동의해주세요.',{err:true});return}
   completeSignup({name:g.name,email:g.email,invite:inv,via:'google'});
  };
 }
@@ -784,7 +784,7 @@ function renderOnboard(){
    /* 코드를 비워두면 화면 없이 진행(=나중에 하기). 입력했다면 6자리를 모두 채워야 한다 */
    if(code&&code.length<STB_CODE_LEN){
     codeInp.classList.add('error');codeInp.focus();
-    toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요`,{err:true});return;
+    toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return;
    }
    if(code){obDone.panel=true;STORES[0].panels={on:1,total:1,last:'방금 전'};window.__addPanel&&window.__addPanel(STORES[0].id,'첫 화면',code);}
    finishOnboard(!!code);
@@ -933,7 +933,7 @@ function drawUsers(){
    <td style="font-size:13px">${u.scope}</td><td>${st}</td>
    <td style="font-size:13px;color:var(--text-3)">${u.last}</td>
    <td><button class="icon-btn" data-um="${u.id}">${IC.dots}</button></td></tr>`;
- }).join('')||`<tr><td colspan="7">${uFlt.q?searchEmptyHtml(uFlt.q):`<div class="empty"><b>조건에 맞는 사용자가 없어요</b><span>필터를 바꿔보세요</span></div>`}</td></tr>`;
+ }).join('')||`<tr><td colspan="7">${uFlt.q?searchEmptyHtml(uFlt.q):`<div class="empty"><b>조건에 맞는 사용자가 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  {const _q=document.getElementById('u-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
   const _r=document.querySelector('#u-tbody [data-se-reset]');if(_r)_r.onclick=()=>{uFlt.q='';if(_q)_q.value='';drawUsers();_q&&_q.focus();};}
  $$('#u-tbody [data-uc]').forEach(c=>c.onclick=()=>{const id=c.dataset.uc;uChecked.has(id)?uChecked.delete(id):uChecked.add(id);drawUsers()});
@@ -942,13 +942,13 @@ function drawUsers(){
   const items=[
    {label:'정보 수정',icon:IC.edit,onClick:()=>openUserEdit(u)},
    {title:'역할 변경'},
-   ...['admin','viewer'].map(r=>({label:ROLE_META[r][0],checked:u.role===r,onClick:()=>{if(u.role==='owner'){toast('최고관리자는 변경할 수 없어요',{err:true});return}u.role=r;drawUsers();toast(`${u.name}님의 역할을 '${ROLE_META[r][0]}'(으)로 변경했어요`)}})),
+   ...['admin','viewer'].map(r=>({label:ROLE_META[r][0],checked:u.role===r,onClick:()=>{if(u.role==='owner'){toast('최고관리자는 변경할 수 없어요.',{err:true});return}u.role=r;drawUsers();toast(`${u.name}님의 역할을 '${ROLE_META[r][0]}'(으)로 변경했어요.`)}})),
    'sep'];
-  if(u.status==='invited')items.push({label:'초대 메일 재발송',icon:IC.copy,onClick:()=>toast(`${u.email}로 초대 메일을 다시 보냈어요`)});
+  if(u.status==='invited')items.push({label:'초대 메일 재발송',icon:IC.copy,onClick:()=>toast(`${u.email}로 초대 메일을 다시 보냈어요.`)});
   if(u.status==='invited')items.push({label:'초대 메일 미리보기',icon:IC.ext,onClick:()=>renderInviteEmail({email:u.email,role:u.role,scope:u.scope,back:()=>{$('#app').hidden=false;}})});
-  if(u.status==='active'&&u.role!=='owner')items.push({label:'비활성화',icon:IC.x,onClick:()=>{u.status='inactive';drawUsers();toast(`${u.name}님을 비활성화했어요 — 로그인할 수 없어요`)}});
-  if(u.status==='inactive')items.push({label:'다시 활성화',icon:IC.checkBig,onClick:()=>{u.status='active';drawUsers();toast(`${u.name}님을 활성화했어요`)}});
-  if(u.role!=='owner')items.push({label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${u.name}' 사용자를 삭제할까요?`,desc:'삭제한 사용자는 복구할 수 없습니다. 사용자 정보와 권한이 모두 삭제되며, 다시 사용하려면 새로 초대해야 해요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(x=>x!==u);drawUsers();toast('사용자를 삭제했어요')}})});
+  if(u.status==='active'&&u.role!=='owner')items.push({label:'비활성화',icon:IC.x,onClick:()=>{u.status='inactive';drawUsers();toast(`${u.name}님을 비활성화했어요. 이제 로그인할 수 없어요.`)}});
+  if(u.status==='inactive')items.push({label:'다시 활성화',icon:IC.checkBig,onClick:()=>{u.status='active';drawUsers();toast(`${u.name}님을 활성화했어요.`)}});
+  if(u.role!=='owner')items.push({label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${u.name}' 사용자를 삭제할까요?`,desc:'삭제한 사용자는 복구할 수 없어요. 사용자 정보와 권한이 모두 삭제되며, 다시 사용하려면 새로 초대해야 해요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(x=>x!==u);drawUsers();toast('사용자를 삭제했어요.')}})});
   popMenu(b,items);
  });
  const ua=$('#u-all');if(ua){const arr=usersFiltered();ua.classList.toggle('on',!!arr.length&&arr.every(u=>uChecked.has(u.id)));}
@@ -958,9 +958,9 @@ function drawUsers(){
    <button class="btn" id="ub-role">역할 변경</button><button class="btn" id="ub-off">비활성화</button><button class="btn danger-t" id="ub-del">삭제</button>
    <button class="close icon-btn" id="ub-x" aria-label="선택 해제">${IC.x}</button>`;
   bulk.querySelector('#ub-x').onclick=()=>{uChecked.clear();drawUsers()};
-  bulk.querySelector('#ub-role').onclick=e=>popMenu(e.currentTarget,['admin','viewer'].map(r=>({label:ROLE_META[r][0],onClick:()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.role=r});uChecked.clear();drawUsers();toast('역할을 변경했어요')}})));
-  bulk.querySelector('#ub-off').onclick=()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.status='inactive'});uChecked.clear();drawUsers();toast('선택한 사용자를 비활성화했어요')};
-  bulk.querySelector('#ub-del').onclick=()=>confirmDialog({title:`사용자 ${uChecked.size}명을 삭제할까요?`,desc:'삭제한 사용자는 복구할 수 없습니다. 사용자 정보와 권한이 모두 삭제되며, 다시 사용하려면 새로 초대해야 해요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(u=>!uChecked.has(u.id)||u.role==='owner');uChecked.clear();drawUsers();toast('삭제했어요')}});
+  bulk.querySelector('#ub-role').onclick=e=>popMenu(e.currentTarget,['admin','viewer'].map(r=>({label:ROLE_META[r][0],onClick:()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.role=r});uChecked.clear();drawUsers();toast('역할을 변경했어요.')}})));
+  bulk.querySelector('#ub-off').onclick=()=>{uChecked.forEach(id=>{const u=userOf(id);if(u&&u.role!=='owner')u.status='inactive'});uChecked.clear();drawUsers();toast('선택한 사용자를 비활성화했어요.')};
+  bulk.querySelector('#ub-del').onclick=()=>confirmDialog({title:`사용자 ${uChecked.size}명을 삭제할까요?`,desc:'삭제한 사용자는 복구할 수 없어요. 사용자 정보와 권한이 모두 삭제되며, 다시 사용하려면 새로 초대해야 해요.',confirmText:'삭제',danger:true,onConfirm:()=>{USERS=USERS.filter(u=>!uChecked.has(u.id)||u.role==='owner');uChecked.clear();drawUsers();toast('삭제했어요.')}});
  }
 }
 function openInviteModal(){
@@ -996,7 +996,7 @@ function openInviteModal(){
    const scope=ov.querySelector('#iv-scope').value;
    USERS.push({id:'u'+(uSeq++),name:em.split('@')[0],email:em,role,scope,status:'invited',last:'—',c:AV[uSeq%8]});
    ov.remove();drawUsers();
-   toast(`${em}으로 초대 메일을 보냈어요`,{action:'재발송',onAction:()=>toast('초대 메일을 다시 보냈어요')});
+   toast(`${em}으로 초대 메일을 보냈어요.`,{action:'재발송',onAction:()=>toast('초대 메일을 다시 보냈어요.')});
   };
   ov.querySelector('#iv-send').onclick=send;
   inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();send()}};
@@ -1012,7 +1012,7 @@ function openUserEdit(u){
    <div class="f-row"><label>담당 매장</label><select class="select" id="ue-scope"><option ${u.scope==='전체 매장'?'selected':''}>전체 매장</option>${STORES.map(s=>`<option ${u.scope===s.name?'selected':''}>${s.name}</option>`).join('')}</select></div>
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="ue-ok">저장</button></div>`,
- {width:'420px',onMount:ov=>ov.querySelector('#ue-ok').onclick=()=>{u.name=ov.querySelector('#ue-nm').value.trim()||u.name;u.scope=ov.querySelector('#ue-scope').value;ov.remove();drawUsers();toast('저장했어요')}});
+ {width:'420px',onMount:ov=>ov.querySelector('#ue-ok').onclick=()=>{u.name=ov.querySelector('#ue-nm').value.trim()||u.name;u.scope=ov.querySelector('#ue-scope').value;ov.remove();drawUsers();toast('저장했어요.')}});
 }
 function openRolesDrawer(){
  let cur='admin';
@@ -1026,7 +1026,7 @@ function openRolesDrawer(){
     <div class="role-tabs">${['admin','viewer'].map(r=>`<button class="chip ${cur===r?'on':''}" data-rt="${r}">${ROLE_META[r][0]}<span class="cnt num">${USERS.filter(u=>u.role===r).length}명</span></button>`).join('')}</div>
     <div class="sync-note">${IC.info}<span><b>${ROLE_META[cur][0]}</b> 역할의 기본 권한이에요. 바꾸면 이 역할의 모든 사용자에게 적용돼요.</span></div>
     <table class="perm-table"><thead><tr><th>페이지</th>${PERM_LV.map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>
-    ${PERM_PAGES.map(([pid,pname])=>`<tr><td>${pname}${pid==='users'?'<span class="sub">최고관리자 계정은 변경·삭제할 수 없어요</span>':''}</td>
+    ${PERM_PAGES.map(([pid,pname])=>`<tr><td>${pname}${pid==='users'?'<span class="sub">최고관리자 계정은 변경·삭제할 수 없어요.</span>':''}</td>
      ${PERM_LV.map((l,lv)=>`<td><span class="radio ${ROLE_PERMS[cur][pid]===lv?'on':''}" data-perm="${pid}:${lv}" role="radio" tabindex="0"></span></td>`).join('')}</tr>`).join('')}
     </tbody></table>`;
    wrap.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>{cur=b.dataset.rt;draw()});
@@ -1036,8 +1036,8 @@ function openRolesDrawer(){
    });
   };
   draw();
-  wrap.querySelector('#rd-save').onclick=()=>{wrap.remove();toast(`'${ROLE_META[cur][0]}' 권한을 저장했어요 — ${USERS.filter(u=>u.role===cur).length}명에게 적용됨`)};
-  wrap.querySelector('#rd-preview').onclick=()=>{previewRole=cur;wrap.remove();if(!canSee(curPage))curPage='library';renderShell();showPage(curPage);toast(`${ROLE_META[cur][0]} 권한으로 화면을 미리보는 중이에요`)};
+  wrap.querySelector('#rd-save').onclick=()=>{wrap.remove();toast(`'${ROLE_META[cur][0]}' 권한을 저장했어요. ${USERS.filter(u=>u.role===cur).length}명에게 적용됐어요.`)};
+  wrap.querySelector('#rd-preview').onclick=()=>{previewRole=cur;wrap.remove();if(!canSee(curPage))curPage='library';renderShell();showPage(curPage);toast(`${ROLE_META[cur][0]} 권한으로 화면을 미리보는 중이에요.`)};
  }});
 }
 
@@ -1092,7 +1092,7 @@ function drawStores(){
    <td>${callBadge(s)}</td>
    <td style="font-size:13px;color:var(--text-3)">${s.panels.last}</td>
    <td><button class="icon-btn" data-sm="${s.id}">${IC.dots}</button></td></tr>`;
- }).join('')||`<tr><td colspan="7">${STORES.length===0?`<div class="empty"><b>아직 등록된 매장이 없어요</b><span>첫 번째 매장을 등록하고 지역·담당자를 정리해보세요</span><button class="btn btn-primary btn-sm" onclick="openStoreModal()">${IC.plus}첫 매장 등록하기</button></div>`:sFlt.q?searchEmptyHtml(sFlt.q):`<div class="empty"><b>조건에 맞는 매장이 없어요</b><button class="btn btn-tonal btn-sm" onclick="openStoreModal()">첫 매장 등록하기</button></div>`}</td></tr>`;
+ }).join('')||`<tr><td colspan="7">${STORES.length===0?`<div class="empty"><b>아직 등록된 매장이 없어요</b><span>첫 번째 매장을 등록하고 지역·담당자를 정리해보세요.</span><button class="btn btn-primary btn-sm" onclick="openStoreModal()">${IC.plus}첫 매장 등록하기</button></div>`:sFlt.q?searchEmptyHtml(sFlt.q):`<div class="empty"><b>조건에 맞는 매장이 없어요</b><button class="btn btn-tonal btn-sm" onclick="openStoreModal()">첫 매장 등록하기</button></div>`}</td></tr>`;
  {const _q=document.getElementById('s-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
   const _r=document.querySelector('#s-tbody [data-se-reset]');if(_r)_r.onclick=()=>{sFlt.q='';if(_q)_q.value='';drawStores();_q&&_q.focus();};
   const _c=document.querySelector('#s-tbody [data-se-cta]');if(_c)_c.onclick=()=>openStoreModal();}
@@ -1120,7 +1120,7 @@ function drawStoresBulk(){
  bulk.querySelector('#sb-x').onclick=()=>{sChecked.clear();drawStores()};
  bulk.querySelector('#sb-mgr').onclick=e=>popMenu(e.currentTarget,USERS.filter(u=>u.status==='active').map(u=>({label:`${u.name} (${ROLE_META[u.role][0]})`,onClick:()=>{
   sChecked.forEach(id=>{const s=STORES.find(x=>x.id===id);if(s&&!s.mgrs.includes(u.id))s.mgrs.push(u.id)});
-  const n=sChecked.size;sChecked.clear();drawStores();toast(`${n}개 매장에 '${u.name}' 담당자를 지정했어요`);
+  const n=sChecked.size;sChecked.clear();drawStores();toast(`${n}개 매장에 '${u.name}' 담당자를 지정했어요.`);
  }})));
  bulk.querySelector('#sb-del').onclick=()=>deleteStores([...sChecked].map(id=>STORES.find(x=>x.id===id)).filter(Boolean));
 }
@@ -1135,7 +1135,7 @@ function deleteStores(list){
  const askLabel=list.length===1?`'${list[0].name}' 매장을`:`매장 ${list.length}개를`;
  const finish=msg=>{STORES=STORES.filter(s=>!ids.has(s.id));ids.forEach(id=>sChecked.delete(id));drawStores();toast(msg);};
  if(panelSum===0){
-  confirmDialog({title:`${askLabel} 삭제할까요?`,desc:'삭제한 매장은 복구할 수 없습니다. 매장 정보와 담당자 설정이 모두 삭제돼요.',confirmText:'삭제',danger:true,onConfirm:()=>finish('매장을 삭제했어요')});
+  confirmDialog({title:`${askLabel} 삭제할까요?`,desc:'삭제한 매장은 복구할 수 없어요. 매장 정보와 담당자 설정이 모두 삭제돼요.',confirmText:'삭제',danger:true,onConfirm:()=>finish('매장을 삭제했어요')});
   return;
  }
  const others=STORES.filter(s=>!ids.has(s.id));
@@ -1188,7 +1188,7 @@ function openStoreModal(){
    window.__syncStore&&window.__syncStore(STORES[0]);
    obDone.store=true;renderObBanner();
    ov.remove();drawStores();
-   toast(`'${nm}' 매장을 등록했어요`,{action:'화면 연결',onAction:()=>showPage('panels')});
+   toast(`'${nm}' 매장을 등록했어요.`,{action:'화면 연결',onAction:()=>showPage('panels')});
   };
  }});
 }
@@ -1216,15 +1216,15 @@ function openStoreDrawer(s,tab='info'){
      </div>
      <p style="font-size:12px;color:var(--text-3);margin:8px 0 0">담당자는 이 매장의 화면·콘텐츠만 관리할 수 있어요.</p></div>`;
    body.querySelectorAll('[data-mgrm]').forEach(b=>b.onclick=()=>{s.mgrs=s.mgrs.filter(x=>x!==b.dataset.mgrm);draw('info');drawStores();});
-   body.querySelector('#mgr-add').onclick=e=>popMenu(e.currentTarget,USERS.filter(u=>u.status==='active'&&!s.mgrs.includes(u.id)).map(u=>({label:`${u.name} · ${ROLE_META[u.role][0]}`,onClick:()=>{s.mgrs.push(u.id);draw('info');drawStores();toast(`${u.name}님을 담당자로 연결했어요`)}})));
+   body.querySelector('#mgr-add').onclick=e=>popMenu(e.currentTarget,USERS.filter(u=>u.status==='active'&&!s.mgrs.includes(u.id)).map(u=>({label:`${u.name} · ${ROLE_META[u.role][0]}`,onClick:()=>{s.mgrs.push(u.id);draw('info');drawStores();toast(`${u.name}님을 담당자로 연결했어요.`)}})));
   }else if(t==='panels'){
    const names=['카운터 좌측','카운터 우측','쇼윈도','입구 안내','홀 메뉴판','드라이브스루','대기존','2층 홀','키오스크'];
    body.innerHTML=(s.panels.total?Array.from({length:s.panels.total},(_,i)=>{
     const on=i<s.panels.on;
     return `<div class="panel-mini"><span class="dot ${on?'on':'off'}"></span><span class="nm">${names[i%9]}</span><span class="tm">${on?'온라인 · 방금 전':'오프라인 · 4시간 전'}</span></div>`;
-   }).join(''):`<div class="empty" style="padding:32px"><b>연결된 화면이 없어요</b><span>셋탑박스의 6자리 코드로 연결해요</span></div>`)
+   }).join(''):`<div class="empty" style="padding:32px"><b>연결된 화면이 없어요</b><span>셋탑박스의 6자리 코드로 연결해요.</span></div>`)
    +`<div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="pn-add" style="flex:1">${IC.plus}화면 연결</button><button class="btn btn-tonal" id="pn-goto" style="flex:1">화면 관리에서 모니터링</button></div>`;
-   body.querySelector('#pn-add').onclick=()=>{s.panels.total++;s.panels.on++;s.panels.last='방금 전';obDone.panel=true;renderObBanner();draw('panels');drawStores();toast('화면이 연결됐어요')};
+   body.querySelector('#pn-add').onclick=()=>{s.panels.total++;s.panels.on++;s.panels.last='방금 전';obDone.panel=true;renderObBanner();draw('panels');drawStores();toast('화면이 연결됐어요.')};
    body.querySelector('#pn-goto').onclick=()=>{wrap.remove();showPage('panels')};
   }else{
    drawCallTab(body,s,wrap);
@@ -1261,7 +1261,7 @@ function drawCallTab(body,s,wrap){
   +`<div class="info-note" style="margin-top:4px">${IC.info}<span>번호호출 위젯을 사용하지 않은 화면은 호출해도 표시되지 않아요. 번호호출 위젯이 사용된 템플릿을 화면에 송출해야 사용 가능해요.</span></div>`
   :`<div class="empty" style="padding:36px 12px"><b>번호호출 기능이 꺼져 있어요</b><span>주문 번호를 매장 화면에 실시간으로 띄우는 기능이에요.<br>켜면 수동 입력 방식이 기본으로 활성화돼요.</span></div>`}`;
  body.querySelector('#call-sw').onclick=()=>{d.on=!d.on;if(d.on&&!d.method)d.method='manual';drawCallTab(body,s,wrap)};
- body.querySelector('#copy-url')?.addEventListener('click',()=>toast('호출 사이트 주소를 복사했어요'));
+ body.querySelector('#copy-url')?.addEventListener('click',()=>toast('호출 사이트 주소를 복사했어요.'));
  body.querySelectorAll('[data-cm]').forEach(c=>c.onclick=e=>{if(e.target.closest('#copy-url'))return;const m=c.dataset.cm;if(m===d.method)return;if(m==='manual'){d.method='manual';d.requested=false;drawCallTab(body,s,wrap);return}openCallRequestModal(s,m,()=>{d.method=m;d.requested=true;drawCallTab(body,s,wrap)})});
 }
 function openCallRequestModal(s,m,onDone){
@@ -1280,7 +1280,7 @@ function openCallRequestModal(s,m,onDone){
    const tel=ov.querySelector('#cr-tel');
    if(!tel.value.trim()){tel.classList.add('error');return}
    ov.remove();onDone&&onDone();
-   toast(`${label} 연동을 신청했어요 — 담당자가 곧 연락드려요`);
+   toast(`${label} 연동을 신청했어요. 담당자가 곧 연락드려요.`);
   };
  }});
 }
@@ -1298,7 +1298,7 @@ function renderTemplatesPage(root){
    </div></header>
   <div id="tpl-body" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>`;
  root.querySelectorAll('[data-tt]').forEach(b=>b.onclick=()=>{tTab=b.dataset.tt;tChecked.clear();renderTemplatesPage(root)});
- root.querySelector('#btn-new-tpl')?.addEventListener('click',()=>{openMenuEditorInline();toast('에디터에서 새 템플릿을 만들어요 — 위젯 탭에서 메뉴판 위젯을 추가해보세요')});
+ root.querySelector('#btn-new-tpl')?.addEventListener('click',()=>{openMenuEditorInline();toast('에디터에서 새 템플릿을 만들어요. 위젯 탭에서 메뉴판 위젯을 추가해보세요.')});
  if(tTab==='mine')drawMyTpls();else drawGallery();
 }
 function tplThumb(t){
@@ -1346,7 +1346,7 @@ function drawMyTpls(){
   arr.forEach(t=>all?tChecked.delete(t.id):tChecked.add(t.id));drawTplGrid();
  };
  {const sa=body.querySelector('#t-selall');sa.closest('.sel-all').addEventListener('click',e=>{if(!e.target.closest('#t-selall'))sa.click()});sa.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sa.click()}});}
- body.querySelector('#tf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{MY_FOLDERS.push({id:'tf'+(tSeq++),name:nm,parent:null});drawTplFolders();toast(`'${nm}' 폴더를 만들었어요`)}});
+ body.querySelector('#tf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{MY_FOLDERS.push({id:'tf'+(tSeq++),name:nm,parent:null});drawTplFolders();toast(`'${nm}' 폴더를 만들었어요.`)}});
  drawTplFolders();drawTplGrid();
 }
 function drawTplFolders(){
@@ -1378,7 +1378,7 @@ function drawTplGrid(){
    <button class="fav ${t.fav?'on':''}" data-tfav="${t.id}" aria-label="${t.name} 즐겨찾기">${t.fav?IC.star:IC.starO}</button>
    <div class="body"><div class="nm">${t.name}</div>
     <div class="sub"><span class="badge badge-gray">${t.ratio}</span>수정 ${t.mod}<button class="icon-btn" data-tm="${t.id}" style="margin-left:auto;width:26px;height:26px" aria-label="더보기">${IC.dots}</button></div></div>
-  </div>`).join('')||(tQ?`<div style="grid-column:1/-1">${searchEmptyHtml(tQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${MY_TPLS.length===0?'아직 만든 템플릿이 없어요':'이 폴더는 비어 있어요'}</b><span>갤러리에서 마음에 드는 템플릿을 가져오거나 새로 만들어보세요</span><button class="btn btn-tonal btn-sm" id="t-empty-gal">갤러리 둘러보기</button></div>`);
+  </div>`).join('')||(tQ?`<div style="grid-column:1/-1">${searchEmptyHtml(tQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${MY_TPLS.length===0?'아직 만든 템플릿이 없어요':'이 폴더는 비어 있어요'}</b><span>갤러리에서 마음에 드는 템플릿을 가져오거나 새로 만들어보세요.</span><button class="btn btn-tonal btn-sm" id="t-empty-gal">갤러리 둘러보기</button></div>`);
  grid.querySelector('#t-empty-gal')?.addEventListener('click',()=>{tTab='gallery';renderTemplatesPage($('#page-root'))});
  {const _q=$('#t-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
   const _r=grid.querySelector('[data-se-reset]');if(_r)_r.onclick=()=>{tQ='';if(_q)_q.value='';drawTplGrid();_q&&_q.focus();};}
@@ -1394,11 +1394,11 @@ function drawTplGrid(){
 function tplMenu(b,t){
  popMenu(b,[
   {label:'에디터에서 편집',icon:IC.edit,onClick:()=>openMenuEditorInline()},
-  {label:'복제',icon:IC.copy,onClick:()=>{MY_TPLS.unshift({...t,id:'t'+(tSeq++),name:t.name+' (복사)',mod:'07.05',fav:false});drawTplFolders();drawTplGrid();toast('템플릿을 복제했어요')}},
-  {label:'이름 변경',icon:IC.edit,onClick:()=>openModal(`<div class="modal-head"><h2>이름 변경</h2></div><div class="modal-body"><div class="f-row"><input class="input" id="rn" value="${t.name}"></div></div><div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="rn-ok">저장</button></div>`,{width:'400px',onMount:ov=>{const i=ov.querySelector('#rn');i.focus();i.select();ov.querySelector('#rn-ok').onclick=()=>{t.name=i.value.trim()||t.name;ov.remove();drawTplGrid();toast('이름을 변경했어요')}}})},
-  {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:MY_FOLDERS,current:t.folder,onMove:fid=>{t.folder=fid;drawTplFolders();drawTplGrid();toast(`'${fPath(MY_FOLDERS,fid)}'(으)로 이동했어요`)}})},
+  {label:'복제',icon:IC.copy,onClick:()=>{MY_TPLS.unshift({...t,id:'t'+(tSeq++),name:t.name+' (복사)',mod:'07.05',fav:false});drawTplFolders();drawTplGrid();toast('템플릿을 복제했어요.')}},
+  {label:'이름 변경',icon:IC.edit,onClick:()=>openModal(`<div class="modal-head"><h2>이름 변경</h2></div><div class="modal-body"><div class="f-row"><input class="input" id="rn" value="${t.name}"></div></div><div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="rn-ok">저장</button></div>`,{width:'400px',onMount:ov=>{const i=ov.querySelector('#rn');i.focus();i.select();ov.querySelector('#rn-ok').onclick=()=>{t.name=i.value.trim()||t.name;ov.remove();drawTplGrid();toast('이름을 변경했어요.')}}})},
+  {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:MY_FOLDERS,current:t.folder,onMove:fid=>{t.folder=fid;drawTplFolders();drawTplGrid();toast(`'${fPath(MY_FOLDERS,fid)}'(으)로 이동했어요.`)}})},
   'sep',
-  {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${t.name}' 템플릿을 삭제할까요?`,desc:'삭제한 템플릿은 복구할 수 없습니다. 이 템플릿을 사용하는 편성일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(x=>x!==t);drawTplFolders();drawTplGrid();toast('삭제했어요',{action:'실행 취소',onAction:()=>{MY_TPLS.unshift(t);drawTplFolders();drawTplGrid()}})}})},
+  {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${t.name}' 템플릿을 삭제할까요?`,desc:'삭제한 템플릿은 복구할 수 없어요. 이 템플릿을 사용하는 편성일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(x=>x!==t);drawTplFolders();drawTplGrid();toast('삭제했어요.',{action:'실행 취소',onAction:()=>{MY_TPLS.unshift(t);drawTplFolders();drawTplGrid()}})}})},
  ]);
 }
 function drawTplBulk(){
@@ -1407,13 +1407,13 @@ function drawTplBulk(){
  if(tChecked.size){
   bulk.innerHTML=`<b>${tChecked.size}개</b> 선택됨 <button class="btn" id="tb-mv">폴더 이동</button><button class="btn danger-t" id="tb-del">삭제</button><button class="close icon-btn" id="tb-x" aria-label="선택 해제">${IC.x}</button>`;
   bulk.querySelector('#tb-x').onclick=()=>{tChecked.clear();drawTplGrid()};
-  bulk.querySelector('#tb-mv').onclick=()=>folderMoveModal({fs:MY_FOLDERS,count:tChecked.size,onMove:fid=>{tChecked.forEach(id=>{const t=MY_TPLS.find(x=>x.id===id);if(t)t.folder=fid});tChecked.clear();drawTplFolders();drawTplGrid();toast(`'${fPath(MY_FOLDERS,fid)}'(으)로 이동했어요`)}});
-  bulk.querySelector('#tb-del').onclick=()=>confirmDialog({title:`템플릿 ${tChecked.size}개를 삭제할까요?`,desc:'삭제한 템플릿은 복구할 수 없습니다. 이 템플릿을 사용하는 편성일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(t=>!tChecked.has(t.id));tChecked.clear();drawTplFolders();drawTplGrid();toast('삭제했어요')}});
+  bulk.querySelector('#tb-mv').onclick=()=>folderMoveModal({fs:MY_FOLDERS,count:tChecked.size,onMove:fid=>{tChecked.forEach(id=>{const t=MY_TPLS.find(x=>x.id===id);if(t)t.folder=fid});tChecked.clear();drawTplFolders();drawTplGrid();toast(`'${fPath(MY_FOLDERS,fid)}'(으)로 이동했어요.`)}});
+  bulk.querySelector('#tb-del').onclick=()=>confirmDialog({title:`템플릿 ${tChecked.size}개를 삭제할까요?`,desc:'삭제한 템플릿은 복구할 수 없어요. 이 템플릿을 사용하는 편성일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{MY_TPLS=MY_TPLS.filter(t=>!tChecked.has(t.id));tChecked.clear();drawTplFolders();drawTplGrid();toast('삭제했어요.')}});
  }
 }
 function drawTplList(grid,arr){
  if(!arr.length){
-  grid.innerHTML=tQ?searchEmptyHtml(tQ):`<div class="empty"><b>${MY_TPLS.length===0?'아직 만든 템플릿이 없어요':'이 폴더는 비어 있어요'}</b><span>갤러리에서 마음에 드는 템플릿을 가져오거나 새로 만들어보세요</span><button class="btn btn-tonal btn-sm" id="t-empty-gal">갤러리 둘러보기</button></div>`;
+  grid.innerHTML=tQ?searchEmptyHtml(tQ):`<div class="empty"><b>${MY_TPLS.length===0?'아직 만든 템플릿이 없어요':'이 폴더는 비어 있어요'}</b><span>갤러리에서 마음에 드는 템플릿을 가져오거나 새로 만들어보세요.</span><button class="btn btn-tonal btn-sm" id="t-empty-gal">갤러리 둘러보기</button></div>`;
   {const _q=$('#t-q');if(_q&&_q.__suxCount)_q.__suxCount(0);
    const _r=grid.querySelector('[data-se-reset]');if(_r)_r.onclick=()=>{tQ='';if(_q)_q.value='';drawTplGrid();_q&&_q.focus();};}
   grid.querySelector('#t-empty-gal')?.addEventListener('click',()=>{tTab='gallery';renderTemplatesPage($('#page-root'))});
@@ -1479,7 +1479,7 @@ function drawGallery(){
 }
 function useGalTpl(g){
  MY_TPLS.unshift({id:'t'+(tSeq++),name:g.name,folder:MY_FOLDERS[0].id,ratio:g.ratio,mod:'07.04',fav:false,g:g.g,e:g.e,tt:g.cat});
- toast(`'${g.name}'을 내 템플릿으로 가져왔어요`,{action:'바로 편집',onAction:()=>openMenuEditorInline()});
+ toast(`'${g.name}'을 내 템플릿으로 가져왔어요.`,{action:'바로 편집',onAction:()=>openMenuEditorInline()});
 }
 function openGalPreview(g){
  openModal(`
@@ -1548,7 +1548,7 @@ function renderLibraryPage(root){
   onToggle:t=>{lTags.includes(t)?lTags=lTags.filter(x=>x!==t):lTags.push(t);libTagRefresh();},
   onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);toast(`'${t}' 태그를 만들었어요. 콘텐츠에 붙이면 이 필터로 찾을 수 있어요.`);},
   onManage:openLibTagManager});
- root.querySelector('#lf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{LIB_FOLDERS.push({id:'lf'+(cSeq++),name:nm,parent:null});drawLibFolders();toast(`'${nm}' 폴더를 만들었어요`)}});
+ root.querySelector('#lf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{LIB_FOLDERS.push({id:'lf'+(cSeq++),name:nm,parent:null});drawLibFolders();toast(`'${nm}' 폴더를 만들었어요.`)}});
  drawLibFolders();
  /* 폴더 전환 시 스켈레톤 */
  const sc=$('#l-scroll');
@@ -1571,7 +1571,7 @@ function drawLibFolders(){
   itemsIn:fid=>LIB.filter(c=>c.folder===fid).length,
   rehome:(fid,pid)=>LIB.forEach(c=>{if(c.folder===fid)c.folder=pid}),
   dropKey:'text/lib',
-  onDropItem:(id,fid)=>{const c=libOf(id);if(c){c.folder=fid;drawLibFolders();drawLib();toast(`'${c.name}'을 '${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요`)}},
+  onDropItem:(id,fid)=>{const c=libOf(id);if(c){c.folder=fid;drawLibFolders();drawLib();toast(`'${c.name}'을 '${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요.`)}},
  });
 }
 const typeBadge=c=>{const l=c.type==='image'?'이미지':c.type==='video'?'동영상':'URL';return `<span class="badge" style="background:rgba(0,0,0,.5);color:#fff">${l}</span>`;};
@@ -1621,28 +1621,28 @@ function bindLib(){
  const _la=$('#l-all');
  if(_la)_la.onclick=()=>{const s=libFiltered().filter(c=>!c.error);const all=s.length&&s.every(c=>lChecked.has(c.id));s.forEach(c=>all?lChecked.delete(c.id):lChecked.add(c.id));drawLib();};
  $$('[data-lc]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.lc;lChecked.has(id)?lChecked.delete(id):lChecked.add(id);drawLib();drawLibBulk()});
- $$('[data-retry]').forEach(b=>b.onclick=e=>{e.stopPropagation();const c=libOf(b.dataset.retry);c.error=false;drawLib();toast(`'${c.name}' 업로드를 완료했어요`)});
- $$('[data-lrm]').forEach(b=>b.onclick=e=>{e.stopPropagation();LIB=LIB.filter(x=>x.id!==b.dataset.lrm);drawLibFolders();drawLib();toast('삭제했어요')});
+ $$('[data-retry]').forEach(b=>b.onclick=e=>{e.stopPropagation();const c=libOf(b.dataset.retry);c.error=false;drawLib();toast(`'${c.name}' 업로드를 완료했어요.`)});
+ $$('[data-lrm]').forEach(b=>b.onclick=e=>{e.stopPropagation();LIB=LIB.filter(x=>x.id!==b.dataset.lrm);drawLibFolders();drawLib();toast('삭제했어요.')});
  $$('[data-lib]').forEach(el=>{
   el.addEventListener('click',e=>{if(e.target.closest('[data-lc],[data-lm],[data-retry],[data-lrm]'))return;const c=libOf(el.dataset.lib);if(!c.error)openLibPreview(c)});
   el.addEventListener('dragstart',e=>e.dataTransfer.setData('text/lib',el.dataset.lib));
  });
  $$('[data-lm]').forEach(b=>b.onclick=e=>{e.stopPropagation();
   const c=libOf(b.dataset.lm);
-  if(c.error){popMenu(b,[{label:'삭제',icon:IC.trash,danger:true,onClick:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요')}}]);return;}
+  if(c.error){popMenu(b,[{label:'삭제',icon:IC.trash,danger:true,onClick:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요.')}}]);return;}
   popMenu(b,[
    {label:'미리보기',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',onClick:()=>openLibPreview(c)},
    {label:'재생목록에 추가',icon:IC.plus,onClick:()=>addToPlaylistMenu(b,[c.id])},
-   {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:LIB_FOLDERS,current:c.folder,onMove:fid=>{c.folder=fid;drawLibFolders();drawLib();toast(`'${c.name}'을 '${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요`)}})},
+   {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:LIB_FOLDERS,current:c.folder,onMove:fid=>{c.folder=fid;drawLibFolders();drawLib();toast(`'${c.name}'을 '${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요.`)}})},
    {label:'태그 편집',icon:IC.edit,onClick:()=>tagPickerMenu(b,{tags:LIB_TAGS,selected:c.tags,keepOpen:true,
      onToggle:t=>{c.tags.includes(t)?c.tags=c.tags.filter(x=>x!==t):c.tags.push(t);drawLib();},
-     onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);if(!c.tags.includes(t))c.tags.push(t);drawLib();toast(`'${c.name}'에 '${t}' 태그를 추가했어요`);},
+     onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);if(!c.tags.includes(t))c.tags.push(t);drawLib();toast(`'${c.name}'에 '${t}' 태그를 추가했어요.`);},
      onManage:openLibTagManager})},
    'sep',
-   {label:'다운로드',icon:IC.upload,onClick:()=>toast('다운로드를 시작했어요')},
+   {label:'다운로드',icon:IC.upload,onClick:()=>toast('다운로드를 시작했어요.')},
    {label:'삭제',icon:IC.trash,danger:true,onClick:()=>{
     const used=c.used.pl+c.used.tp;
-    confirmDialog({title:`'${c.name}' 콘텐츠를 삭제할까요?`,desc:used?`삭제한 콘텐츠는 복구할 수 없습니다. 이 콘텐츠는 재생목록·템플릿 ${used}곳에서 사용 중이며, 삭제하면 해당 위치에서 빈 화면이 될 수 있어요.`:'삭제한 콘텐츠는 복구할 수 없습니다. 이 콘텐츠를 사용 중인 재생목록·템플릿은 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요')}});
+    confirmDialog({title:`'${c.name}' 콘텐츠를 삭제할까요?`,desc:used?`삭제한 콘텐츠는 복구할 수 없어요. 이 콘텐츠는 재생목록·템플릿 ${used}곳에서 사용 중이며, 삭제하면 해당 위치에서 빈 화면이 될 수 있어요.`:'삭제한 콘텐츠는 복구할 수 없어요. 이 콘텐츠를 사용 중인 재생목록·템플릿은 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요.')}});
    }},
   ]);
  });
@@ -1657,18 +1657,18 @@ function drawLibBulk(){
   <button class="close icon-btn" id="lb-x" aria-label="선택 해제">${IC.x}</button>`;
  bulk.querySelector('#lb-x').onclick=()=>{lChecked.clear();drawLib()};
  bulk.querySelector('#lb-pl').onclick=e=>addToPlaylistMenu(e.currentTarget,[...lChecked]);
- bulk.querySelector('#lb-mv').onclick=()=>folderMoveModal({fs:LIB_FOLDERS,count:lChecked.size,onMove:fid=>{lChecked.forEach(id=>{const c=libOf(id);if(c)c.folder=fid});lChecked.clear();drawLibFolders();drawLib();toast(`'${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요`)}});
+ bulk.querySelector('#lb-mv').onclick=()=>folderMoveModal({fs:LIB_FOLDERS,count:lChecked.size,onMove:fid=>{lChecked.forEach(id=>{const c=libOf(id);if(c)c.folder=fid});lChecked.clear();drawLibFolders();drawLib();toast(`'${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요.`)}});
  bulk.querySelector('#lb-tag').onclick=e=>tagPickerMenu(e.currentTarget,{tags:LIB_TAGS,selected:()=>false,keepOpen:true,
-  onToggle:t=>{lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`선택한 콘텐츠에 '${t}' 태그를 추가했어요`);},
-  onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`'${t}' 태그를 만들어 추가했어요`);},
+  onToggle:t=>{lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`선택한 콘텐츠에 '${t}' 태그를 추가했어요.`);},
+  onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`'${t}' 태그를 만들어 추가했어요.`);},
   onManage:openLibTagManager});
- bulk.querySelector('#lb-del').onclick=()=>confirmDialog({title:`콘텐츠 ${lChecked.size}개를 삭제할까요?`,desc:'삭제한 콘텐츠는 복구할 수 없습니다. 사용 중인 콘텐츠가 포함되어 있으면 해당 화면이 비어 보일 수 있어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(c=>!lChecked.has(c.id));lChecked.clear();drawLibFolders();drawLib();toast('삭제했어요')}});
+ bulk.querySelector('#lb-del').onclick=()=>confirmDialog({title:`콘텐츠 ${lChecked.size}개를 삭제할까요?`,desc:'삭제한 콘텐츠는 복구할 수 없어요. 사용 중인 콘텐츠가 포함되어 있으면 해당 화면이 비어 보일 수 있어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(c=>!lChecked.has(c.id));lChecked.clear();drawLibFolders();drawLib();toast('삭제했어요.')}});
 }
 function addToPlaylistMenu(anchor,ids){
  popMenu(anchor,[{title:'재생목록 선택'},...PLAYLISTS.map(pl=>({label:pl.name,onClick:()=>{
   ids.forEach(id=>{const c=libOf(id);pl.items.push({c:id,d:c.type==='video'?c.dur:10});c.used.pl++});
   lChecked.clear();drawLib();
-  toast(`${ids.length}개 콘텐츠를 '${pl.name}'에 추가했어요`,{action:'열기',onAction:()=>openPlaylistEditor(pl.id)});
+  toast(`${ids.length}개 콘텐츠를 '${pl.name}'에 추가했어요.`,{action:'열기',onAction:()=>openPlaylistEditor(pl.id)});
  }})),'sep',{label:'＋ 새 재생목록 만들기',onClick:()=>{openPlaylistEditor(null,ids)}}]);
 }
 function openLibPreview(c){
@@ -1717,13 +1717,13 @@ function openUrlModal(onDone){
   drawTf();
   ov.querySelector('#url-ok').onclick=()=>{
    const u=ov.querySelector('#url-in').value.trim();
-   if(!u.startsWith('http')){ov.querySelector('#url-in').classList.add('error');toast('올바른 URL을 입력해주세요',{err:true});return}
+   if(!u.startsWith('http')){ov.querySelector('#url-in').classList.add('error');toast('올바른 URL을 입력해주세요.',{err:true});return}
    const nm=ov.querySelector('#url-nm').value.trim()||u.replace(/^https?:\/\//,'').slice(0,24);
    LIB.unshift(C('c'+(cSeq++),nm,'url',lFolder==='all'?'lf4':lFolder,[...sel],'—',0,'linear-gradient(135deg,#0E7490,#083A47)','🔗',0,0));
    obDone.upload=true;renderObBanner();
    ov.remove();
    if(curPage==='library'){drawLibFolders();drawLib();}
-   if(typeof onDone==='function')onDone(nm);else toast(`'${nm}'을 추가했어요`);
+   if(typeof onDone==='function')onDone(nm);else toast(`'${nm}'을 추가했어요.`);
   };
  }});
 }
@@ -1731,7 +1731,7 @@ function openUrlModal(onDone){
 /* onDone(n): 업로드 완료 콜백 — 지정하면 기본 완료 토스트 대신 호출부가 후속 UX를 담당
    (예: 편성 콘텐츠 선택 드로어에서 업로드 → 드로어 목록 즉시 갱신) */
 function simulateUpload(onDone){
- if(!canEdit('library')){toast('보기 권한으로는 업로드할 수 없어요',{err:true});return}
+ if(!canEdit('library')){toast('보기 권한으로는 업로드할 수 없어요.',{err:true});return}
  const files=[['매장 포스터 7월.png','image','2.4MB',G.g6,'🪧'],['신메뉴 촬영컷.jpg','image','3.8MB',G.g1,'📸'],['프로모션 클립 20s.mp4','video','31MB',G.g4,'🎞️']];
  const total=files.length;
  let tray=$('#upload-tray');
@@ -1748,7 +1748,7 @@ function simulateUpload(onDone){
   obDone.upload=true;renderObBanner();
   setTimeout(()=>{tray.remove();
    if(typeof onDone==='function')onDone(total);
-   else toast(`${total}개 파일을 업로드했어요`,{action:'재생목록 만들기',onAction:()=>openPlaylistEditor(null)});
+   else toast(`${total}개 파일을 업로드했어요.`,{action:'재생목록 만들기',onAction:()=>openPlaylistEditor(null)});
   },600);
  };
  const run=(i,noFail)=>{
@@ -1835,7 +1835,7 @@ function renderPlaylistsPage(root){
  {const sa=root.querySelector('#pl-selall');sa.closest('.sel-all').addEventListener('click',e=>{if(!e.target.closest('#pl-selall'))sa.click()});sa.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sa.click()}});}
  root.querySelector('#plv-grid').onclick=()=>{plView='grid';renderPlaylistsPage(root)};
  root.querySelector('#plv-list').onclick=()=>{plView='list';renderPlaylistsPage(root)};
- root.querySelector('#pf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{PL_FOLDERS.push({id:'pf'+(pfSeq++),name:nm,parent:null});drawPlFolders();toast(`'${nm}' 폴더를 만들었어요`)}});
+ root.querySelector('#pf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{PL_FOLDERS.push({id:'pf'+(pfSeq++),name:nm,parent:null});drawPlFolders();toast(`'${nm}' 폴더를 만들었어요.`)}});
  drawPlFolders();drawPlArea();
 }
 function drawPlFolders(){
@@ -1887,7 +1887,7 @@ function drawPlArea(){
    <td><button class="icon-btn" data-plm="${pl.id}" aria-label="더보기">${IC.dots}</button></td></tr>`;}).join('')}
   </tbody></table></div>`:emptyHtml;
  }
- area.querySelector('#pl-new-card')?.addEventListener('click',()=>{if(canEdit('playlists'))openPlaylistEditor(null);else toast('보기 권한으로는 만들 수 없어요',{err:true})});
+ area.querySelector('#pl-new-card')?.addEventListener('click',()=>{if(canEdit('playlists'))openPlaylistEditor(null);else toast('보기 권한으로는 만들 수 없어요.',{err:true})});
  area.querySelector('#pl-empty-new')?.addEventListener('click',()=>openPlaylistEditor(null));
  {const _q=$('#pl-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
   const _r=area.querySelector('[data-se-reset]');if(_r)_r.onclick=()=>{plQ='';if(_q)_q.value='';drawPlArea();_q&&_q.focus();};
@@ -1901,10 +1901,10 @@ function drawPlArea(){
   const pl=PLAYLISTS.find(x=>x.id===b.dataset.plm);
   popMenu(b,[
    {label:'편집',icon:IC.edit,onClick:()=>openPlaylistEditor(pl.id)},
-   {label:'복제',icon:IC.copy,onClick:()=>{PLAYLISTS.unshift({...pl,id:'pl'+(plSeq++),name:pl.name+' (복사)',items:pl.items.map(i=>({...i})),panels:0,mod:'07.05'});drawPlFolders();drawPlArea();toast('재생목록을 복제했어요')}},
+   {label:'복제',icon:IC.copy,onClick:()=>{PLAYLISTS.unshift({...pl,id:'pl'+(plSeq++),name:pl.name+' (복사)',items:pl.items.map(i=>({...i})),panels:0,mod:'07.05'});drawPlFolders();drawPlArea();toast('재생목록을 복제했어요.')}},
    {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:PL_FOLDERS,current:pl.folder||null,withNone:true,onMove:fid=>{pl.folder=fid;drawPlFolders();drawPlArea();toast(fid?`'${fPath(PL_FOLDERS,fid)}'(으)로 이동했어요`:'최상위로 이동했어요')}})},
    'sep',
-   {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${pl.name}' 재생목록을 삭제할까요?`,desc:'삭제한 재생목록은 복구할 수 없습니다. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(x=>x!==pl);drawPlFolders();drawPlArea();toast('삭제했어요')}})},
+   {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${pl.name}' 재생목록을 삭제할까요?`,desc:'삭제한 재생목록은 복구할 수 없어요. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(x=>x!==pl);drawPlFolders();drawPlArea();toast('삭제했어요.')}})},
   ]);
  });
 }
@@ -1918,7 +1918,7 @@ function drawPlBulk(){
   <button class="close icon-btn" id="plb-x" aria-label="선택 해제">${IC.x}</button>`;
  bulk.querySelector('#plb-x').onclick=()=>{plChecked.clear();drawPlArea()};
  bulk.querySelector('#plb-mv').onclick=()=>folderMoveModal({fs:PL_FOLDERS,withNone:true,count:plChecked.size,onMove:fid=>{plChecked.forEach(id=>{const pl=PLAYLISTS.find(x=>x.id===id);if(pl)pl.folder=fid});plChecked.clear();drawPlFolders();drawPlArea();toast(fid?`'${fPath(PL_FOLDERS,fid)}'(으)로 이동했어요`:'최상위로 이동했어요')}});
- bulk.querySelector('#plb-del').onclick=()=>confirmDialog({title:`재생목록 ${plChecked.size}개를 삭제할까요?`,desc:'삭제한 재생목록은 복구할 수 없습니다. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(pl=>!plChecked.has(pl.id));plChecked.clear();drawPlFolders();drawPlArea();toast('삭제했어요')}});
+ bulk.querySelector('#plb-del').onclick=()=>confirmDialog({title:`재생목록 ${plChecked.size}개를 삭제할까요?`,desc:'삭제한 재생목록은 복구할 수 없어요. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(pl=>!plChecked.has(pl.id));plChecked.clear();drawPlFolders();drawPlArea();toast('삭제했어요.')}});
 }
 /* ═══════════ 재생목록 에디터 ═══════════ */
 let pleDraft=null,pleSrc=null,pleQ='',pleType='all';
@@ -1962,7 +1962,7 @@ function drawPleLib(){
    <div class="im" style="background:${c.g}">${c.e}${c.type==='video'?`<span class="dur num">${durFmt(c.dur)}</span>`:''}</div>
    <div class="nm">${c.name}</div>
    <button class="add" data-srcadd="${c.id}" aria-label="목록에 추가">${IC.plus}</button>
-  </div>`).join('')||'<div class="empty" style="grid-column:1/-1;padding:30px 10px"><b>콘텐츠가 없어요</b><span>즉시 업로드로 추가해보세요</span></div>';
+  </div>`).join('')||'<div class="empty" style="grid-column:1/-1;padding:30px 10px"><b>콘텐츠가 없어요</b><span>즉시 업로드로 추가해보세요.</span></div>';
  $$('#ple-lib-list [data-src]').forEach(el=>{
   el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plsrc',el.dataset.src);el.classList.add('dragging')});
   el.addEventListener('dragend',()=>el.classList.remove('dragging'));
@@ -1993,7 +1993,7 @@ function drawPleList(){
    <span class="dur-ctl"><span class="step"><button data-dm="${i}" aria-label="5초 줄이기">−</button><input class="num" data-din="${i}" value="${it.d}"><button data-dp="${i}" aria-label="5초 늘리기">＋</button></span><span class="u">초</span></span>
    <button class="icon-btn rm" data-plrm="${i}" aria-label="목록에서 제거">${IC.x}</button>
   </div>`;
- }).join('')||`<div class="empty" style="padding:70px 20px;border:1.5px dashed var(--border-2);border-radius:12px"><b>아직 콘텐츠가 없어요</b><span>왼쪽 라이브러리에서 끌어다 놓거나 더블클릭으로 추가하세요</span></div>`;
+ }).join('')||`<div class="empty" style="padding:70px 20px;border:1.5px dashed var(--border-2);border-radius:12px"><b>아직 콘텐츠가 없어요</b><span>왼쪽 라이브러리에서 끌어다 놓거나 더블클릭으로 추가하세요.</span></div>`;
  /* 시간 조작 */
  $$('[data-dq]').forEach(b=>b.onclick=()=>{const[i,s]=b.dataset.dq.split(':').map(Number);pleDraft.items[i].d=s;drawPleList()});
  $$('[data-dm]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dm;pleDraft.items[i].d=Math.max(1,pleDraft.items[i].d-5);drawPleList()});
@@ -2001,7 +2001,7 @@ function drawPleList(){
  $$('[data-din]').forEach(inp=>inp.onchange=()=>{const i=+inp.dataset.din;const v=parseInt(inp.value.replace(/[^0-9]/g,''))||10;pleDraft.items[i].d=Math.min(600,Math.max(1,v));drawPleList()});
  $$('[data-plrm]').forEach(b=>b.onclick=()=>{
   const i=+b.dataset.plrm;const[rm]=pleDraft.items.splice(i,1);drawPleList();
-  toast('목록에서 뺐어요',{action:'실행 취소',onAction:()=>{pleDraft.items.splice(i,0,rm);drawPleList()}});
+  toast('목록에서 뺐어요.',{action:'실행 취소',onAction:()=>{pleDraft.items.splice(i,0,rm);drawPleList()}});
  });
  /* 정렬 드래그 + 외부 드롭 */
  let dragIdx=null;
@@ -2026,11 +2026,11 @@ function drawPleList(){
 /* 즉시 업로드 (에디터 안에서) */
 $('#ple-upload').onclick=e=>{
  popMenu(e.currentTarget,[
-  {label:'URL 업로드',onClick:()=>openUrlModal(nm=>{drawPleLib();toast(`'${nm}'을 라이브러리에 추가했어요 — 끌어다 놓아보세요`)})},
+  {label:'URL 업로드',onClick:()=>openUrlModal(nm=>{drawPleLib();toast(`'${nm}'을 라이브러리에 추가했어요. 끌어다 놓아보세요.`)})},
   {label:'파일 업로드',onClick:()=>{
    const n=LIB.length;
    simulateUpload();
-   const iv=setInterval(()=>{if(LIB.length>=n+3){clearInterval(iv);drawPleLib();toast('업로드한 콘텐츠가 라이브러리 목록에 추가됐어요 — 끌어다 놓아보세요')}},400);
+   const iv=setInterval(()=>{if(LIB.length>=n+3){clearInterval(iv);drawPleLib();toast('업로드한 콘텐츠가 라이브러리 목록에 추가됐어요. 끌어다 놓아보세요.')}},400);
    setTimeout(()=>clearInterval(iv),8000);
   }},
  ]);
@@ -2042,16 +2042,16 @@ function savePle(silent){
  else{const np={id:'pl'+(plSeq++),name:pleDraft.name,repeat:pleDraft.repeat,items:pleDraft.items.map(i=>({...i})),panels:0,mod:'07.05',folder:(typeof plFolder!=='undefined'&&plFolder!=='all')?plFolder:null};PLAYLISTS.unshift(np);pleSrc=np;}
  obDone.playlist=true;
  pleMarkSaved(); /* 저장 완료 → 현재 상태를 저장 기준으로 갱신(clean) */
- if(!silent)toast(`'${pleDraft.name}'을 저장했어요`);
+ if(!silent)toast(`'${pleDraft.name}'을 저장했어요.`);
 }
 /* 저장 방식 통일: 저장 클릭 → 이름 입력 모달 → 저장 */
 $('#ple-save').onclick=()=>{
- if(!pleDraft.items.length){toast('콘텐츠를 1개 이상 추가해주세요',{err:true});return}
+ if(!pleDraft.items.length){toast('콘텐츠를 1개 이상 추가해주세요.',{err:true});return}
  saveNameModal({title:'재생목록 저장',label:'재생목록 이름',initial:$('#ple-name').value.trim()||pleDraft.name,placeholder:'예) 카운터 기본 루프',onSave:nm=>{$('#ple-name').value=nm;pleDraft.name=nm;savePle(false);}});
 };
 let prevTimer=null;
 $('#ple-preview').onclick=()=>{
- if(!pleDraft.items.length){toast('미리볼 콘텐츠가 없어요',{err:true});return}
+ if(!pleDraft.items.length){toast('미리볼 콘텐츠가 없어요.',{err:true});return}
  const items=pleDraft.items.map(it=>({...libOf(it.c),d:it.d}));
  const total=durFmt(items.reduce((n,i)=>n+i.d,0));
  let idx=0,pvSpeed=2; /* 재생속도 배율 — 1 / 2 / 5 · 열람 시 기본 2배속 */
@@ -2450,11 +2450,11 @@ function bindFolderRail(el,cfg){
    const fs=cfg.fs;
    const fdrag=e.dataTransfer.getData('text/folder');
    if(fdrag){
-    if(wasNo){toast('여기로는 이동할 수 없어요 — 최대 3단계, 자기 하위 폴더로는 이동 불가',{err:true});dragFid=null;return}
+    if(wasNo){toast('여기로는 이동할 수 없어요. 폴더는 최대 3단계까지이고, 자기 하위 폴더로는 옮길 수 없어요.',{err:true});dragFid=null;return}
     const drag=fs.find(f=>f.id===fdrag),tgt=fs.find(f=>f.id===fid);
     if(!drag||!tgt||drag===tgt){dragFid=null;return}
-    if(wasBefore){drag.parent=tgt.parent||null;fs.splice(fs.indexOf(drag),1);fs.splice(fs.indexOf(tgt),0,drag);toast(`'${drag.name}' 폴더의 순서를 바꿨어요`);}
-    else if(wasInto){drag.parent=tgt.id;toast(`'${drag.name}' 폴더를 '${tgt.name}' 아래로 이동했어요`);}
+    if(wasBefore){drag.parent=tgt.parent||null;fs.splice(fs.indexOf(drag),1);fs.splice(fs.indexOf(tgt),0,drag);toast(`'${drag.name}' 폴더의 순서를 바꿨어요.`);}
+    else if(wasInto){drag.parent=tgt.id;toast(`'${drag.name}' 폴더를 '${tgt.name}' 아래로 이동했어요.`);}
     else{dragFid=null;return}
     dragFid=null;cfg.onChanged();return;
    }
@@ -2471,7 +2471,7 @@ function bindFolderRail(el,cfg){
    const fdrag=e.dataTransfer.getData('text/folder');
    if(!fdrag)return;e.preventDefault();
    const drag=cfg.fs.find(f=>f.id===fdrag);
-   if(drag&&drag.parent){drag.parent=null;cfg.onChanged();toast(`'${drag.name}' 폴더를 최상위로 이동했어요`)}
+   if(drag&&drag.parent){drag.parent=null;cfg.onChanged();toast(`'${drag.name}' 폴더를 최상위로 이동했어요.`)}
   });
  }
  el.querySelectorAll('[data-fmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();openFolderMenu(b,cfg,cfg.fs.find(f=>f.id===b.dataset.fmenu))});
@@ -2479,10 +2479,10 @@ function bindFolderRail(el,cfg){
 function openFolderMenu(anchor,cfg,f){
  const fs=cfg.fs,items=[];
  if(fDepth(fs,f.id)<F_MAX)
-  items.push({label:'새 하위 폴더',icon:IC.plus,onClick:()=>folderNameModal({title:`'${f.name}' 안에 새 폴더`,onSave:nm=>{fs.push({id:cfg.makeId(),name:nm,parent:f.id});cfg.onChanged();toast(`'${nm}' 폴더를 만들었어요`)}})});
+  items.push({label:'새 하위 폴더',icon:IC.plus,onClick:()=>folderNameModal({title:`'${f.name}' 안에 새 폴더`,onSave:nm=>{fs.push({id:cfg.makeId(),name:nm,parent:f.id});cfg.onChanged();toast(`'${nm}' 폴더를 만들었어요.`)}})});
  else
-  items.push({label:'새 하위 폴더 (3단계 제한)',icon:IC.plus,onClick:()=>toast('폴더는 최대 3단계까지만 만들 수 있어요',{err:true})});
- items.push({label:'이름 변경',icon:IC.edit,onClick:()=>folderNameModal({title:'폴더 이름 변경',initial:f.name,onSave:nm=>{f.name=nm;cfg.onChanged();toast('폴더 이름을 변경했어요')}})});
+  items.push({label:'새 하위 폴더 (3단계 제한)',icon:IC.plus,onClick:()=>toast('폴더는 최대 3단계까지만 만들 수 있어요.',{err:true})});
+ items.push({label:'이름 변경',icon:IC.edit,onClick:()=>folderNameModal({title:'폴더 이름 변경',initial:f.name,onSave:nm=>{f.name=nm;cfg.onChanged();toast('폴더 이름을 변경했어요.')}})});
  /* 폴더 이동 — 메뉴에는 액션만, 대상 선택은 공용 폴더 이동 모달에서 (인라인 목록 펼침 금지) */
  {
   const desc=fDescIds(fs,f.id);
@@ -2494,12 +2494,12 @@ function openFolderMenu(anchor,cfg,f){
  }
  items.push('sep',{label:'폴더 삭제',icon:IC.trash,danger:true,onClick:()=>{
   const kids=fKids(fs,f.id).length,n=cfg.itemsIn?cfg.itemsIn(f.id):0;
-  confirmDialog({title:`'${f.name}' 폴더를 삭제할까요?`,desc:`삭제한 폴더는 복구할 수 없습니다. ${kids?`하위 폴더 ${kids}개는 한 단계 위로 이동하고, `:''}폴더 안 항목 ${n}개는 ${f.parent?'상위 폴더':'폴더 없음(전체)'}(으)로 이동하며, 항목 자체는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{
+  confirmDialog({title:`'${f.name}' 폴더를 삭제할까요?`,desc:`삭제한 폴더는 복구할 수 없어요. ${kids?`하위 폴더 ${kids}개는 한 단계 위로 이동하고, `:''}폴더 안 항목 ${n}개는 ${f.parent?'상위 폴더':'폴더 없음(전체)'}(으)로 이동하며, 항목 자체는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{
    fKids(fs,f.id).forEach(k=>k.parent=f.parent||null);
    cfg.rehome&&cfg.rehome(f.id,f.parent||null);
    fs.splice(fs.indexOf(f),1);
    cfg.onDeleted?cfg.onDeleted(f.id):cfg.onChanged();
-   toast('폴더를 삭제했어요');
+   toast('폴더를 삭제했어요.');
   }});
  }});
  popMenu(anchor,items);
@@ -2529,7 +2529,7 @@ function folderMoveModal({fs,current,withNone=false,onMove,title='폴더 이동'
    const isCur=r.k===curKey;
    const blocked=!isCur&&canPick&&!canPick(r.k===KEY_ROOT?null:r.k);
    return `<div class="fr-item ${sel===r.k?'on':''} ${isCur?'fm-cur':''} ${blocked?'fm-dis':''}" data-fm="${r.k}" ${blocked?'data-fm-dis="1"':''} role="button" tabindex="${blocked?-1:0}" aria-disabled="${isCur||blocked?'true':'false'}" style="padding-left:${q?8:8+(r.depth-1)*16}px">${IC.folder}<span class="fr-nm">${q?r.path:r.name}</span>${isCur?'<span class="cnt">현재 위치</span>':blocked?'<span class="cnt">이동 불가</span>':''}</div>`;
-  }).join('')||`<div style="padding:16px;font-size:13px;color:var(--text-3)">${q?'검색 결과가 없어요 — 다른 이름으로 검색해보세요':'아직 만들어 둔 폴더가 없어요'}</div>`;
+  }).join('')||`<div style="padding:16px;font-size:13px;color:var(--text-3)">${q?'검색 결과가 없어요. 다른 이름으로 검색해보세요.':'아직 만들어 둔 폴더가 없어요'}</div>`;
   const pick=el=>{if(el.dataset.fm===curKey||el.dataset.fmDis)return;sel=el.dataset.fm;draw();};
   ov.querySelector('#fm-tree').querySelectorAll('[data-fm]').forEach(el=>{
    el.onclick=()=>pick(el);
@@ -2584,7 +2584,7 @@ function renderMyPage(root){
     <div class="set-row"><span class="lbl">현재 플랜</span><span class="val"><b style="font-size:16px">${pnm}</b><span class="num">${ppr}<span style="font-size:12px;color:var(--text-3)"> /월 (VAT 별도)</span></span></span><button class="btn btn-sm btn-tonal" id="mp-plan">플랜 변경</button></div>
     <div class="set-row"><span class="lbl">화면 사용량</span><span class="val"><span class="usage-bar"><i style="width:62%"></i></span><span class="num" style="font-size:13px">31 / 50대</span></span></div>
     <div class="set-row"><span class="lbl">스토리지</span><span class="val"><span class="usage-bar"><i style="width:6%"></i></span><span class="num" style="font-size:13px">6.2 / 100GB</span></span></div>
-    <div class="set-row"><span class="lbl">다음 결제</span><span class="val">${SUB.cancelled?`<span style="color:var(--amber)">결제 없음 — ${SUB.nextBill}까지 이용 가능</span>`:`<span class="num">${SUB.nextBill}</span><span style="font-size:12px;color:var(--text-3);font-weight:500">${ppr} 자동 결제</span>`}</span></div>
+    <div class="set-row"><span class="lbl">다음 결제</span><span class="val">${SUB.cancelled?`<span style="color:var(--amber)">결제 없음 · ${SUB.nextBill}까지 이용 가능</span>`:`<span class="num">${SUB.nextBill}</span><span style="font-size:12px;color:var(--text-3);font-weight:500">${ppr} 자동 결제</span>`}</span></div>
     <div class="set-row"><span class="lbl">결제 수단</span><span class="val">💳 ${SUB.card}</span><button class="btn btn-sm" id="mp-card">변경</button></div>
    </div>
    <div class="set-card"><h3>결제 내역</h3>
@@ -2598,7 +2598,7 @@ function renderMyPage(root){
      :`<p style="margin:0 0 12px;font-size:13px;color:var(--text-2);line-height:1.6">해지해도 다음 결제일(${SUB.nextBill})까지는 모든 기능을 사용할 수 있어요. 콘텐츠와 설정은 90일간 안전하게 보관돼요.</p><button class="btn btn-danger-t" id="mp-cancel">구독 해지</button>`}
    </div>`}
   </div></div>`;
- root.querySelectorAll('[data-receipt]').forEach(b=>b.onclick=()=>toast('영수증을 내려받았어요'));
+ root.querySelectorAll('[data-receipt]').forEach(b=>b.onclick=()=>toast('영수증을 내려받았어요.'));
  const openProfileEdit=()=>openModal(`
   <div class="modal-head"><h2>프로필 수정</h2></div>
   <div class="modal-body"><div class="f-row"><label>이름 <span class="req">*</span></label><input class="input" id="pf-nm" value="${PROFILE.name}"></div>
@@ -2609,12 +2609,12 @@ function renderMyPage(root){
    nm.addEventListener('input',()=>nm.classList.remove('error'));
    ov.querySelector('#pf-ok').onclick=()=>{
     /* 이름은 모든 가입 경로에서 필수로 확보하는 값이므로 비워둘 수 없다 */
-    if(!nm.value.trim()){nm.classList.add('error');nm.focus();toast('이름을 입력해주세요',{err:true});return}
+    if(!nm.value.trim()){nm.classList.add('error');nm.focus();toast('이름을 입력해주세요.',{err:true});return}
     PROFILE.name=nm.value.trim();PROFILE.brand=ov.querySelector('#pf-br').value.trim()||PROFILE.brand;
     session.name=PROFILE.name;session.brand=PROFILE.brand;
     $('#prof-name').textContent=PROFILE.name+'님';$('#prof-brand').textContent=PROFILE.brand;
     const av=$('#lnb-profile .avatar');if(av)av.textContent=PROFILE.name[0];
-    ov.remove();renderMyPage(root);toast('프로필을 저장했어요')};
+    ov.remove();renderMyPage(root);toast('프로필을 저장했어요.')};
   }});
  root.querySelector('#mp-profile').onclick=openProfileEdit;
  /* 이메일은 로그인 계정 식별자라 마이페이지에서 변경하지 않는다 (변경 진입점 없음) */
@@ -2637,18 +2637,18 @@ function renderMyPage(root){
     if(!ov.querySelector('#pw-cur').value){ov.querySelector('#pw-cur').classList.add('error');return}
     if(nw.value.length<8){nw.classList.add('error');return}
     if(nw.value!==ov.querySelector('#pw-cf').value){ov.querySelector('#pw-cf').classList.add('error');toast('새 비밀번호가 서로 달라요',{err:true});return}
-    ov.remove();toast('비밀번호를 변경했어요 — 다른 기기에서는 다시 로그인해야 해요');};
+    ov.remove();toast('비밀번호를 변경했어요. 다른 기기에서는 다시 로그인해야 해요.');};
   }});
  /* 연동됨 상태에는 버튼이 없다 — 해제 없이 연동만 가능 */
  const gBtn=root.querySelector('#mp-google');
- if(gBtn)gBtn.onclick=()=>{PROFILE.google=true;renderMyPage(root);toast('Google 계정을 연동했어요')};
+ if(gBtn)gBtn.onclick=()=>{PROFILE.google=true;renderMyPage(root);toast('Google 계정을 연동했어요.')};
  /* 아래 구독·결제 핸들러는 최고관리자 세션에만 대상 요소가 존재한다 */
  root.querySelector('#mp-card')?.addEventListener('click',()=>openModal(`
   <div class="modal-head"><h2>결제 수단 변경</h2></div>
   <div class="modal-body"><div class="f-row"><label>카드 번호</label><input class="input num" placeholder="0000 - 0000 - 0000 - 0000"></div>
   <div class="f-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="f-row"><label>유효기간</label><input class="input num" placeholder="MM / YY"></div><div class="f-row"><label>CVC</label><input class="input num" placeholder="***"></div></div></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="cd-ok">등록</button></div>`,
-  {width:'420px',onMount:ov=>ov.querySelector('#cd-ok').onclick=()=>{SUB.card='국민카드 **** 1102';ov.remove();renderMyPage(root);toast('결제 수단을 변경했어요')}}));
+  {width:'420px',onMount:ov=>ov.querySelector('#cd-ok').onclick=()=>{SUB.card='국민카드 **** 1102';ov.remove();renderMyPage(root);toast('결제 수단을 변경했어요.')}}));
  const mpPlan=root.querySelector('#mp-plan');
  if(mpPlan)mpPlan.onclick=()=>{
   let sel=SUB.plan;
@@ -2672,8 +2672,8 @@ function renderMyPage(root){
   };
   draw();
   ov.querySelector('#pl-ok').onclick=()=>{
-   if(sel==='ent'){ov.remove();showPage('support');toast('Enterprise 도입 문의를 남겨주세요 — 문의 유형이 미리 선택돼 있어요');supPreset='서비스 이용 문의';return}
-   SUB.plan=sel;ov.remove();renderMyPage(root);toast(sel==='basic'?`다운그레이드가 예약됐어요 — ${SUB.nextBill}부터 Basic 적용`:'Pro 플랜으로 업그레이드했어요');
+   if(sel==='ent'){ov.remove();showPage('support');toast('Enterprise 도입 문의를 남겨주세요. 문의 유형이 미리 선택돼 있어요.');supPreset='서비스 이용 문의';return}
+   SUB.plan=sel;ov.remove();renderMyPage(root);toast(sel==='basic'?`다운그레이드가 예약됐어요. ${SUB.nextBill}부터 Basic 플랜이 적용돼요.`:'Pro 플랜으로 업그레이드했어요');
   };
  };
  root.querySelector('#mp-cancel')?.addEventListener('click',()=>openModal(`
@@ -2684,17 +2684,19 @@ function renderMyPage(root){
     <select class="select" id="cx-why"><option>가격이 부담돼요</option><option>기능이 부족해요</option><option>사용이 어려워요</option><option>매장 운영을 중단해요</option><option>기타</option></select></div>
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn btn-primary" data-close>계속 이용하기</button><button class="btn btn-danger-t" id="cx-ok">해지 예약</button></div>`,
-  {width:'440px',onMount:ov=>ov.querySelector('#cx-ok').onclick=()=>{SUB.cancelled=true;ov.remove();renderMyPage(root);toast(`해지가 예약됐어요 — ${SUB.nextBill}까지 이용할 수 있어요`)}}));
- root.querySelector('#mp-uncancel')?.addEventListener('click',()=>{SUB.cancelled=false;renderMyPage(root);toast('해지를 취소했어요 — 구독이 계속 유지돼요')});
+  {width:'440px',onMount:ov=>ov.querySelector('#cx-ok').onclick=()=>{SUB.cancelled=true;ov.remove();renderMyPage(root);toast(`해지가 예약됐어요. ${SUB.nextBill}까지 이용할 수 있어요.`)}}));
+ root.querySelector('#mp-uncancel')?.addEventListener('click',()=>{SUB.cancelled=false;renderMyPage(root);toast('해지를 취소했어요. 구독이 계속 유지돼요.')});
 }
 
 /* ═══════════ 문의하기 ═══════════ */
 const TK_TYPES=['서비스 이용 문의','오류 신고','기능 개선 제안','결제 문의','기타'];
-const TK_ST={received:['접수','badge-gray'],progress:['처리 중','badge-amber'],answered:['답변 완료','badge-green']};
+/* 문의 상태 배지 — 접수 Gray · 처리 중 Orange(amber 토큰) · 답변 완료 Blue.
+   목록(테이블)과 상세 드로어가 같은 정의를 쓰므로 여기만 바꾸면 전체가 통일된다. */
+const TK_ST={received:['접수','badge-gray'],progress:['처리 중','badge-amber'],answered:['답변 완료','badge-blue']};
 let tkSeq=4,supTab='new',supPreset=null,supFiles=[];
 let TICKETS=[
- {id:'tk3',type:'오류 신고',title:'화면 미리보기가 간헐적으로 안 보여요',body:'강남대로점 쇼윈도 화면의 실시간 미리보기가 하루 2~3번 회색 화면으로 나옵니다. 새로고침하면 잠시 돌아오는데 다시 재발해요.',date:'07.02',status:'answered',files:['스크린샷_0702.png'],answer:{by:'싱크사인 CS 이수진',date:'07.02 14:20',body:'확인 결과 해당 셋탑 펌웨어(v3.4)의 알려진 이슈였어요. 원격으로 v3.6 업데이트를 적용해 드렸고 현재 정상 표시를 확인했습니다. 재발 시 이 문의에 답글로 알려주세요.'}},
- {id:'tk2',type:'결제 문의',title:'세금계산서 발행이 가능한가요?',body:'월 구독 결제 건에 대해 회사 명의 세금계산서 발행이 필요합니다.',date:'07.04',status:'progress',files:[],answer:null},
+ {id:'tk3',type:'오류 신고',title:'화면 미리보기가 간헐적으로 안 보여요',body:'강남대로점 쇼윈도 화면의 실시간 미리보기가 하루 2~3번 회색 화면으로 나옵니다. 새로고침하면 잠시 돌아오는데 다시 재발해요.',date:'07.02',status:'answered',files:['스크린샷_0702.png'],answer:{by:'싱크사인 CS 이수진',date:'07.02 14:20',body:'확인 결과 해당 셋탑 펌웨어(v3.4)의 알려진 이슈였어요. 원격으로 v3.6 업데이트를 적용해 드렸고 현재 정상 표시를 확인했어요. 재발 시 이 문의에 답글로 알려주세요.'}},
+ {id:'tk2',type:'결제 문의',title:'세금계산서 발행이 가능한가요?',body:'월 구독 결제 건에 대해 회사 명의 세금계산서 발행이 필요해요.',date:'07.04',status:'progress',files:[],answer:null},
  {id:'tk1',type:'기능 개선 제안',title:'재생목록에도 폴더 기능이 있으면 좋겠어요',body:'재생목록이 30개가 넘어가니 찾기가 어렵습니다. 콘텐츠처럼 폴더로 관리하고 싶어요.',date:'07.01',status:'answered',files:[],answer:{by:'싱크사인 CS 이수진',date:'07.05 09:10',body:'좋은 제안 감사해요! 이번 업데이트에 재생목록 폴더 기능이 반영됐어요. 재생목록 관리 좌측에서 폴더를 만들어 사용해 보세요. (최대 3단계)'}},
 ];
 function renderSupportPage(root){
@@ -2731,19 +2733,19 @@ function renderSupportPage(root){
    wrap.querySelectorAll('[data-frm]').forEach(b=>b.onclick=()=>{supFiles.splice(+b.dataset.frm,1);drawFiles()});
   };
   body.querySelector('#tk-attach').onclick=()=>{
-   if(supFiles.length>=5){toast('첨부는 최대 5개까지 가능해요',{err:true});return}
+   if(supFiles.length>=5){toast('첨부는 최대 5개까지 가능해요.',{err:true});return}
    supFiles.push(['스크린샷_'+(supFiles.length+1)+'.png','화면로그.txt','오류화면.jpg'][supFiles.length%3]);drawFiles();toast('파일을 첨부했어요 (프로토타입: 샘플)');
   };
   body.querySelector('#tk-submit').onclick=()=>{
    const title=body.querySelector('#tk-title').value.trim(),txt=body.querySelector('#tk-body').value.trim();
    let bad=false;
-   if(!type){toast('문의 유형을 선택해주세요',{err:true});bad=true}
+   if(!type){toast('문의 유형을 선택해주세요.',{err:true});bad=true}
    body.querySelector('#tk-title').classList.toggle('error',!title);
    body.querySelector('#tk-body').classList.toggle('error',!txt);
-   if(bad||!title||!txt){if(title===''||txt==='')toast('제목과 내용을 입력해주세요',{err:true});return}
+   if(bad||!title||!txt){if(title===''||txt==='')toast('제목과 내용을 입력해주세요.',{err:true});return}
    TICKETS.unshift({id:'tk'+(tkSeq++),type,title,body:txt,date:'07.05',status:'received',files:[...supFiles],answer:null});
    supTab='list';renderSupportPage(root);
-   toast('문의를 등록했어요 — 답변이 오면 이메일로도 알려드려요');
+   toast('문의를 등록했어요. 답변이 오면 이메일로도 알려드려요.');
   };
  }else{
   body.innerHTML=`<div class="ptable-wrap"><table class="grid"><thead><tr>
@@ -2760,8 +2762,12 @@ function renderSupportPage(root){
 }
 function openTicketDrawer(t){
  openDrawer(`
-  <div class="drawer-head"><div><h2 style="font-size:16px">${t.title}</h2><span class="sub">${t.type} · 2026.${t.date} 등록 · <span class="badge ${TK_ST[t.status][1]}" style="vertical-align:middle">${TK_ST[t.status][0]}</span></span></div>
-   <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
+  <div class="drawer-head" style="align-items:flex-start">
+   <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+    <h2 style="font-size:16px">${t.title}</h2>
+    <span class="sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${t.type} · 2026.${t.date} 등록<span class="badge ${TK_ST[t.status][1]}">${TK_ST[t.status][0]}</span></span>
+   </div>
+   <button class="icon-btn" data-close style="margin-left:auto;flex:none">${IC.x}</button></div>
   <div class="drawer-body">
    <div class="dsec" style="margin-top:10px"><h3 style="margin:0 0 8px;font-size:13px;font-weight:700">문의 내용</h3>
     <div class="tk-body">${t.body}</div>
@@ -2769,7 +2775,7 @@ function openTicketDrawer(t){
    </div>
    <div class="dsec" style="margin-top:18px"><h3 style="margin:0 0 8px;font-size:13px;font-weight:700">답변</h3>
     ${t.answer?`<div class="answer-box"><div class="who">💬 ${t.answer.by}<span style="color:var(--text-3);font-weight:500">${t.answer.date}</span></div>${t.answer.body}</div>`
-    :`<div class="empty" style="padding:26px"><b>${t.status==='progress'?'담당자가 처리 중이에요':'접수됐어요'}</b><span>평균 4시간 내 답변해 드려요 · 답변이 등록되면 이메일로 알림이 가요</span></div>`}
+    :`<div class="empty" style="padding:26px;gap:4px"><b>${t.status==='received'?'접수됐어요':'담당자가 처리 중이에요'}</b><span>평균 4시간 내 답변해 드려요.</span></div>`}
    </div>
    <div class="dsec" style="margin-top:16px"><h3 style="margin:0 0 8px;font-size:13px;font-weight:700">추가 문의</h3>
     <textarea class="input" id="tk-more" rows="3" placeholder="이 문의에 이어서 내용을 추가할 수 있어요"></textarea>
@@ -2780,7 +2786,7 @@ function openTicketDrawer(t){
   const v=wrap.querySelector('#tk-more').value.trim();
   if(!v){wrap.querySelector('#tk-more').classList.add('error');return}
   t.status=t.status==='answered'?'progress':t.status;t.body+='\n\n[추가] '+v;
-  wrap.remove();toast('추가 문의를 등록했어요');
+  wrap.remove();toast('추가 문의를 등록했어요.');
   if(curPage==='support')renderSupportPage($('#page-root'));
  }});
 }
@@ -2828,7 +2834,7 @@ function renderEmptyDashboard(root,ps){
  root.querySelectorAll('[data-setup]').forEach(b=>b.onclick=()=>{
   const k=b.dataset.setup;
   if(k==='store'){showPage('stores');openStoreModal();}
-  else if(k==='panel'){showPage('panels');if(STORES.length)setTimeout(()=>document.getElementById('btn-add-panel')?.click(),180);else toast('먼저 매장을 등록해주세요');}
+  else if(k==='panel'){showPage('panels');if(STORES.length)setTimeout(()=>document.getElementById('btn-add-panel')?.click(),180);else toast('먼저 매장을 등록해주세요.');}
   else if(k==='content')showPage('library');
   else if(k==='cast')openPanelScheduleInline(); /* 편성 및 화면 송출 → 편성 일정 페이지로 이동 */
  });
@@ -2851,14 +2857,14 @@ function renderDashboard(root){
  /* 오늘 일정(개인·소상공인) / 배포 현황(프랜차이즈·기업) — 같은 데이터·행 구조, 제목만 다름 */
  const schedRows=DASH_SCHED.map((s,i)=>`<div class="dash-row" ${s.st==='fail'?'':'data-dsched'}><span class="tm num">${s.t}</span><span class="thumb-mini" style="background:${s.g}">${s.e}</span><span class="tx"><b>${s.c}</b><span>${s.tg}${s.st==='fail'?` · <span style="color:var(--red)">${s.why}</span>`:''}</span></span>
     ${s.st==='done'?'<span class="badge badge-green">배포 완료</span>':s.st==='next'?'<span class="badge badge-gray">배포 예정</span>':`<span class="badge badge-red">배포 실패</span><button class="btn btn-sm" data-retrysched="${i}">재시도</button>`}</div>`).join('')
-  ||emptyRow('아직 편성된 일정이 없어요 — 콘텐츠를 편성하면 여기에 표시돼요');
+  ||emptyRow('아직 편성된 일정이 없어요. 콘텐츠를 편성하면 여기에 표시돼요.');
  const schedCard=title=>`<div class="dash-card"><h3>${title} <span style="font-size:12px;color:var(--text-2);font-weight:600">완료 <b style="color:var(--green)">${done}</b> · 예정 <b>${next}</b> · 실패 <b style="color:var(--red)">${fail}</b></span><span class="lnk" id="dash-sched">편성일정 열기</span></h3>${schedRows}</div>`;
  /* 개인·소상공인: 패널 실시간 상태 */
  const myPanels=(window.__panelList?window.__panelList(5):[]);
  const liveOn=myPanels.filter(p=>p.stb&&p.status==='on').length,liveErr=myPanels.filter(p=>p.status==='err').length,liveOff=myPanels.filter(p=>!p.stb||p.status==='off').length;
  const cardLive=`<div class="dash-card"><h3>화면 실시간 상태 <span style="font-size:12px;color:var(--text-2);font-weight:600">온라인 <b style="color:var(--green)">${liveOn}</b> · 오류 <b style="color:var(--red)">${liveErr}</b> · 오프라인 <b>${liveOff}</b></span><span class="lnk" data-att-all>화면 관리에서 모두 보기</span></h3>
    ${myPanels.length?myPanels.map(p=>`<div class="dash-row" data-att-all><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${p.name} <span style="font-weight:500;color:var(--text-3)">· ${p.store}</span></b><span>${p.stb?(p.status==='off'?'신호 없음 · '+p.ago:p.status==='err'?'콘텐츠 재생 오류 · '+p.ago:p.content?'송출 중 · '+p.content:'편성된 콘텐츠 없음'):'셋탑 미연결 — 연결하면 송출을 시작해요'}</span></span>
-    <span class="badge ${!p.stb?'badge-amber':p.status==='on'?'badge-green':p.status==='off'?'badge-gray':'badge-red'}">${!p.stb?'셋탑 미연결':p.status==='on'?'온라인':p.status==='off'?'오프라인':'오류'}</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>아직 연결된 화면이 없어요</b><span>화면 관리에서 연결 코드로 등록해보세요</span></div>'}
+    <span class="badge ${!p.stb?'badge-amber':p.status==='on'?'badge-green':p.status==='off'?'badge-gray':'badge-red'}">${!p.stb?'셋탑 미연결':p.status==='on'?'온라인':p.status==='off'?'오프라인':'오류'}</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>아직 연결된 화면이 없어요</b><span>화면 관리에서 연결 코드로 등록해보세요.</span></div>'}
   </div>`;
  /* 프랜차이즈·기업: 지금 확인이 필요한 패널 */
  const cardAttention=`<div class="dash-card"><h3>지금 확인이 필요한 화면 <span style="font-size:12px;color:var(--text-2);font-weight:600">오프라인 <b>${fmt(ps.off)}</b> · 오류 <b style="color:var(--red)">${fmt(ps.err)}</b></span><span class="lnk" data-att>화면 관리에서 모두 보기</span></h3>
@@ -2903,19 +2909,19 @@ function renderDashboard(root){
   else{
    showPage('panels');
    window.__setPanelFilter&&window.__setPanelFilter(k==='panels'?'all':k);
-   if(k!=='panels')toast(`화면 관리에 '${{on:'온라인',off:'오프라인',err:'오류'}[k]}' 필터를 적용했어요`);
+   if(k!=='panels')toast(`화면 관리에 '${{on:'온라인',off:'오프라인',err:'오류'}[k]}' 필터를 적용했어요.`);
   }
  });
  root.querySelectorAll('[data-att]').forEach(el=>el.addEventListener('click',()=>{
   showPage('panels');window.__setPanelFilter&&window.__setPanelFilter('attention');
-  toast('주의가 필요한 화면만 모아서 보여드려요');
+  toast('주의가 필요한 화면만 모아서 보여드려요.');
  }));
  root.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.go)));
  const _ds=root.querySelector('#dash-sched');if(_ds)_ds.onclick=()=>{document.getElementById('mod-products').hidden=true;document.getElementById('mod-panels').hidden=false;(window.__openPanelScheduleMonth||openPanelScheduleInline)();};
  root.querySelectorAll('[data-dsched]').forEach(el=>el.addEventListener('click',()=>openPanelScheduleInline()));
  root.querySelectorAll('[data-retrysched]').forEach(b=>b.onclick=e=>{e.stopPropagation();
   DASH_SCHED[+b.dataset.retrysched].st='next';DASH_SCHED[+b.dataset.retrysched].why='';
-  renderDashboard(root);toast('일정을 다시 예약했어요 — 화면이 온라인이 되면 자동 송출돼요');
+  renderDashboard(root);toast('일정을 다시 예약했어요. 화면이 온라인이 되면 자동 송출돼요.');
  });
 }
 </script>

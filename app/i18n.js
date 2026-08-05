@@ -23,7 +23,7 @@ window.LOCALES={
    support:{t:'문의하기',d:'평균 4시간 내에 답변해 드려요 · 평일 09:00–18:00'},
    dash:{t:'대시보드'},
   },
-  sux:{results:'검색 결과 {n}건',clear:'검색어 지우기',emptyTitle:"'{q}'에 대한 검색 결과가 없어요",emptyDesc:'검색어를 다시 확인하거나 다른 키워드로 검색해보세요',reset:'검색 초기화',errTitle:'검색 중 문제가 발생했어요',errDesc:'일시적인 오류일 수 있어요 — 잠시 후 다시 시도해주세요',retry:'다시 시도'},
+  sux:{results:'검색 결과 {n}건',clear:'검색어 지우기',emptyTitle:"'{q}'에 대한 검색 결과가 없어요",emptyDesc:'검색어를 다시 확인하거나 다른 키워드로 검색해보세요',reset:'검색 초기화',errTitle:'검색 중 문제가 발생했어요',errDesc:'일시적인 오류일 수 있어요. 잠시 후 다시 시도해주세요.',retry:'다시 시도'},
   ph:{products:'상품명, 설명 검색',panels:'화면명, 매장, 콘텐츠 검색',walls:'비디오월, 매장 검색',users:'이름, 이메일 검색',stores:'매장명, 주소 검색',templates:'템플릿 검색',library:'파일명, 태그 검색',playlists:'재생목록 검색'},
   common:{confirm:'확인',cancel:'취소',delete:'삭제',save:'저장',close:'닫기',edit:'수정',copy:'복사',more:'더보기',upload:'업로드',selectAll:'전체 선택',prevPage:'이전 페이지',nextPage:'다음 페이지',recentSort:'최근 등록순',nameSort:'이름순',priceAscSort:'가격 낮은순',priceDescSort:'가격 높은순',issueSort:'문제 화면 우선',panelNameSort:'화면 이름순',storeSort:'매장 이름순',updatedSort:'최근 업데이트순'},
   flt:{all:'전체',onSale:'판매중',soldOut:'품절',discount:'할인중'},
