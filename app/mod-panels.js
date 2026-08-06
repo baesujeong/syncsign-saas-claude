@@ -111,6 +111,19 @@ let RECENT=[];
 const $=s=>__W.querySelector(s)||__E.querySelector(s)||document.querySelector(s);const $$=s=>[...new Set([...__W.querySelectorAll(s),...__E.querySelectorAll(s)])];
 const fmt=n=>n.toLocaleString('ko-KR');
 const storeOf=id=>STORES.find(s=>s.id===id);
+/* 화면(Screen)은 독립 자산이고 매장은 소속 정보일 뿐 — store=null('미지정')도 정상 상태다.
+   (2026-08 정책: 매장을 삭제해도 화면은 삭제·이동 없이 '미지정'으로 남고 편성 일정은 유지)
+   목록·상세·검색·토스트에서 표기가 어긋나지 않도록 라벨을 이 두 헬퍼로 통일한다.
+   storeName: 평문(검색·정렬·토스트) · storeHtml: 목록/상세 표시용(미지정은 흐린 텍스트) */
+const NO_STORE='미지정';
+const NO_STORE_KEY='__none';
+const storeName=id=>storeOf(id)?.name||NO_STORE;
+const storeHtml=id=>storeOf(id)?.name||`<span class="store-none">${NO_STORE}</span>`;
+const unassignedPanels=()=>PANELS.filter(p=>!p.store);
+/* 드롭다운용 매장 목록 — 매장이 많아(수백 개) 앞 50개만 노출하되,
+   현재 선택된 매장이 그 밖에 있으면 맨 앞으로 끌어올려 선택이 사라지지 않게 한다.
+   더 많은 매장 중에서 고를 때는 검색이 되는 매장 선택 모달(openStorePicker)을 쓴다. */
+const storeOptions=cur=>{const arr=STORES.slice(0,50),c=cur&&storeOf(cur);if(c&&!arr.includes(c))arr.unshift(c);return arr};
 const panelOf=id=>PANELS.find(p=>p.id===id);
 const isMaster=p=>PANELS.some(x=>x.follow===p.id);
 const followerCnt=p=>PANELS.filter(x=>x.follow===p.id).length;
@@ -140,6 +153,7 @@ const IC={
  link:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
  cal:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18" stroke-linecap="round"/></svg>',
  monitor:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8" stroke-linecap="round"/></svg>',
+ store:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10v9a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-9"/><path d="M3 9.2 4.6 4.5h14.8L21 9.2a2.6 2.6 0 0 1-5 .9 2.6 2.6 0 0 1-4 0 2.6 2.6 0 0 1-4 0 2.6 2.6 0 0 1-5-.9Z"/></svg>',
  info:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-width="2"/></svg>',
  spark:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>',
  wall:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M12 4v14M3 11h18"/></svg>',
@@ -207,7 +221,8 @@ const thumbBg=p=>!p.stb?'#1B212B':p.status==='off'?'#14181F':p.unsch?'#1B212B':c
 function baseFiltered(){
  let arr=PANELS;
  if(flt.group){const g=GROUPS.find(g=>g.id===flt.group);arr=arr.filter(p=>g.ids.includes(p.id));}
- if(flt.store)arr=arr.filter(p=>p.store===flt.store);
+ if(flt.store===NO_STORE_KEY)arr=arr.filter(p=>!p.store);
+ else if(flt.store)arr=arr.filter(p=>p.store===flt.store);
  else if(flt.region){const r=REGIONS.find(r=>r.id===flt.region);arr=arr.filter(p=>r.storeIds.includes(p.store));}
  if(flt.view==='attention')arr=arr.filter(p=>p.status!=='on');
  if(flt.view==='nostb')arr=arr.filter(p=>!p.stb);
@@ -219,14 +234,15 @@ function baseFiltered(){
  if(flt.status==='err')arr=arr.filter(p=>p.status==='err');
  if(flt.status==='unsch')arr=arr.filter(p=>p.unsch);
  if(flt.tags.length)arr=arr.filter(p=>flt.tags.some(t=>p.tags.includes(t)));
- if(flt.q){const q=flt.q.toLowerCase();arr=arr.filter(p=>p.name.toLowerCase().includes(q)||storeOf(p.store).name.toLowerCase().includes(q)||(p.content&&contentOf(p.content).name.toLowerCase().includes(q)));}
+ if(flt.q){const q=flt.q.toLowerCase();arr=arr.filter(p=>p.name.toLowerCase().includes(q)||storeName(p.store).toLowerCase().includes(q)||(p.content&&contentOf(p.content).name.toLowerCase().includes(q)));}
  return arr;
 }
 function sorted(arr){
  const s=flt.sort;const issueRank=p=>p.status==='err'?0:!p.stb?2:p.status==='off'?1:p.unsch?2.5:3;
  if(s==='issue')return[...arr].sort((a,b)=>issueRank(a)-issueRank(b)||a.lastMin-b.lastMin);
  if(s==='name')return[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
- if(s==='store')return[...arr].sort((a,b)=>storeOf(a.store).name.localeCompare(storeOf(b.store).name,'ko'));
+ /* 매장 이름순 — 미지정 화면은 소속이 없으니 항상 뒤로 모아 보여준다 */
+ if(s==='store')return[...arr].sort((a,b)=>(!a.store)-(!b.store)||storeName(a.store).localeCompare(storeName(b.store),'ko'));
  return[...arr].sort((a,b)=>a.lastMin-b.lastMin);
 }
 /* 비디오월을 카드 1장으로 접기: 대표 셀만 남김 */
@@ -279,12 +295,16 @@ function renderRail(){
   if(b.dataset.view==='attention'){fg[1]=true;renderFg();}
   page=1;renderAll();
  });
- /* 매장 트리 */
+ /* 매장 트리 — 맨 위에 '미지정'(매장에 속하지 않는 화면) 범위를 상시 제공.
+    매장 삭제로 미지정이 된 화면을 바로 찾아 다시 배정할 수 있게 한다. */
  $('#store-total').textContent=`· ${fmt(STORES.length)}개`;
- $('#store-tree').innerHTML=REGIONS.map(r=>{
+ const unN=unassignedPanels().length;
+ const showUn=(unN||flt.store===NO_STORE_KEY)&&(!q||NO_STORE.includes(q));
+ $('#store-tree').innerHTML=(showUn?`<button class="store-row store-row-none ${flt.store===NO_STORE_KEY?'on':''}" data-store="${NO_STORE_KEY}"><span class="dash"></span>${NO_STORE}<span class="cnt num">${fmt(unN)}</span></button>`:'')
+ +REGIONS.map(r=>{
   const stores=r.storeIds.map(storeOf).filter(s=>!q||s.name.includes(q));
   if(q&&!stores.length)return'';
-  const open=q?stores.length<=12:r.id===(flt.region||'r0')&&r.id==='r0'||flt.region===r.id||(flt.store&&storeOf(flt.store).region===r.id);
+  const open=q?stores.length<=12:r.id===(flt.region||'r0')&&r.id==='r0'||flt.region===r.id||(flt.store&&storeOf(flt.store)?.region===r.id);
   const pc=r.storeIds.reduce((n,sid)=>n+panelsOf(sid).length,0);
   return `<div><button class="region-row ${open?'open':''}" data-region="${r.id}">${IC.chev}${r.name}<span class="cnt num">매장 ${stores.length} · 화면 ${fmt(pc)}</span></button>
   <div class="store-list">${stores.slice(0,60).map(s=>{
@@ -311,7 +331,8 @@ attachSearchUX($('#store-search'),()=>renderRail());
 function renderScope(){
  const chip=$('#scope-chip');
  let label=null;
- if(flt.store)label=`매장: <b>${storeOf(flt.store).name}</b>`;
+ if(flt.store===NO_STORE_KEY)label=`매장: <b>${NO_STORE}</b>`;
+ else if(flt.store)label=`매장: <b>${storeName(flt.store)}</b>`;
  else if(flt.region)label=`지역: <b>${REGIONS.find(r=>r.id===flt.region).name}</b>`;
  else if(flt.group)label=`그룹: <b>${GROUPS.find(g=>g.id===flt.group).name}</b>`;
  else if(flt.view!=='all')label=`뷰: <b>${{attention:'주의 필요',unscheduled:'미편성',nostb:'셋탑 미연결',fav:'즐겨찾기',recent:'최근 관리'}[flt.view]}</b>`;
@@ -335,10 +356,12 @@ function wallCardHtml(w){
   </div>
   <div class="body">
    <div class="nm">${w.name}</div>
-   <div class="sub">${storeOf(w.store).name} · ${w.orient||'가로형'} · ${w.res||'FHD (1920×1080)'}</div>
+   <div class="sub">${storeHtml(w.store)} · ${w.orient||'가로형'} · ${w.res||'FHD (1920×1080)'}</div>
    <div class="badges"><span class="badge badge-gray">${(w.gw||w.cols)}×${(w.gh||w.rows)} 캔버스</span><span class="badge badge-gray">일정 ${wallSchedN(w)}건</span><span class="wall-on ${ok?'':'issue'}"><span class="dot ${ok?'on':'err'}"></span>온라인 ${on}/${total}</span></div>
   </div></div>`;
 }
+/* 화면이 하나도 없을 때 — 매장이 없어도 '미지정'으로 바로 등록할 수 있으므로 매장 등록을 선행 조건으로 안내하지 않는다 */
+const noPanelEmptyHtml=()=>`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>셋탑박스 화면의 6자리 연결 코드로 첫 화면을 연결해보세요.${STORES.length?'':'<br>매장이 아직 없다면 <b>미지정</b>으로 등록하고 나중에 지정해도 괜찮아요.'}</span><button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button></div>`;
 function renderList(){
  const arr=sorted(collapseWalls(baseFiltered()));
  const per=view==='grid'?PER.grid:PER.table;
@@ -354,10 +377,10 @@ function renderList(){
     <span class="checkbox check ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span>
     <div class="body">
      <div class="nm">${p.name}</div>
-     <div class="sub">${storeOf(p.store).name} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
+     <div class="sub">${storeHtml(p.store)} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
      <div class="badges">${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}${shareBadge(p)}</div>
     </div></div>`;
-  }).join('')||`<div style="grid-column:1/-1">${PANELS.length===0?`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>${STORES.length===0?'먼저 매장을 등록한 뒤, 셋탑박스의 6자리 연결 코드로 첫 화면을 연결해보세요':'셋탑박스 화면의 6자리 연결 코드로 첫 화면을 연결해보세요'}</span>${STORES.length===0?`<button class="btn btn-tonal btn-sm" onclick="showPage('stores')">매장 관리로 이동</button>`:`<button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button>`}</div>`:flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
+  }).join('')||`<div style="grid-column:1/-1">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
  }else{
   $('#pgrid').hidden=true;$('#ptable-wrap').hidden=false;
   $('#ptbody').innerHTML=slice.map(p=>{
@@ -366,7 +389,7 @@ function renderList(){
     <td><span class="tstatus" style="color:var(--violet)">${IC.wall}비디오월</span></td>
     <td><span class="mini-thumb" style="background:${c.g}"></span></td>
     <td><b>${w.name}</b> <span class="badge badge-violet">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span></td>
-    <td>${storeOf(w.store).name}</td><td>${wallContentLabel(w)}</td><td colspan="2" class="num">화면 ${w.cells.length}개</td><td>—</td>
+    <td>${storeHtml(w.store)}</td><td>${wallContentLabel(w)}</td><td colspan="2" class="num">화면 ${w.cells.length}개</td><td>—</td>
     <td><button class="icon-btn" data-wallmenu="${w.id}">${IC.dots}</button></td></tr>`}
    const st=!p.stb?['셋탑 미연결','var(--amber)']:p.status==='on'?(p.unsch?['미편성','var(--amber)']:['온라인','var(--green)']):p.status==='off'?['오프라인','var(--text-3)']:['오류','var(--red)'];
    return `<tr class="${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
@@ -374,13 +397,13 @@ function renderList(){
     <td><span class="tstatus" style="color:${st[1]}"><span class="dot ${!p.stb||p.status==='off'?'off':p.status==='on'?'on':'err'}"></span>${st[0]}</span></td>
     <td><span class="mini-thumb" style="background:${thumbBg(p)}"></span></td>
     <td><b>${p.name}</b>${p.fav?' <span style="color:#D9A93E">★</span>':''}</td>
-    <td>${storeOf(p.store).name}</td>
+    <td>${storeHtml(p.store)}</td>
     <td>${p.unsch||p.status==='off'?'<span style="color:var(--text-3)">—</span>':contentOf(p.content).name}</td>
     <td>${p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="num">${p.schedN}건</span>`}</td>
     <td>${shareBadge(p)||'<span style="color:var(--text-3)">—</span>'}</td>
     <td class="num" style="color:var(--text-3)">${ago(p.lastMin)}</td>
     <td><button class="icon-btn" data-pmenu="${p.id}">${IC.dots}</button></td></tr>`;
-  }).join('')||`<tr><td colspan="10">${PANELS.length===0?`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>${STORES.length===0?'먼저 매장을 등록한 뒤 첫 화면을 연결해보세요':'셋탑박스의 6자리 연결 코드로 첫 화면을 연결해보세요'}</span>${STORES.length===0?`<button class="btn btn-tonal btn-sm" onclick="showPage('stores')">매장 관리로 이동</button>`:`<button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button>`}</div>`:flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
+  }).join('')||`<tr><td colspan="10">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  }
  $('#pagi').innerHTML=`<span class="num">${arr.length?fmt((page-1)*per+1)+'–'+fmt(Math.min(page*per,arr.length)):0} / ${fmt(arr.length)}개</span>
   <button class="icon-btn" id="pg-prev" ${page<=1?'disabled':''} aria-label="이전 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
@@ -408,6 +431,7 @@ function bindListEvents(){
    {label:'상세 보기',icon:IC.monitor,onClick:()=>openPanelDrawer(p)},
    {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
    {label:'일정 따라가기 설정',icon:IC.link,onClick:()=>openShareModal([p.id])},
+   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p])},
    'sep',
    {label:'연결 코드 확인',icon:STB_IC(14),onClick:()=>openStbInfo(p)},
    {label:'셋탑 재연결',icon:IC.restart,onClick:()=>openStbModal(p)},
@@ -419,6 +443,7 @@ function bindListEvents(){
    {label:'셋탑 연결하기',icon:STB_IC(14),onClick:()=>openStbModal(p)},
    {label:'상세 보기',icon:IC.monitor,onClick:()=>openPanelDrawer(p)},
    {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
+   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p])},
    'sep',
    {label:'화면 삭제',icon:IC.x,danger:true,onClick:()=>deletePanel(p)},
   ]);
@@ -445,6 +470,8 @@ $('#th-check')?.addEventListener('click',()=>{
 $('#bulk-schedule').onclick=()=>openSchedule([...checked]);
 $('#bulk-share').onclick=()=>openShareModal([...checked]);
 $('#bulk-restart').onclick=()=>confirmDialog({title:`화면 ${fmt(checked.size)}개 재시작`,desc:'재시작 중 약 30초간 화면이 꺼져요. 영업시간에는 주의하세요.',confirmText:'재시작',danger:true,onConfirm:()=>{toast(`${fmt(checked.size)}개 화면에 재시작 명령을 보냈어요.`);checked.clear();renderList();}});
+/* 선택한 화면의 소속 매장을 한 번에 지정 — 매장 삭제로 미지정이 된 화면을 다시 배정할 때 주로 쓴다 */
+$('#bulk-store').onclick=()=>openStorePicker([...checked].map(panelOf).filter(Boolean));
 $('#bulk-group').onclick=e=>{
  popMenu(e.currentTarget,[
   {title:'그룹에 추가'},
@@ -469,25 +496,30 @@ $('#tag-filter-btn').onclick=e=>tagPickerMenu(e.currentTarget,{tags:TAGS,selecte
 /* '현재 검색 저장' 기능은 서비스 규모·사용 패턴을 고려해 제거됨 (2026-07) */
 /* 화면 추가 — 필수 정보를 먼저 입력하고, 하단에서 [지금 연결하기]/[나중에 연결하기]를 선택.
    셋탑박스가 아직 없어도 화면을 먼저 만들어 둘 수 있음.
-   매장은 온보딩(첫 매장 등록)에서 항상 확보되므로 기존 선택 방식을 그대로 유지.
+   설치 매장은 선택 항목 — 매장에 속하지 않는 화면은 '미지정'으로 두고 나중에 지정한다(2026-08 정책).
+   기본값은 지금 보고 있는 매장(좌측 트리 범위) → 첫 매장 → 미지정 순으로 잡아 맥락을 잃지 않게 한다.
    opts.onCreated: 등록 완료 후 후속 플로우(예: 편성일정에서 바로 편성 시작)를 잇는 콜백 — 지정 시 기본 토스트를 대체 */
 function openAddPanelModal(opts){
  opts=opts||{};
+ const defStore=flt.store===NO_STORE_KEY?'':((flt.store&&storeOf(flt.store))?flt.store:(STORES[0]?STORES[0].id:''));
  openModal(`
  <div class="modal-head"><div><h2>화면 추가</h2><div class="sub">화면은 매장에 설치된 디스플레이 1대예요. 셋탑박스가 준비됐다면 연결 코드까지 입력하고 바로 연결하세요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
  <div class="modal-body">
   <div class="f-row"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px">
    <div class="sync-note" style="margin-top:8px">${IC.info}<span>셋탑박스를 TV에 연결하고 전원을 켜면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 <b>나중에 연결하기</b>를 선택하세요.</span></div></div>
-  <div class="f-row"><label>설치 매장 <span class="req">*</span></label>${STORES.length?`<select class="select" id="ap-store">${STORES.slice(0,50).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>`:`<div class="ferr" style="margin-top:2px">아직 등록된 매장이 없어요. 먼저 <b>매장 관리</b>에서 매장을 등록해주세요.</div>`}</div>
+  <div class="f-row"><label>설치 매장 <span style="font-weight:500;color:var(--text-3)">선택</span></label>
+   <select class="select" id="ap-store">
+    <option value="" ${defStore?'':'selected'}>${NO_STORE}</option>
+    ${STORES.length?`<optgroup label="매장">${storeOptions(defStore).map(s=>`<option value="${s.id}" ${s.id===defStore?'selected':''}>${s.name}</option>`).join('')}</optgroup>`:''}
+   </select>
+   <div class="fhelp">${STORES.length?`매장에 속하지 않는 화면은 <b>미지정</b>으로 둬도 괜찮아요. 화면 상세에서 언제든 매장을 지정할 수 있어요.`:`아직 등록된 매장이 없어요. <b>미지정</b>으로 먼저 등록하고, 매장을 만든 뒤 화면 상세에서 연결하세요.`}</div></div>
   <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"></div>
  </div>
  <div class="modal-foot"><button class="btn" data-close>취소</button><span class="grow"></span><button class="btn" id="ap-later">나중에 연결하기</button><button class="btn btn-primary" id="ap-ok">지금 연결하기</button></div>`,
  {width:'440px',onMount:ov=>{
   const create=stb=>{
-   if(!STORES.length){ov.remove();
-    if(!$('#screen-schedule').hidden){$('#screen-schedule').hidden=true;$('#app').style.display='flex';} /* 편성일정 전체화면에서 진입한 경우 앱 셸 복원 후 이동 */
-    toast('먼저 매장을 등록해주세요.',{err:true});showPage('stores');return null;}
-   const sid=ov.querySelector('#ap-store').value;
+   /* 빈 문자열 = 미지정 — 매장이 없어도 화면은 등록할 수 있다 */
+   const sid=ov.querySelector('#ap-store').value||null;
    const nmIn=ov.querySelector('#ap-name'),nm=(nmIn.value||'').trim();
    if(!nm){nmIn.classList.add('error');nmIn.focus();toast('화면 이름을 입력해주세요. 설치 위치를 알 수 있는 이름이 좋아요.',{err:true});return null}
    const p=stb
@@ -503,7 +535,9 @@ function openAddPanelModal(opts){
    if(!code){apCode.classList.add('error');apCode.focus();toast('연결 코드를 입력해주세요. 셋탑박스가 아직 없다면 [나중에 연결하기]를 선택하세요.',{err:true});return}
    if(code.length<STB_CODE_LEN){apCode.classList.add('error');apCode.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return}
    const p=create(true);
-   if(p){if(opts.onCreated)opts.onCreated(p);else toast('화면이 연결됐어요. 목록 맨 위에서 확인하세요.');}
+   if(p){if(opts.onCreated)opts.onCreated(p);
+    else if(p.store)toast('화면이 연결됐어요. 목록 맨 위에서 확인하세요.');
+    else toast(`화면이 연결됐어요. 설치 매장은 '${NO_STORE}' 상태예요.`,{action:'매장 지정',onAction:()=>openStorePicker([p])});}
   };
   ov.querySelector('#ap-later').onclick=()=>{
    const p=create(false);
@@ -517,7 +551,7 @@ $('#btn-add-panel').onclick=()=>openAddPanelModal();
 function openStbModal(p,reconnect){
  const isRe=!!p.stb&&(reconnect!==false);
  const ov=openModal(`
-  <div class="modal-head"><div><h2>${p.stb?'셋탑 재연결':'셋탑 연결하기'}</h2><div class="sub">'${p.name}' · ${storeOf(p.store).name}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-head"><div><h2>${p.stb?'셋탑 재연결':'셋탑 연결하기'}</h2><div class="sub">'${p.name}' · ${storeName(p.store)}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
    ${p.stb?`<dl class="kv" style="margin-bottom:14px"><dt>현재 셋탑</dt><dd class="num">${p.stb.sn}</dd><dt>연결 상태</dt><dd>${p.status==='on'?'<span class="badge badge-green">온라인</span>':p.status==='off'?'<span class="badge badge-gray">오프라인</span>':'<span class="badge badge-red">오류</span>'}</dd></dl>
     <div class="sync-note" style="margin-bottom:14px">${IC.info}<span>셋탑을 교체했거나 네트워크를 다시 설정했다면 새 셋탑의 <b>6자리 연결 코드</b>로 재연결하세요. 기존 일정과 태그는 그대로 유지돼요.</span></div>`
@@ -568,7 +602,7 @@ function deletePanel(p,after){
  if(fN)warns.push(`이 화면을 따라가는 <b>${fN}개 화면</b>의 따라가기가 해제돼요. 각 화면은 마지막 일정의 복사본으로 운영돼요.`);
  if(p.stb)warns.push(`연결된 셋탑(<span class="num">${p.stb.sn}</span>)은 해제되어 다른 화면에 다시 연결할 수 있어요.`);
  confirmDialog({
-  title:`'${storeOf(p.store).name} · ${p.name}' 화면을 삭제할까요?`,
+  title:`'${storeName(p.store)} · ${p.name}' 화면을 삭제할까요?`,
   desc:`삭제한 화면은 복구할 수 없어요.${warns.length?'<br><br>'+warns.map(w=>'· '+w).join('<br>'):''}`,
   confirmText:'삭제',danger:true,
   onConfirm:()=>{
@@ -611,7 +645,7 @@ function openStbInfo(p){
  if(!p.stb.code)p.stb.code=genStbCode();
  const code=p.stb.code;
  openModal(`
-  <div class="modal-head"><div><h2>연결 코드 확인</h2><div class="sub">'${p.name}' · ${storeOf(p.store).name}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-head"><div><h2>연결 코드 확인</h2><div class="sub">'${p.name}' · ${storeName(p.store)}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
    <dl class="kv"><dt>셋탑 S/N</dt><dd class="num">${p.stb.sn}</dd><dt>연결 상태</dt><dd>${p.status==='on'?'<span class="badge badge-green">온라인</span>':p.status==='off'?'<span class="badge badge-gray">오프라인</span>':'<span class="badge badge-red">오류</span>'}</dd><dt>등록 코드</dt><dd><span class="num" style="font-size:15px;font-weight:700;letter-spacing:.12em">${code}</span> <button class="lnk" id="stb-reissue" style="color:var(--blue);font-weight:600;font-size:12px;cursor:pointer;background:none;border:0;padding:0;margin-left:6px">코드 재발급</button></dd></dl>
    <div class="sync-note" style="margin-top:12px">${IC.info}<span>코드를 재발급하면 기존 코드는 즉시 만료돼요. 껐다 켜도 연결이 계속 불안정하면 <b>셋탑 재연결</b>을 진행하세요.</span></div>
@@ -621,6 +655,69 @@ function openStbInfo(p){
   ov.querySelector('#stb-re').onclick=()=>{ov.remove();openStbModal(p);};
   ov.querySelector('#stb-reissue').onclick=()=>{p.stb.code=genStbCode();ov.remove();openStbInfo(p);toast('새 연결 코드를 발급했어요. 기존 코드는 만료됐어요.');};
  }});
+}
+
+/* ═══════════ 매장 지정 · 변경 ═══════════ */
+/* 화면은 독립 자산이고 매장은 소속 정보일 뿐이라, 등록 후에도 언제든 다른 매장으로 옮기거나
+   '미지정'으로 되돌릴 수 있다. 편성 일정·셋탑 연결·태그는 그대로 유지된다.
+   매장이 수백 개라 검색형 목록으로 제공하고, 화면 1개·여러 개(일괄) 모두 같은 모달을 쓴다. */
+function openStorePicker(list,after){
+ list=(list||[]).filter(Boolean);if(!list.length)return;
+ /* 비디오월은 한 매장의 화면을 묶은 구성이라, 일부 화면만 다른 매장으로 옮기면 구성이 깨진다 */
+ const walled=list.filter(p=>p.wall);
+ list=list.filter(p=>!p.wall);
+ if(!list.length){
+  const w=WALLS.find(x=>x.id===walled[0].wall);
+  toast(`'${w?w.name:'비디오월'}'에 속한 화면은 매장을 바꿀 수 없어요. 먼저 비디오월 그룹을 해제해주세요.`,{err:true,action:'비디오월 관리',onAction:()=>{if(w)openWallDrawer(w)}});
+  return;
+ }
+ const one=list.length===1?list[0]:null;
+ /* 여러 화면의 매장이 서로 다르면 기본 선택 없음(undefined) — 실수로 전부 미지정이 되지 않게 한다 */
+ const same=list.every(p=>p.store===list[0].store);
+ let sel=same?(list[0].store||null):undefined;
+ const ov=openModal(`
+  <div class="modal-head"><div><h2>${one?(one.store?'매장 변경':'매장 지정'):`화면 ${fmt(list.length)}개 매장 지정`}</h2>
+   <div class="sub">${one?`'${one.name}'의 설치 매장을 선택하세요.`:'선택한 화면의 설치 매장을 한 번에 지정해요.'} 편성 일정·셋탑 연결·태그는 그대로 유지돼요.</div></div>
+   <button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body">
+   <div class="search-wrap" style="margin-bottom:10px">${IC.search}<input class="input input-sm" id="sp-q" placeholder="매장 이름·지역 검색" aria-label="매장 검색"></div>
+   <div id="sp-list" style="max-height:296px;overflow:auto;margin:0 -4px"></div>
+  </div>
+  <div class="modal-foot"><span style="font-size:13px;color:var(--text-2)" id="sp-sum"></span><span class="grow"></span>
+   <button class="btn" data-close>취소</button><button class="btn btn-primary" id="sp-ok">${one?'변경':'지정'}</button></div>`,
+ {width:'460px'});
+ const draw=()=>{
+  const q=(ov.querySelector('#sp-q').value||'').trim();
+  const arr=STORES.filter(s=>!q||s.name.includes(q)||(REGIONS.find(r=>r.id===s.region)?.name||'').includes(q));
+  const shown=arr.slice(0,60);
+  const row=(id,label,meta,none)=>`<button class="store-row ${sel===id?'on':''}${none?' store-row-none':''}" data-sp="${id===null?NO_STORE_KEY:id}">
+   ${none?'<span class="dash"></span>':'<span class="dot on" style="width:6px;height:6px"></span>'}${label}<span class="cnt num">${meta}</span></button>`;
+  ov.querySelector('#sp-list').innerHTML=
+   ((!q||NO_STORE.includes(q))?row(null,NO_STORE,`화면 ${fmt(unassignedPanels().length)}`,true):'')
+   +shown.map(s=>row(s.id,s.name,`${REGIONS.find(r=>r.id===s.region)?.name||''} · 화면 ${fmt(panelsOf(s.id).length)}`)).join('')
+   +(arr.length>shown.length?`<div style="font-size:12px;color:var(--text-3);padding:8px 10px">외 ${fmt(arr.length-shown.length)}개 매장 — 검색으로 찾아보세요</div>`:'')
+   +(q&&!arr.length&&!NO_STORE.includes(q)?`<div style="font-size:13px;color:var(--text-3);padding:14px 10px">'${q}'와 일치하는 매장이 없어요</div>`:'');
+  ov.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{sel=b.dataset.sp===NO_STORE_KEY?null:b.dataset.sp;draw()});
+  const nochange=sel===undefined||(same&&sel===(list[0].store||null));
+  ov.querySelector('#sp-ok').disabled=nochange;
+  ov.querySelector('#sp-sum').innerHTML=sel===undefined?'선택한 화면의 매장이 서로 달라요. 옮길 매장을 선택하세요.'
+   :nochange?(sel?'지금 소속된 매장이에요. 옮길 매장을 선택하세요.':`지금 <b>${NO_STORE}</b> 상태예요. 지정할 매장을 선택하세요.`)
+   :sel?`화면 <b>${fmt(list.length)}개</b>를 '<b>${storeName(sel)}</b>'(으)로`:`화면 <b>${fmt(list.length)}개</b>를 <b>${NO_STORE}</b> 상태로`;
+ };
+ draw();
+ attachSearchUX(ov.querySelector('#sp-q'),()=>draw());
+ ov.querySelector('#sp-q').focus();
+ ov.querySelector('#sp-ok').onclick=()=>{
+  const target=sel||null;
+  const prev=list.map(p=>p.store); /* 되돌리기용 — 화면마다 원래 매장이 다를 수 있다 */
+  list.forEach(p=>p.store=target);
+  ov.remove();checked.clear();renderAll();
+  const who=one?`'${one.name}' 화면을`:`화면 ${fmt(list.length)}개를`;
+  toast(target?`${who} '${storeName(target)}' 매장으로 옮겼어요.`:`${who} '${NO_STORE}' 상태로 바꿨어요.`,
+   {action:'실행 취소',onAction:()=>{list.forEach((p,i)=>p.store=prev[i]);renderAll();after&&after();toast('매장 변경을 되돌렸어요.');}});
+  if(walled.length)toast(`비디오월에 속한 화면 ${fmt(walled.length)}개는 매장을 바꾸지 않았어요.`,{err:true});
+  after&&after();
+ };
 }
 
 /* ═══════════ 화면 상세 드로어 ═══════════ */
@@ -633,7 +730,7 @@ function openPanelDrawer(p,tab='overview'){
   wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true">
    <div class="drawer-head">
     <div><h2>${p.name} <span class="badge ${st[1]}">${st[0]}</span>${p.fav?' <span style="color:#D9A93E;font-size:14px">★</span>':''}</h2>
-    <span class="sub">${storeOf(p.store).name} · 마지막 업데이트 ${ago(p.lastMin)}</span></div>
+    <span class="sub">${storeHtml(p.store)} · 마지막 업데이트 ${ago(p.lastMin)}</span></div>
     <button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button>
    </div>
    <div class="drawer-body">
@@ -693,7 +790,7 @@ function openPanelDrawer(p,tab='overview'){
    body.innerHTML=`
    <div class="dsec"><h3>화면 정보</h3>
     <dl class="kv kv-tight">
-     <dt>매장</dt><dd>${storeOf(p.store).name}</dd>
+     <dt>매장</dt><dd>${storeHtml(p.store)} <button class="lnk" id="if-store" style="margin-left:4px">${p.store?'변경':'매장 지정'}</button></dd>
      <dt>해상도</dt><dd>${p.res}</dd>
      <dt>셋탑 S/N</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span>`:'<span class="badge badge-amber">미연결</span>'}</dd>
      <dt>펌웨어</dt><dd>${p.stb?`${p.fw} <span class="badge badge-green">최신</span>`:'—'}</dd>
@@ -704,6 +801,7 @@ function openPanelDrawer(p,tab='overview'){
    <div class="dsec"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3><div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요. <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>
    <div class="dsec danger-sec"><h3>위험 작업</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm btn-danger-t" id="if-stb-detach">셋탑 연결 해제</button>`:''}<button class="btn btn-sm btn-danger-t" id="if-del">${IC.x}화면 삭제</button></div>
     <p class="dsec-note">${p.stb?'연결 해제 시 화면 정보·일정·태그는 유지되고 다른 셋탑으로 다시 연결할 수 있어요. ':''}삭제하면 편성 일정도 함께 삭제되니 주의하세요.</p></div>`;
+   const _st=body.querySelector('#if-store');if(_st)_st.onclick=()=>openStorePicker([p],()=>draw('info'));
    const _si=body.querySelector('#if-stb-info');if(_si)_si.onclick=()=>{wrap.remove();openStbInfo(p)};
    const _sr=body.querySelector('#if-stb-re');if(_sr)_sr.onclick=()=>{wrap.remove();openStbModal(p)};
    const _sc=body.querySelector('#if-stb-connect');if(_sc)_sc.onclick=()=>{wrap.remove();openStbModal(p)};
@@ -724,7 +822,7 @@ function openWallDrawer(w){
  const c=contentOf(w.content);
  wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true">
   <div class="drawer-head"><div><h2>${w.name} <span class="badge badge-violet">${IC.wall}${(w.gw||w.cols)}×${(w.gh||w.rows)} 비디오월</span></h2>
-  <span class="sub">${storeOf(w.store).name} · 화면 ${w.cells.length}개가 한 화면으로 동작</span></div>
+  <span class="sub">${storeName(w.store)} · 화면 ${w.cells.length}개가 한 화면으로 동작</span></div>
   <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
   <div class="drawer-body">
    <div class="dpreview" style="background:#0B0E13">
@@ -867,7 +965,7 @@ function renderTargets(){
   return;
  }
  const chips=scTargets.slice(0,6).map(id=>{const p=panelOf(id);
-  return `<span class="chip on">${scWallName?IC.wall:''}${scWallName||storeOf(p.store).name+' · '+p.name}${scTargets.length>1?`<button class="x" data-rmt="${id}" aria-label="대상에서 제외">${IC.xs}</button>`:''}</span>`}).join('');
+  return `<span class="chip on">${scWallName?IC.wall:''}${scWallName||storeName(p.store)+' · '+p.name}${scTargets.length>1?`<button class="x" data-rmt="${id}" aria-label="대상에서 제외">${IC.xs}</button>`:''}</span>`}).join('');
  t.innerHTML=`<span class="lbl">적용 대상 <b class="num" style="color:var(--blue)">${scWallName?'비디오월 1개':fmt(scTargets.length)+'개 화면'}</b></span>${chips}
   ${scTargets.length>6?`<span class="chip">+${fmt(scTargets.length-6)}개</span>`:''}
   <button class="chip" id="sc-add-target">＋ 화면 추가</button>
@@ -1199,12 +1297,12 @@ function openShareModal(followerIds){
  const draw=()=>{
   ov.querySelector('#sh-masters').innerHTML=candidates.map(p=>`
    <button class="share-box" data-shm="${p.id}" style="width:100%;text-align:left;cursor:pointer;${masterId===p.id?'border-color:var(--blue);background:var(--blue-50)':''}">
-    <div class="row"><span class="dot ${p.status==='on'?'on':'err'}"></span><b>${p.name}</b><span style="font-size:12px;color:var(--text-3)">${storeOf(p.store).name}</span>
+    <div class="row"><span class="dot ${p.status==='on'?'on':'err'}"></span><b>${p.name}</b><span style="font-size:12px;color:var(--text-3)">${storeName(p.store)}</span>
     ${isMaster(p)?`<span class="badge badge-violet" style="margin-left:auto">${IC.link}이미 ${followerCnt(p)}개가 따라감</span>`:'<span class="badge badge-gray" style="margin-left:auto">일정 4건</span>'}</div>
    </button>`).join('');
   ov.querySelectorAll('[data-shm]').forEach(b=>b.onclick=()=>{masterId=b.dataset.shm;fset.delete(masterId);draw()});
   ov.querySelector('#sh-followers').innerHTML=[...fset].slice(0,12).map(id=>{const p=panelOf(id);
-   return `<span class="chip on">${p.name} · ${storeOf(p.store).name}<button data-shrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button></span>`}).join('')+(fset.size>12?`<span class="chip">+${fset.size-12}개</span>`:'')||'<span style="font-size:13px;color:var(--text-3)">화면 관리 목록에서 화면을 선택한 뒤 다시 열어주세요</span>';
+   return `<span class="chip on">${p.name} · ${storeName(p.store)}<button data-shrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button></span>`}).join('')+(fset.size>12?`<span class="chip">+${fset.size-12}개</span>`:'')||'<span style="font-size:13px;color:var(--text-3)">화면 관리 목록에서 화면을 선택한 뒤 다시 열어주세요</span>';
   ov.querySelectorAll('[data-shrm]').forEach(b=>b.onclick=()=>{fset.delete(b.dataset.shrm);draw()});
   ov.querySelector('#sh-cnt').textContent=fset.size;
   const m=masterId?panelOf(masterId):null;
@@ -1278,7 +1376,7 @@ function openWallWizard(existing,opts={}){
  let orient=existing?.orient||'가로형',res=existing?.res||'FHD (1920×1080)';
  /* 기본 매장: 편집 중인 월의 매장 → 첫 매장 → 없음(신규 가입 직후 빈 환경 가드) */
  let storeId=existing?.store||(STORES[0]&&STORES[0].id)||null;
- const storeName=()=>storeOf(storeId)?.name||'매장 미지정';
+ const wbStore=()=>storeOf(storeId)?.name||NO_STORE;
  let tiles=existing?wallTiles(existing).map(t=>({...t})):[];
  let name=existing?.name||'';
  let pickPid=null,dragPid=null,dragTile=null,selTile=null;
@@ -1362,9 +1460,9 @@ function openWallWizard(existing,opts={}){
    const units=[];for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){if(tileAt(x,y)<0)units.push({x,y});}
    body.innerHTML=`<div class="wall-build">
     <div class="wb-pool">
-     <select class="select select-sm" id="wb-store">${STORES.slice(0,30).map(s=>`<option value="${s.id}" ${s.id===storeId?'selected':''}>${s.name}</option>`).join('')}</select>
+     <select class="select select-sm" id="wb-store"><option value="" ${storeId?'':'selected'}>${NO_STORE} 화면</option>${storeOptions(storeId).map(s=>`<option value="${s.id}" ${s.id===storeId?'selected':''}>${s.name}</option>`).join('')}</select>
      <div class="pool-list">${pool.map(p=>{const used=tiles.some(t=>t.p===p.id);
-      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'err'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||'<div style="padding:14px;font-size:12px;color:var(--text-3)">이 매장에 배치 가능한 화면이 없어요. 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요.</div>'}</div>
+      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'err'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||`<div style="padding:14px;font-size:12px;color:var(--text-3)">${storeId?'이 매장에':'미지정 화면 중'} 배치 가능한 화면이 없어요. 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요.</div>`}</div>
      <button class="btn btn-sm" id="wb-auto">남은 화면 자동 배치</button>
      <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5">① 화면을 캔버스로 끌어다 놓거나, 빈 칸(＋)을 눌러 자리부터 잡아도 돼요.<br>② 타일을 클릭하면 크기 변경·제거, 끌면 위치 이동·맞바꾸기가 돼요.</p>
     </div>
@@ -1395,7 +1493,7 @@ function openWallWizard(existing,opts={}){
       ${tiles.map(t=>`<div style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h};background:${t.p?'#2A3B52':'transparent'};border:${t.p?'1px solid rgba(255,255,255,.15)':'1px dashed #39424F'};border-radius:3px"></div>`).join('')}
      </div>
      <dl class="kv" style="margin-top:12px">
-      <dt>매장</dt><dd>${storeName()}</dd>
+      <dt>매장</dt><dd>${wbStore()}</dd>
       <dt>배치</dt><dd>${placedN?`화면 ${placedN}개`:'—'}${ghostN?` <span class="badge badge-amber">빈 칸 ${ghostN}</span>`:''}</dd>
       <dt>캔버스</dt><dd class="num">${gw}×${gh} · ${orient}</dd>
       <dt>해상도</dt><dd>${res}</dd>
@@ -1418,7 +1516,7 @@ function openWallWizard(existing,opts={}){
    requestAnimationFrame(fitCanvas);
    if(!ov.__rsz){ov.__rsz=()=>{if(!document.contains(ov)){window.removeEventListener('resize',ov.__rsz);return}ov.__fit&&ov.__fit();};window.addEventListener('resize',ov.__rsz);}
    /* 좌측 화면 풀 */
-   body.querySelector('#wb-store').onchange=e=>{storeId=e.target.value;tiles.forEach(t=>t.p=null);pickPid=null;selTile=null;draw()};
+   body.querySelector('#wb-store').onchange=e=>{storeId=e.target.value||null;tiles.forEach(t=>t.p=null);pickPid=null;selTile=null;draw()};
    body.querySelectorAll('[data-pool]').forEach(el=>{
     const pid=el.dataset.pool;
     if(!el.classList.contains('used')){
@@ -1581,8 +1679,8 @@ function openWallWizard(existing,opts={}){
     :`'${name}' 레이아웃을 저장했어요. 콘텐츠·일정은 [일정 편집]에서 언제든 등록할 수 있어요.`);
   };
   if(schedOnly){doSave(name);return} /* 일정 수정만 — 이름 재입력 없이 바로 저장 */
-  if(window.saveNameModal)saveNameModal({title:existing?'비디오월 저장':'비디오월 만들기',label:'비디오월 이름',initial:name||storeName()+' 미디어월',placeholder:'예) 로비 미디어월',confirmText:existing?'저장':'만들기',onSave:doSave});
-  else doSave(name||storeName()+' 미디어월');
+  if(window.saveNameModal)saveNameModal({title:existing?'비디오월 저장':'비디오월 만들기',label:'비디오월 이름',initial:name||wbStore()+' 미디어월',placeholder:'예) 로비 미디어월',confirmText:existing?'저장':'만들기',onSave:doSave});
+  else doSave(name||wbStore()+' 미디어월');
  };
  draw();
 }
@@ -1618,12 +1716,12 @@ function renderScPanels(){
  const cur=new Set(scTargets);
  const row=p=>`<div class="scp-row ${cur.has(p.id)?'on':''}" data-scp="${p.id}" role="button" tabindex="0">
    <span class="dot ${p.status==='on'?'on':p.status==='off'?'off':'err'}"></span>
-   <span class="tx"><b>${p.name}</b><span>${storeOf(p.store).name}</span></span>
+   <span class="tx"><b>${p.name}</b><span>${storeHtml(p.store)}</span></span>
    ${cur.has(p.id)?'<span class="badge badge-blue">대상</span>':`<button class="icon-btn" data-scpadd="${p.id}" aria-label="적용 대상에 추가">${IC.plus}</button>`}
   </div>`;
  let html='';
  if(scpQ){
-  const res=PANELS.filter(p=>!p.wall&&(p.name.includes(scpQ)||storeOf(p.store).name.includes(scpQ))).slice(0,30);
+  const res=PANELS.filter(p=>!p.wall&&(p.name.includes(scpQ)||storeName(p.store).includes(scpQ))).slice(0,30);
   html=`<div class="scp-sec">검색 결과 ${res.length}${res.length===30?'+':''}건</div>`+(res.map(row).join('')||'<div style="font-size:12px;color:var(--text-3);padding:10px">검색 결과가 없어요</div>');
  }else{
   const rec=RECENT.map(panelOf).filter(p=>p&&!p.wall).slice(0,6);
@@ -1631,7 +1729,7 @@ function renderScPanels(){
   const same=sid?panelsOf(sid).filter(p=>!p.wall).slice(0,10):[];
   const favs=PANELS.filter(p=>p.fav&&!p.wall).slice(0,6);
   html=(rec.length?`<div class="scp-sec">최근 관리</div>`+rec.map(row).join(''):'')
-   +(same.length?`<div class="scp-sec">${storeOf(sid).name}</div>`+same.map(row).join(''):'')
+   +(same.length?`<div class="scp-sec">${storeName(sid)}</div>`+same.map(row).join(''):'')
    +(favs.length?`<div class="scp-sec">즐겨찾기</div>`+favs.map(row).join(''):'');
  }
  el.innerHTML=html||'<div style="font-size:12px;color:var(--text-3);padding:14px">표시할 화면이 없어요</div>';
@@ -1641,7 +1739,7 @@ function renderScPanels(){
   if(scTargets.length===1&&scTargets[0]===id)return;
   scTargets=[id];scWallName=null;scWall=null;pushRecent(id);
   renderTargets();renderScPanels();closeSide();
-  toast(`'${storeOf(panelOf(id).store).name} · ${panelOf(id).name}' 일정으로 전환했어요.`);
+  toast(`'${storeName(panelOf(id).store)} · ${panelOf(id).name}' 일정으로 전환했어요.`);
  }));
  el.querySelectorAll('[data-scpadd]').forEach(b=>b.onclick=e=>{e.stopPropagation();
   const id=b.dataset.scpadd;
@@ -1680,9 +1778,9 @@ const wallsFiltered=()=>{
  const arr=WALLS.filter(w=>{
   const ok=w.cells.every(id=>panelOf(id)?.status==='on');
   return (wallsSt==='all'||(wallsSt==='ok'?ok:!ok))&&
-   (!wallsQ||w.name.toLowerCase().includes(wallsQ.toLowerCase())||storeOf(w.store).name.toLowerCase().includes(wallsQ.toLowerCase()));
+   (!wallsQ||w.name.toLowerCase().includes(wallsQ.toLowerCase())||storeName(w.store).toLowerCase().includes(wallsQ.toLowerCase()));
  });
- return wallsSort==='store'?[...arr].sort((a,b)=>storeOf(a.store).name.localeCompare(storeOf(b.store).name,'ko')):[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+ return wallsSort==='store'?[...arr].sort((a,b)=>storeName(a.store).localeCompare(storeName(b.store),'ko')):[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
 };
 /* 비디오월 가이드 — 낯선 기능이라 최초 진입 시 자동 노출 + 언제든 헤더 아이콘으로 재확인 가능.
    in-memory 플래그라 새로고침(데모 리셋)마다 다시 한 번 보여주지만, 같은 세션 내 페이지 이동에는 재노출하지 않음 */
@@ -1793,7 +1891,7 @@ function renderWallsPage(root){
     <span class="checkbox check ${wallsChecked.has(w.id)?'on':''}" data-vwc="${w.id}" role="checkbox" aria-label="${w.name} 선택">${IC.check}</span>
     <div class="body">
      <div class="nm">${w.name}</div>
-     <div class="sub">${storeOf(w.store).name} · ${w.orient||'가로형'} · ${w.res||'FHD (1920×1080)'}</div>
+     <div class="sub">${storeHtml(w.store)} · ${w.orient||'가로형'} · ${w.res||'FHD (1920×1080)'}</div>
      <div class="badges"><span class="badge badge-gray">${(w.gw||w.cols)}×${(w.gh||w.rows)} 캔버스</span><span class="badge badge-gray">일정 ${wallSchedN(w)}건</span><span class="wall-on ${ok?'':'issue'}"><span class="dot ${ok?'on':'err'}"></span>온라인 ${on}/${total}</span></div>
      <div style="display:flex;gap:6px;margin-top:10px">
       <button class="btn btn-sm btn-tonal" data-vw-sched="${w.id}" style="flex:1">일정 편집</button>
@@ -1817,7 +1915,7 @@ function renderWallsPage(root){
      <td><span class="tstatus" style="color:${ok?'var(--green)':'var(--red)'}"><span class="dot ${ok?'on':'err'}"></span>${ok?'LIVE':'일부 오류'}</span></td>
      <td><span class="mini-thumb" style="position:relative;width:72px;height:40px;display:inline-block;background:#0B0E13;border-radius:5px">${wallCellsHtml(w,t=>`<i style="background:${wallTileContent(w,t).g};position:absolute;inset:0"></i>`,'2px')}</span></td>
      <td><b>${w.name}</b></td>
-     <td>${storeOf(w.store).name}</td>
+     <td>${storeHtml(w.store)}</td>
      <td><span class="badge badge-violet">${IC.wall}${(w.gw||w.cols)}×${(w.gh||w.rows)}</span> <span class="num" style="color:var(--text-3)">화면 ${w.cells.length}개 · ${w.orient||'가로형'}</span></td>
      <td>${wallContentLabel(w)}</td>
      <td class="num">${wallSchedN(w)}건</td>
@@ -1860,11 +1958,11 @@ window.__panelStats=()=>{
  const unsch=PANELS.filter(p=>p.unsch).length;
  const nostb=PANELS.filter(p=>!p.stb).length;
  const attention=[...PANELS.filter(p=>p.status==='err').slice(0,3),...PANELS.filter(p=>p.status==='off'&&p.stb).slice(0,3)].slice(0,5)
-  .map(p=>({id:p.id,name:p.name,store:storeOf(p.store).name,status:p.status,ago:ago(p.lastMin)}));
+  .map(p=>({id:p.id,name:p.name,store:storeName(p.store),status:p.status,ago:ago(p.lastMin)}));
  return {stores:STORES.length,panels:PANELS.length,on,off,err,unsch,nostb,walls:WALLS.length,attention};
 };
 /* 대시보드(개인·소상공인): 내 화면 실시간 상태 목록 */
-window.__panelList=n=>PANELS.slice(0,n||6).map(p=>({id:p.id,name:p.name,store:storeOf(p.store).name,status:p.status,stb:!!p.stb,ago:ago(p.lastMin),content:p.stb&&!p.unsch&&p.status!=='off'&&p.content?contentOf(p.content).name:null}));
+window.__panelList=n=>PANELS.slice(0,n||6).map(p=>({id:p.id,name:p.name,store:storeName(p.store),status:p.status,stb:!!p.stb,ago:ago(p.lastMin),content:p.stb&&!p.unsch&&p.status!=='off'&&p.content?contentOf(p.content).name:null}));
 /* 대시보드(프랜차이즈·기업): 지역별 매장 운영 현황 */
 window.__regionStats=()=>REGIONS.map(r=>{
  const ps=r.storeIds.flatMap(sid=>panelsOf(sid));
@@ -1888,5 +1986,33 @@ window.__syncStore=s=>{
  if(!r.storeIds.includes(s.id))r.storeIds.push(s.id);
  if(typeof renderScope==='function')renderScope();
  if(typeof renderRail==='function')renderRail();
+};
+/* 매장 관리(앱 스코프)에서 매장을 삭제했을 때 — 화면은 삭제·이동하지 않고 '미지정'으로 남긴다(2026-08 정책).
+   편성 일정·셋탑 연결·태그는 그대로 유지되고, 나중에 화면 관리에서 다시 매장을 지정할 수 있다.
+   매장 관리와 화면 모듈은 각각 자체 데모 데이터를 갖고 있어 id·이름 양쪽으로 매칭한다.
+   반환값: 미지정으로 바뀐 화면 수 */
+window.__unassignStores=list=>{
+ const tid=new Set();
+ /* 매장 1개당 화면 모듈 매장 1개만 매칭 — 이름 우선, 없으면 id.
+    (두 데모 데이터의 id 공간이 겹쳐 id·이름을 동시에 보면 엉뚱한 매장까지 지워진다) */
+ (list||[]).filter(Boolean).forEach(s=>{
+  const hit=STORES.find(x=>x.name===s.name)||STORES.find(x=>x.id===s.id);
+  if(hit)tid.add(hit.id);
+ });
+ if(!tid.size)return 0;
+ let n=0;
+ PANELS.forEach(p=>{if(p.store&&tid.has(p.store)){p.store=null;n++}});
+ WALLS.forEach(w=>{if(w.store&&tid.has(w.store))w.store=null});
+ for(let i=STORES.length-1;i>=0;i--)if(tid.has(STORES[i].id))STORES.splice(i,1);
+ REGIONS.forEach(r=>{r.storeIds=r.storeIds.filter(id=>!tid.has(id))});
+ /* 보고 있던 범위가 사라졌다면 화면이 이동한 '미지정' 범위로 옮겨 준다 */
+ if(flt.store&&tid.has(flt.store))flt={...flt,store:NO_STORE_KEY,region:null};
+ try{renderAll();wallsRefresh();}catch(e){}
+ return n;
+};
+/* 미지정 화면 모아보기 — 매장 삭제 토스트의 [미지정 화면 보기]에서 호출 */
+window.__showUnassignedPanels=()=>{
+ flt={...flt,store:NO_STORE_KEY,region:null,group:null,view:'all',status:'all'};
+ page=1;try{renderAll();}catch(e){}
 };
 })();

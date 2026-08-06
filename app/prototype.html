@@ -1124,47 +1124,30 @@ function drawStoresBulk(){
  }})));
  bulk.querySelector('#sb-del').onclick=()=>deleteStores([...sChecked].map(id=>STORES.find(x=>x.id===id)).filter(Boolean));
 }
-/* 매장 삭제 정책: 화면(패널)은 반드시 하나의 매장에 소속 — '미배정' 상태 없음.
-   삭제 시 연결된 화면·편성일정도 함께 삭제하거나, 다른 매장으로 옮긴 뒤 삭제. 콘텐츠(공용 자산)는 유지. */
+/* 매장 삭제 정책(2026-08 변경): 화면(Screen)은 독립적인 자산이고, 매장은 화면의 소속 정보일 뿐이다.
+   → 매장을 삭제하면 연결된 화면은 삭제·강제 이동 없이 '미지정' 상태가 되고, 편성 일정은 그대로 유지된다.
+     이후 화면 관리에서 원하는 매장으로 다시 지정할 수 있다. (기존 '다른 매장으로 이동' 플로우는 제거)
+   콘텐츠(공용 자산)는 종전대로 유지. */
 function deleteStores(list){
  list=(list||[]).filter(Boolean);if(!list.length)return;
  const ids=new Set(list.map(s=>s.id));
  const panelSum=list.reduce((a,s)=>a+s.panels.total,0);
- const onSum=list.reduce((a,s)=>a+s.panels.on,0);
- const label=list.length===1?`'${list[0].name}'`:`매장 ${list.length}개`;
  const askLabel=list.length===1?`'${list[0].name}' 매장을`:`매장 ${list.length}개를`;
- const finish=msg=>{STORES=STORES.filter(s=>!ids.has(s.id));ids.forEach(id=>sChecked.delete(id));drawStores();toast(msg);};
+ const nameHtml=list.length===1?`<b>${list[0].name}</b>`:`<b>매장 ${list.length}개</b>`;
+ /* 완료 토스트 — 단일은 매장 이름, 다중은 개수로 결과를 알린다 (화면 유무와 무관하게 동일) */
+ const doneMsg=list.length===1?`'${list[0].name}' 매장을 삭제했어요.`:`${list.length}개 매장을 삭제했어요.`;
+ const finish=()=>{STORES=STORES.filter(s=>!ids.has(s.id));ids.forEach(id=>sChecked.delete(id));drawStores();toast(doneMsg);};
  if(panelSum===0){
-  confirmDialog({title:`${askLabel} 삭제할까요?`,desc:'삭제한 매장은 복구할 수 없어요. 매장 정보와 담당자 설정이 모두 삭제돼요.',confirmText:'삭제',danger:true,onConfirm:()=>finish('매장을 삭제했어요')});
+  confirmDialog({title:`${askLabel} 삭제할까요?`,desc:'삭제한 매장은 복구할 수 없어요. 매장 정보와 담당자 설정이 모두 삭제돼요.',confirmText:'삭제',danger:true,
+   onConfirm:()=>{window.__unassignStores&&window.__unassignStores(list);finish();}});
   return;
  }
- const others=STORES.filter(s=>!ids.has(s.id));
- const nameHtml=list.length===1?`<b>${list[0].name}</b>`:`<b>매장 ${list.length}개</b>`;
- openModal(`
-  <div class="modal-head"><div><h2>이 매장에는 연결된 화면이 있어요</h2><div class="sub">${nameHtml}에 연결된 화면 ${panelSum}대를 다른 매장으로 옮길까요? 모두 삭제하면 화면과 등록된 일정도 모두 삭제돼요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
-  <div style="padding:6px 24px 22px;display:flex;flex-direction:column;gap:8px">
-   ${others.length?'<button class="btn btn-primary" id="sd-move" style="width:100%">다른 매장으로 이동</button>':''}
-   <button class="btn btn-danger-t" id="sd-all" style="width:100%">모두 삭제</button>
-   <button class="btn" data-close style="width:100%">취소</button>
-  </div>`,
- {width:'400px',onMount:ov=>{
-  ov.querySelector('#sd-all').onclick=()=>{ov.remove();finish(`${label} 매장과 화면 ${panelSum}대를 삭제했어요`);};
-  const mv=ov.querySelector('#sd-move');
-  if(mv)mv.onclick=()=>{ov.remove();
-   openModal(`
-    <div class="modal-head"><div><h2>화면을 옮길 매장 선택</h2><div class="sub">연결된 화면 ${panelSum}대를 선택한 매장으로 옮긴 뒤 ${label} 매장을 삭제해요. 편성 일정은 그대로 유지돼요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
-    <div class="modal-body"><div class="f-row"><label>옮길 매장</label><select class="select" id="mv-store">${others.map(s=>`<option value="${s.id}">${s.name} · ${s.region} — 화면 ${s.panels.total}대</option>`).join('')}</select></div></div>
-    <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="mv-go">이동 후 삭제</button></div>`,
-   {width:'460px',onMount:ov2=>{
-    ov2.querySelector('#mv-go').onclick=()=>{
-     const t=STORES.find(s=>s.id===ov2.querySelector('#mv-store').value);
-     if(t){t.panels.total+=panelSum;t.panels.on+=onSum;t.panels.last='방금 전';}
-     ov2.remove();
-     finish(`화면 ${panelSum}대를 '${t?t.name:''}'(으)로 옮기고 매장을 삭제했어요`);
-    };
-   }});
-  };
- }});
+ confirmDialog({
+  title:'이 매장에 연결된 화면이 있어요',
+  desc:`${nameHtml}에 연결된 화면이 <b>${panelSum}대</b> 있어요. 매장을 삭제하면 연결된 화면은 '미지정' 상태로 변경되며, 등록된 편성 일정은 그대로 유지됩니다.`,
+  confirmText:'삭제',danger:true,
+  onConfirm:()=>{window.__unassignStores&&window.__unassignStores(list);finish();}
+ });
 }
 function openStoreModal(){
  openModal(`
@@ -2280,6 +2263,7 @@ renderLogin(false);
       <b id="bulk-count">0개</b> 선택됨
       <button class="btn" id="bulk-schedule">일정 등록</button>
       <button class="btn" id="bulk-share">일정 따라가기 설정</button>
+      <button class="btn" id="bulk-store">매장 지정</button>
       <button class="btn" id="bulk-group">그룹에 추가</button>
       <button class="btn" id="bulk-tag">태그</button>
       <button class="btn" id="bulk-restart">재시작</button>
