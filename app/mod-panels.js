@@ -494,54 +494,52 @@ $('#tag-filter-btn').onclick=e=>tagPickerMenu(e.currentTarget,{tags:TAGS,selecte
  onCreate:t=>{if(!TAGS.includes(t))TAGS.push(t);toast(`'${t}' 태그를 만들었어요. 화면에 붙이면 이 필터로 찾을 수 있어요.`);},
  onManage:openPanelTagManager});
 /* '현재 검색 저장' 기능은 서비스 규모·사용 패턴을 고려해 제거됨 (2026-07) */
-/* 화면 추가 — 필수 정보를 먼저 입력하고, 하단에서 [지금 연결하기]/[나중에 연결하기]를 선택.
-   셋탑박스가 아직 없어도 화면을 먼저 만들어 둘 수 있음.
-   설치 매장은 선택 항목 — 매장에 속하지 않는 화면은 '미지정'으로 두고 나중에 지정한다(2026-08 정책).
-   기본값은 지금 보고 있는 매장(좌측 트리 범위) → 첫 매장 → 미지정 순으로 잡아 맥락을 잃지 않게 한다.
+/* 화면 추가 — 화면 이름 → 설치 매장 → 연결 코드 순으로 입력하고 [추가하기] 하나로 끝낸다.
+   연결 코드는 선택 항목: 비워 두면 화면만 먼저 만들어 두고 셋탑은 나중에 연결한다.
+   설치 매장도 선택 항목 — 매장에 속하지 않는 화면은 '미지정'으로 두고 나중에 지정한다(2026-08 정책).
+   매장 기본값은 지금 보고 있는 매장(좌측 트리 범위), 범위가 없으면 미지정. 임의의 첫 매장을 기본으로
+   잡으면 엉뚱한 매장에 등록되기 쉬워 명시적 선택을 유도한다.
    opts.onCreated: 등록 완료 후 후속 플로우(예: 편성일정에서 바로 편성 시작)를 잇는 콜백 — 지정 시 기본 토스트를 대체 */
 function openAddPanelModal(opts){
  opts=opts||{};
- const defStore=flt.store===NO_STORE_KEY?'':((flt.store&&storeOf(flt.store))?flt.store:(STORES[0]?STORES[0].id:''));
+ const defStore=(flt.store&&flt.store!==NO_STORE_KEY&&storeOf(flt.store))?flt.store:'';
  openModal(`
- <div class="modal-head"><div><h2>화면 추가</h2><div class="sub">화면은 매장에 설치된 디스플레이 1대예요. 셋탑박스가 준비됐다면 연결 코드까지 입력하고 바로 연결하세요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+ <div class="modal-head"><div><h2>화면 추가</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
  <div class="modal-body">
-  <div class="f-row"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px">
-   <div class="sync-note" style="margin-top:8px">${IC.info}<span>셋탑박스를 TV에 연결하고 전원을 켜면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 <b>나중에 연결하기</b>를 선택하세요.</span></div></div>
-  <div class="f-row"><label>설치 매장 <span style="font-weight:500;color:var(--text-3)">선택</span></label>
+  <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"></div>
+  <div class="f-row"><label>설치 매장</label>
    <select class="select" id="ap-store">
     <option value="" ${defStore?'':'selected'}>${NO_STORE}</option>
     ${STORES.length?`<optgroup label="매장">${storeOptions(defStore).map(s=>`<option value="${s.id}" ${s.id===defStore?'selected':''}>${s.name}</option>`).join('')}</optgroup>`:''}
-   </select>
-   <div class="fhelp">${STORES.length?`매장에 속하지 않는 화면은 <b>미지정</b>으로 둬도 괜찮아요. 화면 상세에서 언제든 매장을 지정할 수 있어요.`:`아직 등록된 매장이 없어요. <b>미지정</b>으로 먼저 등록하고, 매장을 만든 뒤 화면 상세에서 연결하세요.`}</div></div>
-  <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"></div>
+   </select></div>
+  <div class="f-row" style="margin-bottom:0"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ">
+   <div class="info-note" style="margin-top:10px">${IC.info}<span>셋탑박스를 TV에 연결하고, 앱을 실행하면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 나중에 연결해도 괜찮아요.</span></div></div>
  </div>
- <div class="modal-foot"><button class="btn" data-close>취소</button><span class="grow"></span><button class="btn" id="ap-later">나중에 연결하기</button><button class="btn btn-primary" id="ap-ok">지금 연결하기</button></div>`,
+ <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="ap-ok">추가하기</button></div>`,
  {width:'440px',onMount:ov=>{
-  const create=stb=>{
+  const nmField=ov.querySelector('#ap-name');nmField.focus();
+  nmField.addEventListener('input',()=>nmField.classList.remove('error'));
+  const apCode=bindStbCodeInput(ov.querySelector('#ap-code'));
+  const create=(nm,stb)=>{
    /* 빈 문자열 = 미지정 — 매장이 없어도 화면은 등록할 수 있다 */
    const sid=ov.querySelector('#ap-store').value||null;
-   const nmIn=ov.querySelector('#ap-name'),nm=(nmIn.value||'').trim();
-   if(!nm){nmIn.classList.add('error');nmIn.focus();toast('화면 이름을 입력해주세요. 설치 위치를 알 수 있는 이름이 좋아요.',{err:true});return null}
    const p=stb
     ?{id:'p'+(pSeq++),store:sid,name:nm,status:'on',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.6',stb:{sn:'STB-'+String(pSeq).padStart(6,'0')}}
     :{id:'p'+(pSeq++),store:sid,name:nm,status:'off',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'—',fw:'—',stb:null};
    PANELS.unshift(p);ov.remove();renderScope();renderRail();renderList();
    return p;
   };
-  const apCode=bindStbCodeInput(ov.querySelector('#ap-code'));apCode.focus();
-  const nmField=ov.querySelector('#ap-name');nmField.addEventListener('input',()=>nmField.classList.remove('error'));
   ov.querySelector('#ap-ok').onclick=()=>{
+   const nm=(nmField.value||'').trim();
+   if(!nm){nmField.classList.add('error');nmField.focus();toast('화면 이름을 입력해주세요. 설치 위치를 알 수 있는 이름이 좋아요.',{err:true});return}
+   /* 코드를 입력하다 만 경우만 막고, 아예 비워 뒀다면 '나중에 연결'로 처리한다 */
    const code=normStbCode(apCode.value);
-   if(!code){apCode.classList.add('error');apCode.focus();toast('연결 코드를 입력해주세요. 셋탑박스가 아직 없다면 [나중에 연결하기]를 선택하세요.',{err:true});return}
-   if(code.length<STB_CODE_LEN){apCode.classList.add('error');apCode.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return}
-   const p=create(true);
-   if(p){if(opts.onCreated)opts.onCreated(p);
-    else if(p.store)toast('화면이 연결됐어요. 목록 맨 위에서 확인하세요.');
-    else toast(`화면이 연결됐어요. 설치 매장은 '${NO_STORE}' 상태예요.`,{action:'매장 지정',onAction:()=>openStorePicker([p])});}
-  };
-  ov.querySelector('#ap-later').onclick=()=>{
-   const p=create(false);
-   if(p){if(opts.onCreated)opts.onCreated(p);else toast(`'${p.name}' 화면을 만들었어요. 셋탑박스가 준비되면 [셋탑 연결하기]로 연결하세요.`,{action:'지금 연결',onAction:()=>openStbModal(p)});}
+   if(code&&code.length<STB_CODE_LEN){apCode.classList.add('error');apCode.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return}
+   const p=create(nm,!!code);
+   if(opts.onCreated){opts.onCreated(p);return}
+   if(!code)toast(`'${p.name}' 화면을 만들었어요. 셋탑박스가 준비되면 [셋탑 연결하기]로 연결하세요.`,{action:'지금 연결',onAction:()=>openStbModal(p)});
+   else if(p.store)toast('화면이 연결됐어요. 목록 맨 위에서 확인하세요.');
+   else toast(`화면이 연결됐어요. 설치 매장은 '${NO_STORE}' 상태예요.`,{action:'매장 지정',onAction:()=>openStorePicker([p])});
   };
  }});
 }
