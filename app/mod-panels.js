@@ -78,8 +78,6 @@ const panelsOf=sid=>PANELS.filter(p=>p.store===sid);
 const ICN1=storeByName('인천공항 1터미널'),GANGNAM=storeByName('강남대로점'),JAMSIL=storeByName('잠실롯데월드점');
 const masterP=panelsOf(ICN1.id)[0];
 masterP.name='카운터 좌측';masterP.status='on';masterP.content='c2';masterP.unsch=false;masterP.schedN=4;masterP.fav=true;
-let followers=PANELS.filter(p=>(p.store===ICN1.id||p.store===storeByName('인천공항 2터미널').id)&&p!==masterP).slice(0,11);
-followers.forEach(p=>{p.follow=masterP.id;p.content='c2';p.unsch=false});
 panelsOf(GANGNAM.id).slice(0,2).forEach((p,i)=>{p.fav=true;p.status=i?'off':'on'});
 /* 데모: 화면만 먼저 만들어 두고 셋탑은 나중에 연결하는 운영 시나리오 */
 panelsOf(GANGNAM.id).slice(-1).concat(panelsOf(storeByName('홍대입구점').id).slice(-1)).forEach((p,i)=>{
@@ -125,8 +123,6 @@ const unassignedPanels=()=>PANELS.filter(p=>!p.store);
    더 많은 매장 중에서 고를 때는 검색이 되는 매장 선택 모달(openStorePicker)을 쓴다. */
 const storeOptions=cur=>{const arr=STORES.slice(0,50),c=cur&&storeOf(cur);if(c&&!arr.includes(c))arr.unshift(c);return arr};
 const panelOf=id=>PANELS.find(p=>p.id===id);
-const isMaster=p=>PANELS.some(x=>x.follow===p.id);
-const followerCnt=p=>PANELS.filter(x=>x.follow===p.id).length;
 const ago=m=>m<1?'방금 전':m<60?`${m}분 전`:m<1440?`${Math.floor(m/60)}시간 전`:`${Math.floor(m/1440)}일 전`;
 let flt={q:'',status:'all',view:'all',store:null,region:null,group:null,wallOnly:false,tags:[],sort:'issue'};
 /* 화면 태그 관리자 — TAGS를 원본으로, 모든 화면·필터·스마트뷰에 반영 */
@@ -343,11 +339,6 @@ function renderScope(){
   chip.querySelector('.clear').onclick=()=>{flt={...flt,store:null,region:null,group:null,view:'all'};page=1;renderAll();};}
 }
 /* ═══════════ 렌더: 목록 ═══════════ */
-function shareBadge(p){
- if(isMaster(p))return `<span class="badge badge-violet">${IC.link}기준 · ${followerCnt(p)}개 따라감</span>`;
- if(p.follow)return `<span class="badge badge-blue">${IC.link}'${panelOf(p.follow).name}' 따라감</span>`;
- return'';
-}
 function wallCardHtml(w){
  const total=w.cells.length,on=w.cells.filter(id=>panelOf(id).status==='on').length,ok=on===total;
  return `<div class="pcard wall" data-wall="${w.id}">
@@ -381,7 +372,7 @@ function renderList(){
     <div class="body">
      <div class="nm">${p.name}</div>
      <div class="sub">${storeHtml(p.store)} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
-     <div class="badges"><div class="badge-row">${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}${shareBadge(p)}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
+     <div class="badges"><div class="badge-row">${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
     </div></div>`;
   }).join('')||`<div style="grid-column:1/-1">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
  }else{
@@ -392,7 +383,7 @@ function renderList(){
     <td><span class="tstatus" style="color:var(--violet)">${IC.wall}비디오월</span></td>
     <td><span class="mini-thumb" style="background:${c.g}"></span></td>
     <td><b>${w.name}</b> <span class="badge badge-violet">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span></td>
-    <td>${storeHtml(w.store)}</td><td>${wallContentLabel(w)}</td><td colspan="2" class="num">화면 ${w.cells.length}개</td><td>—</td>
+    <td>${storeHtml(w.store)}</td><td>${wallContentLabel(w)}</td><td class="num">화면 ${w.cells.length}개</td><td>—</td>
     <td><button class="icon-btn" data-wallmenu="${w.id}">${IC.dots}</button></td></tr>`}
    const st=!p.stb?['셋탑 미연결','var(--amber)']:p.status==='on'?(p.unsch?['미편성','var(--amber)']:['온라인','var(--green)']):['오프라인','var(--text-3)'];
    return `<tr class="${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
@@ -403,10 +394,9 @@ function renderList(){
     <td>${storeHtml(p.store)}</td>
     <td>${p.unsch||p.status==='off'?'<span style="color:var(--text-3)">—</span>':contentOf(p.content).name}</td>
     <td>${p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="num">${p.schedN}건</span>`}</td>
-    <td>${shareBadge(p)||'<span style="color:var(--text-3)">—</span>'}</td>
     <td class="num" style="color:var(--text-3)">${ago(p.lastMin)}</td>
     <td><button class="icon-btn" data-pmenu="${p.id}">${IC.dots}</button></td></tr>`;
-  }).join('')||`<tr><td colspan="10">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
+  }).join('')||`<tr><td colspan="9">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  }
  $('#pagi').innerHTML=`<span class="num">${arr.length?fmt((page-1)*per+1)+'–'+fmt(Math.min(page*per,arr.length)):0} / ${fmt(arr.length)}개</span>
   <button class="icon-btn" id="pg-prev" ${page<=1?'disabled':''} aria-label="이전 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
@@ -450,7 +440,6 @@ $('#th-check')?.addEventListener('click',()=>{
  renderList();
 });
 $('#bulk-schedule').onclick=()=>openSchedule([...checked]);
-$('#bulk-share').onclick=()=>openShareModal([...checked]);
 $('#bulk-restart').onclick=()=>confirmDialog({title:`화면 ${fmt(checked.size)}개 재시작`,desc:'재시작 중 약 30초간 화면이 꺼져요. 영업시간에는 주의하세요.',confirmText:'재시작',danger:true,onConfirm:()=>{toast(`${fmt(checked.size)}개 화면에 재시작 명령을 보냈어요.`);checked.clear();renderList();}});
 /* 선택한 화면의 소속 매장을 한 번에 지정 — 매장 삭제로 미지정이 된 화면을 다시 배정할 때 주로 쓴다 */
 $('#bulk-store').onclick=()=>openStorePicker([...checked].map(panelOf).filter(Boolean));
@@ -535,9 +524,8 @@ function openStbModal(p,reconnect){
   <div class="modal-body">
    <div class="f-row" style="margin-bottom:0"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F82KQ"></div>
    ${p.stb?`<div class="stb-guide"><b>재연결 안내</b>
-    <div class="step">현재 셋탑 <span class="num">${p.stb.sn}</span> · ${p.status==='on'?'온라인':'오프라인'}</div>
-    <div class="step">새 셋탑의 6자리 연결 코드를 입력하면 재연결돼요. 기존 일정·태그는 그대로 유지돼요.</div></div>
-    <button class="lnk" id="stb-detach" style="color:var(--red);font-weight:600;font-size:13px;cursor:pointer;background:none;border:0;padding:0;margin-top:12px">셋탑 연결 해제 — 화면을 '미연결' 상태로 전환</button>`
+    <div class="step">새 셋탑의 6자리 연결 코드를 입력하면 재연결돼요.</div>
+    <div class="step">기존 일정, 태그는 그대로 유지됩니다.</div></div>`
    :`<div class="stb-guide"><b>연결 코드 확인 방법</b>
     <div class="step">① 셋탑박스를 TV(화면)에 연결</div>
     <div class="step">② 전원을 켜고, Syncsign 앱을 실행</div>
@@ -556,20 +544,18 @@ function openStbModal(p,reconnect){
    ov.remove();renderAll();
    toast(wasRe?`'${p.name}' 셋탑이 재연결됐어요. 기존 일정으로 송출을 다시 시작해요.`:`'${p.name}'에 셋탑이 연결됐어요. 이제 콘텐츠를 편성할 수 있어요.`,{action:'일정 편집',onAction:()=>openSchedule([p.id])});
   };
-  const det=ov.querySelector('#stb-detach');
-  if(det)det.onclick=()=>{ov.remove();detachStb(p);};
  }});
 }
 /* ═══════════ 화면 생명주기 관리 — 연결 해제 · 삭제 (⋯ 메뉴 · 상세 드로어 공용) ═══════════ */
 /* 셋탑 연결 해제 — 화면 정보·일정·태그는 유지하고 연결 상태만 해제. 이후 다른 셋탑과 재연결 가능 */
 function detachStb(p,after){
- confirmDialog({title:'셋탑 연결 해제',desc:`'${p.name}'의 셋탑 연결을 해제하면 송출이 중단되고 화면은 '셋탑 미연결' 상태가 돼요.<br>화면 정보와 일정·태그 설정은 그대로 유지되고, 언제든 다른 셋탑박스의 연결 코드로 다시 연결할 수 있어요.`,confirmText:'연결 해제',danger:true,onConfirm:()=>{
+ confirmDialog({title:'셋탑 연결을 해제할까요?',desc:`연결을 해제하면 현재 화면의 송출이 즉시 중단됩니다.<br>화면 정보, 일정, 태그 설정은 삭제되지 않습니다.`,confirmText:'연결 해제',danger:true,onConfirm:()=>{
   p.stb=null;p.status='off';p.content=null;p.lastMin=0;renderAll();
   toast(`'${p.name}' 셋탑 연결을 해제했어요. 화면 정보는 유지돼요.`,{action:'다시 연결',onAction:()=>openStbModal(p)});
   after&&after();
  }});
 }
-/* 화면 삭제 — 편성·송출·따라가기·셋탑 상태를 요약해 확인받고, 삭제 후 실행 취소 지원.
+/* 화면 삭제 — 편성·송출·셋탑 상태를 요약해 확인받고, 삭제 후 실행 취소 지원.
    비디오월 소속 화면은 월 구성이 깨지므로 그룹 해제를 먼저 안내(하드 블록) */
 function deletePanel(p,after){
  if(p.wall){
@@ -577,22 +563,12 @@ function deletePanel(p,after){
   toast(`'${w?w.name:'비디오월'}'에 속한 화면이에요. 먼저 비디오월 그룹을 해제해주세요.`,{err:true,action:'비디오월 관리',onAction:()=>{if(w)openWallDrawer(w)}});
   return;
  }
- const live=!!p.stb&&p.status==='on'&&!p.unsch&&p.content;
- const schedN=p.unsch?0:(p.schedN||0);
- const fN=followerCnt(p);
- const warns=[];
- if(live)warns.push(`지금 <b>'${(contentOf(p.content)||{name:'콘텐츠'}).name}' 송출 중</b>이에요. 삭제하면 송출이 즉시 중단돼요.`);
- if(schedN)warns.push(`편성된 일정 <b>${schedN}건</b>이 함께 삭제돼요.`);
- if(fN)warns.push(`이 화면을 따라가는 <b>${fN}개 화면</b>의 따라가기가 해제돼요. 각 화면은 마지막 일정의 복사본으로 운영돼요.`);
- if(p.stb)warns.push(`연결된 셋탑(<span class="num">${p.stb.sn}</span>)은 해제되어 다른 화면에 다시 연결할 수 있어요.`);
  confirmDialog({
-  title:`'${storeName(p.store)} · ${p.name}' 화면을 삭제할까요?`,
-  desc:`삭제한 화면은 복구할 수 없어요.${warns.length?'<br><br>'+warns.map(w=>'· '+w).join('<br>'):''}`,
+  title:`'${p.name}' 화면을 삭제할까요?`,
+  desc:`화면을 삭제하면 현재 화면의 송출이 즉시 중단됩니다.<br>화면 정보, 일정, 태그 설정도 함께 삭제되며 복구할 수 없습니다`,
   confirmText:'삭제',danger:true,
   onConfirm:()=>{
    const idx=PANELS.indexOf(p);
-   const followers=PANELS.filter(x=>x.follow===p.id);
-   followers.forEach(x=>x.follow=null);
    PANELS.splice(idx,1);
    checked.delete(p.id);
    RECENT=RECENT.filter(id=>id!==p.id);
@@ -601,7 +577,6 @@ function deletePanel(p,after){
    renderAll();
    toast(`'${p.name}' 화면을 삭제했어요.`,{action:'실행 취소',onAction:()=>{
     PANELS.splice(Math.min(idx,PANELS.length),0,p);
-    followers.forEach(x=>x.follow=p.id);
     renderAll();toast(`'${p.name}' 화면을 복구했어요.`);
    }});
    after&&after();
@@ -626,7 +601,7 @@ const genStbCode=()=>{
 /* 화면 이름 수정 — 카드/드로어 ⋯ 메뉴 공용. 저장 시 목록·좌측 레일·드로어 헤더가 함께 바뀐다(after 콜백). */
 function renamePanel(p,after){
  openModal(`
-  <div class="modal-head"><div><h2>화면 이름 수정</h2><div class="sub">${storeName(p.store)}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-head"><div><h2>화면 이름 수정</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>화면 이름 <span class="req">*</span></label><input class="input" id="rn-name" maxlength="40" placeholder="예) 카운터 좌측"></div></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="rn-ok">저장</button></div>`,
  {width:'420px',onMount:ov=>{
@@ -650,7 +625,6 @@ function panelManageMenu(anchor,p,opt){
   {title:'화면 관리'},
   {label:'화면 이름 수정',icon:IC.edit,onClick:()=>renamePanel(p,after)},
   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
-  {label:'일정 따라가기 설정',icon:IC.link,onClick:()=>openShareModal([p.id])},
   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
   'sep',
   {title:'셋탑 관리'},
@@ -882,7 +856,6 @@ function openPanelDrawer(p,tab='overview'){
       <div><dt>셋탑 연결</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span> <span class="badge badge-green">연결됨</span>`:'<span class="badge badge-amber">미연결</span> 셋탑박스 설치 대기'}</dd></div>
       <div><dt>현재 콘텐츠</dt><dd>${p.stb&&p.status==='on'&&!p.unsch?contentOf(p.content).name:'—'}</dd></div>
       <div><dt>일정</dt><dd>${p.unsch?'<span class="badge badge-amber">미편성</span>':`오늘 ${p.schedN}건 편성됨`}</dd></div>
-      <div><dt>일정 공유</dt><dd>${isMaster(p)?`<span class="badge badge-violet">${IC.link}기준 화면</span> ${followerCnt(p)}개 화면이 따라감`:p.follow?`<span class="badge badge-blue">${IC.link}따라가는 중</span> ${panelOf(p.follow).name}`:'사용 안 함'}</dd></div>
       <div><dt>태그</dt><dd><span class="tag-badges">${p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join('')||'—'}</span></dd></div>
      </dl>
     </div>`;
@@ -890,16 +863,11 @@ function openPanelDrawer(p,tab='overview'){
   }else if(tab==='schedule'){
    const items=[['08:00 – 11:30','c2',false],['11:30 – 14:00','c1',true],['14:00 – 18:00','c3',false],['18:00 – 22:00','c6',false]];
    body.innerHTML=`
-    ${p.follow?`<div class="sync-note">${IC.link}<span><b>'${panelOf(p.follow).name}' 일정을 따라가는 중</b><br>기준 화면의 일정이 바뀌면 이 화면도 자동으로 함께 바뀌어요.<br><button class="lnk" id="unfollow" style="color:var(--blue);font-weight:600;margin-top:4px;cursor:pointer">따라가기 해제</button></span></div>`:''}
-    ${isMaster(p)?`<div class="sync-note">${IC.spark}<span><b>이 화면은 기준 화면이에요</b><br>${followerCnt(p)}개 화면이 이 일정을 그대로 따라가요. 여기서 일정을 바꾸면 모두 함께 반영돼요.</span></div>`:''}
     <div class="dsec"><h3>오늘 일정 <span class="lnk" id="go-cal">캘린더에서 편집</span></h3>
     ${p.unsch?'<div class="empty" style="padding:26px"><b>편성된 일정이 없어요</b><span>일정 편집에서 콘텐츠를 편성해 보세요.</span></div>':items.slice(0,p.schedN||4).map(([tm,cid,now])=>{const c=contentOf(cid);
      return `<div class="tl-item ${now?'now':''}"><span class="tm num">${tm}</span><span class="cthumb" style="background:${c.g}">${c.e}</span><span class="nm">${c.name}</span>${now?'<span class="badge badge-blue">지금</span>':''}</div>`}).join('')}
     </div>`;
    body.querySelector('#go-cal').onclick=()=>{wrap.remove();openSchedule([p.id])};
-   body.querySelector('#unfollow')?.addEventListener('click',()=>{
-    confirmDialog({title:'따라가기 해제',desc:`해제하면 이 화면은 자체 일정으로 운영돼요. 현재 일정은 복사본으로 남아요.`,confirmText:'해제',onConfirm:()=>{p.follow=null;wrap.remove();renderList();toast('따라가기를 해제했어요.');}});
-   });
   }else if(tab==='info'){
    const tagEdit=e=>tagPickerMenu(e.currentTarget,{tags:TAGS,selected:p.tags,keepOpen:true,
     onToggle:t=>{p.tags.includes(t)?p.tags=p.tags.filter(x=>x!==t):p.tags.push(t);draw('info');renderList();},
@@ -1387,64 +1355,20 @@ function openSide(cfg){
 $('#sc-save').onclick=()=>{if(!scTargets.length){noTargetToast();return}fg[3]=true;renderFg();toast(`일정을 저장했어요. ${scWallName||fmt(scTargets.length)+'개 화면'}에 동기화됐어요.`);};
 $('#sc-copy-week').onclick=e=>{if(!scTargets.length){noTargetToast();return}popMenu(e.currentTarget,[
  {label:'다음 주로 복사',icon:IC.cal,onClick:()=>toast('이번 주 일정을 다음 주로 복사했어요.')},
- {label:'다른 화면에 그대로 적용',icon:IC.link,onClick:()=>openShareModal(scTargets)},
 ])};
 $('#sc-broadcast').onclick=()=>{
  if(!scTargets.length){noTargetToast();return}
  openModal(`<div class="modal-head"><div><h2>송출하기</h2><div class="sub">저장된 일정으로 ${scWallName?`'${scWallName}' 비디오월`:`${fmt(scTargets.length)}개 화면`}의 송출을 시작해요.</div></div></div>
-  <div class="modal-body"><div class="sync-note">${IC.info}<span>이후 일정을 수정하면 <b>재송출 없이 자동 반영</b>돼요. 따라가기로 연결된 화면도 함께 갱신돼요.</span></div></div>
+  <div class="modal-body"><div class="sync-note">${IC.info}<span>이후 일정을 수정하면 <b>재송출 없이 자동 반영</b>돼요.</span></div></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="bc-ok">송출 시작</button></div>`,
  {width:'440px',onMount:ov=>ov.querySelector('#bc-ok').onclick=()=>{ov.remove();fg[3]=true;fg[5]=true;renderFg();toast(`${scWallName||fmt(scTargets.length)+'개 화면'}에 송출을 시작했어요.`);}});
 };
 
-/* ═══════════ 일정 공유(따라가기) ═══════════ */
-function openShareModal(followerIds){
- let masterId=PANELS.find(p=>isMaster(p))?.id||null;
- let fset=new Set(followerIds.filter(id=>id!==masterId));
- const candidates=[...new Set([PANELS.find(p=>isMaster(p)),...PANELS.filter(p=>p.fav&&!p.follow),...PANELS.filter(p=>!p.follow&&!p.unsch&&p.status==='on').slice(0,6)])].filter(Boolean).slice(0,8);
- const ov=openModal(`
-  <div class="modal-head"><div><h2>일정 따라가기 설정</h2><div class="sub">기준 화면 하나의 일정을 여러 화면이 그대로 따라가요. 기준을 바꾸면 모두 함께 바뀌어요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
-  <div class="modal-body">
-   <div style="display:flex;align-items:center;gap:12px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px">
-    <span class="badge badge-violet" style="height:26px">${IC.link}기준 화면</span>
-    <svg width="26" height="14" viewBox="0 0 26 14" fill="none" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20m0 0-5-5m5 5-5 5"/></svg>
-    <span class="badge badge-blue" style="height:26px">따라가는 화면 <b id="sh-cnt">${fset.size}</b>개</span>
-    <span style="font-size:12px;color:var(--text-2);margin-left:auto">일정이 실시간으로 동기화돼요</span>
-   </div>
-   <div class="f-row"><label>① 기준 화면 선택</label><div id="sh-masters"></div></div>
-   <div class="f-row"><label>② 따라갈 화면 <span style="font-weight:500;color:var(--text-3)">— 화면 관리에서 선택한 ${fmt(fset.size)}개</span></label>
-    <div class="tag-row" id="sh-followers"></div></div>
-  </div>
-  <div class="modal-foot"><span style="font-size:13px;color:var(--text-2)" id="sh-summary"></span><span class="grow"></span>
-   <button class="btn" data-close>취소</button><button class="btn btn-primary" id="sh-ok">적용</button></div>`,
- {width:'560px'});
- const draw=()=>{
-  ov.querySelector('#sh-masters').innerHTML=candidates.map(p=>`
-   <button class="share-box" data-shm="${p.id}" style="width:100%;text-align:left;cursor:pointer;${masterId===p.id?'border-color:var(--blue);background:var(--blue-50)':''}">
-    <div class="row"><span class="dot ${p.status==='on'?'on':'off'}"></span><b>${p.name}</b><span style="font-size:12px;color:var(--text-3)">${storeName(p.store)}</span>
-    ${isMaster(p)?`<span class="badge badge-violet" style="margin-left:auto">${IC.link}이미 ${followerCnt(p)}개가 따라감</span>`:'<span class="badge badge-gray" style="margin-left:auto">일정 4건</span>'}</div>
-   </button>`).join('');
-  ov.querySelectorAll('[data-shm]').forEach(b=>b.onclick=()=>{masterId=b.dataset.shm;fset.delete(masterId);draw()});
-  ov.querySelector('#sh-followers').innerHTML=[...fset].slice(0,12).map(id=>{const p=panelOf(id);
-   return `<span class="chip on">${p.name} · ${storeName(p.store)}<button data-shrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button></span>`}).join('')+(fset.size>12?`<span class="chip">+${fset.size-12}개</span>`:'')||'<span style="font-size:13px;color:var(--text-3)">화면 관리 목록에서 화면을 선택한 뒤 다시 열어주세요</span>';
-  ov.querySelectorAll('[data-shrm]').forEach(b=>b.onclick=()=>{fset.delete(b.dataset.shrm);draw()});
-  ov.querySelector('#sh-cnt').textContent=fset.size;
-  const m=masterId?panelOf(masterId):null;
-  ov.querySelector('#sh-summary').innerHTML=m?`'<b>${m.name}</b>'의 일정을 <b>${fset.size}개</b> 화면이 따라갑니다`:'기준 화면을 선택해주세요';
-  ov.querySelector('#sh-ok').disabled=!m||!fset.size;
- };
- draw();
- ov.querySelector('#sh-ok').onclick=()=>{
-  fset.forEach(id=>panelOf(id).follow=masterId);
-  ov.remove();checked.clear();renderAll();fg[3]=true;renderFg();
-  toast(`${fset.size}개 화면이 '${panelOf(masterId).name}' 일정을 따라가요.`,{action:'기준 일정 열기',onAction:()=>openSchedule([masterId])});
- };
-}
 
 /* ═══════════ 그룹 만들기 ═══════════ */
 function openGroupModal(ids){
  openModal(`
-  <div class="modal-head"><div><h2>그룹 만들기</h2><div class="sub">그룹으로 묶으면 일정 등록·따라가기·재시작을 그룹 단위로 할 수 있어요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-head"><div><h2>그룹 만들기</h2><div class="sub">그룹으로 묶으면 일정 등록·재시작을 그룹 단위로 할 수 있어요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
    <div class="f-row"><label>그룹 이름</label><input class="input" id="g-nm" placeholder="예) 프랜차이즈 B, 수도권 쇼윈도"></div>
    <div class="f-row"><label>포함 화면</label>

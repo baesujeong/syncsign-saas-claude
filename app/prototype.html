@@ -2262,7 +2262,6 @@ renderLogin(false);
     <div class="bulk-bar" id="bulk-bar" hidden>
       <b id="bulk-count">0개</b> 선택됨
       <button class="btn" id="bulk-schedule">일정 등록</button>
-      <button class="btn" id="bulk-share">일정 따라가기 설정</button>
       <button class="btn" id="bulk-store">매장 지정</button>
       <button class="btn" id="bulk-group">그룹에 추가</button>
       <button class="btn" id="bulk-tag">태그</button>
@@ -2275,7 +2274,7 @@ renderLogin(false);
       <div class="ptable-wrap" id="ptable-wrap" hidden>
         <table class="grid"><thead><tr>
           <th style="width:38px"><span class="checkbox" id="th-check" role="checkbox" aria-label="전체 선택" data-i18n-aria="common.selectAll"></span></th>
-          <th data-i18n="tbl.status">상태</th><th data-i18n="tbl.preview">미리보기</th><th data-i18n="tbl.screen">화면</th><th data-i18n="tbl.store">매장</th><th data-i18n="tbl.currentContent">현재 콘텐츠</th><th data-i18n="tbl.schedule">일정</th><th data-i18n="tbl.share">공유</th><th data-i18n="tbl.lastUpdate">마지막 업데이트</th><th style="width:40px"></th>
+          <th data-i18n="tbl.status">상태</th><th data-i18n="tbl.preview">미리보기</th><th data-i18n="tbl.screen">화면</th><th data-i18n="tbl.store">매장</th><th data-i18n="tbl.currentContent">현재 콘텐츠</th><th data-i18n="tbl.schedule">일정</th><th data-i18n="tbl.lastUpdate">마지막 업데이트</th><th style="width:40px"></th>
         </tr></thead><tbody id="ptbody"></tbody></table>
       </div>
       <div class="pagi" id="pagi"></div>
@@ -2547,7 +2546,7 @@ if(PLAYLISTS[0])PLAYLISTS[0].folder='pf1';if(PLAYLISTS[1])PLAYLISTS[1].folder='p
 /* 전화번호는 수집하지 않는다 — SMS 인증·고객센터 연락 등 사용처가 없고, 글로벌 서비스 기준 불필요한 개인정보 (2026-08) */
 let PROFILE={name:'김민규',brand:'그리디쉬프라이',email:'mk.kim@greedish.com',google:true};
 let SUB={plan:'pro',nextBill:'2026.08.01',card:'신한카드 **** 4821',cancelled:false};
-const PLANS={basic:['Basic','₩29,000',['화면 10대','스토리지 20GB','기본 위젯','이메일 지원']],pro:['Pro','₩99,000',['화면 50대','스토리지 100GB','모든 위젯 + 번호호출','일정 공유 · 비디오월','우선 지원']],ent:['Enterprise','별도 문의',['화면 무제한','전용 인프라 · SLA','POS·KDS 연동 구축','전담 매니저']]};
+const PLANS={basic:['Basic','₩29,000',['화면 10대','스토리지 20GB','기본 위젯','이메일 지원']],pro:['Pro','₩99,000',['화면 50대','스토리지 100GB','모든 위젯 + 번호호출','비디오월','우선 지원']],ent:['Enterprise','별도 문의',['화면 무제한','전용 인프라 · SLA','POS·KDS 연동 구축','전담 매니저']]};
 const PAYMENTS=[['2026.07.01','Pro 월 구독','₩99,000'],['2026.06.01','Pro 월 구독','₩99,000'],['2026.05.01','Pro 월 구독','₩99,000'],['2026.04.14','Basic → Pro 업그레이드 (일할 정산)','₩54,300'],['2026.04.01','Basic 월 구독','₩29,000']];
 function renderMyPage(root){
  const [pnm,ppr]=PLANS[SUB.plan];
