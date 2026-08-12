@@ -2830,13 +2830,12 @@ function renderDashboard(root){
  const multi=session.userType!=='single';
  const done=DASH_SCHED.filter(s=>s.st==='done').length,next=DASH_SCHED.filter(s=>s.st==='next').length,fail=DASH_SCHED.filter(s=>s.st==='fail').length;
  const emptyRow=msg=>`<div class="empty" style="padding:20px 14px"><b style="font-size:13px">${msg}</b></div>`;
- /* 상단 현황 카드(공통 5종): 매장 · 전체 패널 · 온라인 · 오프라인 · 오류 — 레퍼런스 기준 */
+ /* 상단 현황 카드(공통 4종): 매장 · 전체 패널 · 온라인 · 오프라인 — '오류'는 오프라인으로 통합(2026-08 정책) */
  const stats=[
   ['stores','매장',fmt(ps.stores),'#242B38','rgba(36,43,56,.08)'],
   ['panels','전체 화면',fmt(ps.panels),'var(--blue)','var(--blue-50)'],
   ['on','온라인',fmt(ps.on),'var(--green)','var(--green-bg)'],
   ['off','오프라인',fmt(ps.off),'#6B7484','rgba(107,116,132,.12)'],
-  ['err','오류',fmt(ps.err),'var(--red)','var(--red-bg)'],
  ];
  /* 오늘 일정(개인·소상공인) / 배포 현황(프랜차이즈·기업) — 같은 데이터·행 구조, 제목만 다름 */
  const schedRows=DASH_SCHED.map((s,i)=>`<div class="dash-row" ${s.st==='fail'?'':'data-dsched'}><span class="tm num">${s.t}</span><span class="thumb-mini" style="background:${s.g}">${s.e}</span><span class="tx"><b>${s.c}</b><span>${s.tg}${s.st==='fail'?` · <span style="color:var(--red)">${s.why}</span>`:''}</span></span>
@@ -2845,14 +2844,14 @@ function renderDashboard(root){
  const schedCard=title=>`<div class="dash-card"><h3>${title} <span style="font-size:12px;color:var(--text-2);font-weight:600">완료 <b style="color:var(--green)">${done}</b> · 예정 <b>${next}</b> · 실패 <b style="color:var(--red)">${fail}</b></span><span class="lnk" id="dash-sched">편성일정 열기</span></h3>${schedRows}</div>`;
  /* 개인·소상공인: 패널 실시간 상태 */
  const myPanels=(window.__panelList?window.__panelList(5):[]);
- const liveOn=myPanels.filter(p=>p.stb&&p.status==='on').length,liveErr=myPanels.filter(p=>p.status==='err').length,liveOff=myPanels.filter(p=>!p.stb||p.status==='off').length;
- const cardLive=`<div class="dash-card"><h3>화면 실시간 상태 <span style="font-size:12px;color:var(--text-2);font-weight:600">온라인 <b style="color:var(--green)">${liveOn}</b> · 오류 <b style="color:var(--red)">${liveErr}</b> · 오프라인 <b>${liveOff}</b></span><span class="lnk" data-att-all>화면 관리에서 모두 보기</span></h3>
-   ${myPanels.length?myPanels.map(p=>`<div class="dash-row" data-att-all><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${p.name} <span style="font-weight:500;color:var(--text-3)">· ${p.store}</span></b><span>${p.stb?(p.status==='off'?'신호 없음 · '+p.ago:p.status==='err'?'콘텐츠 재생 오류 · '+p.ago:p.content?'송출 중 · '+p.content:'편성된 콘텐츠 없음'):'셋탑 미연결 — 연결하면 송출을 시작해요'}</span></span>
-    <span class="badge ${!p.stb?'badge-amber':p.status==='on'?'badge-green':p.status==='off'?'badge-gray':'badge-red'}">${!p.stb?'셋탑 미연결':p.status==='on'?'온라인':p.status==='off'?'오프라인':'오류'}</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>아직 연결된 화면이 없어요</b><span>화면 관리에서 연결 코드로 등록해보세요.</span></div>'}
+ const liveOn=myPanels.filter(p=>p.stb&&p.status==='on').length,liveOff=myPanels.filter(p=>!p.stb||p.status==='off').length;
+ const cardLive=`<div class="dash-card"><h3>화면 실시간 상태 <span style="font-size:12px;color:var(--text-2);font-weight:600">온라인 <b style="color:var(--green)">${liveOn}</b> · 오프라인 <b>${liveOff}</b></span><span class="lnk" data-att-all>화면 관리에서 모두 보기</span></h3>
+   ${myPanels.length?myPanels.map(p=>`<div class="dash-row" data-att-all><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${p.name} <span style="font-weight:500;color:var(--text-3)">· ${p.store}</span></b><span>${p.stb?(p.status==='off'?'신호 없음 · '+p.ago:p.content?'송출 중 · '+p.content:'편성된 콘텐츠 없음'):'셋탑 미연결 — 연결하면 송출을 시작해요'}</span></span>
+    <span class="badge ${!p.stb?'badge-amber':p.status==='on'?'badge-green':'badge-gray'}">${!p.stb?'셋탑 미연결':p.status==='on'?'온라인':'오프라인'}</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>아직 연결된 화면이 없어요</b><span>화면 관리에서 연결 코드로 등록해보세요.</span></div>'}
   </div>`;
  /* 프랜차이즈·기업: 지금 확인이 필요한 패널 */
- const cardAttention=`<div class="dash-card"><h3>지금 확인이 필요한 화면 <span style="font-size:12px;color:var(--text-2);font-weight:600">오프라인 <b>${fmt(ps.off)}</b> · 오류 <b style="color:var(--red)">${fmt(ps.err)}</b></span><span class="lnk" data-att>화면 관리에서 모두 보기</span></h3>
-   ${ps.attention.length?ps.attention.map(a=>`<div class="dash-row" data-att><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${a.name} <span style="font-weight:500;color:var(--text-3)">· ${a.store}</span></b><span>${a.status==='err'?'콘텐츠 재생 오류 · 재시작 필요':'신호 없음'} · ${a.ago}</span></span><span class="badge ${a.status==='err'?'badge-red':'badge-gray'}">${a.status==='err'?'오류':'오프라인'}</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>모든 화면이 정상이에요 🎉</b></div>'}
+ const cardAttention=`<div class="dash-card"><h3>지금 확인이 필요한 화면 <span style="font-size:12px;color:var(--text-2);font-weight:600">오프라인 <b>${fmt(ps.off)}</b></span><span class="lnk" data-att>화면 관리에서 모두 보기</span></h3>
+   ${ps.attention.length?ps.attention.map(a=>`<div class="dash-row" data-att><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${a.name} <span style="font-weight:500;color:var(--text-3)">· ${a.store}</span></b><span>신호 없음 · ${a.ago}</span></span><span class="badge badge-gray">오프라인</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>모든 화면이 정상이에요 🎉</b></div>'}
   </div>`;
  /* 프랜차이즈·기업: 전체 매장 운영 현황 */
  const regions=(window.__regionStats?window.__regionStats():[]).slice(0,5);
@@ -2893,7 +2892,7 @@ function renderDashboard(root){
   else{
    showPage('panels');
    window.__setPanelFilter&&window.__setPanelFilter(k==='panels'?'all':k);
-   if(k!=='panels')toast(`화면 관리에 '${{on:'온라인',off:'오프라인',err:'오류'}[k]}' 필터를 적용했어요.`);
+   if(k!=='panels')toast(`화면 관리에 '${{on:'온라인',off:'오프라인'}[k]}' 필터를 적용했어요.`);
   }
  });
  root.querySelectorAll('[data-att]').forEach(el=>el.addEventListener('click',()=>{

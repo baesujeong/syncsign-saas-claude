@@ -443,9 +443,9 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .tpl-card:hover .hover-actions{opacity:1}
 .tpl-card .check{position:absolute;left:9px;top:9px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px}
 .tpl-card:hover .check,.tpl-card .check.on{opacity:1}
-.tpl-card .fav{position:absolute;right:9px;top:9px;z-index:3;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s}
-.tpl-card:hover .fav{opacity:1}
-.tpl-card .fav.on{opacity:1;color:#D9A93E}
+.tpl-card .fav,.pcard .fav{position:absolute;right:9px;top:9px;z-index:3;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s}
+.tpl-card:hover .fav,.pcard:hover .fav{opacity:1}
+.tpl-card .fav.on,.pcard .fav.on{opacity:1;color:#D9A93E}
 .tpl-card .body{padding:10px 12px 12px}
 .tpl-card .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tpl-card .sub{font-size:12px;color:var(--text-3);margin-top:2px;display:flex;align-items:center;gap:6px}
@@ -1386,21 +1386,25 @@ svg{display:block;flex:none}
 .pcard .thumb{aspect-ratio:16/9;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#fff}
 .pcard .thumb .cemoji{font-size:38px;opacity:.9;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
 .pcard .thumb .cname{position:absolute;left:10px;bottom:9px;font-size:12px;font-weight:600;color:#fff;background:rgba(22,26,33,.78);padding:4px 8px;border-radius:6px;backdrop-filter:blur(3px);max-width:78%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcard .thumb .tl{position:absolute;left:10px;top:9px;z-index:3;display:flex;align-items:center;gap:4px}
+.pcard .thumb .tl{position:absolute;left:10px;top:9px;z-index:3;display:flex;align-items:center;gap:4px;transition:opacity .12s}
 .pcard .thumb .live{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.42);padding:4px 8px;border-radius:99px;backdrop-filter:blur(2px)}
 .pcard .thumb .live .dot{width:6px;height:6px}
 .pcard .thumb .offmsg{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:#6B7484;font-weight:600}
 .pcard .thumb .errband{position:absolute;inset:auto 0 0 0;background:rgba(229,72,77,.92);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;display:flex;align-items:center;gap:6px}
-.pcard .check{position:absolute;right:9px;top:9px;z-index:3;opacity:0;transition:opacity .12s;background:rgba(255,255,255,.92);border-radius:5px}
+/* 상태 뱃지 ↔ 선택 체크박스는 좌측 상단을 공유한다(콘텐츠 관리 lib-card와 동일 UX·스타일).
+   Default = 상태 뱃지만 · Hover/Selected = 뱃지를 숨기고 같은 자리에 체크박스 노출.
+   ★ 즐겨찾기는 우측 상단 코너로 분리(템플릿 카드와 동일). 비디오월 카드는 선택이 없어 뱃지 유지. */
+.pcard:not(.wall):hover .thumb .tl,.pcard:not(.wall).checked .thumb .tl{opacity:0}
+.pcard .check{position:absolute;left:10px;top:9px;right:auto;z-index:4;opacity:0;transition:opacity .12s;background:rgba(255,255,255,.94);border-radius:5px;box-shadow:var(--sh-sm)}
 .pcard:hover .check,.pcard .check.on{opacity:1}
-.pcard .fav{opacity:0;transition:opacity .12s;width:22px;height:22px;border-radius:99px;background:rgba(0,0,0,.42);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;backdrop-filter:blur(2px)}
-.pcard:hover .fav{opacity:1}
-.pcard .fav.on{opacity:1;color:#D9A93E;background:rgba(0,0,0,.35)}
 .pcard .body{padding:10px 12px 12px}
 .pcard .nm{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
 .pcard .nm .dot{flex:none}
 .pcard .sub{font-size:12px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcard .badges{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;min-height:21px}
+.pcard .badges{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;min-height:26px}
+/* 화면 카드: 하단 정보 우측에 더보기(⋯) — 배지는 좌측에서 감싸고 ⋯는 항상 우측 하단 코너 */
+.pcard .badges .badge-row{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0;align-items:center}
+.pcard .badges .card-more{flex:none;width:26px;height:26px;margin-left:auto}
 .pcard .badges .badge{height:19px;font-size:12px;padding:0 6px}
 /* 비디오월 카드 온라인 표시 — 배경 없는 점+텍스트 (배지들과 나란히) */
 .pcard .badges .wall-on{display:inline-flex;align-items:center;gap:4px;height:19px;font-size:12px;font-weight:600;color:var(--green)}
@@ -1795,3 +1799,80 @@ table.grid tr.checked td{background:var(--blue-50)}
 /* 준비 목록 액션 버튼 — 라벨 길이와 무관하게 너비를 통일해 우측 정렬선을 맞춘다.
    116px은 가장 긴 라벨('콘텐츠 등록하기' 115.8px) 기준. min-width라 더 긴 라벨이 생겨도 잘리지 않는다. */
 .setup-row .btn-sm{flex:none;height:34px;padding:0 16px;min-width:116px}
+
+/* ═══ 화면 정보 드로어 — Header / Tab / Content / Footer 4개 영역 통일 (시안 기준) ═══ */
+/* Tab: 헤더 아래 고정 영역(스크롤 안 됨). 밑줄은 좌우 끝까지, 좌우 여백은 본문과 동일(22px) */
+.dtabs{flex:none;display:flex;gap:2px;margin:0;padding:2px 22px 0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.dtabs::-webkit-scrollbar{display:none}
+.dtabs button{flex:none;white-space:nowrap;padding:10px 10px;font-size:14px;font-weight:600;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px}
+.dtabs button.on{color:var(--blue);border-color:var(--blue)}
+.drawer-body{padding:16px 22px 30px}
+/* 날짜 선택 + 정렬 (네트워크·스크린샷 공통) */
+.dpick{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.dpick .seg{display:inline-flex;align-items:center;border:1px solid var(--border-2);border-radius:var(--r-md);overflow:hidden;height:34px}
+.dpick .seg button{width:32px;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+.dpick .seg button:hover:not(:disabled){background:var(--sunken)}
+.dpick .seg button:disabled{opacity:.32;cursor:default}
+.dpick .seg-d{display:flex;align-items:center;gap:6px;padding:0 12px;height:100%;font-size:13px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+.dpick .seg-d svg{color:var(--text-3)}
+.dpick .btn-sm{height:34px}
+.dpick .dsort{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;padding:6px 4px}
+.dpick .dsort:hover{color:var(--text)}
+.dpick .dsort svg{color:var(--text-3)}
+/* 정보 탭 — 카드 + 2열 정보 그리드 */
+.dcard{border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:12px}
+.dcard>h3{margin:0 0 14px;font-size:14px;font-weight:700;display:flex;align-items:center}
+.dcard>h3 .lnk{margin-left:auto;font-size:13px;font-weight:600;color:var(--blue);cursor:pointer}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+.info-grid>div{min-width:0}
+.info-grid dt{font-size:12px;color:var(--text-3);margin-bottom:3px}
+.info-grid dd{margin:0;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.info-grid dd .lnk{font-size:12px;font-weight:600;color:var(--blue);cursor:pointer}
+.dcard .tag-badges{display:flex;flex-wrap:wrap;gap:6px}
+/* 네트워크 탭 — 상태·시간 고정폭 컬럼, 행 구분선 */
+.net-tl{display:flex;flex-direction:column}
+.net-row{display:flex;align-items:center;padding:13px 2px;border-bottom:1px solid var(--border)}
+.net-row .ndot{width:8px;height:8px;border-radius:50%;flex:none;margin-right:14px}
+.net-row .ndot.on{background:var(--green)}
+.net-row .ndot.off{background:var(--text-3)}
+.net-row .nlabel{width:72px;flex:none;font-size:14px;font-weight:700}
+.net-row .ntime{font-size:14px;color:var(--text-3)}
+/* 스크린샷 탭 — 어두운 썸네일 그리드, 일정 없음(캘린더-X) 아이콘 */
+.shot-note{font-size:12px;color:var(--text-3);margin-bottom:10px}
+.shot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px}
+.shot-cell{cursor:pointer}
+.shot-img{aspect-ratio:16/10;border-radius:8px;background:linear-gradient(150deg,#1b2230,#0e1218);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.shot-img.nosch{background:#161b23}
+.shot-cell:hover .shot-img{outline:2px solid var(--blue);outline-offset:1px}
+.shot-t{font-size:12px;color:var(--text-3);margin-top:6px;text-align:center}
+.noschi{display:inline-flex;color:rgba(255,255,255,.34)}
+.shot-img .noschi svg{width:26px;height:26px}
+.shot-full{aspect-ratio:16/9;border-radius:10px;background:linear-gradient(150deg,#1b2230,#0e1218);display:flex;align-items:center;justify-content:center}
+.shot-full.nosch{background:#161b23}
+.shot-full .noschi svg{width:52px;height:52px}
+
+/* ─── 화면 관리(⋯) 메뉴 — 그룹 헤더로만 구분. 아이콘 크기·아이콘↔텍스트 간격·행 여백은
+   기본 .menu-pop 스타일(gap 8px, 아이콘 본래 크기)을 그대로 사용한다(사용자 요청: 간격/아이콘 크기 원복). */
+.menu-pop.mp-manage{min-width:214px}
+
+/* ─── 개요 탭 — 미리보기 카드(상태 뱃지) + 정보 카드(세로 스택) ─── */
+.dpreview .ov-badge{position:absolute;left:12px;top:11px;z-index:2;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.42);padding:4px 9px;border-radius:99px;backdrop-filter:blur(2px)}
+.dpreview .ov-badge .dot{width:6px;height:6px}
+.info-list{display:flex;flex-direction:column;gap:15px}
+.info-list>div{min-width:0}
+.info-list dt{font-size:12px;color:var(--text-3);margin-bottom:3px}
+.info-list dd{margin:0;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* ─── 개요 미리보기 비어있음 상태(셋탑 미연결·신호 없음·편성된 일정 없음) + 셋탑 연결 안내 배너 (시안 기준) ─── */
+.dpreview .offmsg{display:flex;flex-direction:column;align-items:center;gap:14px;color:rgba(255,255,255,.42);font-size:15px;font-weight:500;text-align:center;padding:0 20px;line-height:1.4}
+.dpreview .offmsg svg{width:40px;height:40px}
+.ov-connect-note{background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-lg);padding:15px 16px;margin-bottom:12px}
+.ov-connect-note b{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text);margin-bottom:7px}
+.ov-connect-note b svg{color:var(--text-2);flex:none}
+.ov-connect-note p{margin:0;font-size:13px;line-height:1.6;color:var(--text-2)}
+
+/* ─── 셋탑 연결하기 모달 — 연결 코드 확인 방법 안내 박스 (시안 기준) ─── */
+.stb-guide{background:var(--blue-50);border-radius:var(--r-md);padding:14px 16px;margin-top:14px}
+.stb-guide>b{display:block;font-size:13px;font-weight:700;color:var(--blue-hover);margin-bottom:8px}
+.stb-guide .step{font-size:13px;color:var(--text-2);line-height:1.9}
+.stb-guide .step .num{font-weight:700;color:var(--text-2)}

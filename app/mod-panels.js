@@ -57,7 +57,7 @@ REGION_DEF.forEach(([rname,named,total],ri)=>{
   const n=3+Math.floor(rnd()*9);
   for(let k=0;k<n;k++){
    const r=rnd();
-   const status=r<.94?'on':r<.982?'off':'err';
+   const status=r<.955?'on':'off'; /* 상태는 온라인/오프라인만 — '오류'는 오프라인으로 통합(2026-08 정책) */
    const unsch=status==='on'&&rnd()<.012;
    PANELS.push({
     id:'p'+(pSeq++),store:store.id,
@@ -80,7 +80,7 @@ const masterP=panelsOf(ICN1.id)[0];
 masterP.name='카운터 좌측';masterP.status='on';masterP.content='c2';masterP.unsch=false;masterP.schedN=4;masterP.fav=true;
 let followers=PANELS.filter(p=>(p.store===ICN1.id||p.store===storeByName('인천공항 2터미널').id)&&p!==masterP).slice(0,11);
 followers.forEach(p=>{p.follow=masterP.id;p.content='c2';p.unsch=false});
-panelsOf(GANGNAM.id).slice(0,2).forEach((p,i)=>{p.fav=true;p.status=i?'err':'on'});
+panelsOf(GANGNAM.id).slice(0,2).forEach((p,i)=>{p.fav=true;p.status=i?'off':'on'});
 /* 데모: 화면만 먼저 만들어 두고 셋탑은 나중에 연결하는 운영 시나리오 */
 panelsOf(GANGNAM.id).slice(-1).concat(panelsOf(storeByName('홍대입구점').id).slice(-1)).forEach((p,i)=>{
  p.stb=null;p.status='off';p.content=null;p.unsch=true;p.schedN=0;p.follow=null;p.lastMin=0;
@@ -162,6 +162,10 @@ const IC={
  search:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
  folder:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>',
  upload:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0 5 5m-5-5L7 9"/><path d="M3 15v3a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-3"/></svg>',
+ edit:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+ stb:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0V7ZM12 16v5"/></svg>',
+ unlink:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 7H7a5 5 0 0 0 0 10h2.5M14.5 17H17a5 5 0 0 0 0-10h-2.5"/><path d="M4 4l16 16"/></svg>',
+ trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>',
 };
 function toast(msg,{action,onAction,err}={}){
  const t=document.createElement('div');t.className='toast'+(err?' err':'');
@@ -172,9 +176,9 @@ function toast(msg,{action,onAction,err}={}){
 let openMenu=null;
 function closeMenus(){if(openMenu){openMenu.remove();openMenu=null}}
 document.addEventListener('mousedown',e=>{if(openMenu&&!openMenu.contains(e.target))closeMenus()});
-function popMenu(anchor,items){
- closeMenus();
- const m=document.createElement('div');m.className='menu-pop';
+function popMenu(anchor,items,opts){
+ closeMenus();opts=opts||{};
+ const m=document.createElement('div');m.className='menu-pop'+(opts.cls?' '+opts.cls:'');
  items.forEach(it=>{
   if(it==='sep'){m.insertAdjacentHTML('beforeend','<div class="sep"></div>');return}
   if(it.title){m.insertAdjacentHTML('beforeend',`<div class="mp-title">${it.title}</div>`);return}
@@ -212,8 +216,7 @@ const thumbHtml=(p,big,fav='')=>{
  if(p.unsch)return tl('')+`<div class="offmsg">${IC.cal}편성된 콘텐츠 없음</div>`;
  const c=contentOf(p.content);
  return `<span class="cname">${c.name}</span>
-  ${tl(`<span class="live"><span class="dot ${p.status==='err'?'err':'on'}"></span>${p.status==='err'?'오류':'LIVE'}</span>`)}
-  ${p.status==='err'?'<span class="errband">⚠ 콘텐츠 재생 오류 · 재시작 필요</span>':''}`;
+  ${tl(`<span class="live"><span class="dot on"></span>LIVE</span>`)}`;
 };
 const thumbBg=p=>!p.stb?'#1B212B':p.status==='off'?'#14181F':p.unsch?'#1B212B':contentOf(p.content).g;
 
@@ -231,14 +234,13 @@ function baseFiltered(){
  if(flt.view==='recent')arr=RECENT.map(panelOf).filter(Boolean);
  if(flt.status==='on')arr=arr.filter(p=>p.status==='on'&&!p.unsch);
  if(flt.status==='off')arr=arr.filter(p=>p.status==='off'&&p.stb);
- if(flt.status==='err')arr=arr.filter(p=>p.status==='err');
  if(flt.status==='unsch')arr=arr.filter(p=>p.unsch);
  if(flt.tags.length)arr=arr.filter(p=>flt.tags.some(t=>p.tags.includes(t)));
  if(flt.q){const q=flt.q.toLowerCase();arr=arr.filter(p=>p.name.toLowerCase().includes(q)||storeName(p.store).toLowerCase().includes(q)||(p.content&&contentOf(p.content).name.toLowerCase().includes(q)));}
  return arr;
 }
 function sorted(arr){
- const s=flt.sort;const issueRank=p=>p.status==='err'?0:!p.stb?2:p.status==='off'?1:p.unsch?2.5:3;
+ const s=flt.sort;const issueRank=p=>p.status==='off'?0:!p.stb?1:p.unsch?2:3;
  if(s==='issue')return[...arr].sort((a,b)=>issueRank(a)-issueRank(b)||a.lastMin-b.lastMin);
  if(s==='name')return[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
  /* 매장 이름순 — 미지정 화면은 소속이 없으니 항상 뒤로 모아 보여준다 */
@@ -257,18 +259,18 @@ function collapseWalls(arr){
 
 /* ═══════════ 렌더: 스탯/레일 ═══════════ */
 function renderStats(){
- const all=PANELS.length,on=PANELS.filter(p=>p.status==='on'&&!p.unsch).length,off=PANELS.filter(p=>p.status==='off').length,err=PANELS.filter(p=>p.status==='err').length,un=PANELS.filter(p=>p.unsch).length;
+ const all=PANELS.length,on=PANELS.filter(p=>p.status==='on'&&!p.unsch).length,off=PANELS.filter(p=>p.status==='off').length,un=PANELS.filter(p=>p.unsch).length;
+ /* 상태는 온라인/오프라인/셋탑 미연결/미편성만 — '오류' 카드 제거(오프라인으로 통합) */
  const T=[
   ['all','전체 화면',all,'#242B38','rgba(36,43,56,.08)',IC.monitor],
   ['on','온라인',on,'var(--green)','var(--green-bg)','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></svg>'],
   ['off','오프라인',off,'#6B7484','rgba(107,116,132,.12)','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l22 22M5.5 5.6A9 9 0 0 0 3 12.4m13.4 3.1A5 5 0 0 0 15 9"/></svg>'],
-  ['err','오류',err,'var(--red)','var(--red-bg)','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5h.01M10.3 3.8 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z" stroke-linejoin="round"/></svg>'],
   ['unsch','미편성',un,'var(--amber)','var(--amber-bg)',IC.cal],
  ];
  $('#stats').innerHTML=T.map(([k,l,v,c,bg,ic])=>`
-  <button class="stat ${flt.status===k?'on':''} ${k==='err'?'accent':''}" data-stat="${k}" style="${k==='err'?`--stat-c:${c}`:''}">
+  <button class="stat ${flt.status===k?'on':''}" data-stat="${k}">
    <span><span class="v num">${fmt(v)}</span><span class="l">${l}</span></span>
-   ${(k==='err'||k==='off')&&v?`<span class="delta" style="color:${c}">확인 필요</span>`:''}
+   ${k==='off'&&v?`<span class="delta" style="color:${c}">확인 필요</span>`:''}
   </button>`).join('');
  $$('[data-stat]').forEach(b=>b.onclick=()=>{
   flt.status=flt.status===b.dataset.stat?'all':b.dataset.stat;
@@ -351,7 +353,7 @@ function wallCardHtml(w){
  return `<div class="pcard wall" data-wall="${w.id}">
   <div class="thumb">
    ${wallCellsHtml(w,t=>`<i style="background:${wallTileContent(w,t).g};position:absolute;inset:0"></i>`)}
-   <div class="tl"><span class="live"><span class="dot ${ok?'on':'err'}"></span>${ok?'LIVE':'일부 오류'}</span></div>
+   <div class="tl"><span class="live"><span class="dot ${ok?'on':'off'}"></span>${ok?'LIVE':'일부 오프라인'}</span></div>
    <span class="cname" style="z-index:3">${wallContentLabel(w)}</span>
   </div>
   <div class="body">
@@ -373,12 +375,13 @@ function renderList(){
   $('#pgrid').innerHTML=slice.map(p=>{
    if(p.wall)return wallCardHtml(WALLS.find(w=>w.id===p.wall));
    return `<div class="pcard ${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
-    <div class="thumb" style="background:${thumbBg(p)}">${thumbHtml(p,false,`<button class="fav ${p.fav?'on':''}" data-fav="${p.id}" aria-label="즐겨찾기">${p.fav?IC.star:IC.starO}</button>`)}</div>
+    <div class="thumb" style="background:${thumbBg(p)}">${thumbHtml(p,false)}</div>
     <span class="checkbox check ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span>
+    <button class="fav ${p.fav?'on':''}" data-fav="${p.id}" aria-label="즐겨찾기">${p.fav?IC.star:IC.starO}</button>
     <div class="body">
      <div class="nm">${p.name}</div>
      <div class="sub">${storeHtml(p.store)} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
-     <div class="badges">${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}${shareBadge(p)}</div>
+     <div class="badges"><div class="badge-row">${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}${shareBadge(p)}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
     </div></div>`;
   }).join('')||`<div style="grid-column:1/-1">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
  }else{
@@ -391,10 +394,10 @@ function renderList(){
     <td><b>${w.name}</b> <span class="badge badge-violet">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span></td>
     <td>${storeHtml(w.store)}</td><td>${wallContentLabel(w)}</td><td colspan="2" class="num">화면 ${w.cells.length}개</td><td>—</td>
     <td><button class="icon-btn" data-wallmenu="${w.id}">${IC.dots}</button></td></tr>`}
-   const st=!p.stb?['셋탑 미연결','var(--amber)']:p.status==='on'?(p.unsch?['미편성','var(--amber)']:['온라인','var(--green)']):p.status==='off'?['오프라인','var(--text-3)']:['오류','var(--red)'];
+   const st=!p.stb?['셋탑 미연결','var(--amber)']:p.status==='on'?(p.unsch?['미편성','var(--amber)']:['온라인','var(--green)']):['오프라인','var(--text-3)'];
    return `<tr class="${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
     <td><span class="checkbox ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span></td>
-    <td><span class="tstatus" style="color:${st[1]}"><span class="dot ${!p.stb||p.status==='off'?'off':p.status==='on'?'on':'err'}"></span>${st[0]}</span></td>
+    <td><span class="tstatus" style="color:${st[1]}"><span class="dot ${!p.stb||p.status!=='on'?'off':'on'}"></span>${st[0]}</span></td>
     <td><span class="mini-thumb" style="background:${thumbBg(p)}"></span></td>
     <td><b>${p.name}</b>${p.fav?' <span style="color:#D9A93E">★</span>':''}</td>
     <td>${storeHtml(p.store)}</td>
@@ -426,28 +429,7 @@ function bindListEvents(){
   if(e.target.closest('[data-wallmenu]'))return;
   openWallDrawer(WALLS.find(w=>w.id===el.dataset.wall));
  }));
- $$('[data-pmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();const p=panelOf(b.dataset.pmenu);
-  popMenu(b,p.stb?[
-   {label:'상세 보기',icon:IC.monitor,onClick:()=>openPanelDrawer(p)},
-   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
-   {label:'일정 따라가기 설정',icon:IC.link,onClick:()=>openShareModal([p.id])},
-   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p])},
-   'sep',
-   {label:'연결 코드 확인',icon:STB_IC(14),onClick:()=>openStbInfo(p)},
-   {label:'셋탑 재연결',icon:IC.restart,onClick:()=>openStbModal(p)},
-   {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요.`)},
-   'sep',
-   {label:'셋탑 연결 해제',icon:IC.x,danger:true,onClick:()=>detachStb(p)},
-   {label:'화면 삭제',icon:IC.x,danger:true,onClick:()=>deletePanel(p)},
-  ]:[
-   {label:'셋탑 연결하기',icon:STB_IC(14),onClick:()=>openStbModal(p)},
-   {label:'상세 보기',icon:IC.monitor,onClick:()=>openPanelDrawer(p)},
-   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
-   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p])},
-   'sep',
-   {label:'화면 삭제',icon:IC.x,danger:true,onClick:()=>deletePanel(p)},
-  ]);
- });
+ $$('[data-pmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();panelManageMenu(b,panelOf(b.dataset.pmenu));});
  $$('[data-wallmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();const w=WALLS.find(x=>x.id===b.dataset.wallmenu);
   popMenu(b,[
    {label:'비디오월 관리',icon:IC.wall,onClick:()=>openWallDrawer(w)},
@@ -549,13 +531,17 @@ $('#btn-add-panel').onclick=()=>openAddPanelModal();
 function openStbModal(p,reconnect){
  const isRe=!!p.stb&&(reconnect!==false);
  const ov=openModal(`
-  <div class="modal-head"><div><h2>${p.stb?'셋탑 재연결':'셋탑 연결하기'}</h2><div class="sub">'${p.name}' · ${storeName(p.store)}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-head"><div><h2>${p.stb?'셋탑 재연결':'셋탑 연결하기'}</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
-   ${p.stb?`<dl class="kv" style="margin-bottom:14px"><dt>현재 셋탑</dt><dd class="num">${p.stb.sn}</dd><dt>연결 상태</dt><dd>${p.status==='on'?'<span class="badge badge-green">온라인</span>':p.status==='off'?'<span class="badge badge-gray">오프라인</span>':'<span class="badge badge-red">오류</span>'}</dd></dl>
-    <div class="sync-note" style="margin-bottom:14px">${IC.info}<span>셋탑을 교체했거나 네트워크를 다시 설정했다면 새 셋탑의 <b>6자리 연결 코드</b>로 재연결하세요. 기존 일정과 태그는 그대로 유지돼요.</span></div>`
-   :`<div class="sync-note" style="margin-bottom:14px">${STB_IC(14)}<span><b>연결 코드 확인 방법</b><br>① 셋탑박스를 TV(화면)에 연결 ② 전원 켜기 ③ 화면에 표시되는 <b>6자리 연결 코드</b>를 아래에 입력하세요.</span></div>`}
-   <div class="f-row"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F82KQ" style="font-size:18px;letter-spacing:.2em;text-align:center;height:52px"></div>
-   ${p.stb?`<button class="lnk" id="stb-detach" style="color:var(--red);font-weight:600;font-size:13px;cursor:pointer;background:none;border:0;padding:0">셋탑 연결 해제 — 화면을 '미연결' 상태로 전환</button>`:''}
+   <div class="f-row" style="margin-bottom:0"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F82KQ"></div>
+   ${p.stb?`<div class="stb-guide"><b>재연결 안내</b>
+    <div class="step">현재 셋탑 <span class="num">${p.stb.sn}</span> · ${p.status==='on'?'온라인':'오프라인'}</div>
+    <div class="step">새 셋탑의 6자리 연결 코드를 입력하면 재연결돼요. 기존 일정·태그는 그대로 유지돼요.</div></div>
+    <button class="lnk" id="stb-detach" style="color:var(--red);font-weight:600;font-size:13px;cursor:pointer;background:none;border:0;padding:0;margin-top:12px">셋탑 연결 해제 — 화면을 '미연결' 상태로 전환</button>`
+   :`<div class="stb-guide"><b>연결 코드 확인 방법</b>
+    <div class="step">① 셋탑박스를 TV(화면)에 연결</div>
+    <div class="step">② 전원을 켜고, Syncsign 앱을 실행</div>
+    <div class="step">③ 화면에 표시된 6자리 연결 코드를 입력</div></div>`}
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="stb-ok">${p.stb?'재연결':'연결'}</button></div>`,
  {width:'440px',onMount:ov=>{
@@ -622,7 +608,6 @@ function deletePanel(p,after){
   }
  });
 }
-/* 연결 코드 확인 (연결된 셋탑의 S/N·코드 안내 + 코드 재발급) */
 /* 셋탑 연결 코드 생성 — 영문(A-Z)·숫자(0-9) 혼용 6자리, 구분 기호 없음(prototype.html의 STB_CODE_LEN 규칙).
    데모 재현성을 위해 난수 대신 pSeq 기반 결정적 생성. 영문·숫자가 한쪽만 나오면 마지막 자리를 반대 종류로 교체한다. */
 const genStbCode=()=>{
@@ -638,21 +623,147 @@ const genStbCode=()=>{
  else if(!/[0-9]/.test(out))out=out.slice(0,-1)+D[nx()%10];
  return out;
 };
-function openStbInfo(p){
- /* 코드가 아직 없는 셋탑은 이 시점에 발급해 보관한다 — 재렌더 때마다 코드가 바뀌지 않도록 */
- if(!p.stb.code)p.stb.code=genStbCode();
- const code=p.stb.code;
+/* 화면 이름 수정 — 카드/드로어 ⋯ 메뉴 공용. 저장 시 목록·좌측 레일·드로어 헤더가 함께 바뀐다(after 콜백). */
+function renamePanel(p,after){
  openModal(`
-  <div class="modal-head"><div><h2>연결 코드 확인</h2><div class="sub">'${p.name}' · ${storeName(p.store)}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
-  <div class="modal-body">
-   <dl class="kv"><dt>셋탑 S/N</dt><dd class="num">${p.stb.sn}</dd><dt>연결 상태</dt><dd>${p.status==='on'?'<span class="badge badge-green">온라인</span>':p.status==='off'?'<span class="badge badge-gray">오프라인</span>':'<span class="badge badge-red">오류</span>'}</dd><dt>등록 코드</dt><dd><span class="num" style="font-size:15px;font-weight:700;letter-spacing:.12em">${code}</span> <button class="lnk" id="stb-reissue" style="color:var(--blue);font-weight:600;font-size:12px;cursor:pointer;background:none;border:0;padding:0;margin-left:6px">코드 재발급</button></dd></dl>
-   <div class="sync-note" style="margin-top:12px">${IC.info}<span>코드를 재발급하면 기존 코드는 즉시 만료돼요. 껐다 켜도 연결이 계속 불안정하면 <b>셋탑 재연결</b>을 진행하세요.</span></div>
-  </div>
-  <div class="modal-foot"><button class="btn" id="stb-re">${STB_IC(14)}셋탑 재연결</button><span class="grow"></span><button class="btn btn-primary" data-close>확인</button></div>`,
+  <div class="modal-head"><div><h2>화면 이름 수정</h2><div class="sub">${storeName(p.store)}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>화면 이름 <span class="req">*</span></label><input class="input" id="rn-name" maxlength="40" placeholder="예) 카운터 좌측"></div></div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="rn-ok">저장</button></div>`,
  {width:'420px',onMount:ov=>{
-  ov.querySelector('#stb-re').onclick=()=>{ov.remove();openStbModal(p);};
-  ov.querySelector('#stb-reissue').onclick=()=>{p.stb.code=genStbCode();ov.remove();openStbInfo(p);toast('새 연결 코드를 발급했어요. 기존 코드는 만료됐어요.');};
+  const inp=ov.querySelector('#rn-name');inp.value=p.name;inp.focus();inp.select();
+  inp.addEventListener('input',()=>inp.classList.remove('error'));
+  const save=()=>{
+   const v=inp.value.trim();
+   if(!v){inp.classList.add('error');inp.focus();toast('화면 이름을 입력해주세요. 설치 위치를 알 수 있는 이름이 좋아요.',{err:true});return}
+   if(v===p.name){ov.remove();return}
+   p.name=v;ov.remove();renderAll();after&&after();toast(`화면 이름을 '${v}'로 변경했어요.`);
+  };
+  ov.querySelector('#rn-ok').onclick=save;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
  }});
+}
+/* 화면 관리(변경) 메뉴 — 카드 ⋯ · 드로어 ⋯ 공용. Drawer는 조회 전용이고 관리 액션은 모두 이 메뉴로 모은다.
+   after: 이름·매장·연결 해제 후 상세 드로어를 다시 그리는 콜백(목록은 renderAll이 처리) · onDelete: 삭제 후 처리(드로어 닫기 등) */
+function panelManageMenu(anchor,p,opt){
+ opt=opt||{};const after=opt.after,del=opt.onDelete;
+ popMenu(anchor,p.stb?[
+  {title:'화면 관리'},
+  {label:'화면 이름 수정',icon:IC.edit,onClick:()=>renamePanel(p,after)},
+  {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
+  {label:'일정 따라가기 설정',icon:IC.link,onClick:()=>openShareModal([p.id])},
+  {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
+  'sep',
+  {title:'셋탑 관리'},
+  {label:'셋탑 재연결',icon:IC.stb,onClick:()=>openStbModal(p)},
+  {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요.`)},
+  'sep',
+  {title:'위험 작업'},
+  {label:'셋탑 연결 해제',icon:IC.unlink,danger:true,onClick:()=>detachStb(p,after)},
+  {label:'화면 삭제',icon:IC.trash,danger:true,onClick:()=>deletePanel(p,del)},
+ ]:[
+  {title:'화면 관리'},
+  {label:'화면 이름 수정',icon:IC.edit,onClick:()=>renamePanel(p,after)},
+  {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
+  {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
+  'sep',
+  {title:'셋탑 관리'},
+  {label:'셋탑 연결하기',icon:IC.stb,onClick:()=>openStbModal(p)},
+  'sep',
+  {title:'위험 작업'},
+  {label:'화면 삭제',icon:IC.trash,danger:true,onClick:()=>deletePanel(p,del)},
+ ],{cls:'mp-manage'});
+}
+/* ═══════════ 네트워크·스크린샷 이력 (조회 전용, 화면별 개별) ═══════════ */
+/* 데모 재현성을 위해 화면 id 기반 시드로 결정적 생성하고 화면 객체(p._net/p._shot)에 캐시한다. */
+const HIST_DAYS=['2026.08.12','2026.08.11','2026.08.10','2026.08.09','2026.08.08','2026.08.07','2026.08.06'];
+const TODAY_D=HIST_DAYS[0];
+const hm=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+function seededRng(str){let h=2166136261>>>0;for(const c of str){h^=c.charCodeAt(0);h=Math.imul(h,16777619)>>>0;}return()=>{h^=h<<13;h>>>=0;h^=h>>>17;h^=h<<5;h>>>=0;return h/4294967296;};}
+/* 네트워크 이력 — 연결 상태가 '바뀌는 시점'에만 기록(주기적 수집 아님). 온라인↔오프라인 전환만 남긴다.
+   * 네트워크 끊김은 셋탑 연결 자체의 문제이며, 콘텐츠 재생 오류와는 무관하게 다룬다(추론 금지). */
+function netHistory(p){
+ if(!p.stb)return{days:[],byDate:{}};
+ if(p._net)return p._net;
+ const byDate={};
+ HIST_DAYS.forEach((d,di)=>{
+  const rng=seededRng(p.id+'|net|'+d),isToday=di===0;
+  if(!isToday&&rng()<0.28){byDate[d]=[];return;} /* 지난 날 중 하루 종일 안정적이었던 날 = 전환 이력 없음(빈 상태) */
+  const ev=[];let cur=8*60+Math.floor(rng()*150); /* 아침(08:00~10:30)에 온라인 진입 */
+  ev.push({s:'on',m:cur});
+  const blips=1+Math.floor(rng()*3);
+  for(let i=0;i<blips;i++){
+   cur+=20+Math.floor(rng()*180);if(cur>22*60)break;
+   ev.push({s:'off',m:cur});
+   cur+=1+Math.floor(rng()*12);if(cur>23*60)break;
+   ev.push({s:'on',m:cur});
+  }
+  if(isToday&&p.status==='off')ev.push({s:'off',m:Math.min(cur+25,15*60+21)}); /* 지금 오프라인이면 마지막은 끊김 */
+  byDate[d]=ev.map(e=>({s:e.s,t:hm(e.m)}));
+ });
+ return p._net={days:HIST_DAYS,byDate};
+}
+/* 스크린샷 이력 — 셋탑이 5분마다 현재 송출 화면을 업로드한 누적본. 시간 순으로 쌓인다.
+   nosch: 그 시각에 편성 일정이 없어(미편성/편성 공백) 표시할 콘텐츠가 없던 캡처 → '일정 없음' 아이콘. */
+function shotHistory(p){
+ if(!p.stb)return{days:[],byDate:{}};
+ if(p._shot)return p._shot;
+ const byDate={};
+ HIST_DAYS.forEach((d,di)=>{
+  const rng=seededRng(p.id+'|shot|'+d),isToday=di===0;
+  if(rng()<0.14){byDate[d]=[];return;} /* 셋탑이 꺼져 있어 업로드가 없던 날(스크린샷 자체 없음) */
+  const start=8*60,end=isToday?9*60+55:21*60+55; /* 오늘은 '지금(09:55)'까지만 누적 */
+  const arr=[];for(let m=start;m<=end;m+=5)arr.push({t:hm(m),nosch:p.unsch||rng()<0.15});
+  arr.reverse(); /* 저장은 최신순 */
+  byDate[d]=arr;
+ });
+ return p._shot={days:HIST_DAYS,byDate};
+}
+const chevL='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>';
+const chevR='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+/* 정렬 토글 아이콘(⇅) */
+const sortIcon='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>';
+/* 일정 없음(캘린더-X) — 사용자 제공 아이콘, currentColor로 색 제어 */
+const calXIcon='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4864 1.00024C17.0808 1.00048 17.5623 1.48199 17.5626 2.07642V2.79517H17.7422C20.1213 2.79517 22.0499 4.72375 22.0499 7.10278V17.6917C22.0499 20.0707 20.1213 21.9993 17.7422 21.9993H6.25494C3.8761 21.999 1.94733 20.0705 1.94733 17.6917V7.10278C1.94733 4.72388 3.8761 2.79538 6.25494 2.79517H6.43658V2.07642C6.4368 1.48185 6.91911 1.00024 7.51373 1.00024C8.10824 1.00038 8.59066 1.48193 8.59088 2.07642V2.79517H15.4092V2.07642C15.4095 1.48185 15.8918 1.00024 16.4864 1.00024ZM4.10162 17.6917C4.10162 18.881 5.06561 19.8457 6.25494 19.8459H17.7422C18.9318 19.8459 19.8965 18.8812 19.8965 17.6917V9.43677H4.10162V17.6917ZM13.3917 11.1877C13.8122 10.7672 14.4936 10.7672 14.9141 11.1877C15.3346 11.6083 15.3346 12.2897 14.9141 12.7102L13.5215 14.1028L14.9141 15.4954C15.3347 15.9159 15.3347 16.5973 14.9141 17.0178C14.4936 17.4383 13.8122 17.4384 13.3917 17.0178L11.9991 15.6252L10.6075 17.0178C10.187 17.4383 9.50461 17.4383 9.08405 17.0178C8.66349 16.5973 8.66349 15.9149 9.08405 15.4944L10.4756 14.1028L9.08405 12.7112C8.66351 12.2906 8.66354 11.6083 9.08405 11.1877C9.5046 10.7672 10.1869 10.7672 10.6075 11.1877L11.9991 12.5793L13.3917 11.1877ZM6.25494 4.94849C5.06561 4.9487 4.10162 5.9134 4.10162 7.10278V7.28247H19.8965V7.10278C19.8965 5.91327 18.9318 4.94849 17.7422 4.94849H6.25494Z"/></svg>';
+const histEmpty=(t,s)=>`<div class="empty" style="padding:46px 20px"><b>${t}</b><span>${s}</span></div>`;
+/* 개요 미리보기 비어있음 상태 아이콘 — 셋탑 미연결(플러그+슬래시) / 신호 없음(와이파이 오프). 크기는 CSS로 통일 */
+const stbOffIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0V7ZM12 16v5"/><path d="M3 3 21 21"/></svg>';
+const noSignalIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 1l22 22M9 9a5 5 0 0 0-1.5 3.5M5.5 5.6A9 9 0 0 0 3 12.4m13.4 3.1A5 5 0 0 0 15 9M18.5 18.4A9 9 0 0 0 21 11.6"/></svg>';
+const datePickHtml=(d,oldest,newest,sortLabel)=>`
+ <div class="dpick">
+  <div class="seg">
+   <button data-dnav="prev" ${oldest?'disabled':''} aria-label="이전 날짜">${chevL}</button>
+   <span class="seg-d">${IC.cal}<span class="num">${d}</span></span>
+   <button data-dnav="next" ${newest?'disabled':''} aria-label="다음 날짜">${chevR}</button>
+  </div>
+  <button class="btn btn-sm" data-dnav="today" ${newest?'disabled':''}>오늘</button>
+  <span class="grow"></span>
+  <button class="dsort" data-dsort>${sortLabel}${sortIcon}</button>
+ </div>`;
+/* 네트워크 탭 — 셋탑 미연결이면 이력 자체가 없다. 상태·시간을 고정폭 컬럼으로 세로 정렬. 기본 최신순. */
+function netTabHtml(p,idx,asc){
+ if(!p.stb)return histEmpty('셋탑이 연결되지 않아 네트워크 이력이 없어요.','셋탑을 연결하면 온라인·오프라인 전환이 자동으로 기록돼요.');
+ const H=netHistory(p),d=H.days[idx],evs=H.byDate[d]||[];
+ const list=asc?evs:[...evs].reverse();  /* evs=과거→현재. asc=오래된순 그대로 / 기본(최신순)은 뒤집기 */
+ const rows=evs.length?`<div class="net-tl">${list.map(e=>`<div class="net-row"><span class="ndot ${e.s==='on'?'on':'off'}"></span><span class="nlabel">${e.s==='on'?'온라인':'오프라인'}</span><span class="ntime num">${e.t}</span></div>`).join('')}</div>`
+  :histEmpty('해당 날짜의 네트워크 이력이 없어요.','연결 상태가 바뀌지 않은 날은 이력이 남지 않아요.');
+ return datePickHtml(d,idx>=H.days.length-1,idx<=0,asc?'오래된순':'최신순')+rows;
+}
+/* 스크린샷 탭 — 최신순 기본. 5분 간격이라 하루가 길면 최근 60장만 노출. nosch = 일정 없음 아이콘. */
+function shotTabHtml(p,idx,asc){
+ if(!p.stb)return histEmpty('셋탑이 연결되지 않아 스크린샷이 없어요.','셋탑을 연결하면 5분마다 현재 화면 스크린샷이 올라와요.');
+ const H=shotHistory(p),d=H.days[idx],all=H.byDate[d]||[];
+ let list=asc?[...all].reverse():all;const CAP=60;let note='';
+ if(list.length>CAP){note=`<div class="shot-note">5분 간격 업로드 · 최근 ${CAP}장 표시 (총 ${list.length}장)</div>`;list=list.slice(0,CAP);}
+ const grid=all.length?`${note}<div class="shot-grid">${list.map(s=>`<div class="shot-cell" data-shot="${s.t}" data-nosch="${s.nosch?1:0}"><div class="shot-img${s.nosch?' nosch':''}">${s.nosch?`<span class="noschi" title="편성 일정 없음">${calXIcon}</span>`:''}</div><div class="shot-t num">${s.t}</div></div>`).join('')}</div>`
+  :histEmpty('해당 날짜에 업로드된 스크린샷이 없어요.','셋탑이 꺼져 있었거나 업로드가 없던 날이에요.');
+ return datePickHtml(d,idx>=H.days.length-1,idx<=0,asc?'오래된순':'최신순')+grid;
+}
+function openShotModal(p,t,nosch){
+ openModal(`
+  <div class="modal-head"><div><h2>스크린샷</h2><div class="sub">'${p.name}' · ${storeName(p.store)} · ${TODAY_D} ${t}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body"><div class="shot-full${nosch?' nosch':''}">${nosch?`<span class="noschi">${calXIcon}</span>`:''}</div>
+   <div class="sync-note" style="margin-top:12px">${IC.info}<span>${nosch?`이 시각(<b>${t}</b>)에는 편성된 일정이 없어 표시할 콘텐츠가 없었어요.`:`셋탑이 5분마다 올린 실제 송출 화면 스크린샷이에요. 촬영·업로드 시각 <b>${t}</b>.`}</span></div></div>`,
+ {width:'640px'});
 }
 
 /* ═══════════ 매장 지정 · 변경 ═══════════ */
@@ -723,50 +834,59 @@ function pushRecent(id){RECENT=[id,...RECENT.filter(x=>x!==id)].slice(0,10);}
 function openPanelDrawer(p,tab='overview'){
  pushRecent(p.id);renderRail();
  const wrap=document.createElement('div');wrap.className='drawer-wrap';
+ /* 네트워크·스크린샷 탭의 선택 날짜·정렬은 드로어가 열려 있는 동안 유지(탭 전환에도 보존).
+    asc=false = 최신순(기본), asc=true = 오래된순 — 두 탭 동일 기준. */
+ let netIdx=0,shotIdx=0,netAsc=false,shotAsc=false;
  const draw=(tab)=>{
-  const st=!p.stb?['셋탑 미연결','badge-amber']:p.status==='on'?(p.unsch?['미편성','badge-amber']:['온라인','badge-green']):p.status==='off'?['오프라인','badge-gray']:['오류','badge-red'];
+  const st=!p.stb?['셋탑 미연결','badge-amber']:p.status==='on'?(p.unsch?['미편성','badge-amber']:['온라인','badge-green']):['오프라인','badge-gray'];
   wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true">
    <div class="drawer-head">
     <div><h2>${p.name} <span class="badge ${st[1]}">${st[0]}</span>${p.fav?' <span style="color:#D9A93E;font-size:14px">★</span>':''}</h2>
     <span class="sub">${storeHtml(p.store)} · 마지막 업데이트 ${ago(p.lastMin)}</span></div>
     <button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button>
    </div>
+   <div class="dtabs">
+    ${[['overview','개요'],['schedule','일정'],['info','정보'],['network','네트워크'],['screenshot','스크린샷'],['log','활동 로그']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-dtab="${k}">${l}</button>`).join('')}
+   </div>
    <div class="drawer-body">
-    <div class="dtabs">
-     ${[['overview','개요'],['schedule','일정'],['info','정보'],['log','활동 로그']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-dtab="${k}">${l}</button>`).join('')}
-    </div>
     <div id="dtab-body"></div>
    </div>
    <div class="drawer-foot ro-foot">
-    ${p.stb?`<button class="btn btn-icon" id="d-more" aria-label="더보기">${IC.dots}</button>
-    <button class="btn btn-primary" id="d-sched" style="flex:1">${IC.cal}일정 편집</button>`
+    <button class="btn btn-icon" id="d-more" aria-label="화면 관리">${IC.dots}</button>
+    ${p.stb?`<button class="btn btn-primary" id="d-sched" style="flex:1">${IC.cal}일정 편집</button>`
     :`<button class="btn btn-primary" id="d-stb-connect" style="flex:1">${STB_IC(14)}셋탑 연결하기</button>`}
    </div></div>`;
   wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
   wrap.querySelectorAll('[data-dtab]').forEach(b=>b.onclick=()=>draw(b.dataset.dtab));
-  const _more=wrap.querySelector('#d-more');if(_more)_more.onclick=()=>popMenu(_more,[
-   {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요.`)},
-   {label:'일정 따라가기 설정',icon:IC.link,onClick:()=>{wrap.remove();openShareModal([p.id])}},
-  ]);
+  const _more=wrap.querySelector('#d-more');if(_more)_more.onclick=()=>panelManageMenu(_more,p,{after:()=>draw(tab),onDelete:()=>wrap.remove()});
   const _dsc=wrap.querySelector('#d-sched');if(_dsc)_dsc.onclick=()=>{wrap.remove();openSchedule([p.id])};
   const _cn=wrap.querySelector('#d-stb-connect');if(_cn)_cn.onclick=()=>{wrap.remove();openStbModal(p)};
   const body=wrap.querySelector('#dtab-body');
   if(tab==='overview'){
+   /* 상태는 온라인/오프라인/셋탑 미연결만 — 오류·재생오류 원인 추정 표시 없음(2026-08 정책).
+      상태 뱃지는 콘텐츠가 실제 송출 중일 때(온라인+편성)만 노출하고, 비어있는 상태는 가운데 아이콘+문구로 안내(시안 기준) */
+   const playing=p.stb&&p.status==='on'&&!p.unsch;
+   const preview=!p.stb?`<div class="offmsg">${stbOffIcon}<span>셋탑 미연결</span></div>`
+    :p.status==='off'?`<div class="offmsg">${noSignalIcon}<span>신호 없음 · ${ago(p.lastMin)}</span></div>`
+    :p.unsch?`<div class="offmsg">${calXIcon}<span>편성된 일정 없음</span></div>`
+    :`<span class="cname">${contentOf(p.content).name}</span>`;
    body.innerHTML=`
-    <div class="dpreview" style="background:${thumbBg(p)}">${!p.stb?`<div class="offmsg" style="font-size:13px">${STB_IC(20)}셋탑 미연결</div>`:p.status==='off'?`<div class="offmsg" style="font-size:13px">신호 없음 · ${ago(p.lastMin)}</div>`:p.unsch?`<div class="offmsg" style="font-size:13px">${IC.cal}편성된 콘텐츠 없음</div>`:`<span class="live"><span class="dot ${p.status==='err'?'err':'on'}"></span>${p.status==='err'?'오류':'LIVE'}</span><span class="cname">${contentOf(p.content).name}</span>`}
-     ${p.stb?`<button class="icon-btn refresh" aria-label="미리보기 새로고침"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 4v5h-5"/></svg></button>`:''}
+    <div class="dpreview" style="background:${thumbBg(p)}">
+     ${playing?`<span class="ov-badge"><span class="dot on"></span>온라인</span>`:''}
+     <button class="icon-btn refresh" aria-label="미리보기 새로고침"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 4v5h-5"/></svg></button>
+     ${preview}
     </div>
-    ${!p.stb?`<div class="conflict-box" style="margin:0 0 14px;border-color:var(--amber);background:var(--amber-bg)"><b>${STB_IC(13)} 셋탑박스가 아직 연결되지 않았어요</b>셋탑박스를 TV에 연결하고 전원을 켜면 화면에 6자리 연결 코드가 표시돼요. 코드를 입력하면 바로 송출을 시작할 수 있어요.<div class="opts"><button class="btn btn-sm btn-primary" id="ov-stb-connect">셋탑 연결하기</button></div></div>`:''}
-    ${p.status==='err'&&p.stb?`<div class="conflict-box" style="margin:0 0 14px"><b>⚠ 콘텐츠 재생 오류</b>'${contentOf(p.content).name}' 재생 중 디코딩 오류가 반복돼요. 재시작하거나 콘텐츠를 다시 편성해 주세요.<div class="opts"><button class="btn btn-sm btn-danger">재시작</button><button class="btn btn-sm">다시 편성</button></div></div>`:''}
-    <dl class="kv">
-     <dt>셋탑 연결</dt><dd>${p.stb?`<span class="badge badge-green">연결됨</span> <span class="num" style="color:var(--text-3)">${p.stb.sn}</span>`:'<span class="badge badge-amber">미연결</span> 셋탑박스 설치 대기'}</dd>
-     <dt>현재 콘텐츠</dt><dd>${p.stb&&p.status!=='off'&&!p.unsch?contentOf(p.content).name:'—'}</dd>
-     <dt>일정</dt><dd>${p.unsch?'<span class="badge badge-amber">미편성</span>':`오늘 ${p.schedN}건 편성됨`}</dd>
-     <dt>일정 공유</dt><dd>${isMaster(p)?`<span class="badge badge-violet">${IC.link}기준 화면</span> ${followerCnt(p)}개 화면이 따라감`:p.follow?`<span class="badge badge-blue">${IC.link}따라가는 중</span> ${panelOf(p.follow).name}`:'사용 안 함'}</dd>
-     <dt>태그</dt><dd><span class="tag-badges">${p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join('')||'—'}</span></dd>
-    </dl>`;
+    ${!p.stb?`<div class="ov-connect-note"><b>${IC.info}아직 셋탑 연결이 안됐어요</b><p>셋탑박스를 TV에 연결하고 전원을 켜고, Syncsign 앱을 실행하면 화면에 6자리 연결 코드가 표시돼요. 코드를 입력하면 바로 송출을 시작할 수 있어요.</p></div>`:''}
+    <div class="dcard">
+     <dl class="info-list">
+      <div><dt>셋탑 연결</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span> <span class="badge badge-green">연결됨</span>`:'<span class="badge badge-amber">미연결</span> 셋탑박스 설치 대기'}</dd></div>
+      <div><dt>현재 콘텐츠</dt><dd>${p.stb&&p.status==='on'&&!p.unsch?contentOf(p.content).name:'—'}</dd></div>
+      <div><dt>일정</dt><dd>${p.unsch?'<span class="badge badge-amber">미편성</span>':`오늘 ${p.schedN}건 편성됨`}</dd></div>
+      <div><dt>일정 공유</dt><dd>${isMaster(p)?`<span class="badge badge-violet">${IC.link}기준 화면</span> ${followerCnt(p)}개 화면이 따라감`:p.follow?`<span class="badge badge-blue">${IC.link}따라가는 중</span> ${panelOf(p.follow).name}`:'사용 안 함'}</dd></div>
+      <div><dt>태그</dt><dd><span class="tag-badges">${p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join('')||'—'}</span></dd></div>
+     </dl>
+    </div>`;
    const _rf=body.querySelector('.refresh');if(_rf)_rf.onclick=()=>toast('미리보기를 새로고침했어요.');
-   const _oc=body.querySelector('#ov-stb-connect');if(_oc)_oc.onclick=()=>{wrap.remove();openStbModal(p)};
   }else if(tab==='schedule'){
    const items=[['08:00 – 11:30','c2',false],['11:30 – 14:00','c1',true],['14:00 – 18:00','c3',false],['18:00 – 22:00','c6',false]];
    body.innerHTML=`
@@ -786,26 +906,32 @@ function openPanelDrawer(p,tab='overview'){
     onCreate:t=>{if(!TAGS.includes(t))TAGS.push(t);if(!p.tags.includes(t))p.tags.push(t);draw('info');renderList();toast(`'${t}' 태그를 추가했어요.`);},
     onManage:openPanelTagManager});
    body.innerHTML=`
-   <div class="dsec"><h3>화면 정보</h3>
-    <dl class="kv kv-tight">
-     <dt>매장</dt><dd>${storeHtml(p.store)} <button class="lnk" id="if-store" style="margin-left:4px">${p.store?'변경':'매장 지정'}</button></dd>
-     <dt>해상도</dt><dd>${p.res}</dd>
-     <dt>셋탑 S/N</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span>`:'<span class="badge badge-amber">미연결</span>'}</dd>
-     <dt>펌웨어</dt><dd>${p.stb?`${p.fw} <span class="badge badge-green">최신</span>`:'—'}</dd>
-     <dt>네트워크</dt><dd>${!p.stb?'—':p.status==='off'?'연결 끊김':'유선 · 32ms'}</dd>
-     <dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd>
+   <div class="dcard"><h3>화면 정보</h3>
+    <dl class="info-grid">
+     <div><dt>매장</dt><dd>${storeHtml(p.store)} <button class="lnk" id="if-store">${p.store?'변경':'매장 지정'}</button></dd></div>
+     <div><dt>펌웨어</dt><dd>${p.stb?`${p.fw} <span class="badge badge-green">최신</span>`:'—'}</dd></div>
+     <div><dt>해상도</dt><dd>${p.res}</dd></div>
+     <div><dt>네트워크</dt><dd>${!p.stb?'—':p.status==='off'?'연결 끊김':'유선 · 32ms'}</dd></div>
+     <div><dt>셋탑 S/N</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span>`:'<span class="badge badge-amber">미연결</span>'}</dd></div>
+     <div><dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd></div>
     </dl></div>
-   <div class="dsec stb-sec"><h3>셋탑 관리</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm" id="if-stb-info">연결 코드 확인</button><button class="btn btn-sm" id="if-stb-re">${STB_IC(13)}셋탑 재연결</button>`:`<button class="btn btn-sm btn-primary" id="if-stb-connect">${STB_IC(13)}셋탑 연결하기</button>`}</div></div>
-   <div class="dsec"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3><div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요. <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>
-   <div class="dsec danger-sec"><h3>위험 작업</h3><div class="row-actions">${p.stb?`<button class="btn btn-sm btn-danger-t" id="if-stb-detach">셋탑 연결 해제</button>`:''}<button class="btn btn-sm btn-danger-t" id="if-del">${IC.x}화면 삭제</button></div>
-    <p class="dsec-note">${p.stb?'연결 해제 시 화면 정보·일정·태그는 유지되고 다른 셋탑으로 다시 연결할 수 있어요. ':''}삭제하면 편성 일정도 함께 삭제되니 주의하세요.</p></div>`;
+   <div class="dcard"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3>
+    <div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요. <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>`;
    const _st=body.querySelector('#if-store');if(_st)_st.onclick=()=>openStorePicker([p],()=>draw('info'));
-   const _si=body.querySelector('#if-stb-info');if(_si)_si.onclick=()=>{wrap.remove();openStbInfo(p)};
-   const _sr=body.querySelector('#if-stb-re');if(_sr)_sr.onclick=()=>{wrap.remove();openStbModal(p)};
-   const _sc=body.querySelector('#if-stb-connect');if(_sc)_sc.onclick=()=>{wrap.remove();openStbModal(p)};
-   const _sd=body.querySelector('#if-stb-detach');if(_sd)_sd.onclick=()=>detachStb(p,()=>draw('info'));
-   const _dl=body.querySelector('#if-del');if(_dl)_dl.onclick=()=>deletePanel(p,()=>wrap.remove());
    body.querySelectorAll('[data-ptag-edit]').forEach(b=>b.onclick=tagEdit);
+  }else if(tab==='network'){
+   const H=netHistory(p);
+   if(netIdx>H.days.length-1)netIdx=Math.max(0,H.days.length-1);
+   body.innerHTML=netTabHtml(p,netIdx,netAsc);
+   body.querySelectorAll('[data-dnav]').forEach(b=>b.onclick=()=>{const k=b.dataset.dnav;netIdx=k==='prev'?Math.min(netIdx+1,H.days.length-1):k==='next'?Math.max(netIdx-1,0):0;draw('network');});
+   const _so=body.querySelector('[data-dsort]');if(_so)_so.onclick=()=>{netAsc=!netAsc;draw('network');};
+  }else if(tab==='screenshot'){
+   const H=shotHistory(p);
+   if(shotIdx>H.days.length-1)shotIdx=Math.max(0,H.days.length-1);
+   body.innerHTML=shotTabHtml(p,shotIdx,shotAsc);
+   body.querySelectorAll('[data-dnav]').forEach(b=>b.onclick=()=>{const k=b.dataset.dnav;shotIdx=k==='prev'?Math.min(shotIdx+1,H.days.length-1):k==='next'?Math.max(shotIdx-1,0):0;draw('screenshot');});
+   const _so=body.querySelector('[data-dsort]');if(_so)_so.onclick=()=>{shotAsc=!shotAsc;draw('screenshot');};
+   body.querySelectorAll('[data-shot]').forEach(c=>c.onclick=()=>openShotModal(p,c.dataset.shot,c.dataset.nosch==='1'));
   }else{
    body.innerHTML=[['방금 전','실시간 미리보기 조회'],['10분 전',`'${contentOf(p.content||'c2').name}' 송출 시작`],['오늘 08:00','일일 편성 자동 갱신'],['어제 22:00','절전 모드 진입'],['어제 14:20','관리자 김민규 — 일정 수정']].map(([tm,tx])=>`<div class="log-item"><span class="tm">${tm}</span><span>${tx}</span></div>`).join('');
   }
@@ -824,7 +950,7 @@ function openWallDrawer(w){
   <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
   <div class="drawer-body">
    <div class="dpreview" style="background:#0B0E13">
-    ${wallCellsHtml(w,t=>{const p=panelOf(t.p);const tc=wallTileContent(w,t);return `<div style="background:${tc.g};border-radius:5px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:12px;color:rgba(255,255,255,.75);font-weight:700">${p?p.name:'빈 칸'}</span><span class="dot ${p&&p.status==='on'?'on':'err'}" style="position:absolute;right:6px;top:6px"></span></div>`},'4px')}
+    ${wallCellsHtml(w,t=>{const p=panelOf(t.p);const tc=wallTileContent(w,t);return `<div style="background:${tc.g};border-radius:5px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:12px;color:rgba(255,255,255,.75);font-weight:700">${p?p.name:'빈 칸'}</span><span class="dot ${p&&p.status==='on'?'on':'off'}" style="position:absolute;right:6px;top:6px"></span></div>`},'4px')}
    </div>
    <div class="sync-note">${IC.info}<span><b>일정은 비디오월 단위, 콘텐츠는 화면별</b>로 편성돼요. 각 화면은 자기 타일 영역만 재생하고, 프레임은 자동으로 동기화돼요.</span></div>
    <dl class="kv">
@@ -1295,7 +1421,7 @@ function openShareModal(followerIds){
  const draw=()=>{
   ov.querySelector('#sh-masters').innerHTML=candidates.map(p=>`
    <button class="share-box" data-shm="${p.id}" style="width:100%;text-align:left;cursor:pointer;${masterId===p.id?'border-color:var(--blue);background:var(--blue-50)':''}">
-    <div class="row"><span class="dot ${p.status==='on'?'on':'err'}"></span><b>${p.name}</b><span style="font-size:12px;color:var(--text-3)">${storeName(p.store)}</span>
+    <div class="row"><span class="dot ${p.status==='on'?'on':'off'}"></span><b>${p.name}</b><span style="font-size:12px;color:var(--text-3)">${storeName(p.store)}</span>
     ${isMaster(p)?`<span class="badge badge-violet" style="margin-left:auto">${IC.link}이미 ${followerCnt(p)}개가 따라감</span>`:'<span class="badge badge-gray" style="margin-left:auto">일정 4건</span>'}</div>
    </button>`).join('');
   ov.querySelectorAll('[data-shm]').forEach(b=>b.onclick=()=>{masterId=b.dataset.shm;fset.delete(masterId);draw()});
@@ -1460,7 +1586,7 @@ function openWallWizard(existing,opts={}){
     <div class="wb-pool">
      <select class="select select-sm" id="wb-store"><option value="" ${storeId?'':'selected'}>${NO_STORE} 화면</option>${storeOptions(storeId).map(s=>`<option value="${s.id}" ${s.id===storeId?'selected':''}>${s.name}</option>`).join('')}</select>
      <div class="pool-list">${pool.map(p=>{const used=tiles.some(t=>t.p===p.id);
-      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'err'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||`<div style="padding:14px;font-size:12px;color:var(--text-3)">${storeId?'이 매장에':'미지정 화면 중'} 배치 가능한 화면이 없어요. 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요.</div>`}</div>
+      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'off'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||`<div style="padding:14px;font-size:12px;color:var(--text-3)">${storeId?'이 매장에':'미지정 화면 중'} 배치 가능한 화면이 없어요. 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요.</div>`}</div>
      <button class="btn btn-sm" id="wb-auto">남은 화면 자동 배치</button>
      <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5">① 화면을 캔버스로 끌어다 놓거나, 빈 칸(＋)을 눌러 자리부터 잡아도 돼요.<br>② 타일을 클릭하면 크기 변경·제거, 끌면 위치 이동·맞바꾸기가 돼요.</p>
     </div>
@@ -1713,7 +1839,7 @@ function renderScPanels(){
  }
  const cur=new Set(scTargets);
  const row=p=>`<div class="scp-row ${cur.has(p.id)?'on':''}" data-scp="${p.id}" role="button" tabindex="0">
-   <span class="dot ${p.status==='on'?'on':p.status==='off'?'off':'err'}"></span>
+   <span class="dot ${p.status==='on'?'on':'off'}"></span>
    <span class="tx"><b>${p.name}</b><span>${storeHtml(p.store)}</span></span>
    ${cur.has(p.id)?'<span class="badge badge-blue">대상</span>':`<button class="icon-btn" data-scpadd="${p.id}" aria-label="적용 대상에 추가">${IC.plus}</button>`}
   </div>`;
@@ -1884,7 +2010,7 @@ function renderWallsPage(root){
    return `<div class="pcard wall ${wallsChecked.has(w.id)?'checked':''}" data-vw="${w.id}" style="cursor:pointer">
     <div class="thumb">
      ${wallCellsHtml(w,(t,i)=>`<i style="background:${wallTileContent(w,t).g};position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${i===0?`<span style="font-size:15px"></span>`:''}</i>`)}
-     <div class="tl"><span class="live"><span class="dot ${ok?'on':'err'}"></span>${ok?'LIVE':'일부 오류'}</span></div>
+     <div class="tl"><span class="live"><span class="dot ${ok?'on':'off'}"></span>${ok?'LIVE':'일부 오프라인'}</span></div>
      <span class="cname" style="z-index:3">${wallContentLabel(w)}</span></div>
     <span class="checkbox check ${wallsChecked.has(w.id)?'on':''}" data-vwc="${w.id}" role="checkbox" aria-label="${w.name} 선택">${IC.check}</span>
     <div class="body">
@@ -1910,7 +2036,7 @@ function renderWallsPage(root){
     const on=w.cells.filter(id=>panelOf(id).status==='on').length,ok=on===w.cells.length;
     return `<tr class="${wallsChecked.has(w.id)?'checked':''}" data-vw="${w.id}" style="cursor:pointer">
      <td><span class="checkbox ${wallsChecked.has(w.id)?'on':''}" data-vwc="${w.id}" role="checkbox" aria-label="${w.name} 선택">${IC.check}</span></td>
-     <td><span class="tstatus" style="color:${ok?'var(--green)':'var(--red)'}"><span class="dot ${ok?'on':'err'}"></span>${ok?'LIVE':'일부 오류'}</span></td>
+     <td><span class="tstatus" style="color:${ok?'var(--green)':'var(--amber)'}"><span class="dot ${ok?'on':'off'}"></span>${ok?'LIVE':'일부 오프라인'}</span></td>
      <td><span class="mini-thumb" style="position:relative;width:72px;height:40px;display:inline-block;background:#0B0E13;border-radius:5px">${wallCellsHtml(w,t=>`<i style="background:${wallTileContent(w,t).g};position:absolute;inset:0"></i>`,'2px')}</span></td>
      <td><b>${w.name}</b></td>
      <td>${storeHtml(w.store)}</td>
@@ -1952,12 +2078,11 @@ window.__renderWallsPage=renderWallsPage;
 window.__panelStats=()=>{
  const on=PANELS.filter(p=>p.status==='on'&&!p.unsch).length;
  const off=PANELS.filter(p=>p.status==='off'&&p.stb).length;
- const err=PANELS.filter(p=>p.status==='err').length;
  const unsch=PANELS.filter(p=>p.unsch).length;
  const nostb=PANELS.filter(p=>!p.stb).length;
- const attention=[...PANELS.filter(p=>p.status==='err').slice(0,3),...PANELS.filter(p=>p.status==='off'&&p.stb).slice(0,3)].slice(0,5)
+ const attention=PANELS.filter(p=>p.status==='off'&&p.stb).slice(0,5)
   .map(p=>({id:p.id,name:p.name,store:storeName(p.store),status:p.status,ago:ago(p.lastMin)}));
- return {stores:STORES.length,panels:PANELS.length,on,off,err,unsch,nostb,walls:WALLS.length,attention};
+ return {stores:STORES.length,panels:PANELS.length,on,off,unsch,nostb,walls:WALLS.length,attention};
 };
 /* 대시보드(개인·소상공인): 내 화면 실시간 상태 목록 */
 window.__panelList=n=>PANELS.slice(0,n||6).map(p=>({id:p.id,name:p.name,store:storeName(p.store),status:p.status,stb:!!p.stb,ago:ago(p.lastMin),content:p.stb&&!p.unsch&&p.status!=='off'&&p.content?contentOf(p.content).name:null}));
