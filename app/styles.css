@@ -1397,6 +1397,8 @@ svg{display:block;flex:none}
 .pcard:not(.wall):hover .thumb .tl,.pcard:not(.wall).checked .thumb .tl{opacity:0}
 .pcard .check{position:absolute;left:10px;top:9px;right:auto;z-index:4;opacity:0;transition:opacity .12s;background:rgba(255,255,255,.94);border-radius:5px;box-shadow:var(--sh-sm)}
 .pcard:hover .check,.pcard .check.on{opacity:1}
+/* 선택(체크) 상태는 파란 배경 + 흰 체크 — .pcard .check 흰 배경이 .checkbox.on 을 덮지 않도록 명시 */
+.pcard .check.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .pcard .body{padding:10px 12px 12px}
 .pcard .nm{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
 .pcard .nm .dot{flex:none}
@@ -1876,3 +1878,14 @@ table.grid tr.checked td{background:var(--blue-50)}
 .stb-guide>b{display:block;font-size:13px;font-weight:700;color:var(--blue-hover);margin-bottom:8px}
 .stb-guide .step{font-size:13px;color:var(--text-2);line-height:1.9}
 .stb-guide .step .num{font-weight:700;color:var(--text-2)}
+
+/* ─── 좌측 레일 비디오월 항목 — 이름(선택=구성 화면 목록업) + 우측 카운트, 호버 시 카운트→⋯ 교체 ─── */
+.rail-item.rail-wall{padding:8px 8px;gap:8px}
+.rail-wall-hit{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0;color:inherit;cursor:pointer;background:none;border:0;font:inherit;text-align:left}
+.rail-wall-hit .rail-wall-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 우측 고정 슬롯: 위 리스트 카운트와 동일하게 우측 정렬. 카운트와 ⋯ 가 같은 자리를 공유 */
+.rail-wall-right{flex:none;position:relative;width:26px;height:26px;display:flex;align-items:center;justify-content:flex-end}
+.rail-wall-right .cnt{margin:0;transition:opacity .12s}
+.rail-wall-right .rail-more{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;width:26px;height:26px;color:var(--text-3);opacity:0;transition:opacity .12s;border-radius:6px}
+.rail-item.rail-wall:hover .rail-wall-right .cnt{opacity:0}
+.rail-item.rail-wall:hover .rail-wall-right .rail-more{opacity:1}

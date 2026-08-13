@@ -124,7 +124,7 @@ const unassignedPanels=()=>PANELS.filter(p=>!p.store);
 const storeOptions=cur=>{const arr=STORES.slice(0,50),c=cur&&storeOf(cur);if(c&&!arr.includes(c))arr.unshift(c);return arr};
 const panelOf=id=>PANELS.find(p=>p.id===id);
 const ago=m=>m<1?'방금 전':m<60?`${m}분 전`:m<1440?`${Math.floor(m/60)}시간 전`:`${Math.floor(m/1440)}일 전`;
-let flt={q:'',status:'all',view:'all',store:null,region:null,group:null,wallOnly:false,tags:[],sort:'issue'};
+let flt={q:'',status:'all',view:'all',store:null,region:null,group:null,wall:null,wallOnly:false,tags:[],sort:'issue'};
 /* 화면 태그 관리자 — TAGS를 원본으로, 모든 화면·필터·스마트뷰에 반영 */
 function openPanelTagManager(){
  tagManageModal({label:'화면',tags:TAGS,
@@ -219,6 +219,8 @@ const thumbBg=p=>!p.stb?'#1B212B':p.status==='off'?'#14181F':p.unsch?'#1B212B':c
 /* ═══════════ 필터/정렬 ═══════════ */
 function baseFiltered(){
  let arr=PANELS;
+ /* 비디오월 선택 시: 해당 비디오월을 구성하는 개별 화면만 (일반 매장 선택과 동일하게 목록업) */
+ if(flt.wall){const w=WALLS.find(x=>x.id===flt.wall);if(w)arr=arr.filter(p=>p.wall===flt.wall);else flt.wall=null;}
  if(flt.group){const g=GROUPS.find(g=>g.id===flt.group);arr=arr.filter(p=>g.ids.includes(p.id));}
  if(flt.store===NO_STORE_KEY)arr=arr.filter(p=>!p.store);
  else if(flt.store)arr=arr.filter(p=>p.store===flt.store);
@@ -289,7 +291,7 @@ function renderRail(){
  $('#smart-views').innerHTML='<div class="sec-title">스마트 뷰</div>'+
   smart.map(([k,l,c,ic])=>`<button class="rail-item ${flt.view===k&&!flt.store&&!flt.region&&!flt.group?'on':''}" data-view="${k}">${ic}${l}<span class="cnt num">${c}</span></button>`).join('');
  $$('#smart-views [data-view]').forEach(b=>b.onclick=()=>{
-  flt={...flt,view:b.dataset.view,store:null,region:null,group:null,status:'all'};
+  flt={...flt,view:b.dataset.view,store:null,region:null,group:null,wall:null,status:'all'};
   if(b.dataset.view==='attention'){fg[1]=true;renderFg();}
   page=1;renderAll();
  });
@@ -313,17 +315,22 @@ function renderRail(){
  }).join('');
  $$('[data-region]').forEach(b=>b.onclick=()=>b.classList.toggle('open'));
  $$('[data-store]').forEach(b=>b.onclick=()=>{
-  flt={...flt,store:flt.store===b.dataset.store?null:b.dataset.store,region:null,group:null,view:'all'};
+  flt={...flt,store:flt.store===b.dataset.store?null:b.dataset.store,region:null,group:null,wall:null,view:'all'};
   page=1;renderAll();
  });
  /* 그룹 */
  $('#group-list').innerHTML=GROUPS.map(g=>`<button class="rail-item ${flt.group===g.id?'on':''}" data-group="${g.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" stroke-linecap="round"/></svg>${g.name}<span class="cnt num">${g.ids.length}</span></button>`).join('')
-  +WALLS.map(w=>`<button class="rail-item" data-wallnav="${w.id}">${IC.wall}${w.name}<span class="cnt">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span></button>`).join('');
+  +WALLS.map(w=>`<div class="rail-item rail-wall ${flt.wall===w.id?'on':''}">
+    <button class="rail-wall-hit" data-wallnav="${w.id}">${IC.wall}<span class="rail-wall-nm">${w.name}</span></button>
+    <span class="rail-wall-right"><span class="cnt num">${w.cells.length}</span><button class="icon-btn rail-more" data-wallnavmenu="${w.id}" aria-label="비디오월 관리">${IC.dots}</button></span></div>`).join('');
  $$('[data-group]').forEach(b=>b.onclick=()=>{
-  flt={...flt,group:flt.group===b.dataset.group?null:b.dataset.group,store:null,region:null,view:'all'};
+  flt={...flt,group:flt.group===b.dataset.group?null:b.dataset.group,store:null,region:null,wall:null,view:'all'};
   page=1;renderAll();
  });
- $$('[data-wallnav]').forEach(b=>b.onclick=()=>{const w=WALLS.find(x=>x.id===b.dataset.wallnav);flt={...flt,store:w.store,region:null,group:null,view:'all'};page=1;renderAll();openWallDrawer(w);});
+ /* 비디오월 선택 = 구성 화면 목록업(일반 매장 선택과 동일). 비디오월 정보 Drawer는 더 이상 자동으로 열지 않는다. */
+ $$('[data-wallnav]').forEach(b=>b.onclick=()=>{const id=b.dataset.wallnav;flt={...flt,wall:flt.wall===id?null:id,store:null,region:null,group:null,view:'all',status:'all'};page=1;renderAll();});
+ /* 비디오월 자체 관리(이름 수정·레이아웃·일정·해제)는 그룹명 옆 ⋯ 에서 */
+ $$('[data-wallnavmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();const w=WALLS.find(x=>x.id===b.dataset.wallnavmenu);wallManageMenu(b,w);});
 }
 attachSearchUX($('#store-search'),()=>renderRail());
 function renderScope(){
@@ -333,10 +340,11 @@ function renderScope(){
  else if(flt.store)label=`매장: <b>${storeName(flt.store)}</b>`;
  else if(flt.region)label=`지역: <b>${REGIONS.find(r=>r.id===flt.region).name}</b>`;
  else if(flt.group)label=`그룹: <b>${GROUPS.find(g=>g.id===flt.group).name}</b>`;
+ else if(flt.wall){const w=WALLS.find(x=>x.id===flt.wall);if(w)label=`비디오월: <b>${w.name}</b> · 화면 ${w.cells.length}개`;}
  else if(flt.view!=='all')label=`뷰: <b>${{attention:'주의 필요',unscheduled:'미편성',nostb:'셋탑 미연결',fav:'즐겨찾기',recent:'최근 관리'}[flt.view]}</b>`;
  chip.hidden=!label;
  if(label){chip.innerHTML=label+`<button class="clear" aria-label="범위 해제">${IC.xs}</button>`;
-  chip.querySelector('.clear').onclick=()=>{flt={...flt,store:null,region:null,group:null,view:'all'};page=1;renderAll();};}
+  chip.querySelector('.clear').onclick=()=>{flt={...flt,store:null,region:null,group:null,wall:null,view:'all'};page=1;renderAll();};}
 }
 /* ═══════════ 렌더: 목록 ═══════════ */
 function wallCardHtml(w){
@@ -356,7 +364,8 @@ function wallCardHtml(w){
 /* 화면이 하나도 없을 때 — 매장이 없어도 '미지정'으로 바로 등록할 수 있으므로 매장 등록을 선행 조건으로 안내하지 않는다 */
 const noPanelEmptyHtml=()=>`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>셋탑박스 화면의 6자리 연결 코드로 첫 화면을 연결해보세요.${STORES.length?'':'<br>매장이 아직 없다면 <b>미지정</b>으로 등록하고 나중에 지정해도 괜찮아요.'}</span><button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button></div>`;
 function renderList(){
- const arr=sorted(collapseWalls(baseFiltered()));
+ /* 비디오월 안을 보는 중(flt.wall)이면 접지 않고 구성 화면을 개별 카드로 노출 */
+ const arr=sorted(flt.wall?baseFiltered():collapseWalls(baseFiltered()));
  const per=view==='grid'?PER.grid:PER.table;
  const pages=Math.max(1,Math.ceil(arr.length/per));
  if(page>pages)page=pages;
@@ -364,7 +373,7 @@ function renderList(){
  if(view==='grid'){
   $('#pgrid').hidden=false;$('#ptable-wrap').hidden=true;
   $('#pgrid').innerHTML=slice.map(p=>{
-   if(p.wall)return wallCardHtml(WALLS.find(w=>w.id===p.wall));
+   if(p.wall&&!flt.wall)return wallCardHtml(WALLS.find(w=>w.id===p.wall));
    return `<div class="pcard ${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
     <div class="thumb" style="background:${thumbBg(p)}">${thumbHtml(p,false)}</div>
     <span class="checkbox check ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span>
@@ -378,7 +387,7 @@ function renderList(){
  }else{
   $('#pgrid').hidden=true;$('#ptable-wrap').hidden=false;
   $('#ptbody').innerHTML=slice.map(p=>{
-   if(p.wall){const w=WALLS.find(w=>w.id===p.wall);const c=contentOf(w.content);
+   if(p.wall&&!flt.wall){const w=WALLS.find(w=>w.id===p.wall);const c=contentOf(w.content);
     return `<tr data-wall="${w.id}"><td></td>
     <td><span class="tstatus" style="color:var(--violet)">${IC.wall}비디오월</span></td>
     <td><span class="mini-thumb" style="background:${c.g}"></span></td>
@@ -420,12 +429,7 @@ function bindListEvents(){
   openWallDrawer(WALLS.find(w=>w.id===el.dataset.wall));
  }));
  $$('[data-pmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();panelManageMenu(b,panelOf(b.dataset.pmenu));});
- $$('[data-wallmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();const w=WALLS.find(x=>x.id===b.dataset.wallmenu);
-  popMenu(b,[
-   {label:'비디오월 관리',icon:IC.wall,onClick:()=>openWallDrawer(w)},
-   {label:'그룹 해제',icon:IC.x,danger:true,onClick:()=>disbandWall(w)},
-  ]);
- });
+ $$('[data-wallmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();wallManageMenu(b,WALLS.find(x=>x.id===b.dataset.wallmenu));});
 }
 /* 벌크 */
 function updateBulk(){
@@ -433,7 +437,7 @@ function updateBulk(){
 }
 $('#bulk-close').onclick=()=>{checked.clear();renderList()};
 $('#th-check')?.addEventListener('click',()=>{
- const arr=sorted(collapseWalls(baseFiltered())).slice((page-1)*PER.table,page*PER.table).filter(p=>!p.wall);
+ const arr=sorted(flt.wall?baseFiltered():collapseWalls(baseFiltered())).slice((page-1)*PER.table,page*PER.table).filter(p=>flt.wall||!p.wall);
  const all=arr.every(p=>checked.has(p.id));
  arr.forEach(p=>all?checked.delete(p.id):checked.add(p.id));
  if(checked.size){fg[2]=true;renderFg();}
@@ -555,20 +559,19 @@ function detachStb(p,after){
   after&&after();
  }});
 }
-/* 화면 삭제 — 편성·송출·셋탑 상태를 요약해 확인받고, 삭제 후 실행 취소 지원.
-   비디오월 소속 화면은 월 구성이 깨지므로 그룹 해제를 먼저 안내(하드 블록) */
+/* 화면 삭제 — 개별 화면 생명주기 액션. 비디오월 소속 화면도 일반 화면과 동일하게 삭제 가능하며,
+   삭제 시 해당 화면 셀만 비디오월 구성에서 빠진다(비디오월 자체는 유지). 실행 취소로 복원. */
 function deletePanel(p,after){
- if(p.wall){
-  const w=WALLS.find(x=>x.id===p.wall);
-  toast(`'${w?w.name:'비디오월'}'에 속한 화면이에요. 먼저 비디오월 그룹을 해제해주세요.`,{err:true,action:'비디오월 관리',onAction:()=>{if(w)openWallDrawer(w)}});
-  return;
- }
  confirmDialog({
   title:`'${p.name}' 화면을 삭제할까요?`,
   desc:`화면을 삭제하면 현재 화면의 송출이 즉시 중단됩니다.<br>화면 정보, 일정, 태그 설정도 함께 삭제되며 복구할 수 없습니다`,
   confirmText:'삭제',danger:true,
   onConfirm:()=>{
    const idx=PANELS.indexOf(p);
+   /* 비디오월 구성에서 이 화면 셀만 제거(월은 유지). 실행 취소를 위해 원본 셀/타일을 보관 */
+   const w=p.wall?WALLS.find(x=>x.id===p.wall):null;
+   const wCells=w?[...w.cells]:null, wTiles=w&&w.tiles?[...w.tiles]:null, wCm=w&&w.cm?{...w.cm}:null;
+   if(w){w.cells=w.cells.filter(id=>id!==p.id);if(w.tiles)w.tiles=w.tiles.filter(t=>t.p!==p.id);if(w.cm)delete w.cm[p.id];}
    PANELS.splice(idx,1);
    checked.delete(p.id);
    RECENT=RECENT.filter(id=>id!==p.id);
@@ -577,6 +580,7 @@ function deletePanel(p,after){
    renderAll();
    toast(`'${p.name}' 화면을 삭제했어요.`,{action:'실행 취소',onAction:()=>{
     PANELS.splice(Math.min(idx,PANELS.length),0,p);
+    if(w){w.cells=wCells;if(wTiles)w.tiles=wTiles;if(wCm)w.cm=wCm;}
     renderAll();toast(`'${p.name}' 화면을 복구했어요.`);
    }});
    after&&after();
@@ -947,6 +951,35 @@ function disbandWall(w){
  confirmDialog({title:`'${w.name}' 그룹 해제`,desc:'해제하면 각 화면이 다시 개별 화면로 돌아가요. 화면과 일정 데이터는 삭제되지 않아요.',confirmText:'해제',danger:true,onConfirm:()=>{
   w.cells.forEach(id=>panelOf(id).wall=null);
   WALLS.splice(WALLS.indexOf(w),1);renderRail();renderList();wallsRefresh();toast(`'${w.name}'을 해제했어요.`,{action:'실행 취소'});
+ }});
+}
+/* 비디오월 자체 관리 메뉴 — 레일 ⋯ · 비디오월 카드 ⋯ 공용. 개별 화면 관리(panelManageMenu)와 분리.
+   레이아웃·구성 변경은 여기(비디오월 단위)에서만, 개별 화면 관리 메뉴에는 넣지 않는다. */
+function wallManageMenu(anchor,w){
+ popMenu(anchor,[
+  {title:'비디오월'},
+  {label:'비디오월 정보',icon:IC.wall,onClick:()=>openWallDrawer(w)},
+  {label:'비디오월 이름 수정',icon:IC.edit,onClick:()=>renameWall(w)},
+  {label:'레이아웃 편집',icon:IC.monitor,onClick:()=>openWallWizard(w)},
+  {label:'일정 편집',icon:IC.cal,onClick:()=>openWallWizard(w,{schedOnly:true})},
+  'sep',
+  {title:'위험 작업'},
+  {label:'비디오월 해제',icon:IC.x,danger:true,onClick:()=>disbandWall(w)},
+ ],{cls:'mp-manage'});
+}
+function renameWall(w){
+ openModal(`
+  <div class="modal-head"><div><h2>비디오월 이름 수정</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>비디오월 이름 <span class="req">*</span></label><input class="input" id="wr-name" maxlength="40" placeholder="예) 잠실 미디어월"></div></div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="wr-ok">저장</button></div>`,
+ {width:'420px',onMount:ov=>{
+  const inp=ov.querySelector('#wr-name');inp.value=w.name;inp.focus();inp.select();
+  inp.addEventListener('input',()=>inp.classList.remove('error'));
+  const save=()=>{const v=inp.value.trim();if(!v){inp.classList.add('error');inp.focus();toast('비디오월 이름을 입력해주세요.',{err:true});return}
+   if(v===w.name){ov.remove();return}
+   w.name=v;ov.remove();renderRail();renderList();wallsRefresh();toast(`비디오월 이름을 '${v}'로 변경했어요.`);};
+  ov.querySelector('#wr-ok').onclick=save;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
  }});
 }
 /* ═══════════ 일정 관리 ═══════════ */
@@ -1743,7 +1776,7 @@ $('#fg-toggle').onclick=()=>$('#flow-guide').classList.toggle('min');
 $$('.fg-step').forEach(s=>s.onclick=()=>{
  const n=+s.dataset.fg;
  const backToMain=()=>{$('#screen-schedule').hidden=true;$('#app').style.display='flex';};
- if(n===1){backToMain();flt={...flt,view:'attention',store:null,region:null,group:null,status:'all'};fg[1]=true;page=1;renderAll();renderFg();toast('주의가 필요한 화면만 모아서 보여드려요.');}
+ if(n===1){backToMain();flt={...flt,view:'attention',store:null,region:null,group:null,wall:null,status:'all'};fg[1]=true;page=1;renderAll();renderFg();toast('주의가 필요한 화면만 모아서 보여드려요.');}
  else if(n===2){backToMain();const arr=sorted(collapseWalls(baseFiltered())).filter(p=>!p.wall).slice(0,5);arr.forEach(p=>checked.add(p.id));fg[2]=true;renderList();renderFg();toast('상단 목록에서 체크박스로 화면을 선택해보세요. 5개를 미리 선택했어요.');}
  else if(n===3){openSchedule(PANELS.length?(checked.size?[...checked]:[masterP.id]):[]);}
  else if(n===4){backToMain();openWallWizard();}
@@ -1798,8 +1831,8 @@ attachSearchUX($('#scp-q'),q=>{scpQ=q;renderScPanels()});
 $$('#cal-mode [data-calm]').forEach(b=>b.onclick=()=>{calMode=b.dataset.calm;renderCal()});
 /* 대시보드 드릴다운용 API */
 window.__setPanelFilter=kind=>{
- if(kind==='attention')flt={...flt,view:'attention',status:'all',store:null,region:null,group:null};
- else flt={...flt,status:kind,view:'all',store:null,region:null,group:null};
+ if(kind==='attention')flt={...flt,view:'attention',status:'all',store:null,region:null,group:null,wall:null};
+ else flt={...flt,status:kind,view:'all',store:null,region:null,group:null,wall:null};
  page=1;renderAll();
 };
 window.__openPanelScheduleMonth=()=>{openSchedule(PANELS.length?[masterP.id]:[]);calMode='month';renderCal();};
@@ -2053,13 +2086,13 @@ window.__unassignStores=list=>{
  for(let i=STORES.length-1;i>=0;i--)if(tid.has(STORES[i].id))STORES.splice(i,1);
  REGIONS.forEach(r=>{r.storeIds=r.storeIds.filter(id=>!tid.has(id))});
  /* 보고 있던 범위가 사라졌다면 화면이 이동한 '미지정' 범위로 옮겨 준다 */
- if(flt.store&&tid.has(flt.store))flt={...flt,store:NO_STORE_KEY,region:null};
+ if(flt.store&&tid.has(flt.store))flt={...flt,store:NO_STORE_KEY,region:null,wall:null};
  try{renderAll();wallsRefresh();}catch(e){}
  return n;
 };
 /* 미지정 화면 모아보기 — 매장 삭제 토스트의 [미지정 화면 보기]에서 호출 */
 window.__showUnassignedPanels=()=>{
- flt={...flt,store:NO_STORE_KEY,region:null,group:null,view:'all',status:'all'};
+ flt={...flt,store:NO_STORE_KEY,region:null,group:null,wall:null,view:'all',status:'all'};
  page=1;try{renderAll();}catch(e){}
 };
 })();
