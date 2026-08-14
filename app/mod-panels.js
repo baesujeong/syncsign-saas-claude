@@ -1527,7 +1527,7 @@ function openScopePicker(state){
   <div class="scope-searchbar"><div class="search-wrap">${IC.search}<input class="input input-sm" id="scope-q" placeholder="매장 · 지역 · 그룹 검색"></div></div>
   <div class="scope-scroll" id="scope-scroll"></div>
   <div class="scope-foot" id="scope-foot"></div>`,
- {width:'1080px',cls:'scope-modal',onMount:o=>{
+ {width:'720px',cls:'scope-modal',onMount:o=>{
   const scroll=o.querySelector('#scope-scroll'),foot=o.querySelector('#scope-foot');
   const qin=o.querySelector('#scope-q');
   qin.oninput=()=>{q=qin.value.trim().toLowerCase();drawBody();};
