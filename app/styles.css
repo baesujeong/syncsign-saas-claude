@@ -1429,6 +1429,13 @@ table.grid tr.checked td{background:var(--blue-50)}
 /* 화면 관리 모듈 테이블만 넓은 고정폭 + 셀 줄바꿈 금지(열이 많고 데이터가 김) — 다른 페이지(사용자·매장) 테이블은 자연 줄바꿈 */
 #mod-panels table.grid{min-width:1080px}
 #mod-panels table.grid td{white-space:nowrap}
+/* 화면 관리 리스트 뷰 — 즐겨찾기를 화면명 앞 고정 영역으로 분리(모든 행 동일 x축, 이름 시작 위치 고정) */
+/* 화면 관리 리스트 — 즐겨찾기를 화면명과 완전히 분리된 독립 컬럼(고정폭 th/td)으로 배치 */
+.fav-th,.fav-cell{width:56px;text-align:center}
+.fav-col{width:28px;height:28px;padding:0;border:0;background:none;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#DFDFDF;cursor:pointer;transition:background .12s,color .12s;vertical-align:middle}
+.fav-col:hover{background:var(--sunken)}
+.fav-col.on{color:#FFC041}
+.fav-col svg{width:18px;height:18px;display:block}
 .mini-thumb{width:56px;height:32px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;position:relative;overflow:hidden;flex:none}
 .tstatus{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
 

@@ -180,6 +180,8 @@ const IC={
  dots:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>',
  star:'<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 3 2.7 5.6 6.3.9-4.5 4.3 1 6.2-5.5-3-5.5 3 1-6.2L3 9.5l6.3-.9L12 3Z"/></svg>',
  starO:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.3.9-4.5 4.3 1 6.2-5.5-3-5.5 3 1-6.2L3 9.5l6.3-.9L12 3Z"/></svg>',
+ /* 리스트 뷰 즐겨찾기용 별(단색). 활성/비활성은 .fav-col / .fav-col.on 의 color로 구분 */
+ likeStar:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.9996 17.0662L8.12169 19.3593C7.95037 19.4664 7.77127 19.5122 7.58439 19.4969C7.3975 19.4816 7.23397 19.4205 7.09381 19.3135C6.95364 19.2065 6.84462 19.0729 6.76675 18.9126C6.68888 18.7524 6.67331 18.5727 6.72003 18.3733L7.74791 14.0393L4.31385 11.1271C4.15812 10.9895 4.06093 10.8326 4.02231 10.6565C3.98369 10.4804 3.99521 10.3086 4.05688 10.141C4.11856 9.9735 4.212 9.83591 4.33722 9.72829C4.46243 9.62066 4.63374 9.55187 4.85116 9.52191L9.38318 9.13208L11.1352 5.05035C11.2131 4.8669 11.334 4.72931 11.4978 4.63759C11.6616 4.54586 11.8289 4.5 11.9996 4.5C12.1703 4.5 12.3376 4.54586 12.5014 4.63759C12.6652 4.72931 12.7861 4.8669 12.864 5.05035L14.616 9.13208L19.148 9.52191C19.3661 9.55248 19.5374 9.62128 19.662 9.72829C19.7866 9.8353 19.88 9.97289 19.9423 10.141C20.0046 10.3092 20.0164 10.4813 19.9778 10.6575C19.9392 10.8336 19.8417 10.9901 19.6853 11.1271L16.2513 14.0393L17.2792 18.3733C17.3259 18.572 17.3103 18.7518 17.2325 18.9126C17.1546 19.0735 17.0456 19.2071 16.9054 19.3135C16.7652 19.4199 16.6017 19.481 16.4148 19.4969C16.2279 19.5128 16.0488 19.467 15.8775 19.3593L11.9996 17.0662Z"/></svg>',
  link:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
  cal:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18" stroke-linecap="round"/></svg>',
  monitor:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8" stroke-linecap="round"/></svg>',
@@ -427,6 +429,7 @@ function renderList(){
     return `<tr data-wall="${w.id}"><td></td>
     <td><span class="tstatus" style="color:var(--violet)">${IC.wall}비디오월</span></td>
     <td><span class="mini-thumb" style="background:${c.g}"></span></td>
+    <td class="fav-cell"></td>
     <td><b>${w.name}</b> <span class="badge badge-violet">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span></td>
     <td>${storeHtml(w.store)}</td><td>${wallContentLabel(w)}</td><td class="num">화면 ${w.cells.length}개</td><td>—</td>
     <td><button class="icon-btn" data-wallmenu="${w.id}">${IC.dots}</button></td></tr>`}
@@ -435,13 +438,14 @@ function renderList(){
     <td><span class="checkbox ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span></td>
     <td><span class="tstatus" style="color:${st[1]}"><span class="dot ${!p.stb||p.status!=='on'?'off':'on'}"></span>${st[0]}</span></td>
     <td><span class="mini-thumb" style="background:${thumbBg(p)}"></span></td>
-    <td><b>${p.name}</b>${p.fav?' <span style="color:#D9A93E">★</span>':''}</td>
+    <td class="fav-cell"><button class="fav-col ${p.fav?'on':''}" data-fav="${p.id}" aria-label="즐겨찾기" aria-pressed="${p.fav?'true':'false'}">${IC.likeStar}</button></td>
+    <td><b>${p.name}</b></td>
     <td>${storeHtml(p.store)}</td>
     <td>${p.unsch||p.status==='off'?'<span style="color:var(--text-3)">—</span>':contentOf(p.content).name}</td>
     <td>${p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="num">${p.schedN}건</span>`}</td>
     <td class="num" style="color:var(--text-3)">${ago(p.lastMin)}</td>
     <td><button class="icon-btn" data-pmenu="${p.id}">${IC.dots}</button></td></tr>`;
-  }).join('')||`<tr><td colspan="9">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
+  }).join('')||`<tr><td colspan="10">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  }
  $('#pagi').innerHTML=`<span class="num">${arr.length?fmt((page-1)*per+1)+'–'+fmt(Math.min(page*per,arr.length)):0} / ${fmt(arr.length)}개</span>
   <button class="icon-btn" id="pg-prev" ${page<=1?'disabled':''} aria-label="이전 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
