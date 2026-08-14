@@ -1,6 +1,6 @@
-# HANDOFF — 화면 관리 · 편성일정 (백엔드 인수인계)
+# HANDOFF — 화면 관리 · 편성일정 · 대시보드 (백엔드 인수인계)
 
-이 문서는 **화면 관리(`#panels`)** 와 **편성일정(`#schedule`)** 두 화면을 백엔드 개발자가 인수받아
+이 문서는 **화면 관리(`#panels`)** · **편성일정(`#schedule`)** · **대시보드(`#dash`)** 화면을 백엔드 개발자가 인수받아
 실제 API를 연결할 때 필요한 최소 정보를 정리한 것입니다.
 프론트 프레임워크 없이 동작하는 **정적 프로토타입**이며, 실제 API 명세는 아직 없습니다(임의 생성 금지).
 서버 연동이 필요한 지점은 코드에 `TODO(API)` 로 표시되어 있습니다.
@@ -136,3 +136,40 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 - **문서화 주석 추가:** 파일 상단 모듈 헤더 + 데이터 모델 typedef + `[MOCK DATA]`/`TODO(API)` 마커.
 - **UI·레이아웃·인터랙션·화면 흐름·기능 무변경.** 비디오월/타 화면 코드 무수정.
 - 변경 파일: **`app/mod-panels.js`** (+ 신규 `HANDOFF.md`). `prototype.html`·`styles.css`·`mod-products.js`는 **변경 없음**.
+
+## 13. 대시보드 (`#dash`)
+
+### 파일/함수
+- `app/prototype.html` — `renderDashboard(root)`(메인), `renderEmptyDashboard(root, ps)`(신규 가입 Empty State), `DASH_SCHED`(Mock).
+- 데이터 소스는 **`app/mod-panels.js`** 의 `window.__panelStats()` · `__panelList(n)` · `__regionStats()`.
+- 진입: LNB `대시보드` → `showPage('dash')` → `renderDashboard`.
+
+### 데이터 구조 & 출처 (모두 서버 연동 대상)
+| 데이터 | 출처(현재 Mock) | 형태 | 소비 위치 |
+|---|---|---|---|
+| `ps` | `__panelStats()` | `{ stores, panels, on, off, attention[] }` (+미사용 unsch/nostb/walls) | 상단 현황 카드 4종 · 확인 필요 화면 카드 |
+| `myPanels` | `__panelList(5)` | `[{ id, name, store, status, stb, ago, content }]` | 화면 실시간 상태 카드(개인·소상공인) |
+| `regions` | `__regionStats()` | `[{ name, stores, panels, on, issue }]` | 전체 매장 운영 현황 카드(프랜차이즈·기업) |
+| `DASH_SCHED` | 하드코딩(prototype.html) | `[{ t, c, tg, st:'done'|'next'|'fail', why, g, e }]` | 오늘 일정/배포 현황 카드 |
+| `plan` | 하드코딩(renderDashboard 내) | `{ name, lic, licMax, licPct, stor, storMax, storPct }` | 구독 플랜 카드 |
+
+### API 연동이 필요한 위치 (`TODO(API)`)
+- `__panelStats`/`__panelList`/`__regionStats` (mod-panels.js) → 서버 집계 조회(GET). **반환 필드 형태 유지 권장**(렌더가 그대로 소비).
+- `DASH_SCHED` → "오늘 편성/송출 결과" 조회(GET). `data-retrysched` 재시도 → 재송출 API.
+- `plan`(구독/과금) → 구독 정보 조회(GET).
+
+### 주요 상태값 / 사용자 액션
+- 상태값: `session.userType`(`'single'`|`'multi'` — **데모용 대시보드 유형 토글**, 실제 권한/플랜과 연동 시 제거 가능), `DASH_SCHED`(로컬).
+- 액션: 현황 카드 클릭 → `showPage('panels')` + `__setPanelFilter(...)`(필터 적용) / 매장·플랜 카드 → 해당 페이지 이동 / `편성일정 열기` → `openPanelScheduleInline()` / 실패 일정 `재시도` → `DASH_SCHED[i].st='next'`(로컬).
+
+### 제한사항
+- 실시간 표기(`방금 동기화`)는 데모 문구(폴링/소켓 미구현).
+- 신규 가입 Empty State(`renderEmptyDashboard`)는 매장/화면/콘텐츠/재생목록 **개수만** 서버에서 받아 진행률 표시.
+- `session.userType` 토글은 프로토타입 데모 — 실제로는 사용자/조직 속성으로 대체.
+
+## 14. 대시보드 작업 변경 내용 (문서화 pass)
+
+- **죽은 코드 없음**(대시보드는 이미 정리된 상태) — 코드 삭제 없이 **주석/문서만 추가**.
+- 추가: `prototype.html` 대시보드 영역에 `[MOCK DATA]`·`TODO(API)`·데이터 소스 주석, `mod-panels.js` `__panelStats/__panelList/__regionStats`에 `TODO(API)` 주석, 본 §13/§14.
+- **UI·레이아웃·인터랙션·기능 무변경.** 대시보드 외 다른 화면/공용 로직 무수정(주석만 추가).
+- 변경 파일: `app/prototype.html`(대시보드 영역 주석), `app/mod-panels.js`(데이터 소스 주석), `HANDOFF.md`.

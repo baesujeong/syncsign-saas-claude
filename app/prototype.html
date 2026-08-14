@@ -2774,6 +2774,9 @@ document.getElementById('lnb-profile').addEventListener('click',()=>{if(!$('#app
 <script>
 /* ═══════════ 대시보드 ═══════════ */
 /* 오늘 일정/배포 현황 공용 데이터 — st: done(배포 완료) | next(배포 예정) | fail(배포 실패) */
+/* [MOCK DATA · 대시보드] 오늘 배포/편성 현황 데모 행. 각 행 = { t:시각, c:콘텐츠명, tg:대상 요약,
+   st:'done'|'next'|'fail', why:실패사유, g:썸네일 그라디언트, e:이모지 }.
+   TODO(API): 실제로는 "오늘 편성/송출 결과" 조회(GET)로 대체. 재시도(retrysched)는 재송출 API. */
 let DASH_SCHED=[
  {t:'08:00',c:'브랜드 무비',tg:'제주공항점 · 3개 화면',st:'fail',why:'화면 오프라인 (2대)',g:'linear-gradient(135deg,#15243F,#0B1220)',e:'🎬'},
  {t:'09:00',c:'싱크사인 메인메뉴',tg:'전 매장 카운터 · 214개 화면',st:'done',g:'linear-gradient(135deg,#2A2F36,#15181D)',e:'☕'},
@@ -2817,6 +2820,13 @@ function renderEmptyDashboard(root,ps){
   else if(k==='cast')openPanelScheduleInline(); /* 편성 및 화면 송출 → 편성 일정 페이지로 이동 */
  });
 }
+/* ═══════════ 대시보드(#dash) ═══════════
+   데이터 출처(모두 서버 연동 대상):
+   · ps  = window.__panelStats()  (mod-panels.js) — { stores, panels, on, off, attention[] } 화면/매장 집계
+   · myPanels = window.__panelList(5) (mod-panels.js) — 내 화면 실시간 상태 목록
+   · regions  = window.__regionStats() (mod-panels.js) — 지역별 매장 운영 현황
+   · DASH_SCHED = 오늘 배포/편성 현황(위 [MOCK DATA]) · plan = 구독 플랜 수치(하드코딩)
+   TODO(API): 위 4개 데이터 소스를 실제 조회(GET)로 대체. 사용자 유형(session.userType)은 데모 토글. */
 function renderDashboard(root){
  const ps=window.__panelStats?window.__panelStats():{stores:502,panels:3247,on:3102,off:87,err:34,unsch:24,walls:1,attention:[],recent:[]};
  /* 사용성 테스트(빈 환경): 대시보드는 항상 진입 가능하며, 데이터가 채워질 때까지 온보딩 Empty State를 보여줌 */
@@ -2852,7 +2862,8 @@ function renderDashboard(root){
  const cardStores=`<div class="dash-card"><h3>전체 매장 운영 현황 <span class="lnk" data-go="stores">매장 관리 열기</span></h3>
    ${regions.map(r=>`<div class="dash-row" data-go="stores"><span class="tx"><b>${r.name} <span style="font-weight:500;color:var(--text-3)">· 매장 ${fmt(r.stores)}</span></b><span>화면 ${fmt(r.panels)}대 중 ${fmt(r.on)}대 정상 운영</span></span>${r.issue?`<span class="badge badge-amber">주의 ${fmt(r.issue)}</span>`:'<span class="badge badge-green">정상</span>'}</div>`).join('')||emptyRow('아직 등록된 매장이 없어요')}
   </div>`;
- /* 현재 구독 플랜 — 두 유형 공통(레퍼런스), 수치는 유형별 */
+ /* 현재 구독 플랜 — 두 유형 공통(레퍼런스), 수치는 유형별. [MOCK DATA] 하드코딩.
+    TODO(API): 플랜명·라이선스·스토리지 사용량은 구독/과금 조회로 대체. */
  const plan=multi?{name:'Enterprise 플랜',lic:fmt(ps.panels),licMax:'5,000',licPct:Math.min(100,Math.round(ps.panels/5000*100)),stor:'182GB',storMax:'500GB',storPct:36}
                  :{name:'Pro 플랜',lic:'8',licMax:'10',licPct:80,stor:'18.2GB',storMax:'50GB',storPct:36};
  const cardPlan=`<div class="dash-card"><h3>현재 구독 플랜 <span class="lnk" data-go="mypage">플랜 관리</span></h3>

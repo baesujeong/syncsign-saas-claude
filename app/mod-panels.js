@@ -2296,6 +2296,9 @@ function renderWallsPage(root){
  }
 }
 window.__renderWallsPage=renderWallsPage;
+/* ── 대시보드(#dash) 데이터 소스 — 현재는 인메모리 PANELS/STORES/REGIONS 집계.
+   TODO(API): __panelStats/__panelList/__regionStats 를 각각 서버 집계 조회(GET)로 대체.
+   반환 형태(필드)는 대시보드 렌더(prototype.html renderDashboard)가 그대로 소비하므로 유지 권장. ── */
 window.__panelStats=()=>{
  const on=PANELS.filter(p=>p.status==='on'&&!p.unsch).length;
  const off=PANELS.filter(p=>p.status==='off'&&p.stb).length;
