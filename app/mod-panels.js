@@ -459,6 +459,8 @@ function renderList(){
 }
 function bindListEvents(){
  $$('[data-check]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.check;checked.has(id)?checked.delete(id):checked.add(id);if(checked.size){fg[2]=true;renderFg();}renderList();});
+ /* 즐겨찾기 토글(그리드·리스트 공용). stopPropagation으로 row 클릭(drawer 열기)과 분리.
+    TODO(API): 현재 로컬 p.fav만 변경 — 서버에 사용자별 즐겨찾기 저장(PUT/DELETE) 연동 필요 */
  $$('[data-fav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const p=panelOf(b.dataset.fav);p.fav=!p.fav;renderRail();renderList();toast(p.fav?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요');});
  $$('[data-panel]').forEach(el=>el.addEventListener('click',e=>{
   if(e.target.closest('[data-check],[data-fav],[data-pmenu]'))return;

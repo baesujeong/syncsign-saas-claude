@@ -73,6 +73,7 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 | `detachStb` | 셋탑 연결 해제 | PUT/DELETE |
 | `openStorePicker`(매장 지정) | 화면-매장 지정 | PUT |
 | `openGroupModal` | 그룹 생성 | POST |
+| `bindListEvents`의 `[data-fav]` 토글 | 화면 즐겨찾기 | 사용자별 즐겨찾기 저장 PUT/DELETE (현재 로컬 `p.fav`만 변경) |
 
 > **API Response 소비처(어느 렌더 함수가 쓰는지):**
 > `PANELS/STORES/GROUPS` → `renderList`·`renderRail`·`renderScope`·`openPanelDrawer` (화면 관리) 및
