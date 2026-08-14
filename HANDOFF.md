@@ -1,4 +1,4 @@
-# HANDOFF — 화면 관리 · 편성일정 · 대시보드 (백엔드 인수인계)
+# HANDOFF — 화면 관리 · 편성일정 · 대시보드 · 매장 관리 (백엔드 인수인계)
 
 이 문서는 **화면 관리(`#panels`)** · **편성일정(`#schedule`)** · **대시보드(`#dash`)** 화면을 백엔드 개발자가 인수받아
 실제 API를 연결할 때 필요한 최소 정보를 정리한 것입니다.
@@ -173,3 +173,41 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 - 추가: `prototype.html` 대시보드 영역에 `[MOCK DATA]`·`TODO(API)`·데이터 소스 주석, `mod-panels.js` `__panelStats/__panelList/__regionStats`에 `TODO(API)` 주석, 본 §13/§14.
 - **UI·레이아웃·인터랙션·기능 무변경.** 대시보드 외 다른 화면/공용 로직 무수정(주석만 추가).
 - 변경 파일: `app/prototype.html`(대시보드 영역 주석), `app/mod-panels.js`(데이터 소스 주석), `HANDOFF.md`.
+
+## 15. 매장 관리 (`#stores`)
+
+### 파일/함수 (모두 `app/prototype.html`)
+- 렌더: `renderStoresPage(root)`(메인) → `drawStores()`(목록 tbody) · `drawStoresBulk()`(다중 선택 액션 바) · `callBadge(s)`(번호호출 배지).
+- 필터: `storesFiltered()` — `sFlt`(검색어/지역/번호호출) 기준. 검색 UX는 공용 `attachSearchUX`.
+- 액션: `openStoreModal()`(등록) · `openStoreDrawer(s, tab)`(상세/수정, `info`·`call` 탭) · `drawCallTab()`·`openCallRequestModal()`(번호호출 설정) · `deleteStores(list)`(삭제).
+- 진입: LNB `매장 관리` → `showPage('stores')` → `renderStoresPage`.
+
+### 데이터 구조 & 출처 (모두 서버 연동 대상)
+| 데이터 | 출처(현재 Mock) | 형태 | 소비 위치 |
+|---|---|---|---|
+| `STORES` | 하드코딩(prototype.html) | `[{ id, name, region, addr, mgrs:[userId], panels:{on,total,last}, call:{on,method,requested?} }]` | 매장 목록·필터·상세 |
+| `mgrs` | `USERS`(사용자 관리) 참조 | `userId[]` | 담당자 셀·담당자 지정 |
+| `panels` | (현재 매장 데이터에 내장) | `{ on, total, last }` | 화면 수·마지막 연결 셀 — **실제로는 화면 데이터에서 집계** |
+| `call.method` | 하드코딩 | `'manual'|'pos'|'kds'` | 번호호출 배지·설정 탭 |
+
+### API 연동이 필요한 위치 (`TODO(API)`)
+- 목록 조회 → 매장 GET(`STORES` 대체). `panels` 집계는 화면 데이터에서 산출.
+- `openStoreModal` 저장 → 매장 등록 POST. (현재 `window.__syncStore`로 화면 모듈에 로컬 동기화)
+- `deleteStores` → 매장 삭제 DELETE. 연결 화면 '미지정' 전환은 서버 처리(현재 `window.__unassignStores`).
+- 담당자 지정(드로어/일괄) → 매장-담당자 PUT.
+- 번호호출 설정(`drawCallTab`/`openCallRequestModal`) → 매장 번호호출 설정 PUT + 연동 API.
+
+### 주요 상태값 / 사용자 액션
+- 상태값: `sFlt`(검색/지역/번호호출 필터, 로컬) · `sChecked`(선택 매장 id Set, 로컬).
+- 액션: 행 클릭 → `openStoreDrawer`(상세) / `등록` → `openStoreModal` / 체크 후 `담당자 지정`·`삭제` → 일괄 처리 / 번호호출 토글·요청 → 설정 탭.
+
+### 제한사항 / 크로스모듈 주의
+- **매장 데이터가 두 벌** 존재: `prototype.html`의 `STORES`(매장 관리 UI) ↔ `mod-panels.js`의 `STORES`(화면/편성/대시보드용). 등록·삭제 시 `window.__syncStore`/`__unassignStores`로 수동 동기화 → **서버 연동 시 단일 소스로 통합**하면 이 동기화는 불필요(§11 공용 코드 주의 참고).
+- 매장 삭제 정책(2026-08): 매장 삭제 시 연결 화면은 삭제하지 않고 `'미지정'`으로 남김(편성 일정·셋탑 연결·태그 유지). `__unassignStores`가 처리.
+
+## 16. 매장 관리 작업 변경 내용 (문서화 pass)
+
+- **죽은 코드 없음**(매장 관리는 이미 정리된 상태 — 모든 함수 참조됨) — 코드 삭제 없이 **주석/문서만 추가**.
+- 추가: `prototype.html` 매장 관리 영역에 `[MOCK DATA]`·`TODO(API)`·섹션 주석(STORES·renderStoresPage·openStoreModal·deleteStores), `mod-panels.js` `__syncStore`/`__unassignStores`에 `TODO(API)` 주석, 본 §15/§16.
+- **UI·레이아웃·인터랙션·기능 무변경.** 매장 관리 외 다른 화면/공용 로직 무수정(주석만 추가).
+- 변경 파일: `app/prototype.html`(매장 관리 영역 주석), `app/mod-panels.js`(`__syncStore`/`__unassignStores` 주석), `HANDOFF.md`.

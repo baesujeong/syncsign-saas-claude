@@ -2238,3 +2238,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .scope-foot-dup{font-size:11.5px;color:var(--text-3);display:inline-flex;align-items:center;gap:4px;font-weight:500;word-break:keep-all}
 .scope-foot-dup svg{width:12px;height:12px;flex:none}
 .scope-foot-act .btn{min-width:92px}
+
+/* 매장 상세 Drawer — 탭이 .drawer-body 안에 있는 레이아웃(전체폭 탭 drawer용 전역 .dtabs/.drawer-body
+   오버라이드가 헤더 세로 여백을 키우던 것을 기존 시안 간격으로 원복). 스코프 클래스라 다른 drawer 영향 없음 */
+.drawer-body.sd-body{padding-top:0}
+.sd-body .dtabs{margin:6px 0 16px;padding:0;overflow:visible}
+.sd-body .dtabs button{padding:8px 12px}

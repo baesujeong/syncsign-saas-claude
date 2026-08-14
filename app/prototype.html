@@ -317,6 +317,10 @@ let ROLE_PERMS={
  viewer:{library:1,playlists:1,templates:1,products:1,panels:1,walls:1,schedule:1,stores:0,users:0},
 };
 const PERM_LV=['없음','보기','편집'];
+/* [MOCK DATA · 매장 관리] 매장 목록. 각 매장 = { id, name, region, addr, mgrs:[userId],
+   panels:{on,total,last}, call:{on,method:'manual'|'pos'|'kds',requested?} }.
+   ※ mod-panels.js의 STORES(화면/편성/대시보드용)와는 별개이며, 등록/삭제 시 window.__syncStore /
+     __unassignStores 로 동기화한다. TODO(API): 매장 목록은 서버 조회(GET)로 대체. panels 집계는 실제 화면 데이터에서 산출. */
 let STORES=[
  {id:'s1',name:'강남대로점',region:'서울',addr:'서울 강남구 강남대로 396',mgrs:['u3'],panels:{on:6,total:7,last:'방금 전'},call:{on:true,method:'manual'}},
  {id:'s2',name:'인천공항 1터미널',region:'인천',addr:'인천 중구 공항로 272',mgrs:['u4'],panels:{on:12,total:12,last:'방금 전'},call:{on:true,method:'pos'}},
@@ -1049,6 +1053,11 @@ const storesFiltered=()=>STORES.filter(s=>
  (sFlt.region==='all'||s.region===sFlt.region)&&
  (sFlt.call==='all'||(sFlt.call==='on'?s.call.on:!s.call.on))&&
  (!sFlt.q||s.name.includes(sFlt.q)||s.addr.includes(sFlt.q)));
+/* ═══════════ 매장 관리(#stores) ═══════════
+   데이터: STORES(위 [MOCK DATA]). 상태: sFlt(검색/지역/번호호출 필터), sChecked(선택).
+   API 연동 지점(TODO(API)): 목록 GET · 등록 POST(openStoreModal) · 삭제 DELETE(deleteStores)
+   · 담당자 지정 PUT(drawStoresBulk/드로어) · 번호호출 설정 PUT(drawCallTab/openCallRequestModal).
+   담당자(mgrs)는 USERS(사용자 관리) 참조, 지역/주소는 locFields 공용 컴포넌트 사용. */
 function renderStoresPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.stores.t')}</h1><span class="desc">${t('page.stores.d')}</span>
@@ -1137,6 +1146,7 @@ function deleteStores(list){
  const nameHtml=list.length===1?`<b>${list[0].name}</b>`:`<b>매장 ${list.length}개</b>`;
  /* 완료 토스트 — 단일은 매장 이름, 다중은 개수로 결과를 알린다 (화면 유무와 무관하게 동일) */
  const doneMsg=list.length===1?`'${list[0].name}' 매장을 삭제했어요.`:`${list.length}개 매장을 삭제했어요.`;
+ /* TODO(API): 매장 삭제 DELETE. __unassignStores로 연결 화면을 '미지정' 처리(서버 연동 시 서버가 처리) */
  const finish=()=>{STORES=STORES.filter(s=>!ids.has(s.id));ids.forEach(id=>sChecked.delete(id));drawStores();toast(doneMsg);};
  if(panelSum===0){
   confirmDialog({title:`${askLabel} 삭제할까요?`,desc:'삭제한 매장은 복구할 수 없어요. 매장 정보와 담당자 설정이 모두 삭제돼요.',confirmText:'삭제',danger:true,
@@ -1168,6 +1178,7 @@ function openStoreModal(){
    if(!nm){ov.querySelector('#st-nm').classList.add('error');return}
    const mg=ov.querySelector('#st-mg').value;
    const loc=readLocFields(ov,'st',ov.querySelector('#st-ad').value.trim());
+   /* TODO(API): 매장 등록 POST → 응답으로 로컬 STORES 반영. __syncStore로 화면/편성/대시보드 데이터에 동기화 */
    STORES.unshift({id:'s'+Date.now(),name:nm,region:loc.region,addr:loc.addr,mgrs:mg?[mg]:[],panels:{on:0,total:0,last:'—'},call:{on:false,method:null}});
    window.__syncStore&&window.__syncStore(STORES[0]);
    obDone.store=true;renderObBanner();
@@ -1182,11 +1193,12 @@ function openStoreDrawer(s,tab='info'){
   wrap.querySelector('.drawer').innerHTML=`
    <div class="drawer-head"><div><h2>${s.name}</h2><span class="sub">${s.region}${s.addr?' · '+s.addr:''}</span></div>
     <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
-   <div class="drawer-body">
+   <div class="drawer-body sd-body">
     <div class="dtabs">${[['info','정보'],['panels','화면 '+s.panels.total],['call','번호호출']].map(([k,l])=>`<button class="${t===k?'on':''}" data-st="${k}">${l}</button>`).join('')}</div>
     <div id="st-body"></div>
    </div>
-   ${t==='call'?`<div class="drawer-foot"><span style="flex:1"></span><button class="btn" id="st-cancel">취소</button><button class="btn btn-primary" id="st-reg">등록</button></div>`:''}`;
+   ${t==='call'?`<div class="drawer-foot"><span style="flex:1"></span><button class="btn" id="st-cancel">취소</button><button class="btn btn-primary" id="st-reg">등록</button></div>`
+    :t==='panels'?`<div class="drawer-foot"><button class="btn" id="pn-goto" style="flex:1">화면 관리에서 모니터링</button></div>`:''}`;
   wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
   wrap.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>draw(b.dataset.st));
   const body=wrap.querySelector('#st-body');
@@ -1206,10 +1218,9 @@ function openStoreDrawer(s,tab='info'){
    body.innerHTML=(s.panels.total?Array.from({length:s.panels.total},(_,i)=>{
     const on=i<s.panels.on;
     return `<div class="panel-mini"><span class="dot ${on?'on':'off'}"></span><span class="nm">${names[i%9]}</span><span class="tm">${on?'온라인 · 방금 전':'오프라인 · 4시간 전'}</span></div>`;
-   }).join(''):`<div class="empty" style="padding:32px"><b>연결된 화면이 없어요</b><span>셋탑박스의 6자리 코드로 연결해요.</span></div>`)
-   +`<div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="pn-add" style="flex:1">${IC.plus}화면 연결</button><button class="btn btn-tonal" id="pn-goto" style="flex:1">화면 관리에서 모니터링</button></div>`;
-   body.querySelector('#pn-add').onclick=()=>{s.panels.total++;s.panels.on++;s.panels.last='방금 전';obDone.panel=true;renderObBanner();draw('panels');drawStores();toast('화면이 연결됐어요.')};
-   body.querySelector('#pn-goto').onclick=()=>{wrap.remove();showPage('panels')};
+   }).join(''):`<div class="empty" style="padding:32px"><b>연결된 화면이 없어요</b><span>셋탑박스의 6자리 코드로 연결해요.</span></div>`);
+   /* [화면 관리에서 모니터링]은 하단 drawer-foot에 고정 렌더 */
+   wrap.querySelector('#pn-goto').onclick=()=>{wrap.remove();showPage('panels')};
   }else{
    drawCallTab(body,s,wrap);
    wrap.querySelector('#st-cancel').onclick=()=>wrap.remove();
