@@ -97,10 +97,14 @@ WALLS[0].cm={[WALLS[0].cells[0]]:'T:t1',[WALLS[0].cells[1]]:'L:c2',[WALLS[0].cel
 const wallTileContent=(w,t)=>(w.cm&&t.p&&w.cm[t.p]&&contentOf(w.cm[t.p]))||contentOf(w.content);
 const wallContentLabel=w=>{const n=w.cm?Object.values(w.cm).filter(Boolean).length:0;return n?`화면별 콘텐츠 ${n}개`:contentOf(w.content).name;};
 let GROUPS=[
- {id:'g1',name:'프랜차이즈 A',ids:PANELS.filter(p=>rndSeed(p.id)<0.027).map(p=>p.id)},
+ {id:'g1',name:'프랜차이즈 A',ids:['강남GT타워점','성수연무장점','여의도IFC점','명동중앙점','신촌점'].map(storeByName).filter(Boolean).flatMap(s=>panelsOf(s.id).map(p=>p.id))},
  {id:'g2',name:'신규 오픈 매장',ids:panelsOf(storeByName('마곡나루점').id).concat(panelsOf(storeByName('광교엘리웨이점').id)).map(p=>p.id)},
 ];
 function rndSeed(str){let h=0;for(const c of str)h=(h*31+c.charCodeAt(0))%997;return h/997}
+/* 데모: 매장 미지정 화면 — '매장을 삭제해도 화면은 미지정으로 남는다' 정책을 보여주기 위한 시드 */
+['옥외 배너 A','옥외 배너 B','팝업스토어 입구','팝업스토어 무대','행사장 A','행사장 B','로비 사이니지','주차타워 안내','푸드트럭 존','시즌 부스 1','시즌 부스 2','창고형 매장 대기'].forEach((nm,i)=>{
+ PANELS.push({id:'p'+(pSeq++),store:null,name:nm,status:i%5?'on':'off',content:i%5?pick(CONTENTS).id:null,unsch:i%5===0,schedN:i%5?1+(i%3):0,lastMin:i%5?2:180,tags:[TAGS[i%TAGS.length]||'입구'],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.5',stb:{sn:'STB-U'+String(i).padStart(4,'0')}});
+});
 /* 신규 가입 직후 환경(#tour): 매장·화면·그룹·비디오월·태그 모두 비움 */
 if(window.EMPTY_MODE){REGIONS.length=0;STORES.length=0;PANELS.length=0;GROUPS.length=0;WALLS.length=0;TAGS.length=0;}
 let RECENT=[];
@@ -157,11 +161,13 @@ const IC={
  plus:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
  search:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
  folder:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>',
+ copy:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667A2.667 2.667 0 0 1 9.667 7h8.666A2.667 2.667 0 0 1 21 9.667v8.666A2.667 2.667 0 0 1 18.333 21H9.667A2.667 2.667 0 0 1 7 18.333V9.667Z"/><path d="M4.012 16.737A2.005 2.005 0 0 1 3 15V5c0-1.1.9-2 2-2h10c.75 0 1.158.385 1.5 1"/></svg>',
  upload:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0 5 5m-5-5L7 9"/><path d="M3 15v3a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-3"/></svg>',
  edit:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
  stb:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0V7ZM12 16v5"/></svg>',
  unlink:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 7H7a5 5 0 0 0 0 10h2.5M14.5 17H17a5 5 0 0 0 0-10h-2.5"/><path d="M4 4l16 16"/></svg>',
- trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>',
+ trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H14M4 6H20M18.071 6L17.066 20.071C17.048 20.3232 16.9352 20.5592 16.7502 20.7316C16.5653 20.904 16.3218 20.9999 16.069 21H7.93C7.67716 20.9999 7.43374 20.904 7.24876 20.7316C7.06378 20.5592 6.95095 20.3232 6.933 20.071L5.929 6"/></svg>',
+ liveoff:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.20913 2.20912C2.34308 2.07522 2.52472 2 2.71412 2C2.90353 2 3.08517 2.07522 3.21912 2.20912L21.7903 20.7797C21.9244 20.9136 21.9999 21.0953 22 21.2848C22.0001 21.4744 21.925 21.6562 21.791 21.7903C21.6571 21.9244 21.4754 21.9999 21.2858 22C21.0963 22.0001 20.9145 21.925 20.7803 21.791L12.1604 13.1715C12.1081 13.1819 12.0542 13.1872 11.999 13.1872C11.6201 13.1872 11.2568 13.0367 10.9889 12.7688C10.721 12.5009 10.5705 12.1375 10.5705 11.7587C10.5714 11.7025 10.5762 11.6482 10.5847 11.5958L8.93191 9.94304C8.52856 10.6247 8.36328 11.4211 8.46206 12.207C8.56085 12.9929 8.9181 13.7236 9.47761 14.2843C9.66687 14.4874 9.7699 14.756 9.765 15.0335C9.7601 15.3111 9.64766 15.5759 9.45136 15.7722C9.25506 15.9685 8.99022 16.081 8.71265 16.0859C8.43508 16.0907 8.16645 15.9877 7.96335 15.7985C7.00094 14.8358 6.41385 13.5611 6.30778 12.204C6.20172 10.8469 6.58364 9.49651 7.38478 8.39597L5.85337 6.86461C4.65061 8.3745 4.04581 10.2743 4.15437 12.2016C4.26292 14.1289 5.07723 15.9488 6.44194 17.3141C6.63119 17.5172 6.73422 17.7858 6.72933 18.0634C6.72443 18.341 6.61198 18.6058 6.41568 18.8021C6.21938 18.9984 5.95455 19.1108 5.67698 19.1157C5.39941 19.1206 5.13077 19.0176 4.92767 18.8283C3.1618 17.0612 2.12135 14.6972 2.0111 12.2015C1.90085 9.70576 2.72879 7.25917 4.33196 5.34326L2.20913 3.21907C2.07522 3.08513 2 2.90349 2 2.7141C2 2.5247 2.07522 2.34307 2.20913 2.20912ZM17.5547 4.68758C17.7555 4.48694 18.0279 4.37425 18.3118 4.37425C18.5957 4.37425 18.868 4.48694 19.0689 4.68758C20.7016 6.32086 21.7186 8.46889 21.9472 10.7669C22.1759 13.0649 21.602 15.3712 20.3232 17.2941L18.7704 15.7413C19.6527 14.2413 20.012 12.4909 19.792 10.7646C19.572 9.03832 18.785 7.43394 17.5547 6.20322C17.4551 6.10372 17.3761 5.98558 17.3222 5.85555C17.2683 5.72552 17.2406 5.58615 17.2406 5.4454C17.2406 5.30464 17.2683 5.16527 17.3222 5.03524C17.3761 4.90521 17.4551 4.78707 17.5547 4.68758ZM14.5276 7.71886C14.7284 7.51822 15.0008 7.40553 15.2847 7.40553C15.5686 7.40553 15.8409 7.51822 16.0418 7.71886C16.8693 8.54605 17.4229 9.60731 17.6278 10.7592C17.8327 11.9111 17.679 13.0982 17.1875 14.16L15.499 12.4715C15.6172 11.8935 15.5903 11.2952 15.4208 10.73C15.2513 10.1649 14.9444 9.65062 14.5276 9.23307C14.3269 9.03219 14.2142 8.75988 14.2142 8.47597C14.2142 8.19205 14.3269 7.91974 14.5276 7.71886Z"/></svg>',
 };
 function toast(msg,{action,onAction,err}={}){
  const t=document.createElement('div');t.className='toast'+(err?' err':'');
@@ -1061,16 +1067,434 @@ const TODAY=6;
 let calMode='week';
 let scTargets=[],scEdit=null,scWallName=null,scWall=null;
 const hLabel=h=>`${String(Math.floor(h)).padStart(2,'0')}:${h%1?'30':'00'}`;
-function openSchedule(targets,wallName){
- scTargets=targets;scWallName=wallName||null;scEdit=null;
- scWall=wallName?(WALLS.find(w=>w.name===wallName)||WALLS.find(w=>w.cells.includes(targets[0]))||null):null;
- const _pw=document.getElementById('mod-panels');if(_pw)_pw.hidden=false;
- const _mw=document.getElementById('mod-products');if(_mw)_mw.hidden=true;
- $('#app').style.display='none';$('#screen-schedule').hidden=false;
- renderTargets();renderCal();closeSide();renderScPanels();
- fg[2]=fg[2]||targets.length>1;renderFg();
+/* ── 편성 적용 대상: 범위(scope) 기반 선택. 전체/매장/그룹/미지정/개별을 조합하고, 실제 적용은 고유 화면 기준(중복 제거) ── */
+let scScopes=[]; /* {type:'all'|'store'|'group'|'unassigned'|'panel', id} */
+const SCHEDULABLE=p=>!!p&&!p.wall; /* 비디오월 소속 화면은 개별 편성 대상에서 제외(월 단위 편성) */
+function scopeIds(sc){
+ if(sc.type==='all')return PANELS.filter(SCHEDULABLE).map(p=>p.id);
+ if(sc.type==='store')return panelsOf(sc.id).filter(SCHEDULABLE).map(p=>p.id);
+ if(sc.type==='group'){const g=GROUPS.find(g=>g.id===sc.id);return g?g.ids.filter(id=>SCHEDULABLE(panelOf(id))):[];}
+ if(sc.type==='unassigned')return PANELS.filter(p=>SCHEDULABLE(p)&&!p.store).map(p=>p.id);
+ if(sc.type==='panel')return SCHEDULABLE(panelOf(sc.id))?[sc.id]:[];
+ return [];
 }
-$('#sc-back').onclick=()=>{$('#screen-schedule').hidden=true;$('#app').style.display='flex';renderAll();window.__afterPanelBack&&window.__afterPanelBack();};
+const scopeCount=sc=>scopeIds(sc).length;
+function scopeLabel(sc){
+ if(sc.type==='all')return '전체 화면';
+ if(sc.type==='store')return `${storeName(sc.id)} 전체`;
+ if(sc.type==='group')return GROUPS.find(g=>g.id===sc.id)?.name||'그룹';
+ if(sc.type==='unassigned')return '미지정 화면';
+ if(sc.type==='panel'){const p=panelOf(sc.id);return p?`${storeName(p.store)} · ${p.name}`:'화면';}
+ return '';
+}
+const scopeKey=sc=>sc.type+':'+(sc.id||'');
+function scUnique(){const s=new Set();scScopes.forEach(sc=>scopeIds(sc).forEach(id=>s.add(id)));return [...s];}
+/* scScopes → 실제 적용 화면(고유) 동기화. 비디오월(scWall) 편성은 별도 흐름이라 건드리지 않는다. */
+function syncTargets(){if(!scWall)scTargets=scUnique();}
+function addScope(sc){
+ if(scWall)return;
+ if(sc.type==='all'){scScopes=[sc];syncTargets();return;} /* 전체 화면은 배타 — 다른 범위와 중복 선택하지 않음 */
+ scScopes=scScopes.filter(s=>s.type!=='all');
+ if(!scScopes.some(s=>scopeKey(s)===scopeKey(sc))&&scopeCount(sc))scScopes.push(sc);
+ syncTargets();
+}
+function removeScope(key){scScopes=scScopes.filter(s=>scopeKey(s)!==key);syncTargets();}
+/* 화면별 기존 편성(데모): 화면 id 시드로 결정적 생성. 미편성 화면은 빈 배열 → Empty 상태 구분. */
+function panelSched(pid){
+ const p=panelOf(pid); if(!p||p.unsch||!p.stb)return [];
+ if(p._psched)return p._psched;
+ const rng=seededRng(pid+'|psched'), conts=CONTENTS.map(c=>c.id), blocks=[];
+ [0,1,2,3,4,5,6].forEach(d=>{
+  if(rng()<0.35)return; /* 그 요일 편성 없음 */
+  let cur=8+Math.floor(rng()*3);
+  const nb=1+Math.floor(rng()*2);
+  for(let i=0;i<nb;i++){const dur=2+Math.floor(rng()*3);if(cur+dur>22)break;blocks.push({day:d,s:cur,e:cur+dur,content:conts[Math.floor(rng()*conts.length)]});cur+=dur+Math.floor(rng()*2);}
+ });
+ return p._psched=blocks;
+}
+/* ═══════════ 편성일정 = 편성표(프로그램) 중심 구조 ═══════════
+   하나의 편성표 안에 여러 일정(blocks)을 배치하고, 편성표 단위로 송출 대상(scopes)을 지정한다.
+   · 송출 대상은 개별 일정이 아니라 편성표 전체에 적용된다.
+   · 대상이 없어도 편성표는 저장 가능(‘송출 대상 없음’) → 이후 대상 지정 후 송출.
+   메인(#page-root) = 편성표 목록 · 생성/편집(#screen-schedule) = 캘린더 중심 편집기 */
+let PROGRAMS=[], progSeq=0, progQ='', progFilter='all', progSort='recent', progView='list', progChecked=new Set();
+let curProg=null, pcalMode='week', pcalSelGid=null;
+const PROG_NOW='2026-08-13';
+const REPEAT_N=['월','화','수','목','금','토','일'];
+function mkBlock(o){return Object.assign({id:'pb'+(schedSeq++),gid:'g'+(schedSeq),day:0,s:9,e:11,content:null,type:'normal',sd:PROG_NOW,ed:null},o);}
+function mkProgram(o){return Object.assign({id:'prog'+(progSeq++),name:'',active:true,broadcast:false,scopes:[],blocks:[]},o);}
+function progUnique(p){const set=new Set();(p.scopes||[]).forEach(sc=>scopeIds(sc).forEach(id=>set.add(id)));return[...set];}
+const progItemCount=p=>new Set((p.blocks||[]).map(b=>b.gid)).size;
+function progPeriod(p){if(!p.blocks||!p.blocks.length)return null;let sd=null,ed=null,open=false;
+ p.blocks.forEach(b=>{if(!sd||b.sd<sd)sd=b.sd;if(!b.ed)open=true;else if(!ed||b.ed>ed)ed=b.ed;});return{sd,ed:open?null:ed};}
+/* 상태 = 송출하기(broadcast) 실행 여부 + 편성 기간
+   · 미송출(저장만) → '-'  · 시작일 전 → 예약  · 기간 종료 → 종료  · 그 외 → 송출 중 */
+function progStatus(p){
+ if(!p.broadcast)return{k:'draft',l:'-',c:''};
+ const pr=progPeriod(p);
+ if(pr){if(pr.ed&&pr.ed<PROG_NOW)return{k:'ended',l:'종료',c:'badge-gray'};if(pr.sd>PROG_NOW)return{k:'scheduled',l:'예약',c:'badge-green'};}
+ return{k:'live',l:'송출 중',c:'badge-blue'};
+}
+function progScopeSummary(p){
+ const scs=p.scopes||[];if(!scs.length)return null;
+ const one=sc=>sc.type==='all'?'전체':sc.type==='panel'?(panelOf(sc.id)?.name||'화면'):sc.type==='unassigned'?`미지정 · ${fmt(scopeCount(sc))}개`:`${scopeLabel(sc)} · ${fmt(scopeCount(sc))}개`;
+ if(scs.length===1)return one(scs[0]);
+ const f=scs[0],fl=f.type==='panel'?(panelOf(f.id)?.name||'화면'):f.type==='all'?'전체':scopeLabel(f);
+ return `${fl} 외 ${fmt(scs.length-1)}개`;
+}
+const progPeriodLabel=p=>{const pr=progPeriod(p);return pr?`${fmtDot(pr.sd)} ~ ${pr.ed?fmtDot(pr.ed):'무기한'}`:'일정 없음';};
+function repeatLabel(days){const d=[...(days||[])].sort((a,b)=>a-b);if(!d.length)return'반복 없음';if(d.length===7)return'매일';if(d.join()==='0,1,2,3,4')return'평일';if(d.join()==='5,6')return'주말';return d.map(i=>REPEAT_N[i]).join('·');}
+/* 데모 편성표 시드 — 상태가 골고루 나오도록 (편성표마다 여러 일정 포함) */
+function seedPrograms(){
+ if(PROGRAMS.length||window.EMPTY_MODE)return;
+ const ALL=[0,1,2,3,4,5,6],WD=[0,1,2,3,4],WE=[5,6];
+ const bl=(content,s,e,days,sd,ed,type)=>{const gid='g'+(schedSeq++);return days.map(d=>mkBlock({content,s,e,day:d,gid,type:type||'normal',sd:sd||PROG_NOW,ed:ed||null}));};
+ const gan=storeByName('강남대로점')?.id,jam=storeByName('잠실롯데월드점')?.id,hong=storeByName('홍대입구점')?.id;
+ const st=id=>id?[{type:'store',id}]:[{type:'all'}];
+ const std=(sd,ed)=>[...bl('c2',8,11.5,ALL,sd,ed),...bl('c1',11.5,14,ALL,sd,ed),...bl('c3',14,18,ALL,sd,ed),...bl('c5',18,21,WD,sd,ed),...bl('c6',18,22,WE,sd,ed)];
+ const P=(name,scopes,blocks,extra)=>mkProgram(Object.assign({name,scopes,blocks},extra||{}));
+ PROGRAMS=[
+  P('여름 시즌 프로모션',st(gan),std('2026-08-13','2026-08-31'),{broadcast:true}),          /* 송출 중 */
+  P('신제품 런칭 캠페인',[{type:'all'}],std('2026-08-13',null),{broadcast:true}),           /* 송출 중 (무기한) */
+  P('주말 브런치 편성',jam?[{type:'store',id:jam}]:st(null),[...bl('c2',9,12,ALL,'2026-08-13',null),...bl('c6',12,18,WE,'2026-08-13',null)],{broadcast:true}), /* 송출 중 (무기한) */
+  P('신규 오픈 편성',hong?[{type:'store',id:hong}]:st(null),std('2026-08-20','2026-09-30'),{broadcast:true}), /* 예약 (시작일 미도래) */
+  P('심야 절전 안내',[],[...bl('c4',22,23.5,ALL,'2026-08-13',null)]),                        /* - (미송출 · 대상 미지정) */
+  P('봄 시즌 기획전',st(gan),std('2026-03-01','2026-05-31'),{broadcast:true}),               /* 종료 */
+  P('상시 브랜드 루프',st(gan),std('2026-01-01',null)),                                      /* - (미송출 · 대상은 지정됨) */
+ ];
+}
+/* ── 진입 라우팅 ──
+   화면 관리에서 특정 화면을 대상으로 진입하면 그 화면을 송출 대상으로 하는 새 편성표 편집을 시작,
+   그 외(대시보드·LNB)는 편성표 목록으로 이동 */
+function openSchedule(targets,wallName){
+ seedPrograms();
+ if(targets&&targets.length&&!wallName){
+  const scopes=targets.filter(id=>SCHEDULABLE(panelOf(id))).map(id=>({type:'panel',id}));
+  openProgramEditor(mkProgram({scopes}),true);
+ }else if(typeof showPage==='function'){showPage('schedule');}
+}
+/* ═══════════ 편성표 목록 (앱 셸 페이지) ═══════════ */
+const PROG_FILTERS=[['all','전체'],['live','송출 중'],['scheduled','예약'],['ended','종료'],['draft','미송출']];
+const IC_GRID='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+const IC_LIST='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>';
+function renderSchedulePage(root){
+ seedPrograms();progChecked.clear();
+ root.innerHTML=`
+  <header class="page-head"><h1>편성일정</h1><span class="desc">여러 일정을 담은 편성표를 만들어 원하는 화면에 송출하세요.</span>
+   <div class="actions"><button class="btn btn-primary" id="prog-new" ${canEdit&&!canEdit('schedule')?'disabled':''}>${IC.plus}일정 등록</button></div></header>
+  <div class="rail-layout" style="padding-top:10px">
+   <div class="rail-main std">
+    <div class="prod-toolbar">
+     <div class="search-wrap">${IC.search}<input class="input input-sm" id="prog-q" placeholder="일정명, 콘텐츠, 적용 대상 검색" value="${(progQ||'').replace(/"/g,'&quot;')}"></div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap" id="prog-filters"></div>
+     <label class="sel-all"><span class="checkbox" id="prog-all" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span>전체 선택</label>
+     <div class="spacer"></div>
+     <select class="select select-sm" id="prog-sort" style="width:132px" aria-label="정렬"><option value="recent">최근 등록순</option><option value="name">이름순</option><option value="items">일정 수순</option></select>
+    </div>
+    <div class="bulk-bar" id="prog-bulk" hidden></div>
+    <div class="content-scroll"><div id="prog-listwrap"></div></div>
+   </div>
+  </div>`;
+ attachSearchUX(root.querySelector('#prog-q'),q=>{progQ=q;drawProgFilters();drawProgList();});
+ root.querySelector('#prog-sort').value=progSort;
+ root.querySelector('#prog-sort').onchange=e=>{progSort=e.target.value;drawProgList();};
+ root.querySelector('#prog-new').onclick=()=>openProgramEditor(mkProgram({}),true);
+ const selAll=()=>{const arr=filteredPrograms();const all=arr.length&&arr.every(p=>progChecked.has(p.id));arr.forEach(p=>all?progChecked.delete(p.id):progChecked.add(p.id));drawProgList();drawSelAll();};
+ const _pa=root.querySelector('#prog-all');
+ _pa.addEventListener('click',e=>{e.stopPropagation();selAll();});
+ _pa.closest('.sel-all').addEventListener('click',e=>{if(!e.target.closest('#prog-all'))selAll();});
+ _pa.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selAll();}});
+ drawProgFilters();drawProgList();
+}
+function drawSelAll(){const el=document.getElementById('prog-all');if(!el)return;const arr=filteredPrograms();el.classList.toggle('on',arr.length>0&&arr.every(p=>progChecked.has(p.id)));}
+function drawProgFilters(){
+ const el=document.getElementById('prog-filters');if(!el)return;
+ const counts={};PROGRAMS.forEach(p=>{const k=progStatus(p).k;counts[k]=(counts[k]||0)+1;});
+ el.innerHTML=PROG_FILTERS.map(([k,l])=>{const n=k==='all'?PROGRAMS.length:(counts[k]||0);return `<button class="chip ${progFilter===k?'on':''}" data-pf="${k}">${l}<span class="cnt num">${fmt(n)}</span></button>`}).join('');
+ el.querySelectorAll('[data-pf]').forEach(b=>b.onclick=()=>{progFilter=b.dataset.pf;drawProgFilters();drawProgList();drawSelAll();});
+}
+function progSearchHit(p){if(!progQ.trim())return true;const q=progQ.trim().toLowerCase();
+ const cn=(p.blocks||[]).map(b=>{const c=b.content?contentOf(b.content):null;return c?c.name:'';}).join(' ').toLowerCase();
+ return (p.name||'').toLowerCase().includes(q)||cn.includes(q)||(progScopeSummary(p)||'').toLowerCase().includes(q);}
+function filteredPrograms(){
+ let arr=PROGRAMS.filter(p=>(progFilter==='all'||progStatus(p).k===progFilter)&&progSearchHit(p));
+ if(progSort==='name')arr=arr.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
+ else if(progSort==='items')arr=arr.slice().sort((a,b)=>progItemCount(b)-progItemCount(a));
+ return arr;
+}
+function drawProgList(){
+ const wrap=document.getElementById('prog-listwrap');if(!wrap)return;
+ const arr=filteredPrograms();
+ if(!PROGRAMS.length){wrap.innerHTML=`<div class="prog-empty"><span class="prog-empty-ic">${IC.cal}</span><b>아직 만든 편성표가 없어요</b><span class="prog-empty-sub">여러 일정을 담은 편성표를 만들어 화면에 송출해보세요.<br>대상 없이 먼저 저장해 두고, 나중에 송출 대상을 지정할 수 있어요.</span><button class="btn btn-primary" id="prog-empty-new">${IC.plus}일정 등록</button></div>`;
+  wrap.querySelector('#prog-empty-new').onclick=()=>openProgramEditor(mkProgram({}),true);updateProgBulk();return;}
+ if(!arr.length){wrap.innerHTML=`<div class="prog-empty"><b>조건에 맞는 편성표가 없어요</b><span class="prog-empty-sub">검색어나 필터를 바꿔보세요.</span></div>`;updateProgBulk();return;}
+ wrap.innerHTML=progTableHtml(arr);
+ wrap.querySelectorAll('[data-prow]').forEach(r=>r.addEventListener('click',e=>{if(e.target.closest('[data-pcheck],[data-pmenu],[data-tgt]'))return;openProgramEditor(PROGRAMS.find(p=>p.id===r.dataset.prow));}));
+ wrap.querySelectorAll('[data-pcheck]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.pcheck;progChecked.has(id)?progChecked.delete(id):progChecked.add(id);drawProgList();});
+ wrap.querySelectorAll('[data-pmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();progRowMenu(b,PROGRAMS.find(p=>p.id===b.dataset.pmenu));});
+ wrap.querySelectorAll('[data-tgt]').forEach(b=>b.onclick=e=>{e.stopPropagation();openTargetDrawer(PROGRAMS.find(p=>p.id===b.dataset.tgt));});
+ const _hall=wrap.querySelector('#prog-head-all');if(_hall)_hall.onclick=e=>{e.stopPropagation();const all=arr.length&&arr.every(p=>progChecked.has(p.id));arr.forEach(p=>all?progChecked.delete(p.id):progChecked.add(p.id));drawProgList();};
+ updateProgBulk();drawSelAll();
+}
+/* 송출 대상 셀 — 대상이 있으면 밑줄 링크(클릭 시 Drawer로 실제 적용 화면 조회), 없으면 정적 표시 */
+const progTgtCell=p=>{const s=progScopeSummary(p);return s?`<button class="prog-tgt-btn" data-tgt="${p.id}" title="적용 화면 보기"><span class="prog-tgt-tx">${s}</span></button>`:'<span class="prog-tgt-none">미지정</span>';};
+/* 송출 대상 상세 Drawer — 편성표명 + 적용 화면 수 + 범위 칩(초과 시 +N개 대상) + 실제 적용 화면 목록(검색)
+   + [송출 대상 변경](스코프 피커). 화면 정보 Drawer와 동일 컴포넌트 재사용. */
+function openTargetDrawer(prog){
+ const wrap=document.createElement('div');wrap.className='drawer-wrap';
+ let q='';
+ const build=()=>{
+  const ids=progUnique(prog);
+  const rows=ids.map(id=>{const p=panelOf(id);return {id,name:p?p.name:'화면',store:p?p.store:null,status:p?p.status:'off'};})
+   .sort((a,b)=>{const sa=storeName(a.store),sb=storeName(b.store);return sa===sb?a.name.localeCompare(b.name,'ko'):sa.localeCompare(sb,'ko');});
+  const scs=prog.scopes||[], MAXCHIP=2, CAP=400, showSearch=true;
+  const chipHtml=scs.length?scs.slice(0,MAXCHIP).map(sc=>{const range=sc.type!=='panel';return `<span class="chip on tgt-scope-chip">${range?IC.folder:''}${scopeLabel(sc)}${range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}개`:''}</span>`}).join('')
+    +(scs.length>MAXCHIP?`<span class="chip tgt-scope-more">+ ${fmt(scs.length-MAXCHIP)}개 대상</span>`:'')
+   :`<span class="tgt-scope-none">송출 대상 없음</span>`;
+  wrap.innerHTML=`<div class="drawer tgt-drawer" role="dialog" aria-modal="true">
+    <div class="drawer-head"><div><h2>${prog.name||'편성표'}</h2></div><button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button></div>
+    <div class="tgt-top">
+     <div class="tgt-count">적용 화면 <b class="num">${fmt(ids.length)}개</b></div>
+     <div class="tgt-scope-chips">${chipHtml}</div>
+     ${showSearch?`<div class="search-wrap tgt-search">${IC.search}<input class="input input-sm" id="tgt-q" placeholder="화면명, 매장명 검색" value="${q.replace(/"/g,'&quot;')}"></div>`:''}
+    </div>
+    <div class="drawer-body"><div class="tgt-list" id="tgt-list"></div><div class="tgt-more" id="tgt-more"></div></div>
+    <div class="drawer-foot"><button class="btn btn-primary" id="tgt-change" style="flex:1">${IC.monitor}송출 대상 변경</button></div>
+   </div>`;
+  const listEl=wrap.querySelector('#tgt-list'),moreEl=wrap.querySelector('#tgt-more');
+  const renderList=()=>{
+   const ql=q.trim().toLowerCase();
+   const filtered=ql?rows.filter(r=>r.name.toLowerCase().includes(ql)||storeName(r.store).toLowerCase().includes(ql)):rows;
+   const shown=filtered.slice(0,CAP);
+   listEl.innerHTML=shown.length?shown.map(r=>`<div class="tgt-row"><span class="dot ${r.status==='on'?'on':'off'}"></span><span class="tgt-nm">${r.name}</span><span class="tgt-store">${storeHtml(r.store)}</span></div>`).join('')
+    :`<div class="empty" style="padding:44px 20px"><b>${ql?'검색 결과가 없어요':'적용 화면이 없어요'}</b>${ql?'<span>화면명이나 매장명을 바꿔보세요</span>':'<span>[송출 대상 변경]으로 화면을 지정해보세요</span>'}</div>`;
+   moreEl.innerHTML=filtered.length>CAP?`${fmt(CAP)}개까지 표시했어요 · 검색으로 좁혀보세요 <span class="num">(총 ${fmt(filtered.length)}개)</span>`:'';
+  };
+  renderList();
+  wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
+  const qi=wrap.querySelector('#tgt-q'); if(qi)qi.oninput=()=>{q=qi.value;renderList();};
+  wrap.querySelector('#tgt-change').onclick=()=>openScopePicker({scopes:prog.scopes,onChange:()=>{q='';build();if(typeof drawProgList==='function')drawProgList();}});
+ };
+ build();
+ document.body.appendChild(wrap);
+ wrap.addEventListener('mousedown',e=>{if(e.target===wrap)wrap.remove();});
+}
+function progTableHtml(arr){
+ return `<div class="ptable-wrap"><table class="grid prog-table"><thead><tr>
+  <th style="width:40px"><span class="checkbox ${arr.length&&arr.every(p=>progChecked.has(p.id))?'on':''}" id="prog-head-all" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span></th><th>일정명</th><th style="width:230px">기간</th><th style="width:96px">일정 수</th><th style="width:220px">송출 대상</th><th style="width:120px">상태</th><th style="width:44px"></th>
+ </tr></thead><tbody>${arr.map(p=>{const st=progStatus(p),ck=progChecked.has(p.id);
+  return `<tr data-prow="${p.id}" class="${ck?'checked':''}">
+   <td><span class="checkbox ${ck?'on':''}" data-pcheck="${p.id}" role="checkbox" aria-checked="${ck}">${IC.check}</span></td>
+   <td><span class="prog-nm">${p.name||'제목 없는 편성표'}</span></td>
+   <td class="num prog-mut">${progPeriodLabel(p)}</td>
+   <td class="num prog-mut">${fmt(progItemCount(p))}개</td>
+   <td>${progTgtCell(p)}</td>
+   <td>${st.k==='draft'?'<span class="prog-status-dash">-</span>':`<span class="badge ${st.c}">${st.l}</span>`}</td>
+   <td><button class="icon-btn" data-pmenu="${p.id}" aria-label="편성표 관리">${IC.dots}</button></td>
+  </tr>`}).join('')}</tbody></table></div>`;
+}
+function progGridHtml(arr){
+ return `<div class="prog-grid">${arr.map(p=>{const st=progStatus(p),ck=progChecked.has(p.id);
+  return `<div class="prog-card ${ck?'checked':''}" data-prow="${p.id}">
+   <div class="prog-card-top"><span class="checkbox ${ck?'on':''}" data-pcheck="${p.id}" role="checkbox" aria-checked="${ck}">${IC.check}</span><span class="badge ${st.c}">${st.l}</span><button class="icon-btn" data-pmenu="${p.id}" aria-label="편성표 관리">${IC.dots}</button></div>
+   <div class="prog-card-nm">${p.name||'제목 없는 편성표'}</div>
+   <dl class="prog-card-kv"><div><dt>기간</dt><dd class="num">${progPeriodLabel(p)}</dd></div><div><dt>일정 수</dt><dd class="num">${fmt(progItemCount(p))}개</dd></div><div><dt>송출 대상</dt><dd class="prog-card-tgt">${progTgtCell(p)}</dd></div></dl>
+  </div>`}).join('')}</div>`;
+}
+function progRowMenu(anchor,p){
+ popMenu(anchor,[
+  {label:'편집',icon:IC.edit,onClick:()=>openProgramEditor(p)},
+  {label:'복사',icon:IC.copy,onClick:()=>{const n=mkProgram({name:(p.name||'편성표')+' 복사',broadcast:false,scopes:p.scopes.map(x=>({...x})),blocks:p.blocks.map(b=>({...b,id:'pb'+(schedSeq++)}))});PROGRAMS.splice(PROGRAMS.indexOf(p)+1,0,n);drawProgFilters();drawProgList();toast('편성표를 복사했어요. (미송출 상태)');}},
+  ...(p.broadcast?[{label:'송출 중단',icon:IC.liveoff,onClick:()=>{p.broadcast=false;drawProgFilters();drawProgList();toast(`'${p.name||'편성표'}' 송출을 중단했어요.`);}}]:[]),
+  'sep',
+  {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${p.name||'편성표'}'을(를) 삭제할까요?`,desc:'삭제한 편성표는 복구할 수 없어요. 송출 중이면 즉시 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{const i=PROGRAMS.indexOf(p);PROGRAMS.splice(i,1);progChecked.delete(p.id);drawProgFilters();drawProgList();toast('편성표를 삭제했어요.',{action:'실행 취소',onAction:()=>{PROGRAMS.splice(Math.min(i,PROGRAMS.length),0,p);drawProgFilters();drawProgList();}});}})},
+ ],{cls:'mp-manage'});
+}
+function updateProgBulk(){
+ const bar=document.getElementById('prog-bulk');if(!bar)return;const n=progChecked.size;bar.hidden=!n;if(!n)return;
+ const each=fn=>{[...progChecked].forEach(id=>{const p=PROGRAMS.find(x=>x.id===id);if(p)fn(p);});};
+ bar.innerHTML=`<b>${fmt(n)}개</b> 선택됨
+  <button class="btn" id="pb-stop">송출 중단</button>
+  <button class="btn danger-t" id="pb-del">삭제</button><button class="close icon-btn" id="pb-x" aria-label="선택 해제">${IC.x}</button>`;
+ bar.querySelector('#pb-stop').onclick=()=>{const c=[...progChecked].filter(id=>{const p=PROGRAMS.find(x=>x.id===id);return p&&p.broadcast;}).length;each(p=>p.broadcast=false);drawProgFilters();drawProgList();toast(c?`${fmt(c)}개 편성표의 송출을 중단했어요.`:'송출 중인 편성표가 없어요.');};
+ bar.querySelector('#pb-del').onclick=()=>confirmDialog({title:`선택한 편성표 ${fmt(n)}개를 삭제할까요?`,desc:'삭제한 편성표는 복구할 수 없어요. 송출 중이면 즉시 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{const c=n;PROGRAMS=PROGRAMS.filter(p=>!progChecked.has(p.id));progChecked.clear();drawProgFilters();drawProgList();toast(`${fmt(c)}개 편성표를 삭제했어요.`);}});
+ bar.querySelector('#pb-x').onclick=()=>{progChecked.clear();drawProgList();};
+}
+/* ═══════════ 편성표 편집기 (Takeover · 캘린더 중심) ═══════════ */
+function openProgramEditor(prog,isNew){
+ seedPrograms();
+ curProg={...prog,scopes:(prog.scopes||[]).map(x=>({...x})),blocks:(prog.blocks||[]).map(b=>({...b})),_isNew:!!isNew,_orig:isNew?null:prog};
+ pcalMode='week';pcalSelGid=null;
+ const _pw=document.getElementById('mod-panels');if(_pw)_pw.hidden=false;
+ $('#app').hidden=true;$('#screen-schedule').hidden=false;
+ $('#prog-name').value=curProg.name||'';
+ $('#prog-name').classList.remove('flash');
+ renderProgTargets();renderProgCal();
+ const first=curProg.blocks.slice().sort((a,b)=>a.s-b.s)[0];
+ if(first)openBlockSide(blockCfg(first));else renderProgSideEmpty();
+}
+const blockCfg=b=>({edit:b,days:curProg.blocks.filter(x=>x.gid===b.gid).map(x=>x.day),s:b.s,e:b.e,content:b.content,type:b.type,sd:b.sd,ed:b.ed});
+/* 가로 스크롤 칩 영역 공용 — 세로 휠→가로 이동(트랙패드·Shift+휠 포함) + ‹/› 버튼(양끝 Disabled) + 가장자리 페이드.
+   스크롤은 해당 영역 내부에서만 처리해 본문/모달 스크롤과 분리한다. */
+const CHEV_L='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>';
+const CHEV_R='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+function wireChipScroller(scrollEl,prevBtn,nextBtn,wrapEl){
+ if(!scrollEl)return ()=>{};
+ const update=()=>{
+  if(!scrollEl.isConnected){window.removeEventListener('resize',update);return;}
+  const overflow=scrollEl.scrollWidth-scrollEl.clientWidth>2;
+  if(wrapEl)wrapEl.classList.toggle('scrollable',overflow);
+  const atStart=scrollEl.scrollLeft<=1,atEnd=scrollEl.scrollLeft>=scrollEl.scrollWidth-scrollEl.clientWidth-1;
+  if(prevBtn)prevBtn.disabled=!overflow||atStart;
+  if(nextBtn)nextBtn.disabled=!overflow||atEnd;
+  scrollEl.classList.remove('mask-l','mask-r','mask-both');
+  if(overflow)scrollEl.classList.add(!atStart&&!atEnd?'mask-both':!atStart?'mask-l':'mask-r');
+ };
+ const step=()=>Math.max(160,Math.round(scrollEl.clientWidth*0.72));
+ if(prevBtn)prevBtn.onclick=()=>scrollEl.scrollBy({left:-step(),behavior:'smooth'});
+ if(nextBtn)nextBtn.onclick=()=>scrollEl.scrollBy({left:step(),behavior:'smooth'});
+ scrollEl.addEventListener('wheel',e=>{if(scrollEl.scrollWidth-scrollEl.clientWidth<=1)return;const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!d)return;scrollEl.scrollLeft+=d;e.preventDefault();},{passive:false});
+ scrollEl.addEventListener('scroll',update,{passive:true});
+ window.addEventListener('resize',update);
+ update();
+ return update;
+}
+function renderProgTargets(){
+ const el=$('#prog-targets'),scs=curProg.scopes,uniq=progUnique(curProg).length;
+ if(!scs.length){
+  el.innerHTML=`<span class="sc-tg-label">송출 대상</span><button class="btn btn-sm sc-tg-pick" id="prog-pick">${IC.monitor}화면 선택하기</button><span class="sc-tg-hint">${IC.info}이 편성표의 <b>모든 일정</b>이 선택한 화면에 함께 적용돼요.</span>`;
+ }else{
+  const chipsHtml=scs.map(sc=>{const range=sc.type!=='panel';const cnt=range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}개`:'';
+   return `<span class="chip on sc-tg-chip">${range?IC.folder:''}<span class="sc-tg-chip-tx">${scopeLabel(sc)}${cnt}</span><button class="x" data-prm="${scopeKey(sc)}" aria-label="대상에서 제외">${IC.xs}</button></span>`}).join('');
+  el.innerHTML=`<span class="sc-tg-label">송출 대상 <b class="num">${fmt(uniq)}개 화면</b></span>
+   <div class="sc-tg-scroller" id="tg-wrap">
+    <button class="scope-chip-nav prev" id="tg-prev" tabindex="-1" aria-label="이전 대상 보기">${CHEV_L}</button>
+    <div class="sc-tg-chips" id="tg-scroll">${chipsHtml}</div>
+    <button class="scope-chip-nav next" id="tg-next" tabindex="-1" aria-label="다음 대상 보기">${CHEV_R}</button>
+   </div>
+   <button class="btn btn-sm sc-tg-pick" id="prog-pick">${IC.monitor}대상 변경</button>`;
+  wireChipScroller($('#tg-scroll'),$('#tg-prev'),$('#tg-next'),$('#tg-wrap'));
+ }
+ el.querySelector('#prog-pick').onclick=()=>openScopePicker({scopes:curProg.scopes,onChange:renderProgTargets});
+ el.querySelectorAll('[data-prm]').forEach(b=>b.onclick=()=>{curProg.scopes=curProg.scopes.filter(sc=>scopeKey(sc)!==b.dataset.prm);renderProgTargets();});
+}
+function renderProgCal(){
+ const head=$('#cal-head'),gridEl=$('#cal-grid'),blocks=curProg.blocks;
+ $$('#cal-mode [data-calm]').forEach(b=>b.classList.toggle('on',b.dataset.calm===pcalMode));
+ if(pcalMode==='month'){
+  $('#cal-range').textContent='2026년 7월';$('#cal-hint').textContent='날짜를 클릭하면 그 요일에 일정을 추가할 수 있어요';
+  head.style.gridTemplateColumns='repeat(7,1fr)';
+  head.innerHTML=REPEAT_N.map(d=>`<div class="cell" style="border-left:0">${d}</div>`).join('');
+  gridEl.style.display='block';
+  const cells=[];
+  for(let i=0;i<35;i++){let dnum,inM=true;if(i<2){dnum=29+i;inM=false}else if(i<33){dnum=i-1}else{dnum=i-32;inM=false}const wd=i%7,today=i===6;
+   const bs=blocks.filter(b=>b.day===wd).sort((a,b)=>a.s-b.s);
+   cells.push(`<div class="cm-cell ${inM?'':'out'} ${today?'today':''}" data-cmd="${wd}" role="button" tabindex="0"><span class="cm-d num">${dnum}${today?' · 오늘':''}</span>${bs.slice(0,3).map(b=>{const c=contentOf(b.content);return `<span class="cm-chip ${b.type==='urgent'?'urgent':''}" style="background:${calBg(b)}">${hLabel(b.s)} ${c?c.name:''}</span>`}).join('')}${bs.length>3?`<span class="cm-more">+${bs.length-3}건 더</span>`:''}</div>`);}
+  gridEl.innerHTML=`<div class="cal-month">${cells.join('')}</div>`;
+  gridEl.querySelectorAll('[data-cmd]').forEach(cell=>cell.onclick=()=>{pcalMode='week';renderProgCal();openBlockSide({days:[+cell.dataset.cmd],s:9,e:11,content:null,type:'normal'});});
+  return;
+ }
+ $('#cal-range').textContent='2026년 6월 29일 – 7월 5일';$('#cal-hint').textContent='빈 시간을 클릭하면 일정을 등록할 수 있어요';
+ head.style.gridTemplateColumns='';
+ head.innerHTML='<div class="cell"></div>'+DAYS.map((d,i)=>`<div class="cell ${i===TODAY?'today':''}">${d.split(' ')[0]}<span class="d num">${d.split(' ')[1]}</span></div>`).join('');
+ const hours=[];for(let h=7;h<23;h++)hours.push(h);
+ let cols='';
+ for(let d=0;d<7;d++){
+  const bhtml=blocks.filter(b=>b.day===d).map(b=>{const c=contentOf(b.content);
+   return `<div class="cal-block ${b.type==='urgent'?'urgent':''} ${pcalSelGid===b.gid?'sel':''}" data-block="${b.id}" style="top:${(b.s-7)*44+1}px;height:${(b.e-b.s)*44-3}px;background:${calBg(b)}">${c?c.name:'콘텐츠 미지정'}<span class="t num">${hLabel(b.s)} – ${hLabel(b.e)}</span></div>`;}).join('');
+  cols+=`<div class="cal-col" data-day="${d}">${hours.map(h=>`<div class="slot" data-slot="${h}"></div>`).join('')}${bhtml}${d===TODAY?`<div class="now-line" style="left:0;top:${(14.5-7)*44}px"></div>`:''}</div>`;
+ }
+ gridEl.innerHTML=`<div>${hours.map(h=>`<div class="hour num">${hLabel(h)}</div>`).join('')}</div>`+cols;
+ gridEl.querySelectorAll('.slot').forEach(sl=>sl.onclick=()=>{const day=+sl.closest('.cal-col').dataset.day,h=+sl.dataset.slot;openBlockSide({days:[day],s:h,e:Math.min(h+2,23),content:null,type:'normal'});});
+ gridEl.querySelectorAll('[data-block]').forEach(bl=>bl.onclick=e=>{e.stopPropagation();const b=blocks.find(x=>x.id===bl.dataset.block);if(b)openBlockSide(blockCfg(b));});
+ const scroll=$('#cal-scroll');if(scroll&&!scroll._scrolled){scroll.scrollTop=30;scroll._scrolled=true;}
+}
+function renderProgSideEmpty(){
+ pcalSelGid=null;$('#sc-side-foot').hidden=true;$('#sc-side-title').textContent='일정 설정';
+ $('#sc-side-body').innerHTML=`<div class="bs-empty"><span class="bs-empty-ic">${IC.cal}</span><b>일정을 선택하세요</b><span>캘린더에서 일정을 클릭해 설정을 편집하거나,<br>빈 시간을 클릭해 새 일정을 추가하세요.</span></div>`;
+ renderProgCal();
+}
+/* 우측 일정 설정 패널 — 편성표 내부의 개별 일정(block) 편집 */
+function openBlockSide(cfg){
+ $('#sc-side-foot').hidden=false;
+ $('#sc-side-title').textContent=cfg.edit?'일정 수정':'일정 추가';
+ pcalSelGid=cfg.edit?cfg.edit.gid:null;
+ let sel={content:cfg.content,type:cfg.type||'normal',s:cfg.s,e:cfg.e,days:[...cfg.days],sd:cfg.sd||PROG_NOW,ed:cfg.ed||null,noEnd:!cfg.ed};
+ const body=$('#sc-side-body');
+ const times=[];for(let h=7;h<=23;h+=.5)times.push(h);
+ const draw=()=>{
+  const cur=sel.content?contentOf(sel.content):null;
+  const kindL=cur?({lib:'콘텐츠',tpl:'템플릿',pl:'재생목록',wall:'비디오월',gone:'삭제된 자산'})[cur.kind]||'콘텐츠':'';
+  body.innerHTML=`
+   <div class="f-row"><label>콘텐츠 <span class="req">*</span></label>
+    ${cur?`<button class="asset-field" id="bs-content"><span class="cthumb" style="background:${cur.g}">${cur.e||''}</span><span class="asset-tx"><b>${cur.name}</b><span>${kindL}</span></span><span class="asset-chg">변경</span></button>`
+     :`<button class="asset-field empty" id="bs-content"><span class="asset-empty-plus"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="asset-empty-tx">콘텐츠 · 템플릿 · 재생목록 선택</span></button>`}</div>
+   ${periodField(sel.sd,sel.ed,sel.noEnd,'bs')}
+   <div class="f-row"><label>송출 시간</label><div class="time-row"><select class="select select-sm" id="bs-ts">${times.filter(h=>h<23).map(h=>`<option value="${h}" ${h===sel.s?'selected':''}>${hLabel(h)}</option>`).join('')}</select><span class="time-dash">~</span><select class="select select-sm" id="bs-te">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===sel.e?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
+   <div class="f-row"><label>반복 주기</label><div class="day-chips">${REPEAT_N.map((d,i)=>`<button class="day-chip ${sel.days.includes(i)?'on':''}" data-bsd="${i}">${d}</button>`).join('')}</div></div>
+   <div class="f-row"><label>유형 ${IC.info}</label><div class="seg" style="width:100%"><button class="${sel.type==='normal'?'on':''}" data-bsty="normal" style="flex:1">일반</button><button class="${sel.type==='urgent'?'on':''}" data-bsty="urgent" style="flex:1">긴급 (즉시 교체)</button></div>${sel.type==='urgent'?'<p class="bs-note">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>
+   ${cfg.edit?`<button class="btn btn-sm btn-danger-t" id="bs-del" style="width:100%;margin-top:2px">${IC.trash}이 일정 삭제</button>`:''}`;
+  body.querySelector('#bs-content').onclick=()=>openAssetPicker(sel.content,ref=>{sel.content=ref;draw();});
+  bindPeriod(body,'bs',sel,draw);
+  body.querySelector('#bs-ts').onchange=e=>{sel.s=+e.target.value;if(sel.e<=sel.s)sel.e=Math.min(23,sel.s+.5);draw();};
+  body.querySelector('#bs-te').onchange=e=>{sel.e=+e.target.value;draw();};
+  body.querySelectorAll('[data-bsd]').forEach(b=>b.onclick=()=>{const i=+b.dataset.bsd;sel.days=sel.days.includes(i)?sel.days.filter(x=>x!==i):[...sel.days,i];draw();});
+  body.querySelectorAll('[data-bsty]').forEach(b=>b.onclick=()=>{sel.type=b.dataset.bsty;draw();});
+  body.querySelector('#bs-del')?.addEventListener('click',()=>{curProg.blocks=curProg.blocks.filter(b=>b.gid!==cfg.edit.gid);toast('일정을 삭제했어요.');renderProgSideEmpty();});
+ };
+ draw();
+ $('#sc-cancel').onclick=renderProgSideEmpty;
+ $('#sc-apply').textContent=cfg.edit?'저장':'등록';
+ $('#sc-apply').onclick=()=>{
+  if(!sel.content)return toast('편성할 콘텐츠를 선택해주세요.',{err:true});
+  const pErr=periodError(sel);if(pErr)return toast(pErr,{err:true});
+  if(sel.e<=sel.s)return toast('종료 시간이 시작 시간보다 빨라요.',{err:true});
+  if(!sel.days.length)return toast('반복 요일을 선택해주세요.',{err:true});
+  const gid=cfg.edit?cfg.edit.gid:'g'+(schedSeq++);
+  if(cfg.edit)curProg.blocks=curProg.blocks.filter(b=>b.gid!==gid);
+  sel.days.forEach(d=>curProg.blocks.push(mkBlock({content:sel.content,type:sel.type,s:sel.s,e:sel.e,day:d,gid,sd:sel.sd,ed:sel.noEnd?null:sel.ed})));
+  pcalSelGid=gid;
+  toast(cfg.edit?'일정을 수정했어요.':'편성표에 일정을 추가했어요.');
+  renderProgCal();
+  const nb=curProg.blocks.find(b=>b.gid===gid);if(nb)openBlockSide(blockCfg(nb));
+ };
+ renderProgCal();
+}
+function progSnapshot(){const p=curProg;return {id:p.id,name:($('#prog-name').value||'').trim(),active:p.active,broadcast:!!p.broadcast,scopes:p.scopes.map(x=>({...x})),blocks:p.blocks.map(b=>({...b}))};}
+function requireProgName(){const inp=$('#prog-name');inp.focus();inp.select();inp.classList.add('flash');setTimeout(()=>inp.classList.remove('flash'),1400);toast('편성표명을 입력해주세요.',{err:true});}
+function commitProgram(broadcast){
+ const clean=progSnapshot();
+ if(broadcast)clean.broadcast=true; /* 송출하기 실행 → 상태가 송출 중/예약/종료로 전환 */
+ if(curProg._isNew)PROGRAMS.unshift(clean);else{const i=PROGRAMS.indexOf(curProg._orig);if(i>=0)PROGRAMS[i]=clean;else PROGRAMS.unshift(clean);}
+ backToSchedList();
+ toast(broadcast?`${fmt(progUnique(clean).length)}개 화면에 '${clean.name}' 편성표를 송출했어요.`:(curProg._isNew?'편성표를 저장했어요. 송출하기 전까지는 실제로 재생되지 않아요.':'변경사항을 저장했어요.'));
+}
+function saveProgram(broadcast){
+ curProg.name=($('#prog-name').value||'').trim();
+ if(!curProg.name)return requireProgName();
+ if(!curProg.blocks.length)return toast('편성표에 일정을 한 개 이상 추가해주세요. 캘린더의 빈 시간을 클릭해보세요.',{err:true});
+ if(broadcast&&!progUnique(curProg).length){
+  openModal(`
+   <div class="modal-head"><div><h2>송출할 화면을 선택해주세요</h2><div class="sub">현재 편성표에 송출 대상이 지정되지 않았어요. 화면을 선택한 후 송출해주세요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="prog-nt-pick">화면 선택하기</button></div>`,
+  {width:'440px',onMount:ov=>{ov.querySelector('#prog-nt-pick').onclick=()=>{ov.remove();openScopePicker({scopes:curProg.scopes,onChange:renderProgTargets});};}});
+  return;
+ }
+ commitProgram(broadcast);
+}
+function backToSchedList(){
+ $('#screen-schedule').hidden=true;$('#app').hidden=false;
+ if(typeof showPage==='function')showPage('schedule');else if(window.__afterPanelBack)window.__afterPanelBack();
+}
+/* 편집기 헤더/캘린더 바인딩 (요소는 항상 존재) */
+$('#prog-back')&&($('#prog-back').onclick=backToSchedList);
+$('#prog-name')&&($('#prog-name').oninput=()=>{if(curProg)curProg.name=$('#prog-name').value;});
+$('#prog-save')&&($('#prog-save').onclick=()=>saveProgram(false));
+$('#prog-broadcast')&&($('#prog-broadcast').onclick=()=>saveProgram(true));
+$('#cal-today')&&($('#cal-today').onclick=()=>{pcalMode='week';renderProgCal();});
+$('#cal-prev')&&($('#cal-prev').onclick=()=>toast('데모에서는 이번 주만 제공돼요.'));
+$('#cal-next')&&($('#cal-next').onclick=()=>toast('데모에서는 이번 주만 제공돼요.'));
+$$('#cal-mode [data-calm]').forEach(b=>b.onclick=()=>{pcalMode=b.dataset.calm;renderProgCal();});
 /* 편성일정 컨텍스트에서의 화면 등록 — 등록 즉시 그 화면을 대상으로 편성을 이어가 페이지 이동 없이 첫 편성까지 완료 */
 function addPanelFromSchedule(){
  openAddPanelModal({onCreated:p=>{
@@ -1082,21 +1506,207 @@ function addPanelFromSchedule(){
 const noTargetToast=()=>toast('먼저 편성할 화면을 등록해주세요.',{action:'화면 등록하기',onAction:addPanelFromSchedule});
 function renderTargets(){
  const t=$('#sc-targets');
- if(!scTargets.length){
-  t.innerHTML=`<span class="lbl">적용 대상 <b class="num" style="color:var(--text-3)">없음</b></span>
-   <button class="chip" id="sc-add-target">＋ 화면 등록하기</button>
-   <span style="font-size:12px;color:var(--text-3);margin-left:auto">화면을 등록하면 이 캘린더의 일정이 그 화면에 적용돼요</span>`;
-  t.querySelector('#sc-add-target').onclick=addPanelFromSchedule;
+ if(scWall){ /* 비디오월 편성 — 단일 대상 표기 유지 */
+  t.innerHTML=`<span class="lbl">적용 대상 <b class="num" style="color:var(--blue)">비디오월 1개</b></span>
+   <span class="chip on">${IC.wall}${scWallName}</span>
+   <span class="sc-hint" style="margin-left:auto">비디오월 일정은 화면 전체에 하나로 적용돼요</span>`;
   return;
  }
- const chips=scTargets.slice(0,6).map(id=>{const p=panelOf(id);
-  return `<span class="chip on">${scWallName?IC.wall:''}${scWallName||storeName(p.store)+' · '+p.name}${scTargets.length>1?`<button class="x" data-rmt="${id}" aria-label="대상에서 제외">${IC.xs}</button>`:''}</span>`}).join('');
- t.innerHTML=`<span class="lbl">적용 대상 <b class="num" style="color:var(--blue)">${scWallName?'비디오월 1개':fmt(scTargets.length)+'개 화면'}</b></span>${chips}
-  ${scTargets.length>6?`<span class="chip">+${fmt(scTargets.length-6)}개</span>`:''}
-  <button class="chip" id="sc-add-target">＋ 화면 추가</button>
-  <span style="font-size:12px;color:var(--text-3);margin-left:auto">여기서 등록하는 일정은 대상 전체에 한 번에 적용돼요</span>`;
- t.querySelectorAll('[data-rmt]').forEach(b=>b.onclick=()=>{scTargets=scTargets.filter(x=>x!==b.dataset.rmt);renderTargets();renderScPanels();});
- t.querySelector('#sc-add-target').onclick=()=>{const q=$('#scp-q');if(q)q.focus();toast('왼쪽 목록에서 ＋ 버튼을 누르면 대상에 추가돼요.');};
+ if(!scScopes.length){
+  t.innerHTML=`<span class="lbl">적용 대상 <b class="num" style="color:var(--text-3)">없음</b></span>
+   <button class="chip chip-add" id="sc-add-target">${IC.plus}적용 대상 추가</button>
+   <span class="sc-hint" style="margin-left:auto">편성할 화면·매장·그룹을 추가하면 그 대상에 일정이 적용돼요</span>`;
+  t.querySelector('#sc-add-target').onclick=openScopePicker;
+  return;
+ }
+ const uniq=scTargets.length;
+ const chips=scScopes.map(sc=>{const range=sc.type!=='panel';
+  return `<span class="chip on ${range?'chip-range':''}">${range?IC.folder:''}${scopeLabel(sc)}${range?` <b class="num">· ${fmt(scopeCount(sc))}개</b>`:''}<button class="x" data-rms="${scopeKey(sc)}" aria-label="대상에서 제외">${IC.xs}</button></span>`}).join('');
+ t.innerHTML=`<span class="lbl">적용 대상 <b class="num" style="color:var(--blue)">${fmt(uniq)}개 화면</b></span>${chips}
+  <button class="chip chip-add" id="sc-add-target">${IC.plus}대상 추가</button>
+  <span class="sc-hint" style="margin-left:auto">고유 화면 ${fmt(uniq)}개에 한 번에 적용돼요</span>`;
+ t.querySelectorAll('[data-rms]').forEach(b=>b.onclick=()=>{removeScope(b.dataset.rms);renderTargets();renderCal();renderScPanels();});
+ t.querySelector('#sc-add-target').onclick=openScopePicker;
+}
+/* 적용 대상 추가 — 대형 Modal · 탭 없이 하나의 공간에서 전체/매장(지역→매장→화면)/그룹/미지정/개별 화면을
+   통합 탐색하며 여러 범위를 동시에 다중 선택. 선택 상태는 Modal 전체에서 유지되고 [선택 완료] 시에만 반영된다.
+   Footer는 선택 범위 칩 + 중복 제거한 실제 고유 화면 수를 고정 표시. */
+function openScopePicker(state){
+ let q='';
+ const sel=(state.scopes||[]).map(x=>({...x}));            /* 작업용 복사본 — 취소 시 원복 */
+ const expRegions=new Set(), expUnits=new Set();           /* expUnits: 매장/미지정 펼침(scopeKey 기준) */
+ /* 데이터 캐시 (편성 가능 화면만) */
+ const schedByStore={}; PANELS.forEach(p=>{if(SCHEDULABLE(p)){const k=p.store||NO_STORE_KEY;(schedByStore[k]=schedByStore[k]||[]).push(p.id);}});
+ const storePanels=sid=>schedByStore[sid]||[];
+ const ALL_CNT=PANELS.filter(SCHEDULABLE).length;
+ const UNASSIGNED=schedByStore[NO_STORE_KEY]||[];
+ const regionPanels=region=>region.storeIds.reduce((n,sid)=>n+storePanels(sid).length,0);
+ /* 선택 상태 조작 (sel 배열) */
+ const has=sc=>sel.some(s=>scopeKey(s)===scopeKey(sc));
+ const hasAll=()=>sel.some(s=>s.type==='all');
+ const rm=k=>{const i=sel.findIndex(s=>scopeKey(s)===k);if(i>=0)sel.splice(i,1);};
+ const uniqSet=()=>{const set=new Set();sel.forEach(sc=>scopeIds(sc).forEach(id=>set.add(id)));return set;};
+ const rawSum=()=>sel.reduce((n,sc)=>n+scopeCount(sc),0);
+ /* 매장·미지정을 하나의 '단위(unit)'로 일반화 — scope는 범위(store/unassigned), panels는 하위 화면 */
+ const unitOf=key=>key==='unassigned:'?{scope:{type:'unassigned'},panels:UNASSIGNED}:{scope:{type:'store',id:key.slice(6)},panels:storePanels(key.slice(6))};
+ const unitState=(panels,scope)=>{if(has(scope))return 'full';if(!panels.length)return 'none';const s=panels.filter(id=>has({type:'panel',id})).length;return s===0?'none':s===panels.length?'full':'partial';};
+ const collapseUnit=(panels,scope)=>{if(panels.length&&panels.every(id=>has({type:'panel',id}))){panels.forEach(id=>rm('panel:'+id));if(!has(scope))sel.push(scope);}};
+ const toggleUnit=(panels,scope)=>{if(hasAll())return;const st=unitState(panels,scope);panels.forEach(id=>rm('panel:'+id));rm(scopeKey(scope));if(st!=='full')sel.push(scope);};
+ const togglePanelIn=(panels,scope,pid)=>{if(hasAll())return;if(has(scope)){rm(scopeKey(scope));panels.forEach(id=>{if(id!==pid)sel.push({type:'panel',id});});}else{has({type:'panel',id:pid})?rm('panel:'+pid):sel.push({type:'panel',id:pid});}collapseUnit(panels,scope);};
+ const panelCk=(scope,pid)=>has(scope)||has({type:'panel',id:pid});
+ const toggleGroup=g=>{if(hasAll())return;has({type:'group',id:g.id})?rm('group:'+g.id):sel.push({type:'group',id:g.id});};
+ const toggleAll=()=>{if(hasAll())rm('all:');else{sel.length=0;sel.push({type:'all'});}};
+ const CK=(on,ind)=>`<span class="checkbox ${on?'on':ind?'ind':''}">${on?IC.check:''}</span>`;
+ const ov=openModal(`
+  <div class="modal-head"><h2>적용 대상 추가</h2><div class="sub">편성표를 송출할 대상을 선택하세요. 여러 범위를 함께 선택할 수 있어요.</div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="scope-searchbar"><div class="search-wrap">${IC.search}<input class="input input-sm" id="scope-q" placeholder="매장 · 지역 · 그룹 검색"></div></div>
+  <div class="scope-scroll" id="scope-scroll"></div>
+  <div class="scope-foot" id="scope-foot"></div>`,
+ {width:'1080px',cls:'scope-modal',onMount:o=>{
+  const scroll=o.querySelector('#scope-scroll'),foot=o.querySelector('#scope-foot');
+  const qin=o.querySelector('#scope-q');
+  qin.oninput=()=>{q=qin.value.trim().toLowerCase();drawBody();};
+  /* 매장·미지정 공용 행 — 체크박스(전체/일부/미선택) + 펼침 화살표 + 하위 화면 */
+  function unitRow(name,sub,scope,panels){
+   const key=scopeKey(scope),st=unitState(panels,scope),cnt=panels.length,exp=!!q||expUnits.has(key);
+   return `<div class="scope-store">
+    <div class="scope-item scope-store-row" data-unit="${key}">
+     <span class="ck-hit" data-unit="${key}">${CK(st==='full',st==='partial')}</span>
+     <button class="scope-chev-btn" data-unitexp="${key}"><span class="scope-chev ${exp?'exp':''}">${IC.chev}</span></button>
+     <span class="scope-item-tx" data-unit="${key}"><b>${name}</b><span>${st==='partial'?'일부 선택됨 · 클릭하면 전체 선택':sub}</span></span>
+     <span class="scope-cnt num">${fmt(cnt)}개</span>
+    </div>
+    ${exp?`<div class="scope-panels">${panels.map(id=>{const p=panelOf(id),ck=panelCk(scope,id);return `<div class="scope-panel ${ck?'sel':''}" data-panel="${id}" data-punit="${key}">${CK(ck)}<span class="dot ${p.status==='on'?'on':'off'}"></span><span class="scope-panel-nm">${p.name}</span></div>`}).join('')}</div>`:''}
+   </div>`;
+  }
+  function drawBody(){
+   const prev=scroll.scrollTop;
+   const dim=hasAll()?' scope-dim':'';
+   let html='';
+   /* 전체 화면 */
+   if(!q||'전체 화면'.includes(q)) html+=`<div class="scope-sec"><div class="scope-sec-h">전체 화면</div>
+    <div class="scope-item scope-all ${hasAll()?'sel':''}" data-all>${CK(hasAll())}<span class="scope-item-tx"><b>전체 화면</b><span>모든 편성 가능 화면에 적용 · 선택하면 다른 범위는 해제돼요</span></span><span class="scope-cnt num">${fmt(ALL_CNT)}개</span></div></div>`;
+   /* 매장 — 맨 위 '미지정' + 지역 → 매장 → 화면 */
+   let storeInner='';
+   if(UNASSIGNED.length&&(!q||'미지정'.includes(q))) storeInner+=unitRow('미지정','매장이 지정되지 않은 화면 전체',{type:'unassigned'},UNASSIGNED);
+   storeInner+=REGIONS.map(region=>{
+    const stores=region.storeIds.map(storeOf).filter(s=>s&&storePanels(s.id).length&&(!q||s.name.toLowerCase().includes(q)||region.name.toLowerCase().includes(q)));
+    if(!stores.length)return '';
+    const exp=!!q||expRegions.has(region.id),show=q?stores:stores.slice(0,40);
+    return `<div class="scope-region"><button class="scope-region-h" data-region="${region.id}"><span class="scope-chev ${exp?'exp':''}">${IC.chev}</span><b>${region.name}</b><span class="scope-region-meta">매장 ${fmt(region.storeIds.length)} · 화면 ${fmt(regionPanels(region))}</span></button>${exp?`<div class="scope-region-body">${show.map(s=>unitRow(`${s.name} 전체`,'이 매장의 편성 가능한 화면 전체',{type:'store',id:s.id},storePanels(s.id))).join('')}${!q&&stores.length>40?`<div class="scope-more">이 지역 매장이 ${fmt(stores.length)}개예요 · 상단 검색으로 좁혀보세요</div>`:''}</div>`:''}</div>`;
+   }).join('');
+   if(storeInner.trim()) html+=`<div class="scope-sec${dim}"><div class="scope-sec-h">매장</div>${storeInner}</div>`;
+   /* 그룹 */
+   const groups=GROUPS.filter(g=>!q||g.name.toLowerCase().includes(q));
+   if(groups.length) html+=`<div class="scope-sec${dim}"><div class="scope-sec-h">그룹</div>${groups.map(g=>{const ck=has({type:'group',id:g.id});return `<div class="scope-item ${ck?'sel':''}" data-group="${g.id}">${CK(ck)}<span class="scope-item-tx"><b>${g.name}</b><span>그룹에 속한 화면 전체</span></span><span class="scope-cnt num">${fmt(scopeCount({type:'group',id:g.id}))}개</span></div>`}).join('')}</div>`;
+   if(!html.trim()) html=`<div class="scope-empty">검색 결과가 없어요</div>`;
+   scroll.innerHTML=html; scroll.scrollTop=prev;
+   drawFoot();
+  }
+  /* Sticky Footer — 정적 셸 1회 생성(칩 컨테이너·좌우 네비·CTA), 이후 drawFoot는 내용만 갱신 */
+  foot.innerHTML=`
+   <div class="scope-foot-sel"><span class="scope-foot-label">선택 대상</span>
+    <div class="scope-chip-wrap" id="scope-chip-wrap">
+     <button class="scope-chip-nav prev" id="scope-chip-prev" aria-label="이전 대상 보기" tabindex="-1">${CHEV_L}</button>
+     <div class="scope-foot-chips" id="scope-chip-scroll"></div>
+     <button class="scope-chip-nav next" id="scope-chip-next" aria-label="다음 대상 보기" tabindex="-1">${CHEV_R}</button>
+    </div></div>
+   <div class="scope-foot-act"><span class="scope-foot-dup" id="scope-foot-dup" hidden></span><span class="grow"></span><span class="scope-foot-total" id="scope-foot-total"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="scope-done" disabled>선택 완료</button></div>`;
+  const chipWrap=foot.querySelector('#scope-chip-wrap'),chipScroll=foot.querySelector('#scope-chip-scroll'),
+        prevBtn=foot.querySelector('#scope-chip-prev'),nextBtn=foot.querySelector('#scope-chip-next'),
+        totalEl=foot.querySelector('#scope-foot-total'),dupEl=foot.querySelector('#scope-foot-dup'),doneBtn=foot.querySelector('#scope-done');
+  foot.querySelector('[data-close]').onclick=()=>ov.remove();
+  doneBtn.onclick=()=>{if(doneBtn.disabled)return;state.scopes.splice(0,state.scopes.length,...sel);state.onChange&&state.onChange();ov.remove();};
+  const updateChipNav=wireChipScroller(chipScroll,prevBtn,nextBtn,chipWrap);
+  chipScroll.addEventListener('click',e=>{const rc=e.target.closest('[data-rmchip]');if(rc){rm(rc.dataset.rmchip);drawBody();}});
+  function drawFoot(){
+   const uniq=uniqSet().size, overlap=rawSum()>uniq;
+   chipScroll.innerHTML=sel.length?sel.map(sc=>{const range=sc.type!=='panel';const cnt=range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}`:'';
+    return `<span class="chip on chip-range scope-chip">${range?IC.folder:''}<span class="scope-chip-tx">${scopeLabel(sc)}${cnt}</span><button class="x" data-rmchip="${scopeKey(sc)}" aria-label="제외">${IC.xs}</button></span>`}).join('')
+    :`<span class="scope-foot-empty">아직 선택한 대상이 없어요</span>`;
+   totalEl.innerHTML=`총 <b class="num">${fmt(uniq)}</b> 개 화면`;
+   dupEl.hidden=!overlap; if(overlap)dupEl.innerHTML=`${IC.info}일부 화면은 여러 범위에 포함돼 한 번만 적용돼요`;
+   doneBtn.disabled=!uniq;
+   chipScroll.scrollLeft=0; updateChipNav();
+  }
+  /* 본문(탐색 영역) 이벤트 위임 */
+  scroll.addEventListener('click',e=>{
+   const ux=e.target.closest('[data-unitexp]'); if(ux){const k=ux.dataset.unitexp;expUnits.has(k)?expUnits.delete(k):expUnits.add(k);drawBody();return;}
+   const rg=e.target.closest('[data-region]'); if(rg){const id=rg.dataset.region;expRegions.has(id)?expRegions.delete(id):expRegions.add(id);drawBody();return;}
+   const un=e.target.closest('[data-unit]'); if(un){const {panels,scope}=unitOf(un.dataset.unit);toggleUnit(panels,scope);drawBody();return;}
+   const pn=e.target.closest('[data-panel]'); if(pn){const {panels,scope}=unitOf(pn.dataset.punit);togglePanelIn(panels,scope,pn.dataset.panel);drawBody();return;}
+   const gr=e.target.closest('[data-group]'); if(gr){toggleGroup(GROUPS.find(g=>g.id===gr.dataset.group));drawBody();return;}
+   if(e.target.closest('[data-all]')){toggleAll();drawBody();return;}
+  });
+  drawBody();
+ }});
+}
+/* 기존 편성 보기 — 다중 대상의 화면별 기존 편성을 같은 시간축(가로)에서 비교하는 대형 오버레이.
+   화면별 행 + 공통 시간축으로 서로 다른 편성을 한눈에 비교. 요일 선택 · 화면 탭 · 막대 클릭 상세. */
+function openExistingOverlay(idsArg,onAdd,addLabel){
+ const ids=[...(idsArg||scTargets)]; if(!ids.length)return;
+ const HS=7,HE=23,SPAN=HE-HS;
+ let day=TODAY, focus=null;
+ const anyBlocks=ids.some(id=>panelSched(id).length);
+ const ov=document.createElement('div'); ov.className='overlay sched-ov-wrap';
+ ov.innerHTML=`<div class="sched-ov" role="dialog" aria-modal="true">
+   <div class="sched-ov-head">
+    <div><h2>기존 편성 보기</h2><div class="sub">선택한 <b>${fmt(ids.length)}개 화면</b>의 기존 편성을 같은 시간축에서 비교해요.</div></div>
+    <button class="icon-btn" data-close aria-label="닫기">${IC.x}</button>
+   </div>
+   <div class="sched-ov-tabs" id="sov-tabs"></div>
+   <div class="sched-ov-toolbar"><div class="day-chips" id="sov-days"></div><span class="grow"></span><span class="sc-hint">막대를 클릭하면 편성 상세를 볼 수 있어요</span></div>
+   <div class="sched-ov-body" id="sov-body"></div>
+   <div class="sched-ov-foot"><span class="sc-hint" id="sov-foot"></span><span class="grow"></span><button class="btn" data-close>닫기</button>${onAdd?`<button class="btn btn-primary" id="sov-add">${IC.cal}${addLabel||'일정 등록'}</button>`:''}</div>
+  </div>`;
+ const close=()=>ov.remove();
+ ov.addEventListener('mousedown',e=>{if(e.target===ov)close()});
+ ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);
+ const _sovAdd=ov.querySelector('#sov-add');if(_sovAdd)_sovAdd.onclick=()=>{close();if(onAdd)onAdd();};
+ const DC=['월','화','수','목','금','토','일'];
+ const draw=()=>{
+  ov.querySelector('#sov-tabs').innerHTML=`<button class="sov-tab ${focus===null?'on':''}" data-sov-t="">전체 <b class="num">${fmt(ids.length)}</b></button>`+
+   ids.map(id=>{const p=panelOf(id);return `<button class="sov-tab ${focus===id?'on':''}" data-sov-t="${id}"><span class="dot ${p.status==='on'?'on':'off'}"></span>${p.name}</button>`}).join('');
+  ov.querySelectorAll('[data-sov-t]').forEach(b=>b.onclick=()=>{focus=b.dataset.sovT||null;draw();});
+  ov.querySelector('#sov-days').innerHTML=DC.map((d,i)=>`<button class="day-chip ${day===i?'on':''}" data-sov-d="${i}">${d}</button>`).join('');
+  ov.querySelectorAll('[data-sov-d]').forEach(b=>b.onclick=()=>{day=+b.dataset.sovD;draw();});
+  const body=ov.querySelector('#sov-body');
+  if(!anyBlocks){
+   body.innerHTML=`<div class="sov-empty"><div class="empty" style="padding:60px 20px"><b>기존 편성이 없어요</b><span>선택한 화면에 아직 편성된 일정이 없어요.${onAdd?'<br>겹치는 편성이 없어 바로 송출할 수 있어요.':''}</span>${onAdd?`<button class="btn btn-primary btn-sm" id="sov-empty-add">${IC.cal}${addLabel||'일정 등록'}</button>`:''}</div></div>`;
+   const _eAdd=body.querySelector('#sov-empty-add');if(_eAdd)_eAdd.onclick=()=>{close();if(onAdd)onAdd();};
+   ov.querySelector('#sov-foot').textContent='';
+   return;
+  }
+  const rows=(focus?[focus]:ids);
+  const ax=[];for(let h=HS;h<=HE;h+=2)ax.push(h);
+  const axis=`<div class="sov-axis"><div class="sov-axis-name"></div><div class="sov-axis-track">${ax.map(h=>`<span class="sov-tick" style="left:${(h-HS)/SPAN*100}%">${hLabel(h)}</span>`).join('')}</div></div>`;
+  const rowsHtml=rows.map(id=>{const p=panelOf(id);const blocks=panelSched(id).filter(b=>b.day===day).sort((a,b)=>a.s-b.s);
+   const bars=blocks.map(b=>{const c=contentOf(b.content);return `<button class="sov-bar" data-sb='${JSON.stringify({s:b.s,e:b.e,c:b.content})}' style="left:${(b.s-HS)/SPAN*100}%;width:${(b.e-b.s)/SPAN*100}%;background:${calBg(b)}"><span>${c.name}</span></button>`}).join('');
+   return `<div class="sov-row"><div class="sov-name"><span class="dot ${p.status==='on'?'on':'off'}"></span><span class="tx"><b>${p.name}</b><span>${storeHtml(p.store)}</span></span></div>
+    <div class="sov-track">${ax.map(h=>`<span class="sov-grid" style="left:${(h-HS)/SPAN*100}%"></span>`).join('')}${bars||`<span class="sov-none">이 요일 편성 없음</span>`}</div></div>`;
+  }).join('');
+  body.innerHTML=axis+`<div class="sov-rows">${rowsHtml}</div>`;
+  body.querySelectorAll('[data-sb]').forEach(bar=>bar.onclick=e=>{e.stopPropagation();const b=JSON.parse(bar.dataset.sb);const c=contentOf(b.c);
+   popMenu(bar,[{title:'편성 상세'},{label:`콘텐츠 · ${c.name}`,icon:IC.monitor},{label:`시간 · ${hLabel(b.s)} – ${hLabel(b.e)}`,icon:IC.cal},{label:'상태 · 편성됨',icon:IC.check}]);});
+  const total=rows.reduce((n,id)=>n+panelSched(id).filter(b=>b.day===day).length,0);
+  ov.querySelector('#sov-foot').innerHTML=`${DC[day]}요일 · ${focus?panelOf(focus).name:fmt(rows.length)+'개 화면'} · 편성 <b class="num">${fmt(total)}건</b>`;
+ };
+ draw();
+ document.body.appendChild(ov);
+}
+/* 다중 대상 신규 등록 시, 겹치는 기존 편성이 있는 화면을 실제 데이터 기준으로 요약해 덮어쓰기 확인 */
+function multiConflictDialog(clashes,onConfirm){
+ const byId={}; clashes.forEach(({id,b})=>{(byId[id]=byId[id]||[]).push(b)});
+ const keys=Object.keys(byId);
+ const rows=keys.slice(0,8).map(id=>{const p=panelOf(id);const b=byId[id].slice().sort((a,b)=>a.s-b.s)[0];
+  return `<div class="sc-clash-row"><span class="dot ${p.status==='on'?'on':'off'}"></span><span class="tx"><b>${p.name}</b><span>${storeHtml(p.store)}</span></span><span class="num sc-clash-t">${hLabel(b.s)} ~ ${hLabel(b.e)}${byId[id].length>1?` 외 ${byId[id].length-1}`:''}</span></div>`}).join('');
+ const more=keys.length>8?`<div class="sc-hint" style="padding:6px 2px 0">외 ${fmt(keys.length-8)}개 화면</div>`:'';
+ openModal(`
+  <div class="modal-head"><div><h2>일정이 겹치는 화면이 있어요</h2><div class="sub">선택한 화면 중 <b>${fmt(keys.length)}개</b>에 같은 시간대 기존 편성이 있어요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body"><div class="sc-clash-list">${rows}${more}</div>
+   <div class="sync-note" style="margin-top:12px">${IC.info}<span>덮어쓰면 겹치는 기존 편성만 새 일정으로 교체돼요. 겹치지 않는 화면은 기존 편성을 유지한 채 추가돼요.</span></div></div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-danger" id="clash-ok">기존 일정 덮어쓰기</button></div>`,
+ {width:'460px',onMount:ov=>{ov.querySelector('#clash-ok').onclick=()=>{ov.remove();onConfirm();};}});
 }
 /* 대상 화면이 없을 때 캘린더 위에 얹는 블러 오버레이 — 캘린더가 아직 사용할 수 없는 영역임을
    시각적으로만 전달(문구 없음). 화면 등록 유도는 상단 대상 바·좌측 레일의 CTA가 담당하고,
@@ -1110,6 +1720,26 @@ function syncCalEmpty(){
 function renderCal(){
  const head=$('#cal-head'),gridEl=$('#cal-grid');
  syncCalEmpty();
+ /* 다중 대상(고유 화면 2개+): 각 화면의 기존 편성을 한 캘린더에 섞지 않고, 신규 등록 중심 화면으로 전환.
+    기존 편성은 [기존 편성 보기] 대형 오버레이에서 화면별로 비교한다(비디오월·단일 대상은 기존 캘린더 유지). */
+ const multi=!scWall&&scTargets.length>1;
+ const tb=$('#screen-schedule')?.querySelector('.cal-toolbar');
+ if(tb)tb.style.display=multi?'none':'';
+ if(multi){
+  head.style.display='none'; gridEl.style.display='block';
+  gridEl.innerHTML=`<div class="sc-multi"><div class="sc-multi-card">
+    <span class="sc-multi-ic">${IC.cal}</span>
+    <h3>선택한 <b>${fmt(scTargets.length)}개 화면</b>에 새 편성을 등록하세요</h3>
+    <p>화면마다 기존 편성이 서로 다를 수 있어, 여러 화면을 함께 선택했을 때는 신규 등록에 집중해요.<br>기존 편성은 화면별로 비교해서 확인할 수 있어요.</p>
+    <div class="sc-multi-actions">
+     <button class="btn btn-primary" id="sc-multi-add">${IC.plus}일정 등록</button>
+     <button class="btn" id="sc-multi-existing">${IC.cal}기존 편성 보기</button>
+    </div></div></div>`;
+  gridEl.querySelector('#sc-multi-add').onclick=()=>openSide({days:[TODAY],s:9,e:11,content:null,type:'normal'});
+  gridEl.querySelector('#sc-multi-existing').onclick=openExistingOverlay;
+  return;
+ }
+ head.style.display='';
  $$('#cal-mode [data-calm]').forEach(b=>b.classList.toggle('on',b.dataset.calm===calMode));
  if(calMode==='month'){
   const rangeEl=$('#cal-range');if(rangeEl)rangeEl.textContent='2026년 7월';
@@ -1313,6 +1943,7 @@ function openSide(cfg){
     ${cur?`<div class="scp-row on" style="width:100%;cursor:default"><span class="cthumb" style="background:${cur.g};flex:none">${cur.e}</span><span class="tx" style="flex:1;min-width:0"><b>${cur.name}</b><span>${kindL}</span></span><button class="btn btn-sm" id="cp-change">변경</button></div>`
     :`<button class="btn" id="cp-pick" style="width:100%;height:52px;border-style:dashed">${IC.plus}콘텐츠 · 템플릿 · 재생목록에서 선택</button>`}</div>`;
   body.innerHTML=`
+   ${(!scWall&&scTargets.length>1)?`<div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>선택한 <b>${fmt(scTargets.length)}개 화면</b>에 동일한 일정이 등록돼요.</span></div>`:''}
    ${contentField}
    ${periodField(sel.sd,sel.ed,sel.noEnd,'sc')}
    <div class="f-row"><label>송출 시간</label>
@@ -1374,6 +2005,13 @@ function openSide(cfg){
    closeSide();renderCal();fg[3]=true;renderFg();
    toast(`${cfg.edit?'일정을 수정했어요':'일정을 등록했어요'} — ${scWallName?scWallName:fmt(scTargets.length)+'개 화면'}에 적용됨`);
   };
+  /* 다중 대상: 화면별 기존 편성(panelSched)과의 충돌을 실제 화면 기준으로 판단해 덮어쓰기 확인 */
+  if(!scWall&&scTargets.length>1){
+   const clashes=[];
+   scTargets.forEach(id=>panelSched(id).forEach(b=>sel.days.forEach(d=>{if(b.day===d&&b.s<sel.e&&sel.s<b.e)clashes.push({id,b});})));
+   if(clashes.length){multiConflictDialog(clashes,()=>{clashes.forEach(({id,b})=>{const p=panelOf(id);if(p._psched)p._psched=p._psched.filter(x=>x!==b);});commit();});return;}
+   commit();return;
+  }
   if(conflicts.length){
    $('#conflict-area').innerHTML=`<div class="conflict-box"><b>⚠ 일정 ${conflicts.length}건과 시간이 겹쳐요</b>
     ${[...new Set(conflicts.map(c=>`${['월','화','수','목','금','토','일'][c.day]} ${hLabel(c.s)}–${hLabel(c.e)} '${contentOf(c.content).name}'`))].slice(0,3).join('<br>')}
@@ -1385,17 +2023,7 @@ function openSide(cfg){
   commit();
  };
 }
-$('#sc-save').onclick=()=>{if(!scTargets.length){noTargetToast();return}fg[3]=true;renderFg();toast(`일정을 저장했어요. ${scWallName||fmt(scTargets.length)+'개 화면'}에 동기화됐어요.`);};
-$('#sc-copy-week').onclick=e=>{if(!scTargets.length){noTargetToast();return}popMenu(e.currentTarget,[
- {label:'다음 주로 복사',icon:IC.cal,onClick:()=>toast('이번 주 일정을 다음 주로 복사했어요.')},
-])};
-$('#sc-broadcast').onclick=()=>{
- if(!scTargets.length){noTargetToast();return}
- openModal(`<div class="modal-head"><div><h2>송출하기</h2><div class="sub">저장된 일정으로 ${scWallName?`'${scWallName}' 비디오월`:`${fmt(scTargets.length)}개 화면`}의 송출을 시작해요.</div></div></div>
-  <div class="modal-body"><div class="sync-note">${IC.info}<span>이후 일정을 수정하면 <b>재송출 없이 자동 반영</b>돼요.</span></div></div>
-  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="bc-ok">송출 시작</button></div>`,
- {width:'440px',onMount:ov=>ov.querySelector('#bc-ok').onclick=()=>{ov.remove();fg[3]=true;fg[5]=true;renderFg();toast(`${scWallName||fmt(scTargets.length)+'개 화면'}에 송출을 시작했어요.`);}});
-};
+/* (레거시 #sc-save/#sc-copy-week/#sc-broadcast 상단 바인딩 제거 — 편성표 편집기 헤더 버튼으로 대체) */
 
 
 /* ═══════════ 그룹 만들기 ═══════════ */
@@ -1778,10 +2406,9 @@ $$('.fg-step').forEach(s=>s.onclick=()=>{
  const backToMain=()=>{$('#screen-schedule').hidden=true;$('#app').style.display='flex';};
  if(n===1){backToMain();flt={...flt,view:'attention',store:null,region:null,group:null,wall:null,status:'all'};fg[1]=true;page=1;renderAll();renderFg();toast('주의가 필요한 화면만 모아서 보여드려요.');}
  else if(n===2){backToMain();const arr=sorted(collapseWalls(baseFiltered())).filter(p=>!p.wall).slice(0,5);arr.forEach(p=>checked.add(p.id));fg[2]=true;renderList();renderFg();toast('상단 목록에서 체크박스로 화면을 선택해보세요. 5개를 미리 선택했어요.');}
- else if(n===3){openSchedule(PANELS.length?(checked.size?[...checked]:[masterP.id]):[]);}
+ else if(n===3){openSchedule(checked.size?[...checked]:[]);}
  else if(n===4){backToMain();openWallWizard();}
- else{if(!$('#screen-schedule').hidden)$('#sc-broadcast').click();else if(!PANELS.length)openSchedule([]); /* 빈 상태 진입 — 오버레이가 화면 등록부터 안내 */
-  else{openSchedule(checked.size?[...checked]:[masterP.id]);setTimeout(()=>$('#sc-broadcast').click(),250);}}
+ else{if(!$('#screen-schedule').hidden){const bc=$('#prog-broadcast');if(bc)bc.click();}else{openSchedule(checked.size?[...checked]:[]);}}
 });
 function renderAll(){renderStats();renderRail();renderScope();renderList();}
 renderAll();renderFg();
@@ -1827,15 +2454,15 @@ function renderScPanels(){
   if(!scTargets.includes(id)){scTargets.push(id);renderTargets();renderScPanels();toast(`'${panelOf(id).name}'을 적용 대상에 추가했어요. 등록하는 일정이 함께 적용돼요.`)}
  });
 }
-attachSearchUX($('#scp-q'),q=>{scpQ=q;renderScPanels()});
-$$('#cal-mode [data-calm]').forEach(b=>b.onclick=()=>{calMode=b.dataset.calm;renderCal()});
+/* (편성일정 편집기 캘린더/검색 바인딩은 편성표 편집기 섹션에서 처리 — 레거시 #scp-q/#cal-mode 바인딩 제거) */
 /* 대시보드 드릴다운용 API */
 window.__setPanelFilter=kind=>{
  if(kind==='attention')flt={...flt,view:'attention',status:'all',store:null,region:null,group:null,wall:null};
  else flt={...flt,status:kind,view:'all',store:null,region:null,group:null,wall:null};
  page=1;renderAll();
 };
-window.__openPanelScheduleMonth=()=>{openSchedule(PANELS.length?[masterP.id]:[]);calMode='month';renderCal();};
+window.__openPanelScheduleMonth=()=>{if(typeof showPage==='function')showPage('schedule');};
+window.__renderSchedulePage=root=>renderSchedulePage(root);
 /* 비디오월 방향 반영 프리뷰 헬퍼 */
 function wallAspect(w){
  const gw=w.gw||w.cols,gh=w.gh||w.rows;
@@ -2054,8 +2681,8 @@ window.__addPanel=(sid,name,code)=>{
  PANELS.unshift({id:'p'+(pSeq++),store:sid,name:name||'첫 화면',status:'on',content:null,unsch:true,schedN:0,lastMin:0,tags:[],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.6',stb:{sn:'STB-'+String(pSeq).padStart(6,'0'),code:normStbCode(code)||null}});
  try{renderAll();}catch(e){}
 };
-/* 편성일정은 화면이 없어도 항상 진입 가능 — 빈 상태에서는 캘린더 위 안내 오버레이가 화면 등록 → 첫 편성을 이어줌 */
-window.__openPanelSchedule=()=>{openSchedule(PANELS.length?[masterP.id]:[]);};
+/* 편성일정은 화면이 없어도 항상 진입 가능 — 목록 뷰로 열리고, [일정 등록]으로 새 일정을 만든다 */
+window.__openPanelSchedule=()=>{openSchedule([]);};
 /* 매장 관리(앱 스코프)에서 등록한 매장을 화면 모듈로 동기화 — 드롭다운·상세·좌측 매장 트리에서 사용.
    s.region은 지역 '이름'(예 '서울')이므로 REGIONS 버킷을 찾거나 만들고, 화면용 store.region은 그 버킷 id로 맞춤 */
 window.__syncStore=s=>{

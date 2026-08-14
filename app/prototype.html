@@ -103,8 +103,8 @@ const IC={
  folder:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>',
  info:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-width="2"/></svg>',
  edit:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.5 20.5 7 8 19.5 3.5 20.5 4.5 16 17 3.5Z"/></svg>',
- trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m3 0v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7"/></svg>',
- copy:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9" stroke-linecap="round"/></svg>',
+ trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H14M4 6H20M18.071 6L17.066 20.071C17.048 20.3232 16.9352 20.5592 16.7502 20.7316C16.5653 20.904 16.3218 20.9999 16.069 21H7.93C7.67716 20.9999 7.43374 20.904 7.24876 20.7316C7.06378 20.5592 6.95095 20.3232 6.933 20.071L5.929 6"/></svg>',
+ copy:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667A2.667 2.667 0 0 1 9.667 7h8.666A2.667 2.667 0 0 1 21 9.667v8.666A2.667 2.667 0 0 1 18.333 21H9.667A2.667 2.667 0 0 1 7 18.333V9.667Z"/><path d="M4.012 16.737A2.005 2.005 0 0 1 3 15V5c0-1.1.9-2 2-2h10c.75 0 1.158.385 1.5 1"/></svg>',
  ext:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M10 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4"/></svg>',
  play:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>',
  upload:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0 5 5m-5-5L7 9"/><path d="M3 15v3a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-3"/></svg>',
@@ -819,7 +819,7 @@ function renderShell(){
   {sec:'nav.secOps'},
   {id:'panels',k:'nav.panels'},
   {id:'walls',k:'nav.walls'},
-  {id:'schedule',k:'nav.schedule',stub:true},
+  {id:'schedule',k:'nav.schedule'},
   {id:'stores',k:'nav.stores'},
   {sec:'nav.secSet'},
   {id:'users',k:'nav.users'},
@@ -873,6 +873,7 @@ function showPage(id){
  if(id==='products'){mountLegacy('products');return}
  if(id==='panels'){mountLegacy('panels');return}
  if(id==='walls'){root.innerHTML='';window.__renderWallsPage&&window.__renderWallsPage(root);return}
+ if(id==='schedule'){root.innerHTML='';window.__renderSchedulePage&&window.__renderSchedulePage(root);return}
  if(id==='dash')renderDashboard(root);
  else if(id==='users')renderUsersPage(root);
  else if(id==='stores')renderStoresPage(root);
@@ -1377,7 +1378,7 @@ function drawTplGrid(){
 function tplMenu(b,t){
  popMenu(b,[
   {label:'에디터에서 편집',icon:IC.edit,onClick:()=>openMenuEditorInline()},
-  {label:'복제',icon:IC.copy,onClick:()=>{MY_TPLS.unshift({...t,id:'t'+(tSeq++),name:t.name+' (복사)',mod:'07.05',fav:false});drawTplFolders();drawTplGrid();toast('템플릿을 복제했어요.')}},
+  {label:'복사',icon:IC.copy,onClick:()=>{MY_TPLS.unshift({...t,id:'t'+(tSeq++),name:t.name+' (복사)',mod:'07.05',fav:false});drawTplFolders();drawTplGrid();toast('템플릿을 복사했어요.')}},
   {label:'이름 변경',icon:IC.edit,onClick:()=>openModal(`<div class="modal-head"><h2>이름 변경</h2></div><div class="modal-body"><div class="f-row"><input class="input" id="rn" value="${t.name}"></div></div><div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="rn-ok">저장</button></div>`,{width:'400px',onMount:ov=>{const i=ov.querySelector('#rn');i.focus();i.select();ov.querySelector('#rn-ok').onclick=()=>{t.name=i.value.trim()||t.name;ov.remove();drawTplGrid();toast('이름을 변경했어요.')}}})},
   {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:MY_FOLDERS,current:t.folder,onMove:fid=>{t.folder=fid;drawTplFolders();drawTplGrid();toast(`'${fPath(MY_FOLDERS,fid)}'(으)로 이동했어요.`)}})},
   'sep',
@@ -1884,7 +1885,7 @@ function drawPlArea(){
   const pl=PLAYLISTS.find(x=>x.id===b.dataset.plm);
   popMenu(b,[
    {label:'편집',icon:IC.edit,onClick:()=>openPlaylistEditor(pl.id)},
-   {label:'복제',icon:IC.copy,onClick:()=>{PLAYLISTS.unshift({...pl,id:'pl'+(plSeq++),name:pl.name+' (복사)',items:pl.items.map(i=>({...i})),panels:0,mod:'07.05'});drawPlFolders();drawPlArea();toast('재생목록을 복제했어요.')}},
+   {label:'복사',icon:IC.copy,onClick:()=>{PLAYLISTS.unshift({...pl,id:'pl'+(plSeq++),name:pl.name+' (복사)',items:pl.items.map(i=>({...i})),panels:0,mod:'07.05'});drawPlFolders();drawPlArea();toast('재생목록을 복사했어요.')}},
    {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:PL_FOLDERS,current:pl.folder||null,withNone:true,onMove:fid=>{pl.folder=fid;drawPlFolders();drawPlArea();toast(fid?`'${fPath(PL_FOLDERS,fid)}'(으)로 이동했어요`:'최상위로 이동했어요')}})},
    'sep',
    {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${pl.name}' 재생목록을 삭제할까요?`,desc:'삭제한 재생목록은 복구할 수 없어요. 편성된 일정이 있다면 함께 중단돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{PLAYLISTS=PLAYLISTS.filter(x=>x!==pl);drawPlFolders();drawPlArea();toast('삭제했어요.')}})},
@@ -2284,33 +2285,27 @@ renderLogin(false);
 
 <!-- ═══════════ 일정 관리 화면 ═══════════ -->
 <div id="screen-schedule" hidden>
+  <!-- 편성표 편집/생성 (Takeover) — 하나의 편성표 안에 여러 일정을 배치하고, 편성표 단위로 송출 대상 지정 -->
   <div class="sc-top">
-    <button class="back" id="sc-back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>화면 관리</button>
+    <button class="back" id="prog-back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>편성일정</button>
     <span class="divider-v"></span>
-    <h1>일정 관리</h1>
+    <input class="name-input" id="prog-name" placeholder="편성표명 입력" aria-label="편성표명" maxlength="40">
+    <span class="sc-top-help" id="prog-help">일정만 먼저 저장해 두고, 원하는 때 대상을 지정해 송출할 수 있어요.</span>
     <div class="actions">
-      <button class="btn" id="sc-copy-week">이번 주 일정 복사</button>
-      <button class="btn" id="sc-save">저장</button>
-      <button class="btn btn-primary" id="sc-broadcast">송출하기</button>
+      <button class="btn" id="prog-broadcast">송출하기</button>
+      <button class="btn btn-primary" id="prog-save">저장</button>
     </div>
   </div>
-  <div class="sc-targets" id="sc-targets"></div>
+  <div class="sc-targets" id="prog-targets"></div>
   <div class="sc-body">
-    <aside class="sc-plist">
-      <div class="sc-plist-head">
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input input-sm" id="scp-q" placeholder="화면·매장 검색" aria-label="화면 검색"></div>
-      </div>
-      <div class="sc-plist-body" id="scp-list"></div>
-      <div class="sc-plist-foot">화면을 클릭하면 그 화면의 일정으로 전환돼요 · ＋ 버튼으로 지금 일정의 적용 대상에 추가할 수 있어요</div>
-    </aside>
     <div class="cal-wrap">
       <div class="cal-toolbar">
         <button class="btn btn-sm" id="cal-today">오늘</button>
-        <button class="icon-btn" aria-label="이전 주"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
-        <button class="icon-btn" aria-label="다음 주"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+        <button class="icon-btn" id="cal-prev" aria-label="이전"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
+        <button class="icon-btn" id="cal-next" aria-label="다음"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
         <span class="range" id="cal-range">2026년 6월 29일 – 7월 5일</span>
         <div class="spacer"></div>
-        <span style="font-size:12px;color:var(--text-3)" id="cal-hint">빈 시간을 클릭하면 일정을 등록할 수 있어요</span>
+        <span class="cal-hint" id="cal-hint">빈 시간을 클릭하면 일정을 등록할 수 있어요</span>
         <div class="seg" id="cal-mode"><button class="on" data-calm="week">주</button><button data-calm="month">월</button></div>
       </div>
       <div class="cal">
@@ -2318,10 +2313,10 @@ renderLogin(false);
         <div class="cal-scroll" id="cal-scroll"><div class="cal-grid" id="cal-grid"></div></div>
       </div>
     </div>
-    <aside class="sc-side" id="sc-side" hidden>
-      <div class="sc-side-head"><h2 id="sc-side-title">일정 등록<button class="icon-btn" id="sc-side-close" style="margin-left:auto" aria-label="닫기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></h2></div>
+    <aside class="sc-side" id="sc-side">
+      <div class="sc-side-head"><h2 id="sc-side-title">일정 설정</h2></div>
       <div class="sc-side-body" id="sc-side-body"></div>
-      <div class="sc-side-foot"><button class="btn" id="sc-cancel" style="flex:1">취소</button><button class="btn btn-primary" id="sc-apply" style="flex:2">등록</button></div>
+      <div class="sc-side-foot" id="sc-side-foot" hidden><button class="btn" id="sc-cancel" style="flex:1">취소</button><button class="btn btn-primary" id="sc-apply" style="flex:2">등록</button></div>
     </aside>
   </div>
 </div>
