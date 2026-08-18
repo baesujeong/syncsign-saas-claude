@@ -1,10 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
-   화면 관리(#panels) · 편성일정(#schedule) 모듈 — Syncsign SaaS 프로토타입
+   화면 관리(#panels) · 편성일정(#schedule) · 비디오월(#walls) 모듈 — Syncsign SaaS 프로토타입
    ───────────────────────────────────────────────────────────────────────────────
    · 순수 브라우저 JS(빌드·번들·TypeScript 없음). prototype.html이 <script>로 로드하는
      하나의 IIFE이며, 바깥으로는 window.__* 함수로만 노출한다.
    · 이 한 파일에 3개 화면이 공존한다: [화면 관리] · [편성일정] · [비디오월].
-     ※ 비디오월은 별도 담당 영역 — 이 파일 안에 있어도 수정 대상 아님.
    · 상세 인수인계 문서: 프로젝트 루트 HANDOFF.md (데이터 모델·Mock 위치·API 연동 지점 정리).
 
    ── 데이터 모델 (JSDoc typedef · 실제 타입 시스템 없음, 문서용) ──────────────────────
@@ -13,7 +12,8 @@
    @typedef {Object} Store   매장       { id, name, region }
    @typedef {Object} Region  지역       { id, name, storeIds:string[] }
    @typedef {Object} Group   그룹       { id, name, ids:string[]  // 소속 panel id 목록 }
-   @typedef {Object} Wall    비디오월   { id, name, store, cells:string[], tiles, cm, content }
+   @typedef {Object} Wall    비디오월   { id, name, store, cells:string[], tiles, cm, content,
+                                          broadcast:boolean, sd, ed, stime, etime  // 편성(송출) 상태·기간·시간 }
    @typedef {Object} Scope   송출 범위  { type:'all'|'store'|'group'|'unassigned'|'panel', id? }
    @typedef {Object} Block   편성표 내 일정 { id, gid, day:0~6(월~일), s, e:시각(시), content, type, sd, ed }
    @typedef {Object} Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Block[] }
@@ -23,7 +23,7 @@
    2) 공용 상태·헬퍼 (IC, toast, popMenu, openModal, scope* 등)
    3) 화면 관리: 필터/정렬 · 목록 · 화면 상세 Drawer · 셋탑/삭제 · 매장 지정 · 그룹
    4) 편성일정: 편성표 목록 · 편집기(캘린더) · 송출 대상 선택 Modal · 송출 대상 Drawer
-   5) 비디오월 (담당 분리 — 작업 범위 아님)
+   5) 비디오월: 목록(그리드/리스트) · 필터(송출 상태) · 카드/행 · ⋯ 관리 메뉴 · 위저드(레이아웃/일정)
    6) window.__* 노출 (대시보드·라우팅 연동)
    ═══════════════════════════════════════════════════════════════════════════════ */
 (function(){
@@ -115,10 +115,44 @@ panelsOf(GANGNAM.id).slice(-1).concat(panelsOf(storeByName('홍대입구점').id
  p.name=i?'신규 쇼윈도 (설치 예정)':'2층 증축 홀 (설치 예정)';
 });
 while(panelsOf(JAMSIL.id).length<4)PANELS.push({id:'p'+(pSeq++),store:JAMSIL.id,name:'미디어월 확장 '+panelsOf(JAMSIL.id).length,status:'on',content:'c5',unsch:false,schedN:2,lastMin:1,tags:['홀'],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.5'});
-const WALLS=[{id:'w1',name:'잠실 미디어월',store:JAMSIL.id,rows:2,cols:2,cells:panelsOf(JAMSIL.id).slice(0,4).map(p=>p.id),content:'c5',schedN:4}];
+const WALLS=[{id:'w1',name:'잠실 미디어월',store:JAMSIL.id,rows:2,cols:2,cells:panelsOf(JAMSIL.id).slice(0,4).map(p=>p.id),content:'c5',schedN:4,orient:'가로형',broadcast:true,sd:'2026-08-13',ed:null,stime:'09:00',etime:'16:00'}];
 /* 비디오월 편성 건수: 위저드로 등록된 실제 SCHED('W:id')를 우선하고, 없으면 시드값(schedN) 폴백 */
 const wallSchedN=w=>SCHED.filter(b=>b.content==='W:'+w.id).length||w.schedN||0;
 WALLS[0].cells.forEach(id=>{const p=PANELS.find(x=>x.id===id);p.wall='w1';p.content='c5';p.status='on';p.unsch=false});
+/* [MOCK DATA] 데모 비디오월 추가 시드 — 송출 상태(송출 중·예약·종료·미송출)가 골고루 나오도록.
+   특수 데모 매장(잠실/강남/인천공항1/홍대)을 제외한 매장의 화면 4개씩을 묶는다.
+   broadcast/sd/ed/stime/etime = 편성(송출) 상태·기간·시간. TODO(API): WALLS 는 서버 조회(GET)로 대체. */
+const WALL_SEED=[
+ {broadcast:true, sd:'2026-08-13', ed:null,         stime:'10:00', etime:'22:00'},
+ {broadcast:true, sd:'2026-08-13', ed:'2026-12-31', stime:'08:00', etime:'20:00'},
+ {broadcast:true, sd:'2026-09-01', ed:null,         stime:'09:00', etime:'18:00'}, /* 예약(시작 전) */
+ {broadcast:true, sd:'2026-03-01', ed:'2026-05-31', stime:'09:00', etime:'21:00'}, /* 종료(기간 지남) */
+ {broadcast:false,sd:'2026-08-13', ed:null,         stime:'09:00', etime:'16:00'}, /* 미송출 */
+];
+(()=>{
+ const excl=new Set([JAMSIL.id,GANGNAM.id,ICN1.id,storeByName('홍대입구점').id]);
+ let seq=2;
+ for(const cfg of WALL_SEED){
+  const store=STORES.find(s=>!excl.has(s.id)&&panelsOf(s.id).filter(p=>!p.wall).length>=4);
+  if(!store)break;
+  excl.add(store.id);
+  const id='w'+(seq++);
+  const cells=panelsOf(store.id).filter(p=>!p.wall).slice(0,4);
+  cells.forEach(p=>{p.wall=id;});
+  WALLS.push({id,name:`${store.name} 미디어월`,store:store.id,rows:2,cols:2,cells:cells.map(p=>p.id),content:'c5',schedN:cfg.broadcast?2:0,orient:'가로형',broadcast:cfg.broadcast,sd:cfg.sd,ed:cfg.ed,stime:cfg.stime,etime:cfg.etime});
+ }
+})();
+/* 비디오월 송출 상태 — 편성일정(progStatus)과 동일 모델: broadcast=false면 '-'(미송출),
+   아니면 편성 기간(sd~ed) 기준으로 예약(시작 전)/종료(기간 지남)/송출 중 판정 */
+function wallStatus(w){
+ if(!w.broadcast)return{k:'draft',l:'-',c:''};
+ if(w.ed&&w.ed<PROG_NOW)return{k:'ended',l:'종료',c:'badge-gray'};
+ if(w.sd&&w.sd>PROG_NOW)return{k:'scheduled',l:'예약',c:'badge-green'};
+ return{k:'live',l:'송출 중',c:'badge-blue'};
+}
+const wallPeriodLabel=w=>w.sd?`${fmtDot(w.sd)} ~ ${w.ed?fmtDot(w.ed):'무기한'}`:'기간 미설정';
+const wallTimeLabel=w=>w.stime&&w.etime?`${w.stime} ~ ${w.etime}`:'시간 미설정';
+const WALL_FILTERS=[['all','전체'],['live','송출 중'],['scheduled','예약'],['ended','종료'],['draft','미송출']];
 /* 레거시 균등 그리드 월 → 타일 모델(자유 배치·크기 혼합)로 이행 */
 WALLS.forEach(w=>{if(!w.tiles){w.gw=w.cols;w.gh=w.rows;w.tiles=w.cells.map((id,i)=>({p:id,x:i%w.cols,y:Math.floor(i/w.cols),w:1,h:1}));}});
 /* 데모: 잠실 미디어월은 화면별 콘텐츠 편성 사용 중 (일정은 월 단위 · 콘텐츠는 화면별) */
@@ -2126,11 +2160,10 @@ function wallCellsHtml(w,renderTile,gap){
 /* ═══════════ 비디오월 관리 페이지 — 표준 관리 레이아웃(상품 관리 기준) ═══════════ */
 let wallsView='grid',wallsQ='',wallsSt='all',wallsSort='name',wallsChecked=new Set();
 const wallsFiltered=()=>{
- const arr=WALLS.filter(w=>{
-  const ok=w.cells.every(id=>panelOf(id)?.status==='on');
-  return (wallsSt==='all'||(wallsSt==='ok'?ok:!ok))&&
-   (!wallsQ||w.name.toLowerCase().includes(wallsQ.toLowerCase())||storeName(w.store).toLowerCase().includes(wallsQ.toLowerCase()));
- });
+ const arr=WALLS.filter(w=>
+  (wallsSt==='all'||wallStatus(w).k===wallsSt)&&
+  (!wallsQ||w.name.toLowerCase().includes(wallsQ.toLowerCase())||storeName(w.store).toLowerCase().includes(wallsQ.toLowerCase()))
+ );
  return wallsSort==='store'?[...arr].sort((a,b)=>storeName(a.store).localeCompare(storeName(b.store),'ko')):[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
 };
 /* 비디오월 가이드 — 낯선 기능이라 최초 진입 시 자동 노출 + 언제든 헤더 아이콘으로 재확인 가능.
@@ -2170,7 +2203,7 @@ function renderWallsPage(root){
    <div class="rail-main std">
     <div class="prod-toolbar">
      <div class="search-wrap">${IC.search}<input class="input input-sm" id="vw-q" placeholder="${t('ph.walls')}" value="${wallsQ}"></div>
-     <div style="display:flex;gap:6px">${[['all','전체'],['ok','정상'],['issue','확인 필요']].map(([k,l])=>`<button class="chip ${wallsSt===k?'on':''}" data-vwst="${k}">${l}</button>`).join('')}</div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap">${(()=>{const c={};WALLS.forEach(w=>{const k=wallStatus(w).k;c[k]=(c[k]||0)+1;});return WALL_FILTERS.map(([k,l])=>{const n=k==='all'?WALLS.length:(c[k]||0);return `<button class="chip ${wallsSt===k?'on':''}" data-vwst="${k}">${l}<span class="cnt num">${fmt(n)}</span></button>`}).join('');})()}</div>
      <label class="sel-all"><span class="checkbox ${arr.length&&arr.every(w=>wallsChecked.has(w.id))?'on':''}" id="vw-selall" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span>전체 선택</label>
      <div class="spacer"></div>
      <select class="select select-sm" id="vw-sort" style="width:110px" aria-label="정렬"><option value="name">이름순</option><option value="store">매장순</option></select>
@@ -2214,39 +2247,41 @@ function renderWallsPage(root){
  const bindWallRows=scope=>{
   scope.querySelectorAll('[data-vwc]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.vwc;wallsChecked.has(id)?wallsChecked.delete(id):wallsChecked.add(id);renderWallsPage(root);});
   scope.querySelectorAll('[data-vw]').forEach(el=>el.addEventListener('click',e=>{
-   if(e.target.closest('[data-vw-sched],[data-vw-edit],[data-vw-menu],[data-vwc]'))return;
+   if(e.target.closest('[data-vw-menu],[data-vwc]'))return;
    openWallDrawer(WALLS.find(w=>w.id===el.dataset.vw));
   }));
-  /* 비디오월 일정은 일반 편성일정과 분리된 전용 편집 화면(위저드 3단계 재사용)으로 진입 */
-  scope.querySelectorAll('[data-vw-sched]').forEach(b=>b.onclick=e=>{e.stopPropagation();const w=WALLS.find(x=>x.id===b.getAttribute('data-vw-sched'));openWallWizard(w,{schedOnly:true})});
-  scope.querySelectorAll('[data-vw-edit]').forEach(b=>b.onclick=e=>{e.stopPropagation();openWallWizard(WALLS.find(x=>x.id===b.getAttribute('data-vw-edit')))});
+  /* 레이아웃/일정 편집은 카드·행의 ⋯ 관리 메뉴로 통합 (인라인 버튼 제거) */
   scope.querySelectorAll('[data-vw-menu]').forEach(b=>b.onclick=e=>{e.stopPropagation();
    const w=WALLS.find(x=>x.id===b.getAttribute('data-vw-menu'));
+   /* 송출하기 아이콘(방송 신호) — 송출 중단은 IC.liveoff 재사용 */
+   const BC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>';
    popMenu(b,[
-    {label:'상세 보기',icon:IC.monitor,onClick:()=>openWallDrawer(w)},
-    {label:'이름 변경',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.5 20.5 7 8 19.5 3.5 20.5 4.5 16 17 3.5Z"/></svg>',onClick:()=>{if(window.folderNameModal)folderNameModal({title:'비디오월 이름 변경',initial:w.name,onSave:nm=>{w.name=nm;wallsRefresh();toast('이름을 변경했어요.')}})}},
+    {label:'레이아웃 편집',icon:IC.wall,onClick:()=>openWallWizard(w)},
+    {label:'일정 편집',icon:IC.cal,onClick:()=>openWallWizard(w,{schedOnly:true})},
+    {label:'이름 변경',icon:IC.edit,onClick:()=>renameWall(w)},
+    w.broadcast
+     ?{label:'송출 중단',icon:IC.liveoff,onClick:()=>{w.broadcast=false;wallsRefresh();toast(`'${w.name}' 송출을 중단했어요.`)}}
+     :{label:'송출하기',icon:BC,onClick:()=>{w.broadcast=true;if(!w.sd)w.sd=PROG_NOW;wallsRefresh();toast(`'${w.name}' 송출을 시작했어요.`)}},
     'sep',
-    {label:'그룹 해제',icon:IC.x,danger:true,onClick:()=>disbandWall(w)},
+    {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${w.name}'을(를) 삭제할까요?`,desc:'삭제하면 이 비디오월 구성이 사라지고, 묶였던 화면은 다시 개별 화면으로 돌아가요. 화면과 일정 데이터는 유지돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{w.cells.forEach(id=>{const p=panelOf(id);if(p)p.wall=null});WALLS.splice(WALLS.indexOf(w),1);renderRail();renderList();wallsRefresh();toast(`'${w.name}'을(를) 삭제했어요.`);}})},
    ]);
   });
  };
  const grid=root.querySelector('#vw-grid');
  if(grid){
   grid.innerHTML=arr.map(w=>{
-   const total=w.cells.length,on=w.cells.filter(id=>panelOf(id).status==='on').length,ok=on===total;
-   return `<div class="pcard wall ${wallsChecked.has(w.id)?'checked':''}" data-vw="${w.id}" style="cursor:pointer">
-    <div class="thumb">
-     ${wallCellsHtml(w,(t,i)=>`<i style="background:${wallTileContent(w,t).g};position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${i===0?`<span style="font-size:15px"></span>`:''}</i>`)}
-     <div class="tl"><span class="live"><span class="dot ${ok?'on':'off'}"></span>${ok?'LIVE':'일부 오프라인'}</span></div>
-     <span class="cname" style="z-index:3">${wallContentLabel(w)}</span></div>
+   const st=wallStatus(w);
+   return `<div class="pcard wall vw-card ${wallsChecked.has(w.id)?'checked':''}" data-vw="${w.id}" style="cursor:pointer">
+    <div class="vw-thumb">
+     ${st.k!=='draft'?`<span class="vw-badge ${st.k}"><span class="dot"></span>${st.l}</span>`:''}
+     <span class="vw-layout-big">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span></div>
     <span class="checkbox check ${wallsChecked.has(w.id)?'on':''}" data-vwc="${w.id}" role="checkbox" aria-label="${w.name} 선택">${IC.check}</span>
     <div class="body">
      <div class="nm">${w.name}</div>
-     <div class="sub">${storeHtml(w.store)} · ${w.orient||'가로형'} · ${w.res||'FHD (1920×1080)'}</div>
-     <div class="badges"><span class="badge badge-gray">${(w.gw||w.cols)}×${(w.gh||w.rows)} 캔버스</span><span class="badge badge-gray">일정 ${wallSchedN(w)}건</span><span class="wall-on ${ok?'':'issue'}"><span class="dot ${ok?'on':'err'}"></span>온라인 ${on}/${total}</span></div>
-     <div style="display:flex;gap:6px;margin-top:10px">
-      <button class="btn btn-sm btn-tonal" data-vw-sched="${w.id}" style="flex:1">일정 편집</button>
-      <button class="btn btn-sm" data-vw-edit="${w.id}" style="flex:1">레이아웃 편집</button>
+     <div class="sub">${storeHtml(w.store)} · 화면 ${w.cells.length}개</div>
+     <div class="vw-chips">
+      <span class="vw-chip">${wallPeriodLabel(w)}</span>
+      <span class="vw-chip">${wallTimeLabel(w)}</span>
       <button class="icon-btn" data-vw-menu="${w.id}" aria-label="더보기">${IC.dots}</button>
      </div></div></div>`;
   }).join('')||`<div style="grid-column:1/-1">${wallsQ?searchEmptyHtml(wallsQ):`<div class="empty"><b>조건에 맞는 비디오월이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
@@ -2257,24 +2292,19 @@ function renderWallsPage(root){
  if(list){
   list.innerHTML=arr.length?`<div class="ptable-wrap"><table class="grid"><thead><tr>
     <th style="width:38px"><span class="checkbox ${arr.every(w=>wallsChecked.has(w.id))?'on':''}" id="vw-all" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span></th>
-    <th style="width:64px">상태</th><th style="width:96px">미리보기</th><th>이름</th><th>매장</th><th>구성</th><th>콘텐츠</th><th>일정</th><th style="width:220px"></th>
+    <th>이름</th><th>매장</th><th>구성</th><th style="width:230px">기간</th><th style="width:150px">시간</th><th style="width:110px">상태</th><th style="width:44px"></th>
    </tr></thead><tbody>
    ${arr.map(w=>{
-    const on=w.cells.filter(id=>panelOf(id).status==='on').length,ok=on===w.cells.length;
+    const st=wallStatus(w);
     return `<tr class="${wallsChecked.has(w.id)?'checked':''}" data-vw="${w.id}" style="cursor:pointer">
      <td><span class="checkbox ${wallsChecked.has(w.id)?'on':''}" data-vwc="${w.id}" role="checkbox" aria-label="${w.name} 선택">${IC.check}</span></td>
-     <td><span class="tstatus" style="color:${ok?'var(--green)':'var(--amber)'}"><span class="dot ${ok?'on':'off'}"></span>${ok?'LIVE':'일부 오프라인'}</span></td>
-     <td><span class="mini-thumb" style="position:relative;width:72px;height:40px;display:inline-block;background:#0B0E13;border-radius:5px">${wallCellsHtml(w,t=>`<i style="background:${wallTileContent(w,t).g};position:absolute;inset:0"></i>`,'2px')}</span></td>
      <td><b>${w.name}</b></td>
      <td>${storeHtml(w.store)}</td>
-     <td><span class="badge badge-violet">${IC.wall}${(w.gw||w.cols)}×${(w.gh||w.rows)}</span> <span class="num" style="color:var(--text-3)">화면 ${w.cells.length}개 · ${w.orient||'가로형'}</span></td>
-     <td>${wallContentLabel(w)}</td>
-     <td class="num">${wallSchedN(w)}건</td>
-     <td><div style="display:flex;gap:6px;justify-content:flex-end">
-      <button class="btn btn-sm btn-tonal" data-vw-sched="${w.id}">${IC.cal}일정 편집</button>
-      <button class="btn btn-sm" data-vw-edit="${w.id}">레이아웃</button>
-      <button class="icon-btn" data-vw-menu="${w.id}" aria-label="더보기">${IC.dots}</button>
-     </div></td></tr>`;
+     <td><span class="badge badge-gray">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span> <span class="num" style="color:var(--text-3)">화면 ${w.cells.length}개 · ${w.orient||'가로형'}</span></td>
+     <td class="num prog-mut">${wallPeriodLabel(w)}</td>
+     <td class="num prog-mut">${wallTimeLabel(w)}</td>
+     <td>${st.k==='draft'?'<span class="prog-status-dash">-</span>':`<span class="badge ${st.c}">${st.l}</span>`}</td>
+     <td><button class="icon-btn" data-vw-menu="${w.id}" aria-label="더보기">${IC.dots}</button></td></tr>`;
    }).join('')}
   </tbody></table></div>`:(wallsQ?searchEmptyHtml(wallsQ):`<div class="empty"><b>조건에 맞는 비디오월이 없어요</b><span>필터를 바꿔보세요.</span></div>`);
   const _lse=list.querySelector('[data-se-reset]');if(_lse)_lse.onclick=()=>{wallsQ='';renderWallsPage(root);root.querySelector('#vw-q')?.focus();};
@@ -2288,14 +2318,14 @@ function renderWallsPage(root){
   bulk.hidden=!wallsChecked.size;
   if(wallsChecked.size){
    bulk.innerHTML=`<b>${wallsChecked.size}개</b> 선택됨
-    <button class="btn danger-t" id="vwb-disband">그룹 해제</button>
+    <button class="btn danger-t" id="vwb-disband">삭제</button>
     <button class="close icon-btn" id="vwb-x" aria-label="선택 해제">${IC.x}</button>`;
    bulk.querySelector('#vwb-x').onclick=()=>{wallsChecked.clear();renderWallsPage(root)};
    bulk.querySelector('#vwb-disband').onclick=()=>{
     const n=wallsChecked.size;
-    confirmDialog({title:`비디오월 ${n}개 그룹 해제`,desc:'해제하면 각 화면이 다시 개별 화면로 돌아가요. 화면과 일정 데이터는 삭제되지 않아요.',confirmText:'해제',danger:true,onConfirm:()=>{
+    confirmDialog({title:`비디오월 ${n}개를 삭제할까요?`,desc:'삭제하면 이 비디오월 구성이 사라지고, 묶였던 화면은 다시 개별 화면으로 돌아가요. 화면과 일정 데이터는 유지돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{
      [...wallsChecked].forEach(id=>{const w=WALLS.find(x=>x.id===id);if(w){w.cells.forEach(cid=>{const p=panelOf(cid);if(p)p.wall=null});WALLS.splice(WALLS.indexOf(w),1);}});
-     wallsChecked.clear();renderRail();renderList();renderWallsPage(root);toast(`비디오월 ${n}개를 해제했어요.`);
+     wallsChecked.clear();renderRail();renderList();renderWallsPage(root);toast(`비디오월 ${n}개를 삭제했어요.`);
     }});
    };
   }

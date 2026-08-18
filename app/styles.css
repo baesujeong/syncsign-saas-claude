@@ -1412,6 +1412,17 @@ svg{display:block;flex:none}
 .pcard .badges .wall-on{display:inline-flex;align-items:center;gap:4px;height:19px;font-size:12px;font-weight:600;color:var(--green)}
 .pcard .badges .wall-on.issue{color:var(--red)}
 .pcard .badges .wall-on .dot{width:6px;height:6px}
+/* 비디오월 관리 카드(그리드) — 어두운 레이아웃 썸네일 + 상태 뱃지 + 기간/시간 칩 */
+.vw-card .vw-thumb{position:relative;aspect-ratio:16/9;background:#15181E;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.vw-card .vw-layout-big{font-size:42px;font-weight:800;letter-spacing:1px;color:#5B6472}
+.vw-badge{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 12px;border-radius:99px;background:rgba(16,20,27,.72);color:#fff;font-size:12.5px;font-weight:700;backdrop-filter:blur(2px)}
+.vw-badge .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.vw-badge.live .dot{background:#4D8DFF}
+.vw-badge.scheduled .dot{background:#37B24D}
+.vw-badge.ended .dot{background:#9AA3AF}
+.vw-chips{display:flex;align-items:center;gap:6px;margin-top:12px}
+.vw-chip{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:8px;background:var(--sunken);border:1px solid var(--border);font-size:12px;color:var(--text-2);white-space:nowrap}
+.vw-chips .icon-btn{margin-left:auto;flex:none}
 
 /* 비디오월 카드 */
 .pcard.wall .thumb{background:#0B0E13}

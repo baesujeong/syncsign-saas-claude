@@ -1,4 +1,4 @@
-# HANDOFF — 화면 관리 · 편성일정 · 대시보드 · 매장 관리 (백엔드 인수인계)
+# HANDOFF — 화면 관리 · 편성일정 · 대시보드 · 매장 관리 · 비디오월 (백엔드 인수인계)
 
 이 문서는 **화면 관리(`#panels`)** · **편성일정(`#schedule`)** · **대시보드(`#dash`)** 화면을 백엔드 개발자가 인수받아
 실제 API를 연결할 때 필요한 최소 정보를 정리한 것입니다.
@@ -212,3 +212,43 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 - 추가: `prototype.html` 매장 관리 영역에 `[MOCK DATA]`·`TODO(API)`·섹션 주석(STORES·renderStoresPage·openStoreModal·deleteStores), `mod-panels.js` `__syncStore`/`__unassignStores`에 `TODO(API)` 주석, 본 §15/§16.
 - **UI·레이아웃·인터랙션·기능 무변경.** 매장 관리 외 다른 화면/공용 로직 무수정(주석만 추가).
 - 변경 파일: `app/prototype.html`(매장 관리 영역 주석), `app/mod-panels.js`(`__syncStore`/`__unassignStores` 주석), `HANDOFF.md`.
+
+## 17. 비디오월 (`#walls`)
+
+여러 화면을 하나의 레이아웃으로 묶어 하나의 큰 화면처럼 운영. **일정은 비디오월 단위, 콘텐츠는 화면별**로 편성.
+
+### 파일/함수 (모두 `app/mod-panels.js`)
+- 렌더: `renderWallsPage(root)`(그리드/리스트) · `wallsRefresh()` · `wallsFiltered()`(검색+송출 상태 필터+정렬).
+- 상태 헬퍼: `wallStatus(w)`(편성일정 `progStatus`와 동일 모델) · `wallPeriodLabel(w)` · `wallTimeLabel(w)` · `wallSchedN(w)`.
+- 카드/행 액션: 행·카드 클릭 → `openWallDrawer` / ⋯ 메뉴 → 레이아웃 편집·일정 편집(`openWallWizard`) · 이름 변경(`renameWall`) · 송출 중단/송출하기(`w.broadcast` 토글) · 삭제.
+- 진입: LNB `비디오월` → `showPage('walls')` → `window.__renderWallsPage`.
+
+### 데이터 구조 & 출처 (서버 연동 대상)
+| 데이터 | 출처(현재 Mock) | 형태 | 소비 위치 |
+|---|---|---|---|
+| `WALLS` | 하드코딩(mod-panels.js) | `{ id, name, store, rows, cols, cells:[panelId], tiles, cm, content, orient, broadcast, sd, ed, stime, etime }` | 목록·카드·상세 |
+| `broadcast`/`sd`/`ed` | 하드코딩 | boolean · 'YYYY-MM-DD' · null(무기한) | `wallStatus` 상태 판정 |
+| `stime`/`etime` | 하드코딩 | '09:00' 등 | 시간 컬럼/칩 |
+| `cells` | PANELS 참조 | panelId[] | 구성(화면 수)·레이아웃 |
+
+### 상태값 (편성일정과 동일 모델)
+- `broadcast=false` → **미송출(`-`)**. 아니면 편성 기간(`sd~ed`)으로 판정: 시작 전 → **예약**, 종료 후 → **종료**, 그 외 → **송출 중**.
+- 뱃지: 송출 중(`badge-blue`) / 예약(`badge-green`) / 종료(`badge-gray`) / 미송출(`-`).
+
+### API 연동이 필요한 위치 (`TODO(API)`)
+- 목록 조회 → 비디오월 GET(`WALLS` 대체). `cells`는 화면 데이터 참조.
+- 송출 중단/송출하기 → 편성(송출) 상태 PUT(현재 `w.broadcast` 로컬 토글).
+- 삭제 → 비디오월 DELETE(구성 해제, 묶인 화면은 `p.wall=null`로 개별 복귀 — 서버 처리).
+- 레이아웃/일정 편집 → 위저드(`openWallWizard`) 저장 시 POST/PUT.
+
+### 제한사항 / 공용 코드 주의
+- `WALLS`/`cells`/`p.wall`은 **화면 관리와 공유**한다: 화면 관리 목록은 `p.wall`이 설정된 화면을 비디오월 카드로 접어 보여준다(`wallCardHtml`). 비디오월 삭제 시 `p.wall=null` 처리로 다시 개별 화면이 된다.
+- `SCHED`/`SB`/`wallSchedN`은 비디오월 편성과 연결된 공용 코드 — 구조 변경 시 화면 관리·편성일정 영향 범위 먼저 확인(§11).
+
+## 18. 비디오월 UI 개편 변경 내용
+
+- 상태 모델을 **온라인 기반(정상/확인 필요) → 방송(송출) 기반(송출 중·예약·종료·미송출)** 으로 전환(편성일정과 통일). `WALLS`에 `broadcast/sd/ed/stime/etime/orient` 추가 + `wallStatus`/`wallPeriodLabel`/`wallTimeLabel` 신설 + 상태 다양화 데모 시드.
+- 필터 칩: 송출 상태별(카운트 포함). 리스트 컬럼: **이름·매장·구성·기간·시간·상태·⋯**(미리보기·콘텐츠·인라인 버튼 제거). 그리드 카드: 어두운 레이아웃 썸네일(N×M) + 상태 뱃지 + 기간/시간 칩 + ⋯.
+- ⋯ 관리 메뉴 통일: 레이아웃 편집·일정 편집·이름 변경·송출 중단/송출하기·삭제. 인라인 [일정 편집]/[레이아웃] 버튼 및 관련 죽은 위임 핸들러 제거.
+- **기능 무변경**(생성/편집/일정/이름/삭제 동일), 정보 구조·상태 표현만 개편. `wallCellsHtml`/`wallContentLabel`/`wallTileContent`는 화면 관리 카드·상세 드로어에서 계속 사용(유지).
+- 변경 파일: `app/mod-panels.js`(데이터 모델·`renderWallsPage`·⋯메뉴·헤더 주석), `app/styles.css`(`.vw-*` 카드 스타일), `HANDOFF.md`.
