@@ -1283,11 +1283,11 @@ function openCallRequestModal(s,m,onDone){
 <script>
 /* ═══════════ 템플릿 관리 ═══════════ */
 let tTab='mine',tFolder='all',tQ='',tSort='mod',tRatio='all',tChecked=new Set(),tView='grid';
-let gInd='all',gCat='all',gRatio='all';
+let gInd='all',gCat='all',gRatio='all',gSort='pop',gQ='';
 function renderTemplatesPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.templates.t')}</h1>
-   <div class="seg" style="margin-left:6px"><button class="${tTab==='mine'?'on':''}" data-tt="mine">내 템플릿</button><button class="${tTab==='gallery'?'on':''}" data-tt="gallery">템플릿 갤러리 <span class="badge badge-blue" style="height:17px;font-size:12px">${GALLERY.length}</span></button></div>
+   <div class="seg" style="margin-left:6px"><button class="${tTab==='mine'?'on':''}" data-tt="mine">내 템플릿</button><button class="${tTab==='gallery'?'on':''}" data-tt="gallery">템플릿 갤러리</button></div>
    <div class="actions">
     ${tTab==='mine'?`<button class="btn btn-primary" id="btn-new-tpl" ${canEdit('templates')?'':'disabled'}>${IC.plus}새 템플릿 만들기</button>`:''}
    </div></header>
@@ -1297,8 +1297,8 @@ function renderTemplatesPage(root){
  if(tTab==='mine')drawMyTpls();else drawGallery();
 }
 function tplThumb(t){
- if(t.ratio==='9:16')return `<div class="thumb vert"><span class="vwrap" style="background:${t.g}"><span class="e" style="font-size:22px">${t.e}</span></span></div>`;
- return `<div class="thumb" style="background:${t.g}"><span class="e">${t.e}</span><span class="tt">${t.tt||''}</span></div>`;
+ if(t.ratio==='9:16')return `<div class="thumb vert"><span class="vwrap" style="background:${t.g}"></span></div>`;
+ return `<div class="thumb" style="background:${t.g}"><span class="tt">${t.tt||''}</span></div>`;
 }
 /* 표준 레이아웃(상품 관리 기준): 좌측=탐색, 우측 카드=툴바(검색·필터·정렬·보기·전체선택)+선택배너+리스트 */
 function tplFiltered(){
@@ -1438,60 +1438,68 @@ function drawTplList(grid,arr){
 function drawGallery(){
  const body=$('#tpl-body');
  body.innerHTML=`
-  <div class="toolbar" style="padding-top:2px">
-   <div class="search-wrap">${IC.search}<input class="input input-sm" placeholder="갤러리 템플릿 검색"></div>
-   <div class="spacer"></div>
-   <span style="font-size:12px;color:var(--text-3)">마음에 드는 템플릿을 내 템플릿으로 가져와 수정하세요</span>
-  </div>
-  <div class="rail-layout">
+  <div class="gal-layout">
    <aside class="gal-rail">
-    <div class="gal-sec"><div class="t">업종</div>${[['all','전체'],...GAL_IND.map(i=>[i,`${GAL_E[i]} ${i}`])].map(([k,l])=>`<button class="fr-item ${gInd===k?'on':''}" data-gi="${k}">${l}<span class="cnt num">${k==='all'?GALLERY.length:GALLERY.filter(g=>g.ind===k).length}</span></button>`).join('')}</div>
+    <div class="gal-sec"><div class="t">업종</div>${[['all','전체'],...GAL_IND.map(i=>[i,i])].map(([k,l])=>`<button class="fr-item ${gInd===k?'on':''}" data-gi="${k}">${l}<span class="cnt num">${k==='all'?GALLERY.length:GALLERY.filter(g=>g.ind===k).length}</span></button>`).join('')}</div>
     <div class="gal-sec"><div class="t">카테고리</div>${[['all','전체'],...GAL_CAT.map(c=>[c,c])].map(([k,l])=>`<button class="fr-item ${gCat===k?'on':''}" data-gc="${k}">${l}</button>`).join('')}</div>
-    <div class="gal-sec"><div class="t">화면 비율</div>${[['all','전체'],['16:9','가로 16:9'],['9:16','세로 9:16']].map(([k,l])=>`<button class="fr-item ${gRatio===k?'on':''}" data-gr="${k}">${l}</button>`).join('')}</div>
    </aside>
-   <div class="rail-main"><div class="content-scroll" style="padding:2px 2px 20px"><div class="tpl-grid" id="g-grid"></div></div></div>
+   <div class="gal-main">
+    <div class="gal-toolbar">
+     <div class="search-wrap" style="width:340px;flex:none">${IC.search}<input class="input input-sm" id="g-q" placeholder="갤러리 템플릿 검색" value="${(gQ||'').replace(/"/g,'&quot;')}"></div>
+     <div class="gal-ratio">${[['all','전체'],['16:9','가로'],['9:16','세로']].map(([k,l])=>`<button class="chip ${gRatio===k?'on':''}" data-gr="${k}">${l}</button>`).join('')}</div>
+     <div class="spacer"></div>
+     <select class="select select-sm" id="g-sort" style="width:120px" aria-label="정렬"><option value="pop">인기순</option><option value="name">이름순</option></select>
+    </div>
+    <div class="gal-scroll"><div class="tpl-grid" id="g-grid"></div></div>
+   </div>
   </div>`;
  body.querySelectorAll('[data-gi]').forEach(b=>b.onclick=()=>{gInd=b.dataset.gi;drawGallery()});
  body.querySelectorAll('[data-gc]').forEach(b=>b.onclick=()=>{gCat=b.dataset.gc;drawGallery()});
  body.querySelectorAll('[data-gr]').forEach(b=>b.onclick=()=>{gRatio=b.dataset.gr;drawGallery()});
  const grid=body.querySelector('#g-grid');
- /* 로딩 스켈레톤 → 콘텐츠 */
- grid.innerHTML=Array(8).fill('<div><div class="skel" style="aspect-ratio:16/9"></div><div class="skel" style="height:14px;margin-top:8px;width:70%"></div></div>').join('');
- setTimeout(()=>{
-  const arr=GALLERY.filter(g=>(gInd==='all'||g.ind===gInd)&&(gCat==='all'||g.cat===gCat)&&(gRatio==='all'||g.ratio===gRatio));
+ /* 검색·정렬은 셸 재렌더 없이 그리드만 다시 그림 */
+ const paint=()=>{
+  let arr=GALLERY.filter(g=>(gInd==='all'||g.ind===gInd)&&(gCat==='all'||g.cat===gCat)&&(gRatio==='all'||g.ratio===gRatio)&&(!gQ||(g.name+' '+g.ind+' '+g.cat).toLowerCase().includes(gQ.toLowerCase())));
+  arr=gSort==='name'?[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko')):[...arr].sort((a,b)=>b.uses-a.uses);
   grid.innerHTML=arr.map(g=>`
    <div class="tpl-card" data-gt="${g.id}">
-    ${tplThumb({...g,tt:g.cat})}
-    <div class="hover-actions"><button class="btn btn-sm" data-gpv="${g.id}" style="background:rgba(255,255,255,.94)">미리보기</button><button class="btn btn-sm btn-primary" data-guse="${g.id}">내 템플릿으로</button></div>
-    <button class="fav ${g.fav?'on':''}" data-gfav="${g.id}">${g.fav?IC.star:IC.starO}</button>
+    <div class="tpl-thumb-wrap">
+     ${tplThumb({...g,tt:g.cat})}
+     <button class="fav ${g.fav?'on':''}" data-gfav="${g.id}">${g.fav?IC.star:IC.starO}</button>
+     <div class="hover-actions"><button class="btn btn-sm" data-gpv="${g.id}">미리보기</button><button class="btn btn-sm btn-primary" data-gedit="${g.id}">편집하기</button></div>
+    </div>
     <div class="body"><div class="nm">${g.name}</div><div class="sub"><span class="badge badge-gray">${g.ratio}</span>${g.ind} · ${g.cat}<span style="margin-left:auto" class="num">${fmt(g.uses)}회 사용</span></div></div>
-   </div>`).join('')||'<div class="empty" style="grid-column:1/-1"><b>조건에 맞는 템플릿이 없어요</b></div>';
-  grid.querySelectorAll('[data-gfav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const g=GALLERY.find(x=>x.id===b.dataset.gfav);g.fav=!g.fav;drawGallery()});
+   </div>`).join('')||(gQ?searchEmptyHtml(gQ):'<div class="empty" style="grid-column:1/-1"><b>조건에 맞는 템플릿이 없어요</b></div>');
+  grid.querySelectorAll('[data-gfav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const g=GALLERY.find(x=>x.id===b.dataset.gfav);g.fav=!g.fav;paint()});
   grid.querySelectorAll('[data-gpv]').forEach(b=>b.onclick=e=>{e.stopPropagation();openGalPreview(GALLERY.find(x=>x.id===b.dataset.gpv))});
-  grid.querySelectorAll('[data-guse]').forEach(b=>b.onclick=e=>{e.stopPropagation();useGalTpl(GALLERY.find(x=>x.id===b.dataset.guse))});
+  grid.querySelectorAll('[data-gedit]').forEach(b=>b.onclick=e=>{e.stopPropagation();editGalTpl(GALLERY.find(x=>x.id===b.dataset.gedit))});
   grid.querySelectorAll('[data-gt]').forEach(el=>el.addEventListener('click',()=>openGalPreview(GALLERY.find(x=>x.id===el.dataset.gt))));
- },420);
+ };
+ attachSearchUX(body.querySelector('#g-q'),q=>{gQ=q;paint()});
+ const _gs=body.querySelector('#g-sort');_gs.value=gSort;_gs.onchange=e=>{gSort=e.target.value;paint()};
+ /* 로딩 스켈레톤 → 콘텐츠 */
+ grid.innerHTML=Array(8).fill('<div><div class="skel" style="aspect-ratio:16/9"></div><div class="skel" style="height:14px;margin-top:8px;width:70%"></div></div>').join('');
+ setTimeout(paint,420);
 }
-function useGalTpl(g){
- MY_TPLS.unshift({id:'t'+(tSeq++),name:g.name,folder:MY_FOLDERS[0].id,ratio:g.ratio,mod:'07.04',fav:false,g:g.g,e:g.e,tt:g.cat});
- toast(`'${g.name}'을 내 템플릿으로 가져왔어요.`,{action:'바로 편집',onAction:()=>openMenuEditorInline()});
+/* 갤러리 템플릿 편집하기 — 내 템플릿으로 사본을 만들고 바로 에디터로 진입 */
+function editGalTpl(g){
+ MY_TPLS.unshift({id:'t'+(tSeq++),name:g.name,folder:MY_FOLDERS[0]?.id||null,ratio:g.ratio,mod:'07.04',fav:false,g:g.g,e:g.e,tt:g.cat});
+ openMenuEditorInline();
 }
 function openGalPreview(g){
  openModal(`
   <div class="modal-head"><div><h2>${g.name}</h2><div class="sub">${g.ind} · ${g.cat} · ${g.ratio} · ${fmt(g.uses)}회 사용됨</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body" style="padding-bottom:8px">
    <div style="${g.ratio==='9:16'?'display:flex;justify-content:center;background:#EDF0F4;border-radius:12px;padding:14px':''}">
-    <div style="background:${g.g};border-radius:10px;${g.ratio==='9:16'?'height:340px;aspect-ratio:9/16':'aspect-ratio:16/9'};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff">
-     <span style="font-size:52px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4))">${g.e}</span>
-     <b style="letter-spacing:.18em;font-size:14px">${g.cat.toUpperCase?g.cat:''}</b>
-     <span style="font-size:12px;color:rgba(255,255,255,.6)">텍스트·이미지·위젯을 자유롭게 수정할 수 있어요</span>
+    <div class="gp-thumb" style="background:${g.g};${g.ratio==='9:16'?'height:440px;aspect-ratio:9/16':'aspect-ratio:16/9'}">
+     <button class="gp-fav ${g.fav?'on':''}" id="gp-fav" aria-label="즐겨찾기">${g.fav?IC.star:IC.starO}</button>
     </div>
    </div>
   </div>
-  <div class="modal-foot"><button class="btn" id="gp-fav">${g.fav?IC.star:IC.starO}즐겨찾기</button><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" id="gp-use">내 템플릿으로 가져오기</button></div>`,
- {width:'560px',onMount:ov=>{
-  ov.querySelector('#gp-fav').onclick=()=>{g.fav=!g.fav;ov.remove();drawGallery()};
-  ov.querySelector('#gp-use').onclick=()=>{ov.remove();useGalTpl(g)};
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" id="gp-edit">편집하기</button></div>`,
+ {width:'640px',onMount:ov=>{
+  ov.querySelector('#gp-fav').onclick=()=>{g.fav=!g.fav;const mb=ov.querySelector('#gp-fav');mb.classList.toggle('on',g.fav);mb.innerHTML=g.fav?IC.star:IC.starO;const gc=document.querySelector(`[data-gfav="${g.id}"]`);if(gc){gc.classList.toggle('on',g.fav);gc.innerHTML=g.fav?IC.star:IC.starO;}};
+  ov.querySelector('#gp-edit').onclick=()=>{ov.remove();editGalTpl(g)};
  }});
 }
 

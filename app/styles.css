@@ -288,6 +288,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .fr-item svg{color:var(--text-3)}
 .fr-item.on svg{color:var(--blue)}
 .fr-item .cnt{margin-left:auto;font-size:12px;color:var(--text-3);font-weight:500}
+/* 템플릿 갤러리 필터 — 활성 상태를 회색 채움으로 더 뚜렷하게 (시안 반영, 갤러리 레일에만 적용) */
+.gal-rail .fr-item.on{background:#E9EDF3;color:var(--text);font-weight:700}
+.gal-rail .fr-item.on .cnt{color:var(--text-2)}
 .fr-item.drop-ok{outline:2px dashed var(--blue);outline-offset:-2px}
 .fr-item.fm-dis{opacity:.45;cursor:not-allowed}
 .fr-item.fm-dis:hover{background:none}
@@ -439,8 +442,9 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .tpl-card .thumb .tt{position:absolute;left:10px;bottom:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.06em}
 .tpl-card .thumb.vert{aspect-ratio:16/9;background:#EDF0F4!important}
 .tpl-card .thumb.vert .vwrap{height:88%;aspect-ratio:9/16;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;color:#fff}
-.tpl-card .hover-actions{position:absolute;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .15s}
+.tpl-card .hover-actions{position:absolute;inset:0;background:rgba(15,23,42,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:0;transition:opacity .15s}
 .tpl-card:hover .hover-actions{opacity:1}
+.tpl-card .hover-actions .btn{width:62%;height:38px;font-size:14px;font-weight:700}
 .tpl-card .check{position:absolute;left:9px;top:9px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px}
 .tpl-card:hover .check,.tpl-card .check.on{opacity:1}
 .tpl-card .fav,.pcard .fav{position:absolute;right:9px;top:9px;z-index:3;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s}
@@ -450,9 +454,25 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .tpl-card .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tpl-card .sub{font-size:12px;color:var(--text-3);margin-top:2px;display:flex;align-items:center;gap:6px}
 .tpl-card .body .badge{height:18px;font-size:12px;padding:0 6px}
-.gal-rail{width:200px;flex:none;overflow-y:auto}
+/* 템플릿 갤러리 — 좌측 필터 카드 + 우측 검색·그리드 카드 (2-pane) */
+.gal-layout{flex:1;display:flex;gap:16px;padding:2px 24px 24px;min-height:0}
+.gal-rail{width:210px;flex:none;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 10px}
+.gal-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.gal-toolbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
+.gal-ratio{display:flex;gap:6px}
+.gal-scroll{flex:1;overflow-y:auto;padding:16px}
+.gal-scroll .tpl-grid{grid-template-columns:repeat(auto-fill,minmax(255px,1fr))}
 .gal-sec{margin-bottom:16px}
+.gal-sec:last-child{margin-bottom:0}
 .gal-sec .t{font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:.04em;padding:0 4px 6px}
+/* 호버 딤·버튼은 썸네일 영역에만 (본문 제외) */
+.tpl-thumb-wrap{position:relative}
+/* 갤러리 미리보기 모달 — 썸네일 + 우측 상단 즐겨찾기 별 */
+.gp-thumb{position:relative;border-radius:12px;overflow:hidden}
+.gp-fav{position:absolute;right:14px;top:14px;width:40px;height:40px;border-radius:10px;background:rgba(16,20,27,.5);color:#fff;display:inline-flex;align-items:center;justify-content:center;border:0;cursor:pointer;transition:background .12s,color .12s}
+.gp-fav:hover{background:rgba(16,20,27,.68)}
+.gp-fav.on{color:#FFC94D}
+.gp-fav svg{width:20px;height:20px}
 
 /* ─── 라이브러리 ─── */
 .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px}
