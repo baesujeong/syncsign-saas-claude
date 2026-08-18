@@ -1414,7 +1414,7 @@ svg{display:block;flex:none}
 .pcard .badges .wall-on .dot{width:6px;height:6px}
 /* 비디오월 관리 카드(그리드) — 어두운 레이아웃 썸네일 + 상태 뱃지 + 기간/시간 칩 */
 .vw-card .vw-thumb{position:relative;aspect-ratio:16/9;background:#15181E;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.vw-card .vw-layout-big{font-size:42px;font-weight:800;letter-spacing:1px;color:#5B6472}
+.vw-card .vw-layout-big{font-size:32px;font-weight:600;letter-spacing:1px;color:#5B6472}
 .vw-badge{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 12px;border-radius:99px;background:rgba(16,20,27,.72);color:#fff;font-size:12.5px;font-weight:700;backdrop-filter:blur(2px)}
 .vw-badge .dot{width:7px;height:7px;border-radius:50%;flex:none}
 .vw-badge.live .dot{background:#4D8DFF}
@@ -1582,15 +1582,17 @@ table.grid tr.checked td{background:var(--blue-50)}
 .wiz-step.cur{background:var(--blue-50);color:var(--blue)}
 .wiz-step.cur .n{background:var(--blue);color:#fff}
 .wiz-body{flex:1;overflow-y:auto;padding:4px 24px 20px;border-top:1px solid var(--border)}
-.layout-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding-top:18px}
-.layout-card{border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .13s}
-.layout-card:hover{border-color:var(--border-2)}
-.layout-card.on{border-color:var(--blue);background:var(--blue-50)}
-.layout-card b{font-size:13px}
+.layout-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding-top:18px}
+.layout-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:border-color .13s,box-shadow .13s;box-shadow:var(--sh-sm)}
+.layout-card:hover{border-color:var(--border-2);box-shadow:var(--sh-md)}
+.layout-card.on{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.layout-card b{font-size:14px;font-weight:700}
 .layout-card span{font-size:12px;color:var(--text-3)}
-.lc-prev{width:100%;aspect-ratio:16/10;display:grid;gap:4px}
-.lc-prev i{background:#242B38;border-radius:3px}
+.lc-prev{width:100%;aspect-ratio:16/10;background:var(--sunken);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.lc-grid{display:grid;gap:6px;width:76%;margin:auto}
+.lc-prev i{background:#1B2230;border-radius:5px;min-width:0;min-height:0}
 .layout-card.on .lc-prev i{background:var(--blue)}
+.lc-blank{font-size:24px;color:var(--text-3)}
 .wall-build{display:flex;gap:16px;padding-top:16px;min-height:0}
 .wb-pool{width:250px;flex:none;display:flex;flex-direction:column;gap:8px}
 .wb-pool .pool-list{border:1px solid var(--border);border-radius:var(--r-md);overflow-y:auto;max-height:320px}
@@ -1634,19 +1636,15 @@ table.grid tr.checked td{background:var(--blue-50)}
 .vwb-stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;background:var(--sunken);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px}
 /* 크기(width/height)는 fitCanvas()가 스테이지 실측 기준으로 px 지정 — CSS는 형태만 담당 */
 .vwb-canvas{display:grid;gap:6px;background:#0B0E13;border-radius:10px;padding:10px;margin:auto;flex:none}
-.vwb-unit{border:1.5px dashed #39424F;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#5A6472;font-size:15px;cursor:pointer;transition:all .12s;min-width:0;min-height:0}
-.vwb-unit:hover{border-color:#6B7484;color:#9AA3B2}
-.vwb-unit.over{border-color:var(--blue);background:rgba(37,99,235,.15);color:#8AB4FF}
 .vwb-tile{background:#1C2634;border:1.5px solid rgba(255,255,255,.18);border-radius:6px;color:#fff;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:grab;overflow:visible;min-width:0;min-height:0;padding:4px;text-align:center;transition:border-color .12s}
 .vwb-tile b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .vwb-tile .sz{font-size:12px;color:rgba(255,255,255,.55)}
 .vwb-tile.ghost{background:rgba(37,99,235,.10);border-style:dashed;border-color:rgba(122,162,247,.45);color:#9AB4E8}
 .vwb-tile:hover{border-color:rgba(255,255,255,.4)}
-.vwb-tile.sel{border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.45)}
-.vwb-tools{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);display:flex;gap:4px;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;padding:4px;box-shadow:var(--sh-md);z-index:5}
-.vwb-tools button{height:24px;min-width:32px;padding:0 8px;border-radius:5px;font-size:12px;font-weight:700;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center}
-.vwb-tools button:hover{background:var(--sunken)}
-.vwb-tools button.on{background:var(--blue-50);color:var(--blue)}
+/* 칸 삭제 버튼 — 평소 숨김, 칸에 호버 시 좌측 상단에 노출 */
+.vwb-del{position:absolute;left:6px;top:6px;width:22px;height:22px;border-radius:6px;background:rgba(16,20,27,.72);color:#fff;display:inline-flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s,background .12s;z-index:5;border:0;cursor:pointer}
+.vwb-tile:hover .vwb-del{opacity:1}
+.vwb-del:hover{background:var(--red)}
 
 /* ─── 플로우 가이드 ─── */
 #flow-guide{position:fixed;left:18px;bottom:18px;z-index:90;width:262px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden}
