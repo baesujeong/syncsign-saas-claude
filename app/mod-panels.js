@@ -1815,9 +1815,13 @@ function openWallWizard(existing,opts={}){
  /* 비디오월 일정 상태 — 유형(우선순위)은 사용자 선택 없이 시스템이 최우선(wall)으로 처리 */
  let scDays=[0,1,2,3,4,5,6],scS=9,scE=18;
  const scPd={sd:todayISO(),ed:null,noEnd:true};
+ /* 재생 주기 — 콘텐츠 전체가 1회 재생 완료된 뒤 다음 회차 시작 전까지의 대기 시간.
+    scCont(연속 재생)=true면 대기 없이 즉시 다음 회차. 단위: sec/min/hour */
+ let scCycN=0,scCycUnit='sec',scCont=false;
  if(existing){
   const exB=SCHED.filter(b=>b.content==='W:'+existing.id);
   if(exB.length){scDays=[...new Set(exB.map(b=>b.day))].sort();scS=exB[0].s;scE=exB[0].e;scPd.sd=exB[0].sd||todayISO();scPd.ed=exB[0].ed||null;scPd.noEnd=!exB[0].ed;}
+  if(existing.cyc){scCycN=existing.cyc.n||0;scCycUnit=existing.cyc.unit||'sec';scCont=!!existing.cyc.cont;}
  }
  /* 전체 페이지 편집기 — 모달 대신 화면 전체를 작업 공간으로 사용 (화면이 많아도 넉넉한 캔버스) */
  const ov=document.createElement('div');ov.className='vwb-screen';
@@ -1855,7 +1859,7 @@ function openWallWizard(existing,opts={}){
   ov.querySelector('#wz-prev').style.visibility=step>1&&!schedOnly?'visible':'hidden';
   ov.querySelector('#wz-next').style.visibility=step>1?'visible':'hidden';
   ov.querySelector('#wz-prev').textContent=step===2?'시작점 다시 선택':'이전';
-  ov.querySelector('#wz-next').textContent=step===2?'다음 : 콘텐츠 · 일정':(existing?'저장':'비디오월 만들기');
+  ov.querySelector('#wz-next').textContent=step===2?'다음 : 콘텐츠 · 일정':(step===3?'비디오월 저장':(existing?'저장':'비디오월 만들기'));
   if(step===1){
    body.innerHTML=`<div style="max-width:1040px;margin:0 auto;width:100%">
     <div class="scp-sec" style="padding-left:2px;padding-top:12px">추천 시작점 — 골라도 다음 단계에서 얼마든지 바꿀 수 있어요</div>
@@ -2035,12 +2039,18 @@ function openWallWizard(existing,opts={}){
     <div class="vwb-side plain" style="width:340px;overflow-y:auto">
      <div class="rail-main std" style="flex:none">
       <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">일정 설정</b><span style="font-size:12px;color:var(--text-3)">비디오월 전체에 하나로 적용</span></div>
-      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:20px">
+      <div style="padding:14px 16px 20px;display:flex;flex-direction:column;gap:20px">
        ${periodField(scPd.sd,scPd.ed,scPd.noEnd,'w3')}
        <div class="f-row" style="margin:0"><label>송출 시간</label><div class="time-row">
         <select class="select select-sm" id="w3-s" aria-label="시작 시간">${times.filter(h=>h<23).map(h=>`<option value="${h}" ${h===scS?'selected':''}>${hLabel(h)}</option>`).join('')}</select>
         <span style="color:var(--text-3)">–</span>
         <select class="select select-sm" id="w3-e" aria-label="종료 시간">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===scE?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
+       <div class="f-row" style="margin:0"><label>재생 주기</label>
+        <div class="time-row">
+         <input class="input input-sm" id="w3-cyc" type="number" min="0" inputmode="numeric" value="${scCycN}" ${scCont?'disabled':''} aria-label="재생 주기 값" style="flex:1;min-width:0">
+         <select class="select select-sm" id="w3-cycu" ${scCont?'disabled':''} aria-label="재생 주기 단위" style="width:96px;flex:none">${[['sec','초'],['min','분'],['hour','시간']].map(([v,l])=>`<option value="${v}" ${scCycUnit===v?'selected':''}>${l}</option>`).join('')}</select></div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-2);margin-top:10px;cursor:pointer"><span class="checkbox ${scCont?'on':''}" id="w3-cont" role="checkbox" aria-checked="${scCont}" tabindex="0">${IC.check}</span>연속 재생</label>
+        <p style="font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.5">콘텐츠 전체가 1회 재생된 뒤 다음 회차까지의 <b>대기 시간</b>이에요. 연속 재생은 대기 없이 바로 이어서 재생해요.</p></div>
        <div class="f-row" style="margin:0"><label>반복 주기</label><div class="day-chips">${['월','화','수','목','금','토','일'].map((d,i)=>`<button class="day-chip ${scDays.includes(i)?'on':''}" data-w3d="${i}">${d}</button>`).join('')}</div></div>
        <div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요. 같은 시간의 일반 일정보다 먼저 재생돼요.</span></div>
       </div>
@@ -2049,7 +2059,7 @@ function openWallWizard(existing,opts={}){
      <div style="display:grid;grid-template-columns:repeat(${gw},1fr);grid-template-rows:repeat(${gh},1fr);gap:2px;aspect-ratio:${orient==='세로형'?gw*9+'/'+gh*16:gw*16+'/'+gh*9};background:#0B0E13;padding:6px;border-radius:8px;max-height:170px;width:100%">
       ${tiles.map(t=>{const a=t.p&&cm[t.p]?contentOf(cm[t.p]):null;return `<div style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h};background:${a?a.g:t.p?'#2A3B52':'transparent'};border:${t.p?'1px solid rgba(255,255,255,.15)':'1px dashed #39424F'};border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px">${a?a.e:''}</div>`}).join('')}
      </div>
-     <div class="sync-note" style="margin-top:12px;font-size:12px">${IC.info}<span>[${existing?'저장':'비디오월 만들기'}]를 누르면 <b>비디오월 생성과 편성 등록이 한 번에</b> 완료돼요. 콘텐츠를 하나도 지정하지 않으면 레이아웃만 저장돼요.</span></div>
+     <div class="sync-note" style="margin-top:12px;font-size:12px">${IC.info}<span>[비디오월 저장]을 누르면 <b>비디오월 생성과 편성 등록이 한 번에</b> 완료돼요. 콘텐츠를 하나도 지정하지 않으면 레이아웃만 저장돼요.</span></div>
     </div></div>`;
    body.querySelectorAll('[data-w3c]').forEach(rowEl=>rowEl.onclick=()=>{
     const pid=rowEl.dataset.w3c;
@@ -2058,6 +2068,11 @@ function openWallWizard(existing,opts={}){
    const _wf=body.querySelector('#w3-fill');
    if(_wf)_wf.onclick=()=>openAssetPicker(null,ref=>{placed.forEach(t=>{cm[t.p]=ref});draw();toast('모든 화면에 같은 콘텐츠를 지정했어요. 필요한 화면만 개별로 바꿔보세요.');});
    body.querySelectorAll('[data-w3d]').forEach(b=>b.onclick=()=>{const i=+b.dataset.w3d;scDays.includes(i)?scDays=scDays.filter(x=>x!==i):scDays.push(i);scDays.sort();draw()});
+   /* 재생 주기 — 값/단위 입력, [연속 재생] 체크 시 입력 비활성(재렌더로 disabled 반영) */
+   const _cyc=body.querySelector('#w3-cyc');if(_cyc)_cyc.oninput=e=>{scCycN=Math.max(0,parseInt(e.target.value||'0',10)||0)};
+   const _cycu=body.querySelector('#w3-cycu');if(_cycu)_cycu.onchange=e=>{scCycUnit=e.target.value};
+   const _cont=body.querySelector('#w3-cont');
+   if(_cont){const toggleCont=()=>{scCont=!scCont;draw()};_cont.onclick=toggleCont;_cont.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleCont()}});}
    bindPeriod(body,'w3',scPd,draw);
    body.querySelector('#w3-s').onchange=e=>scS=+e.target.value;
    body.querySelector('#w3-e').onchange=e=>scE=+e.target.value;
@@ -2093,6 +2108,8 @@ function openWallWizard(existing,opts={}){
     w={id:'w'+Date.now(),name,store:storeId,rows:gh,cols:gw,gw,gh,cells:finalCells,tiles:finalTiles,content:'c5',orient,res};
     WALLS.push(w);finalCells.forEach(id=>{const p=panelOf(id);p.wall=w.id;p.content='c5'});
    }
+   /* 재생 주기 저장 — 연속 재생이면 대기 0. TODO(API): 저장 시 서버 편성 payload에 포함 */
+   w.cyc={n:scCont?0:scCycN,unit:scCycUnit,cont:scCont};
    if(an){
     w.cm={...cm};
     SCHED=SCHED.filter(b=>b.content!=='W:'+w.id);
@@ -2108,7 +2125,7 @@ function openWallWizard(existing,opts={}){
     :`'${name}' 레이아웃을 저장했어요. 콘텐츠·일정은 [일정 편집]에서 언제든 등록할 수 있어요.`);
   };
   if(schedOnly){doSave(name);return} /* 일정 수정만 — 이름 재입력 없이 바로 저장 */
-  if(window.saveNameModal)saveNameModal({title:existing?'비디오월 저장':'비디오월 만들기',label:'비디오월 이름',initial:name||wbStore()+' 미디어월',placeholder:'예) 로비 미디어월',confirmText:existing?'저장':'만들기',onSave:doSave});
+  if(window.saveNameModal)saveNameModal({title:'비디오월 저장',label:'비디오월 이름',initial:name||wbStore()+' 미디어월',placeholder:'예) 로비 미디어월',confirmText:'저장',onSave:doSave});
   else doSave(name||wbStore()+' 미디어월');
  };
  draw();
