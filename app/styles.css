@@ -444,7 +444,7 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .tpl-card .thumb.vert .vwrap{height:88%;aspect-ratio:9/16;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;color:#fff}
 .tpl-card .hover-actions{position:absolute;inset:0;background:rgba(15,23,42,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:0;transition:opacity .15s}
 .tpl-card:hover .hover-actions{opacity:1}
-.tpl-card .hover-actions .btn{width:62%;height:38px;font-size:14px;font-weight:700}
+.tpl-card .hover-actions .btn{width:50%;height:38px;font-size:14px;font-weight:700}
 .tpl-card .check{position:absolute;left:9px;top:9px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px}
 .tpl-card:hover .check,.tpl-card .check.on{opacity:1}
 .tpl-card .fav,.pcard .fav{position:absolute;right:9px;top:9px;z-index:3;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s}
@@ -455,7 +455,7 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .tpl-card .sub{font-size:12px;color:var(--text-3);margin-top:2px;display:flex;align-items:center;gap:6px}
 .tpl-card .body .badge{height:18px;font-size:12px;padding:0 6px}
 /* 템플릿 갤러리 — 좌측 필터 카드 + 우측 검색·그리드 카드 (2-pane) */
-.gal-layout{flex:1;display:flex;gap:16px;padding:2px 24px 24px;min-height:0}
+.gal-layout{flex:1;display:flex;gap:16px;padding:12px 24px 24px;min-height:0}
 .gal-rail{width:210px;flex:none;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 10px}
 .gal-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
 .gal-toolbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
@@ -698,7 +698,7 @@ svg{display:block;flex:none}
 
 /* 카테고리 레일 */
 .cat-rail{width:216px;flex:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;overflow:hidden}
-.cat-rail-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px}
+.cat-rail-head{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 16px 10px}
 .cat-rail-head b{font-size:14px}
 .cat-rail-head .hint{font-size:12px;color:var(--text-3);display:block;margin-top:1px}
 .cat-list{flex:1;overflow-y:auto;padding:4px 10px 10px}
@@ -711,8 +711,6 @@ svg{display:block;flex:none}
 .cat-item:hover .tools{display:flex}
 .cat-item:hover .cnt{display:none}
 .cat-item .tools .icon-btn{width:24px;height:24px}
-.cat-add{margin:0 10px 12px;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-md);border:1px dashed var(--border-2);color:var(--text-3);font-size:13px;font-weight:600;width:calc(100% - 20px);justify-content:center}
-.cat-add:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-50)}
 .cat-edit-row{display:flex;gap:6px;padding:6px 10px}
 .cat-edit-row .input{height:32px;font-size:13px}
 
@@ -1369,7 +1367,7 @@ svg{display:block;flex:none}
 .sync-note-top{font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px}
 
 /* 대시보드 스탯 */
-.stats{display:flex;gap:10px;padding:14px 24px 0;flex:none}
+.stats{display:flex;gap:10px;padding:12px 24px 0;flex:none}
 /* 현황 카드 — 아이콘 없이 숫자(상단)·라벨(하단) 구성, 오류 카드만 색상 강조 */
 .stat{flex:1;display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px 18px;cursor:pointer;transition:all .13s;text-align:left}
 .stat:hover{border-color:var(--border-2);box-shadow:var(--sh-sm)}

@@ -1238,7 +1238,7 @@ function renderSchedulePage(root){
  root.innerHTML=`
   <header class="page-head"><h1>편성일정</h1><span class="desc">여러 일정을 담은 편성표를 만들어 원하는 화면에 송출하세요.</span>
    <div class="actions"><button class="btn btn-primary" id="prog-new" ${canEdit&&!canEdit('schedule')?'disabled':''}>${IC.plus}일정 등록</button></div></header>
-  <div class="rail-layout" style="padding-top:10px">
+  <div class="rail-layout" style="padding-top:12px">
    <div class="rail-main std">
     <div class="prod-toolbar">
      <div class="search-wrap">${IC.search}<input class="input input-sm" id="prog-q" placeholder="일정명, 콘텐츠, 적용 대상 검색" value="${(progQ||'').replace(/"/g,'&quot;')}"></div>
@@ -2214,7 +2214,7 @@ function renderWallsPage(root){
     <button class="vwb-guide" id="vw-guide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 14c0-2 2-2.2 2-4a2 2 0 0 0-4-.3" stroke-linecap="round" stroke-linejoin="round"/></svg>비디오월이란?</button>
     <button class="btn btn-primary" id="vw-new"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>비디오월 만들기</button></div></header>
   ${WALLS.length?`
-  <div class="rail-layout" style="padding-top:10px">
+  <div class="rail-layout" style="padding-top:12px">
    <div class="rail-main std">
     <div class="prod-toolbar">
      <div class="search-wrap">${IC.search}<input class="input input-sm" id="vw-q" placeholder="${t('ph.walls')}" value="${wallsQ}"></div>

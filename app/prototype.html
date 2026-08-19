@@ -1310,7 +1310,7 @@ function tplFiltered(){
 function drawMyTpls(){
  const body=$('#tpl-body');
  body.innerHTML=`
-  <div class="rail-layout" style="padding-top:10px">
+  <div class="rail-layout" style="padding-top:12px">
    <aside class="folder-rail"><div class="fr-head">폴더<button class="icon-btn" id="tf-add" style="width:24px;height:24px" aria-label="새 폴더">${IC.plus}</button></div>
     <div class="fr-list" id="tf-list"></div></aside>
    <div class="rail-main std">
@@ -1512,7 +1512,7 @@ function renderLibraryPage(root){
     <button class="btn" id="btn-add-url" ${canEdit('library')?'':'disabled'}>URL 추가</button>
     <button class="btn btn-primary" id="btn-upload" ${canEdit('library')?'':'disabled'}>${IC.upload}업로드</button>
    </div></header>
-  <div class="rail-layout" style="padding-top:10px">
+  <div class="rail-layout" style="padding-top:12px">
    <aside class="folder-rail"><div class="fr-head">폴더<button class="icon-btn" id="lf-add" style="width:24px;height:24px" aria-label="새 폴더">${IC.plus}</button></div>
     <div class="fr-list" id="lf-list"></div>
     <div style="padding:10px 12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);word-break:keep-all">파일을 화면 어디에나 끌어다 놓으면 현재 폴더로 업로드돼요</div></aside>
@@ -1808,7 +1808,7 @@ function renderPlaylistsPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.playlists.t')}</h1><span class="desc">${t('page.playlists.d')}</span>
    <div class="actions"><button class="btn btn-primary" id="btn-new-pl" ${canEdit('playlists')?'':'disabled'}>${IC.plus}재생목록 만들기</button></div></header>
-  <div class="rail-layout" style="padding-top:10px">
+  <div class="rail-layout" style="padding-top:12px">
    <aside class="folder-rail"><div class="fr-head">폴더<button class="icon-btn" id="pf-add" style="width:24px;height:24px" aria-label="새 폴더">${IC.plus}</button></div>
     <div class="fr-list" id="pf-list"></div></aside>
    <div class="rail-main std">
@@ -2130,9 +2130,8 @@ renderLogin(false);
 
     <div class="admin-content">
       <aside class="cat-rail">
-        <div class="cat-rail-head"><div><b>카테고리</b><span class="hint">메뉴판의 그룹 기준이 돼요</span></div></div>
+        <div class="cat-rail-head"><div><b>카테고리</b><span class="hint">메뉴판의 그룹 기준이 돼요</span></div><button class="icon-btn" id="cat-add-btn" style="width:24px;height:24px" aria-label="카테고리 추가"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div>
         <div class="cat-list" id="cat-list"></div>
-        <button class="cat-add" id="cat-add-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>카테고리 추가</button>
       </aside>
 
       <section class="prod-area">
@@ -2566,7 +2565,7 @@ function renderMyPage(root){
  const [pnm,ppr]=PLANS[SUB.plan];
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.mypage.t')}</h1><span class="desc">${t(isOwnerSession()?'page.mypage.d':'page.mypage.dMember')}</span></header>
-  <div class="content-scroll" style="padding-top:16px"><div class="set-wrap">
+  <div class="content-scroll" style="padding-top:12px"><div class="set-wrap">
    <div class="set-card"><h3>계정</h3>
     <div class="set-row"><span class="lbl">프로필</span><span class="val"><span class="avatar" style="background:#242B38;width:40px;height:40px;font-size:15px">${PROFILE.name[0]}</span><span><b style="display:block">${PROFILE.name}</b><span style="font-size:12px;color:var(--text-3);font-weight:500">${PROFILE.brand} · ${memberSession?ROLE_META[memberSession.role][0]:'최고관리자'}</span></span></span><button class="btn btn-sm" id="mp-profile">수정</button></div>
     <div class="set-row"><span class="lbl">이메일</span><span class="val">${PROFILE.email}<span class="badge badge-green">인증됨</span></span></div>
@@ -2701,7 +2700,7 @@ function renderSupportPage(root){
   <header class="page-head"><h1>${t('page.support.t')}</h1><span class="desc">${t('page.support.d')}</span>
    <div class="seg" style="margin-left:10px"><button class="${supTab==='new'?'on':''}" data-sp="new">문의 등록</button><button class="${supTab==='list'?'on':''}" data-sp="list">문의 내역 <span class="badge badge-blue" style="height:17px;font-size:12px">${TICKETS.length}</span></button></div>
   </header>
-  <div class="content-scroll" style="padding-top:16px" id="sup-body"></div>`;
+  <div class="content-scroll" style="padding-top:12px" id="sup-body"></div>`;
  root.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{supTab=b.dataset.sp;renderSupportPage(root)});
  const body=root.querySelector('#sup-body');
  if(supTab==='new'){
@@ -2815,7 +2814,7 @@ function renderEmptyDashboard(root,ps){
  const doneN=steps.filter(([k])=>n[k]>0).length,total=steps.length;
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.dash.t')}</h1><span class="desc">${PROFILE.name}님, 싱크사인에 오신 것을 환영해요 👋 · 아래 순서대로 준비하면 첫 화면을 송출할 수 있어요</span></header>
-  <div class="content-scroll" style="padding-top:14px"><div class="dash-wrap" style="max-width:900px">
+  <div class="content-scroll" style="padding-top:12px"><div class="dash-wrap" style="max-width:900px">
    <div class="dash-empty-hero">
     <div class="deh-ic">🚀</div>
     <div class="deh-tx"><b>서비스 준비를 시작해볼까요?</b><p>매장 등록 → 화면 연결 → 콘텐츠 등록 → 편성 및 화면 송출 순서로 진행하면 첫 화면을 내보낼 수 있어요.</p>
@@ -2897,7 +2896,7 @@ function renderDashboard(root){
    <div class="actions">
     <div class="seg" title="프로토타입 데모: 사용자 유형별 대시보드 미리보기"><button class="${multi?'':'on'}" data-utype="single">개인·소상공인</button><button class="${multi?'on':''}" data-utype="multi">프랜차이즈·기업</button></div>
     <span class="sync-note-top"><span class="dot on pulse"></span>실시간 · 방금 동기화</span></div></header>
-  <div class="content-scroll" style="padding-top:14px"><div class="dash-wrap">
+  <div class="content-scroll" style="padding-top:12px"><div class="dash-wrap">
    <div class="stats" style="padding:0">
     ${stats.map(([k,l,v,c,bg])=>`<button class="stat ${k==='err'?'accent':''}" data-ds="${k}" style="${k==='err'?`--stat-c:${c}`:''}"><span><span class="v num">${v}</span><span class="l">${l}</span></span></button>`).join('')}
    </div>

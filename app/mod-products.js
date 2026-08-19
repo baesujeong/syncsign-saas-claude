@@ -126,7 +126,7 @@ function renderCats(){
  let html=`<button class="cat-item ${flt.cat==='all'?'on':''}" data-cat="all">전체 상품<span class="cnt num">${total}</span></button>`;
  CATS.forEach(c=>{
   const n=products.filter(p=>p.cat===c.id).length;
-  html+=`<button class="cat-item ${flt.cat===c.id?'on':''}" data-cat="${c.id}">${c.emoji} ${c.name}<span class="cnt num">${n}</span>
+  html+=`<button class="cat-item ${flt.cat===c.id?'on':''}" data-cat="${c.id}">${c.name}<span class="cnt num">${n}</span>
    <span class="tools"><span class="icon-btn" data-catedit="${c.id}" role="button" aria-label="이름 수정">${IC.edit}</span><span class="icon-btn" data-catdel="${c.id}" role="button" aria-label="삭제">${IC.trash}</span></span></button>`;
  });
  list.innerHTML=html;
