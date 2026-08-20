@@ -74,6 +74,8 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 | `openStorePicker`(매장 지정) | 화면-매장 지정 | PUT |
 | `openGroupModal` | 그룹 생성 | POST |
 | `bindListEvents`의 `[data-fav]` 토글 | 화면 즐겨찾기 | 사용자별 즐겨찾기 저장 PUT/DELETE (현재 로컬 `p.fav`만 변경) |
+| `mod-products.js` `bgUpload()` | 배경 콘텐츠 업로드 | 파일 업로드 POST → 자산 라이브러리 추가 (현재 샘플 이미지로 대체) |
+| `mod-products.js` `renderBgLayer()` | 배경 콘텐츠 렌더 | 실제 자산 URL이면 `<img>`/`<video>`를 `object-fit:cover`로 렌더 (프로토타입은 자산 그라디언트로 대체, cover·비율 유지) |
 
 > **API Response 소비처(어느 렌더 함수가 쓰는지):**
 > `PANELS/STORES/GROUPS` → `renderList`·`renderRail`·`renderScope`·`openPanelDrawer` (화면 관리) 및

@@ -205,7 +205,6 @@ function openPanelTagManager(){
 function panelTagRefresh(){const c=$('#tag-filter-cnt');if(c)c.textContent=flt.tags.length?flt.tags.length+'개':'전체';if(typeof renderList==='function')renderList();}
 let view='grid',page=1;const PER={grid:24,table:40};
 let checked=new Set();
-let fg={1:false,2:false,3:false,4:false,5:false};
 const IC={
  x:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
  xs:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
@@ -346,7 +345,7 @@ function renderStats(){
   </button>`).join('');
  $$('[data-stat]').forEach(b=>b.onclick=()=>{
   flt.status=flt.status===b.dataset.stat?'all':b.dataset.stat;
-  if(flt.status!=='all'){flt.view='all';fg[1]=true;renderFg();}
+  if(flt.status!=='all'){flt.view='all';}
   page=1;renderAll();
  });
 }
@@ -366,7 +365,6 @@ function renderRail(){
   smart.map(([k,l,c,ic])=>`<button class="rail-item ${flt.view===k&&!flt.store&&!flt.region&&!flt.group?'on':''}" data-view="${k}">${ic}${l}<span class="cnt num">${c}</span></button>`).join('');
  $$('#smart-views [data-view]').forEach(b=>b.onclick=()=>{
   flt={...flt,view:b.dataset.view,store:null,region:null,group:null,wall:null,status:'all'};
-  if(b.dataset.view==='attention'){fg[1]=true;renderFg();}
   page=1;renderAll();
  });
  /* 매장 트리 — 맨 위에 '미지정'(매장에 속하지 않는 화면) 범위를 상시 제공.
@@ -494,7 +492,7 @@ function renderList(){
  bindListEvents();updateBulk();
 }
 function bindListEvents(){
- $$('[data-check]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.check;checked.has(id)?checked.delete(id):checked.add(id);if(checked.size){fg[2]=true;renderFg();}renderList();});
+ $$('[data-check]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.check;checked.has(id)?checked.delete(id):checked.add(id);renderList();});
  /* 즐겨찾기 토글(그리드·리스트 공용). stopPropagation으로 row 클릭(drawer 열기)과 분리.
     TODO(API): 현재 로컬 p.fav만 변경 — 서버에 사용자별 즐겨찾기 저장(PUT/DELETE) 연동 필요 */
  $$('[data-fav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const p=panelOf(b.dataset.fav);p.fav=!p.fav;renderRail();renderList();toast(p.fav?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요');});
@@ -518,7 +516,6 @@ $('#th-check')?.addEventListener('click',()=>{
  const arr=sorted(flt.wall?baseFiltered():collapseWalls(baseFiltered())).slice((page-1)*PER.table,page*PER.table).filter(p=>flt.wall||!p.wall);
  const all=arr.every(p=>checked.has(p.id));
  arr.forEach(p=>all?checked.delete(p.id):checked.add(p.id));
- if(checked.size){fg[2]=true;renderFg();}
  renderList();
 });
 $('#bulk-schedule').onclick=()=>openSchedule([...checked]);
@@ -528,7 +525,7 @@ $('#bulk-store').onclick=()=>openStorePicker([...checked].map(panelOf).filter(Bo
 $('#bulk-group').onclick=e=>{
  popMenu(e.currentTarget,[
   {title:'그룹에 추가'},
-  ...GROUPS.map(g=>({label:g.name,onClick:()=>{const n=checked.size;g.ids=[...new Set([...g.ids,...checked])];renderRail();toast(`${fmt(n)}개 화면을 '${g.name}'에 추가했어요.`);fg[4]=true;renderFg();}})),
+  ...GROUPS.map(g=>({label:g.name,onClick:()=>{const n=checked.size;g.ids=[...new Set([...g.ids,...checked])];renderRail();toast(`${fmt(n)}개 화면을 '${g.name}'에 추가했어요.`);}})),
   'sep',
   {label:'＋ 새 그룹 만들기',onClick:()=>openGroupModal([...checked])},
  ]);
@@ -1795,7 +1792,7 @@ function openGroupModal(ids){
   ov.querySelector('#g-ok').onclick=()=>{
    const v=i.value.trim();if(!v){i.focus();toast('그룹 이름을 입력해주세요.',{err:true});return}
    GROUPS.push({id:'g'+Date.now(),name:v,ids:[...ids]});
-   ov.remove();checked.clear();renderAll();fg[4]=true;renderFg();
+   ov.remove();checked.clear();renderAll();
    toast(`'${v}' 그룹을 만들었어요. 좌측 그룹 목록에서 확인하세요.`);
   };
  }});
@@ -2096,13 +2093,12 @@ function openWallWizard(existing,opts={}){
     SCHED=SCHED.filter(b=>b.content!=='W:'+w.id);
     /* 비디오월 일정은 시스템이 자동으로 최우선(wall) 처리 */
     scDays.forEach(d=>{const b=SB(d,scS,scE,'W:'+w.id,'wall',scPd.sd,scPd.noEnd?null:scPd.ed);b.cm={...cm};SCHED.push(b);});
-    fg[3]=true;
    }
    /* 송출 상태 결정: 송출하기=broadcast / 저장=신규는 미송출, 종료→유효 기간 수정 시 미송출, 그 외 기존 상태 유지 */
    if(broadcast)w.broadcast=true;
    else if(!existing)w.broadcast=false;
    else if(wasEnded&&!(w.ed&&w.ed<PROG_NOW))w.broadcast=false;
-   ov.remove();renderAll();fg[4]=true;renderFg();wallsRefresh();
+   ov.remove();renderAll();wallsRefresh();
    const stL=wallStatus(w).l;
    toast(broadcast
     ?`'${name}' 비디오월을 송출했어요. (${stL})`
@@ -2130,23 +2126,9 @@ function openWallWizard(existing,opts={}){
 }
 document.getElementById('btn-make-wall').onclick=()=>openWallWizard();
 
-/* ═══════════ 플로우 가이드 & 초기화 ═══════════ */
-function renderFg(){
- let cur=fg[1]?fg[2]?fg[3]?fg[4]?fg[5]?0:5:4:3:2:1;
- $$('.fg-step').forEach(s=>{const n=+s.dataset.fg;s.classList.toggle('done',!!fg[n]);s.classList.toggle('cur',n===cur);});
-}
-$('#fg-toggle').onclick=()=>$('#flow-guide').classList.toggle('min');
-$$('.fg-step').forEach(s=>s.onclick=()=>{
- const n=+s.dataset.fg;
- const backToMain=()=>{$('#screen-schedule').hidden=true;$('#app').style.display='flex';};
- if(n===1){backToMain();flt={...flt,view:'attention',store:null,region:null,group:null,wall:null,status:'all'};fg[1]=true;page=1;renderAll();renderFg();toast('주의가 필요한 화면만 모아서 보여드려요.');}
- else if(n===2){backToMain();const arr=sorted(collapseWalls(baseFiltered())).filter(p=>!p.wall).slice(0,5);arr.forEach(p=>checked.add(p.id));fg[2]=true;renderList();renderFg();toast('상단 목록에서 체크박스로 화면을 선택해보세요. 5개를 미리 선택했어요.');}
- else if(n===3){openSchedule(checked.size?[...checked]:[]);}
- else if(n===4){backToMain();openWallWizard();}
- else{if(!$('#screen-schedule').hidden){const bc=$('#prog-broadcast');if(bc)bc.click();}else{openSchedule(checked.size?[...checked]:[]);}}
-});
+/* ═══════════ 초기화 ═══════════ */
 function renderAll(){renderStats();renderRail();renderScope();renderList();}
-renderAll();renderFg();
+renderAll();
 /* 대시보드 드릴다운용 API */
 window.__setPanelFilter=kind=>{
  if(kind==='attention')flt={...flt,view:'attention',status:'all',store:null,region:null,group:null,wall:null};

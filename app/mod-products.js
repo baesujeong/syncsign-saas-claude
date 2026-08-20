@@ -37,7 +37,6 @@ const CONTENT_NAME=()=>document.getElementById('content-name').value||'싱크사
 let widget=null; // {mode,cat,items,excluded,layout,cols,show,soldout,sort}
 const defaultShow=()=>({img:true,desc:true,price:true,opt:false,discount:true});
 let style={title:'SIGNATURE MENU',accent:'#F7C860',lang:false};
-let fg={1:true,2:false,3:false,4:false};
 
 /* 필터 상태 (상품 관리) */
 let flt={q:'',st:'all',cat:'all',sort:'new'};
@@ -401,7 +400,7 @@ function openDrawer(edit){
   const finalImgs=imgs.length?imgs:[{e:'🍽️',h:30}];
   const finalMain=Math.min(mainIdx,finalImgs.length-1);
   if(isEdit){Object.assign(edit,{name,price,cur,desc:wrap.querySelector('#f-desc').value.trim(),cat,opt,discount:dc,imgs:finalImgs,mainIdx:finalMain,mod:'07.04'});toast(usedIn(edit)?`'${name}' 수정을 완료했어요. 사용 중인 메뉴판에 바로 반영됐어요.`:'상품을 수정했어요');}
-  else{const np=P('p'+(++seq),name,wrap.querySelector('#f-desc').value.trim(),cat,price,opt,dc,'sale','🍽️',30,'07.04');np.cur=cur;np.imgs=finalImgs;np.mainIdx=finalMain;products.unshift(np);fg[1]=true;renderFg();toast(`'${name}'을 등록했어요.`);}
+  else{const np=P('p'+(++seq),name,wrap.querySelector('#f-desc').value.trim(),cat,price,opt,dc,'sale','🍽️',30,'07.04');np.cur=cur;np.imgs=finalImgs;np.mainIdx=finalMain;products.unshift(np);toast(`'${name}'을 등록했어요.`);}
   renderCats();renderProducts();renderBoard();
   if(keep){wrap.remove();openDrawer();}else wrap.remove();
  };
@@ -444,7 +443,7 @@ function openImport(){
    const go=ov.querySelector('#imp-go');go.disabled=false;go.textContent=`${rows.length}개 상품 등록`;
    go.onclick=()=>{
     rows.forEach((r,i)=>products.unshift(P('p'+(++seq),r[0],'',r[1],r[2],false,null,'sale',['🍪','🧋','☕','🧁','🍉'][i],Math.floor(Math.random()*360),'07.04')));
-    fg[1]=true;renderFg();ov.remove();renderCats();renderProducts();
+    ov.remove();renderCats();renderProducts();
     toast(`${rows.length}개 상품을 등록했어요.`,{action:'메뉴판에 추가',onAction:gotoEditor});
    };
   };
@@ -510,7 +509,6 @@ function sortIds(arr){
    기존 상품 연동 로직을 그대로 재사용하면서 위치·크기만 새 오브젝트 엔진에 편입 */
 function createWidget(cfg){
  widget={mode:cfg.mode,cat:cfg.cat||null,items:cfg.items||[],excluded:[],layout:cfg.layout||'media',cols:2,show:defaultShow(),soldout:'badge',sort:'manual'};
- fg[2]=true;renderFg();
  let mo=objects.find(o=>o.type==='widget'&&o.kind==='menu');
  if(!mo){mo={id:genId(),type:'widget',kind:'menu',x:24,y:24,w:Math.max(200,canvasW-48),h:Math.max(150,canvasH-48),z:nextZ()};objects.push(mo);}
  setSel(mo.id);
@@ -603,8 +601,12 @@ function openPicker({mode='manual',addTo=false}={}){
    splitLayout: 분할 모드일 때만 사용 — {id,regions:[{x,y,w,h,assetRef}]}. 자유 객체와 배타적으로 동작
    좌표는 항상 canvasW×canvasH 기준의 '캔버스 공간' px — 화면에는 edScale만큼 축소해 보여줘요 */
 let canvasW=1920,canvasH=1080,canvasBg='#FFFFFF';
+/* 배경 레이어: 색상 on/off · 배경 콘텐츠 ref('L:id', 재생목록 제외) · 콘텐츠 투명도(0~100)
+   배경 콘텐츠는 일반 오브젝트와 분리된 배경 레이어로 관리 → 오브젝트 편집에 영향 없음 */
+let bgColorOn=true,bgContent=null,bgOpacity=100;
+let bgQ='',bgType='all',bgFolder='all'; /* 배경 콘텐츠 브라우저: 검색어 · 타입필터 · 폴더필터 */
 let canvasConfigured=false; /* 최초 진입 시 캔버스 설정 모달 자동 표시 여부 */
-let objects=[],selId=null,selIds=new Set(),clipboard=[],objSeq=0,activeTool='text';
+let objects=[],selId=null,selIds=new Set(),clipboard=[],objSeq=0,activeTool=null;
 let splitLayout=null;
 let edScale=1;
 let history=[],historyIdx=-1,restoringHistory=false;
@@ -643,6 +645,11 @@ const SNAP_THRESH=6;
 function activeObj(){return objects.find(o=>o.id===selId)||null}
 function selectedObjs(){return objects.filter(o=>selIds.has(o.id))}
 function setSel(id){selId=id;selIds=id?new Set([id]):new Set();}
+/* 그룹에 속한 객체를 선택하면 같은 그룹 전체를 함께 선택 */
+function selectRespectingGroup(o){
+ if(o.gid){selIds=new Set(objects.filter(x=>x.gid===o.gid).map(x=>x.id));selId=o.id;}
+ else setSel(o.id);
+}
 function measureTextSize(o){
  const el=document.createElement('div');
  el.style.cssText=`position:absolute;visibility:hidden;white-space:pre;line-height:1.3;padding:0;font-family:'${o.font}',sans-serif;font-size:${o.size}px;font-weight:${o.weight};font-style:${o.italic?'italic':'normal'}`;
@@ -669,10 +676,11 @@ function resolveAsset(ref){
 }
 
 /* ─ 실행취소 / 다시실행 (JSON 스냅샷 방식) ─ */
-function snapshot(){return JSON.stringify({objects,splitLayout,canvasW,canvasH,canvasBg,widget,style})}
+function snapshot(){return JSON.stringify({objects,splitLayout,canvasW,canvasH,canvasBg,bgColorOn,bgContent,bgOpacity,widget,style})}
 function restoreSnapshot(s){
  const d=JSON.parse(s);
  objects=d.objects;splitLayout=d.splitLayout;canvasW=d.canvasW;canvasH=d.canvasH;canvasBg=d.canvasBg;widget=d.widget;style=d.style;
+ bgColorOn=d.bgColorOn!==false;bgContent=d.bgContent||null;bgOpacity=d.bgOpacity==null?100:d.bgOpacity;
  setSel(null);restoringHistory=true;renderEditor();restoringHistory=false;updateUndoRedoBtns();
 }
 function pushHistory(){
@@ -733,9 +741,25 @@ function fitEdCanvas(){
  const availW=Math.max(160,wrap.clientWidth-56),availH=Math.max(160,wrap.clientHeight-56);
  edScale=Math.min(availW/canvasW,availH/canvasH,1.4);
  canvas.style.width=(canvasW*edScale)+'px';canvas.style.height=(canvasH*edScale)+'px';
- canvas.style.background=canvasBg;
  stage.style.width=canvasW+'px';stage.style.height=canvasH+'px';stage.style.transform=`scale(${edScale})`;
  const tag=$('#canvas-res-tag');if(tag)tag.textContent=`${canvasW} × ${canvasH}`;
+ renderBgLayer();
+}
+/* 배경 레이어 렌더 — 하단: 배경색(base) / 상단: 배경 콘텐츠(cover, 투명도).
+   콘텐츠 투명도가 100 미만이면 배경색이 아래에서 비쳐 보임 */
+function renderBgLayer(){
+ const canvas=$('#ed-canvas'),layer=$('#ed-bg-layer');
+ if(canvas)canvas.style.background=bgColorOn?canvasBg:'transparent';
+ if(!layer)return;
+ const a=bgContent?resolveAsset(bgContent):null;
+ if(a){
+  /* TODO(API): 실제 자산 URL이면 <img>/<video>를 object-fit:cover로 렌더. 프로토타입은 자산 그라디언트로 대체(원본 비율 유지·cover). */
+  layer.style.display='block';
+  layer.style.opacity=Math.max(0,Math.min(100,bgOpacity))/100;
+  layer.innerHTML=`<div class="ed-bg-fill" style="background:${a.g};background-size:cover;background-position:center"></div>`;
+ }else{
+  layer.style.display='none';layer.style.opacity='';layer.innerHTML='';
+ }
 }
 function canvasPointFromEvent(e){
  const stage=$('#ed-stage');const r=stage.getBoundingClientRect();
@@ -746,6 +770,7 @@ function canvasPointFromEvent(e){
 function renderEditor(){
  fitEdCanvas();
  $$('.ed-rail button[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===activeTool));
+ const bgBtn=$('#ed-rail-bg');if(bgBtn)bgBtn.classList.toggle('on',activeTool==='bg');
  renderStage();renderRightPanel();
  setupStageEvents();
  if(!history.length){history=[snapshot()];historyIdx=0;updateUndoRedoBtns();}
@@ -764,12 +789,7 @@ function setupStageEvents(){
 function renderStage(){
  const stage=$('#ed-stage');if(!stage)return;
  if(!objects.length&&!splitLayout){
-  stage.innerHTML=`<div class="canvas-empty ${isLightBg()?'':'ce-dark'}" id="canvas-empty">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 8h6M7 11h8M7 14h5"/></svg>
-   <p><b>비어 있는 캔버스예요</b></p>
-   <p class="sub">왼쪽 도구에서 텍스트·그래픽·도형·분할·위젯을 골라 화면을 만들어 보세요.</p>
-   <button class="btn" id="canvas-add-text">＋ 텍스트 추가</button></div>`;
-  const qb=stage.querySelector('#canvas-add-text');if(qb)qb.onclick=()=>{activeTool='text';addObject('text',{});};
+  stage.innerHTML='';
   return;
  }
  if(splitLayout){
@@ -895,7 +915,7 @@ function attachObjectEvents(el,o){
    else{selIds.add(o.id);selId=o.id;}
    renderStage();renderRightPanel();return;
   }
-  if(!selIds.has(o.id)){setSel(o.id);renderStage();renderRightPanel();el=$(`[data-eo="${o.id}"]`);}
+  if(!selIds.has(o.id)){selectRespectingGroup(o);renderStage();renderRightPanel();el=$(`[data-eo="${o.id}"]`);}
   else if(selId!==o.id){selId=o.id;renderRightPanel();}
   startDragObject(e,o);
  });
@@ -1135,13 +1155,16 @@ function openRegionPicker(i){
 
 /* ═══════════ 에디터 : 좌측 라이브러리 패널(도구별) / 우측 속성 패널 ═══════════ */
 function renderRightPanel(){
- const lib=$('#panel-lib'),set=$('#panel-settings');
+ const aside=$('#ed-panel'),lib=$('#panel-lib'),set=$('#panel-settings');
  const o=activeObj();
- if(o){lib.hidden=true;set.hidden=false;renderPropsPanel(o);}
- else{lib.hidden=false;set.hidden=true;renderLibPanel();}
+ if(o){aside.hidden=false;lib.hidden=true;set.hidden=false;renderPropsPanel(o);}
+ else if(activeTool){aside.hidden=false;lib.hidden=false;set.hidden=true;renderLibPanel();}
+ else{aside.hidden=true;lib.hidden=true;set.hidden=true;} /* 도구·선택 없음 → 클린 기본 화면 */
+ fitEdCanvas(); /* 패널 표시 상태에 맞춰 캔버스 폭 재계산 */
 }
 function renderLibPanel(){
  const el=$('#panel-lib');
+ if(activeTool==='bg'){renderBgPanel(el);return;}
  if(activeTool==='text'){
   el.innerHTML=`<div class="ed-panel-head"><h2>텍스트</h2></div>
    <div class="ed-panel-body">
@@ -1174,6 +1197,140 @@ function renderLibPanel(){
  }else if(activeTool==='split')renderSplitLib(el);
  else renderWidgetsLib(el);
 }
+/* ═══════════ 에디터 : 배경 설정 패널 ═══════════ */
+function bgFolderLabel(){
+ if(bgFolder==='all')return '전체 폴더';
+ const f=(typeof LIB_FOLDERS!=='undefined')&&LIB_FOLDERS.find(x=>x.id===bgFolder);
+ return f?f.name:'전체 폴더';
+}
+function bgFilteredItems(){
+ const q=bgQ.toLowerCase();
+ /* 재생목록 제외 — 라이브러리 콘텐츠(이미지·동영상·URL)만 */
+ return LIB.filter(c=>!c.error
+  && (bgType==='all'||c.type===bgType)
+  && (bgFolder==='all'||c.folder===bgFolder)
+  && (!q||c.name.toLowerCase().includes(q)));
+}
+function bgUpload(){
+ /* TODO(API): 실제 파일 업로드 → 자산 라이브러리에 추가. 프로토타입은 샘플 이미지로 대체 */
+ const id='cu'+(++objSeq);
+ LIB.unshift({id,name:'업로드 이미지.png',type:'image',folder:bgFolder!=='all'?bgFolder:'lf1',tags:[],size:'2.0MB',dur:0,g:'linear-gradient(135deg,#22D3EE,#6366F1)',e:'🖼️',used:{pl:0,tp:0},date:'—'});
+ bgContent='L:'+id;bgOpacity=100;pushHistory();renderEditor();
+ toast('배경 이미지를 업로드했어요 (프로토타입: 샘플 적용)');
+}
+function renderBgPanel(el){
+ closeBgColorPop();
+ const a=bgContent?resolveAsset(bgContent):null;
+ const chev='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+ const folderIcon='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>';
+ el.innerHTML=`<div class="ed-panel-head bg-panel-head"><h2>배경 설정</h2></div>
+  <div class="ed-panel-body bg-body">
+   <div class="bg-color-row">
+    <span class="bg-color-lbl">배경색</span>
+    <button class="bg-toggle ${bgColorOn?'on':''}" id="bg-color-toggle" role="switch" aria-checked="${bgColorOn}" aria-label="배경색 사용"><i></i></button>
+    <button class="bg-swatch-btn" id="bg-swatch-btn"><span class="bg-hex"># ${canvasBg.replace('#','')}</span><span class="bg-swatch" style="background:${canvasBg}"></span></button>
+   </div>
+   <div class="bg-divider"></div>
+   ${a?`
+   <div class="bg-op-head"><span>이미지 투명도</span><span id="bg-op-val">${bgOpacity} %</span></div>
+   <input type="range" min="0" max="100" value="${bgOpacity}" id="bg-op-slider" class="bg-slider" aria-label="배경 콘텐츠 투명도">
+   <button class="btn bg-del-btn" id="bg-del">배경 이미지 삭제</button>`
+   :`
+   <div class="search-wrap" style="margin-bottom:10px">${IC.search}<input class="input input-sm" id="bg-q" placeholder="콘텐츠 검색" value="${bgQ}"></div>
+   <button class="bg-folder-dd" id="bg-folder-dd">${folderIcon}<span class="bg-folder-lbl">${bgFolderLabel()}</span>${chev}</button>
+   <div class="bg-chips">
+    ${[['all','전체'],['image','이미지'],['video','동영상'],['url','URL']].map(([v,l])=>`<button class="${bgType===v?'on':''}" data-bgtype="${v}">${l}</button>`).join('')}
+   </div>
+   <div class="bg-grid" id="bg-grid"></div>`}
+  </div>`;
+ el.querySelector('#bg-color-toggle').onclick=()=>{bgColorOn=!bgColorOn;renderBgLayer();pushHistory();renderBgPanel(el);};
+ el.querySelector('#bg-swatch-btn').onclick=e=>openBgColorPop(e.currentTarget);
+ if(a){
+  const sl=el.querySelector('#bg-op-slider'),val=el.querySelector('#bg-op-val');
+  sl.addEventListener('input',()=>{bgOpacity=+sl.value;val.textContent=bgOpacity+' %';renderBgLayer();});
+  sl.addEventListener('change',()=>pushHistory());
+  el.querySelector('#bg-del').onclick=()=>{bgContent=null;bgOpacity=100;pushHistory();renderEditor();}; /* 콘텐츠만 제거, 배경색 유지 */
+ }else{
+  el.querySelector('#bg-q').addEventListener('input',e=>{bgQ=e.target.value.trim();drawBgGrid();});
+  el.querySelector('#bg-folder-dd').onclick=e=>{
+   const folders=(typeof LIB_FOLDERS!=='undefined')?LIB_FOLDERS:[];
+   popMenu(e.currentTarget,[{label:'전체 폴더',onClick:()=>{bgFolder='all';renderBgPanel(el);}}]
+    .concat(folders.map(f=>({label:f.name,onClick:()=>{bgFolder=f.id;renderBgPanel(el);}}))));
+  };
+  el.querySelectorAll('[data-bgtype]').forEach(b=>b.onclick=()=>{bgType=b.dataset.bgtype;renderBgPanel(el);});
+  drawBgGrid();
+ }
+ function drawBgGrid(){
+  const grid=el.querySelector('#bg-grid');if(!grid)return;
+  const items=bgFilteredItems();
+  const durBadge=c=>c.type==='video'?`<span class="dur num">${typeof durFmt==='function'?durFmt(c.dur):c.dur}</span>`:'';
+  /* 카드 UI는 재생목록 라이브러리 카드(.ple-src)와 통일 */
+  grid.innerHTML=`<button class="bg-upload" id="bg-upload"><span class="im"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>업로드</span></button>`
+   +items.map(c=>`<button class="ple-src bg-src" data-bgref="L:${c.id}"><div class="im" style="background:${c.g}">${c.e}${durBadge(c)}</div><div class="nm">${c.name}</div></button>`).join('')
+   +(items.length?'':`<div class="bg-empty">조건에 맞는 콘텐츠가 없어요</div>`);
+  grid.querySelector('#bg-upload').onclick=bgUpload;
+  grid.querySelectorAll('[data-bgref]').forEach(card=>card.onclick=()=>{bgContent=card.dataset.bgref;bgOpacity=100;pushHistory();renderEditor();});
+ }
+}
+/* 색상 피커 팝오버 (HSV) */
+let bgColorPopEl=null,bgColorPopCleanup=null;
+function closeBgColorPop(){
+ if(bgColorPopCleanup){bgColorPopCleanup();bgColorPopCleanup=null;}
+ if(bgColorPopEl){bgColorPopEl.remove();bgColorPopEl=null;}
+}
+function openBgColorPop(anchor){
+ if(bgColorPopEl){closeBgColorPop();return;}
+ const PRESETS=['#111827','#6B7280','#2563EB','#16A34A','#F59E0B','#FFFFFF'];
+ const eye='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-4 12-12 3 3L6 21l-4 1Z"/><path d="m15 6 3-3a2.12 2.12 0 0 1 3 3l-3 3"/></svg>';
+ let {h,s,v}=hexToHsv(canvasBg);
+ const pop=document.createElement('div');pop.className='color-pop';
+ pop.innerHTML=`<div class="cp-head"><b>색상</b><button class="icon-btn cp-x" aria-label="닫기">${IC.x}</button></div>
+  <div class="cp-sv" id="cp-sv"><div class="cp-sv-dot" id="cp-sv-dot"></div></div>
+  <div class="cp-hue" id="cp-hue"><div class="cp-hue-dot" id="cp-hue-dot"></div></div>
+  <div class="cp-row"><input class="input input-sm" id="cp-hex" value="${canvasBg.toUpperCase()}" spellcheck="false"><button class="cp-eye" id="cp-eye" aria-label="스포이트">${eye}</button></div>
+  <div class="cp-presets">${PRESETS.map(c=>`<button data-cp="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
+ document.body.appendChild(pop);bgColorPopEl=pop;
+ const r=anchor.getBoundingClientRect();
+ let top=r.bottom+8;if(top+320>window.innerHeight)top=Math.max(8,r.top-328);
+ pop.style.left=Math.max(8,Math.min(r.right-288,window.innerWidth-296))+'px';
+ pop.style.top=top+'px';
+ const sv=pop.querySelector('#cp-sv'),svDot=pop.querySelector('#cp-sv-dot'),hue=pop.querySelector('#cp-hue'),hueDot=pop.querySelector('#cp-hue-dot'),hexIn=pop.querySelector('#cp-hex');
+ const cl=x=>Math.max(0,Math.min(1,x));
+ function paint(commit){
+  const hex=hsvToHex(h,s,v);canvasBg=hex;
+  sv.style.background=`linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,hsl(${Math.round(h)},100%,50%))`;
+  svDot.style.left=s+'%';svDot.style.top=(100-v)+'%';
+  hueDot.style.left=(h/360*100)+'%';
+  if(document.activeElement!==hexIn)hexIn.value=hex.toUpperCase();
+  renderBgLayer();
+  const sw=$('#bg-swatch-btn .bg-swatch'),hx=$('#bg-swatch-btn .bg-hex');
+  if(sw)sw.style.background=hex;if(hx)hx.textContent='# '+hex.replace('#','').toUpperCase();
+  if(commit)pushHistory();
+ }
+ paint(false);
+ const svMove=e=>{const b=sv.getBoundingClientRect();s=cl((e.clientX-b.left)/b.width)*100;v=100-cl((e.clientY-b.top)/b.height)*100;paint(false);};
+ sv.addEventListener('mousedown',e=>{e.preventDefault();svMove(e);const up=()=>{document.removeEventListener('mousemove',svMove);document.removeEventListener('mouseup',up);paint(true);};document.addEventListener('mousemove',svMove);document.addEventListener('mouseup',up);});
+ const hueMove=e=>{const b=hue.getBoundingClientRect();h=cl((e.clientX-b.left)/b.width)*360;paint(false);};
+ hue.addEventListener('mousedown',e=>{e.preventDefault();hueMove(e);const up=()=>{document.removeEventListener('mousemove',hueMove);document.removeEventListener('mouseup',up);paint(true);};document.addEventListener('mousemove',hueMove);document.addEventListener('mouseup',up);});
+ hexIn.addEventListener('input',()=>{let x=hexIn.value.trim();if(!/^#?[0-9a-fA-F]{6}$/.test(x))return;if(x[0]!=='#')x='#'+x;const c=hexToHsv(x);h=c.h;s=c.s;v=c.v;paint(false);});
+ hexIn.addEventListener('change',()=>pushHistory());
+ pop.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>{const c=hexToHsv(b.dataset.cp);h=c.h;s=c.s;v=c.v;paint(true);});
+ pop.querySelector('#cp-eye').onclick=async()=>{
+  if(window.EyeDropper){try{const res=await new window.EyeDropper().open();const c=hexToHsv(res.sRGBHex);h=c.h;s=c.s;v=c.v;paint(true);}catch(_){}}
+  else toast('이 브라우저는 스포이트를 지원하지 않아요.',{err:true});
+ };
+ pop.querySelector('.cp-x').onclick=closeBgColorPop;
+ const outside=e=>{if(!pop.contains(e.target)&&!anchor.contains(e.target))closeBgColorPop();};
+ setTimeout(()=>document.addEventListener('mousedown',outside),0);
+ bgColorPopCleanup=()=>document.removeEventListener('mousedown',outside);
+}
+/* 색상 변환 헬퍼 (hex ↔ rgb ↔ hsv) */
+function hexToRgb(h){h=(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h||'000000',16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
+function rgbToHex(r,g,b){const t=x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0');return '#'+t(r)+t(g)+t(b);}
+function rgbToHsv(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360;}return{h,s:mx?d/mx*100:0,v:mx*100};}
+function hsvToRgb(h,s,v){s/=100;v/=100;const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;let r,g,b;if(h<60){r=c;g=x;b=0;}else if(h<120){r=x;g=c;b=0;}else if(h<180){r=0;g=c;b=x;}else if(h<240){r=0;g=x;b=c;}else if(h<300){r=x;g=0;b=c;}else{r=c;g=0;b=x;}return{r:(r+m)*255,g:(g+m)*255,b:(b+m)*255};}
+function hexToHsv(hex){const {r,g,b}=hexToRgb(hex);return rgbToHsv(r,g,b);}
+function hsvToHex(h,s,v){const {r,g,b}=hsvToRgb(h,s,v);return rgbToHex(r,g,b);}
 function renderGraphicLib(el){
  el.innerHTML=`<div class="ed-panel-head"><h2>그래픽</h2><div class="wtabs"><button class="${gLibTab==='content'?'on':''}" data-glt="content">콘텐츠</button><button class="${gLibTab==='playlist'?'on':''}" data-glt="playlist">재생목록</button></div></div>
   <div class="ed-panel-body">
@@ -1475,32 +1632,18 @@ function openCanvasSetupModal(){
   else apply();
  };
 }
-function openBgModal(){
- const SW=['#171C24','#FFFFFF','#0B1220','#F4F6F9','#1A2130'];
- const ov=openModal(`
-  <div class="modal-head"><h2>배경 설정</h2></div>
-  <div class="modal-body"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-   ${SW.map(c=>`<button data-bg="${c}" aria-label="배경 ${c}" style="width:32px;height:32px;border-radius:8px;background:${c};border:2px solid ${canvasBg===c?'var(--blue)':'var(--border-2)'}"></button>`).join('')}
-   <input type="color" id="bg-custom" value="${canvasBg}" style="width:36px;height:32px;padding:0;border:0;background:none;cursor:pointer" aria-label="사용자 지정 배경색">
-  </div></div>
-  <div class="modal-foot"><span class="grow"></span><button class="btn btn-primary" data-close>완료</button></div>`,{width:'420px'});
- ov.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{canvasBg=b.dataset.bg;ov.querySelectorAll('[data-bg]').forEach(x=>x.style.borderColor=x===b?'var(--blue)':'var(--border-2)');fitEdCanvas();renderStage();pushHistory();});
- ov.querySelector('#bg-custom').addEventListener('input',e=>{canvasBg=e.target.value;fitEdCanvas();renderStage();});
- ov.querySelector('#bg-custom').addEventListener('change',()=>pushHistory());
-}
-$('#ed-tool-canvas').onclick=openCanvasSetupModal;
-$('#ed-tool-bg').onclick=openBgModal;
+$('#ed-rail-bg').onclick=()=>{activeTool='bg';setSel(null);renderEditor();};
 $('#ed-undo').onclick=undo;
 $('#ed-redo').onclick=redo;
-$('#ed-tool-order').onclick=e=>{
- const o=activeObj();
- if(!o){toast('먼저 객체를 선택해주세요.',{err:true});return}
- popMenu(e.currentTarget,[
-  {label:'맨 앞으로',onClick:()=>zOrder(o.id,'front')},
-  {label:'한 칸 위로',onClick:()=>zOrder(o.id,'up')},
-  {label:'한 칸 아래로',onClick:()=>zOrder(o.id,'down')},
-  {label:'맨 뒤로',onClick:()=>zOrder(o.id,'back')},
- ]);
+/* 그룹 : 선택된 2개 이상 객체를 하나의 그룹으로 묶거나(같은 그룹이면) 해제 */
+$('#ed-tool-group').onclick=()=>{
+ const sel=selectedObjs();
+ if(sel.length<2){toast('그룹으로 묶을 객체를 2개 이상 선택해주세요.',{err:true});return;}
+ const gid=sel[0].gid;
+ const already=gid&&sel.every(o=>o.gid===gid)&&objects.filter(o=>o.gid===gid).length===sel.length;
+ if(already){sel.forEach(o=>delete o.gid);toast('그룹을 해제했어요.');}
+ else{const g='g'+(++objSeq);sel.forEach(o=>o.gid=g);toast('그룹으로 묶었어요.');}
+ pushHistory();renderEditor();
 };
 $$('.ed-rail button[data-tool]').forEach(b=>b.onclick=()=>{activeTool=b.dataset.tool;setSel(null);renderEditor();});
 window.addEventListener('resize',()=>{const es=document.getElementById('screen-editor');if(es&&!es.hidden)fitEdCanvas();});
@@ -1582,17 +1725,17 @@ function drawSettings(){
 
 /* ═══════════ 저장 / 프리뷰 / 송출 ═══════════ */
 $('#btn-save-content').onclick=()=>{
- fg[3]=true;renderFg();
  toast(`'${CONTENT_NAME()}'을 저장했어요.`,{action:'송출하기',onAction:openBroadcast});
 };
 $('#btn-preview').onclick=()=>{
- if(!objects.length&&!splitLayout){toast('먼저 콘텐츠를 추가해 주세요.',{err:true});return}
+ if(!objects.length&&!splitLayout&&!bgContent){toast('먼저 콘텐츠를 추가해 주세요.',{err:true});return}
  const wasSel=selId;setSel(null);renderStage();
+ const bgA=bgContent?resolveAsset(bgContent):null;
+ const bgHtml=bgA?`<div style="position:absolute;inset:0;background:${bgA.g};background-size:cover;background-position:center;opacity:${Math.max(0,Math.min(100,bgOpacity))/100};z-index:0"></div>`:'';
  const pv=document.createElement('div');pv.className='preview-overlay';
  pv.innerHTML=`<div class="preview-top"><b>${CONTENT_NAME()}</b><span class="tag">${canvasW} × ${canvasH}</span><span class="tag">실제 화면 미리보기</span><button class="icon-btn" aria-label="닫기">${IC.x}</button></div>
-  <div class="preview-stage"><div class="ed-canvas" style="width:min(100%,${canvasW}px);aspect-ratio:${canvasW}/${canvasH};background:${canvasBg};position:relative;overflow:hidden"><div style="position:absolute;inset:0;width:${canvasW}px;height:${canvasH}px;transform-origin:top left;transform:scale(var(--pvs,1))">${$('#ed-stage').innerHTML}</div></div></div>`;
- pv.querySelector('.canvas-empty')?.remove();
- const inner=pv.querySelector('.preview-stage .ed-canvas > div');
+  <div class="preview-stage"><div class="ed-canvas" style="width:min(100%,${canvasW}px);aspect-ratio:${canvasW}/${canvasH};background:${bgColorOn?canvasBg:'transparent'};position:relative;overflow:hidden">${bgHtml}<div class="pv-stage" style="position:absolute;inset:0;width:${canvasW}px;height:${canvasH}px;transform-origin:top left;transform:scale(var(--pvs,1));z-index:1">${$('#ed-stage').innerHTML}</div></div></div>`;
+ const inner=pv.querySelector('.preview-stage .pv-stage');
  const fitPv=()=>{const box=pv.querySelector('.preview-stage .ed-canvas');if(box&&inner)inner.style.transform=`scale(${box.clientWidth/canvasW})`;};
  pv.querySelector('.icon-btn').onclick=()=>{pv.remove();setSel(wasSel);renderStage();renderRightPanel();};
  document.body.appendChild(pv);
@@ -1641,37 +1784,14 @@ function openBroadcast(){
    <p>'${CONTENT_NAME()}'이 ${n}개 화면에 ${when==='now'?'지금 표시되고 있어요.':'7월 5일 09:00부터 표시돼요.'}<br>상품 가격·품절 상태가 바뀌면 <b>재송출 없이 자동 반영</b>돼요.</p></div>
    <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" data-close id="bc-done">확인</button></div>`;
   ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>ov.remove());
-  fg[3]=true;fg[4]=true;renderFg();
   toast(`${n}개 화면에 송출했어요.`);
  };
  draw();
 }
 $('#btn-broadcast').onclick=openBroadcast;
 
-/* ═══════════ 플로우 가이드 ═══════════ */
-function renderFg(){
- let cur=fg[1]?fg[2]?fg[3]?fg[4]?0:4:3:2:1;
- $$('.fg-step').forEach(s=>{
-  const n=+s.dataset.fg;
-  s.classList.toggle('done',!!fg[n]);
-  s.classList.toggle('cur',n===cur);
- });
- /* 온보딩 배너 동기화 */
- const ob2=$('#ob2'),ob3=$('#ob3');
- if(ob2){ob2.classList.toggle('done',fg[3]);ob2.classList.toggle('cur',!fg[3]);}
- if(ob3){ob3.classList.toggle('done',fg[4]);ob3.classList.toggle('cur',fg[3]&&!fg[4]);}
-}
-$('#fg-toggle').onclick=()=>$('#flow-guide').classList.toggle('min');
-$$('.fg-step').forEach(s=>s.onclick=()=>{
- const n=+s.dataset.fg;
- if(n===1){gotoAdmin();openDrawer();}
- else if(n===2){gotoEditor();if(!widget)openPicker();}
- else if(n===3){gotoEditor();}
- else{gotoEditor();openBroadcast();}
-});
-
 /* ═══════════ 초기화 ═══════════ */
-renderCats();renderProducts();renderFg();
+renderCats();renderProducts();
 window.__openMenuEditor=gotoEditor;
 window.__productCount=()=>products.length;
 })();
