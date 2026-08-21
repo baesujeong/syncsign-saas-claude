@@ -938,26 +938,26 @@ table.grid tr.checked td{background:var(--blue-50)}
 .cs-card.on .cs-prev-box i{background:var(--blue)}
 /* 위젯: 대기·호출/날씨/뉴스 */
 .wg{width:100%;height:100%;display:flex;border-radius:8px;overflow:hidden;box-sizing:border-box}
-/* 대기/호출 위젯 — 반응형 4레이아웃 × Light/Dark. --cu = 컨테이너 폭의 1%(JS로 설정, fitCallWidgets) */
-.wg-call2{--cu:4px;width:100%;height:100%;box-sizing:border-box;border-radius:6px;overflow:hidden;font-family:'Pretendard',sans-serif;font-variant-numeric:tabular-nums}
-.wg-call2 .cp-grid{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--cu)*3);grid-auto-rows:1fr}
-.wg-call2 .cp-cell{display:flex;align-items:center;justify-content:center;font-weight:800;border-radius:calc(var(--cu)*2.5)}
-.cl-pickup{display:flex;flex-direction:column;padding:calc(var(--cu)*6)}
-.cl-pickup .cp-title{font-size:calc(var(--cu)*15);font-weight:800;text-align:center;line-height:1}
-.cl-pickup .cp-sub{font-size:calc(var(--cu)*4.6);font-weight:700;text-align:center;margin:calc(var(--cu)*2) 0 calc(var(--cu)*4)}
+/* 대기/호출 위젯 — 4레이아웃 × Light/Dark. --u = 렌더 폭/100 (렌더 시 인라인 지정) → 캔버스·미리보기 동일 마크업 스케일 */
+.wg-call2{--u:3px;width:100%;height:100%;box-sizing:border-box;border-radius:6px;overflow:hidden;font-family:'Pretendard',sans-serif;font-variant-numeric:tabular-nums}
+.wg-call2 .cp-grid{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*3);grid-auto-rows:1fr}
+.wg-call2 .cp-cell{display:flex;align-items:center;justify-content:center;font-weight:800;border-radius:calc(var(--u)*2.5)}
+.cl-pickup{display:flex;flex-direction:column;padding:calc(var(--u)*6)}
+.cl-pickup .cp-title{font-size:calc(var(--u)*15);font-weight:800;text-align:center;line-height:1}
+.cl-pickup .cp-sub{font-size:calc(var(--u)*4.6);font-weight:700;text-align:center;margin:calc(var(--u)*2) 0 calc(var(--u)*4)}
 .cl-pickup .cp-grid{flex:1}
-.cl-pickup .cp-cell{font-size:calc(var(--cu)*13)}
-.cl-grid{display:flex;padding:calc(var(--cu)*5)}
+.cl-pickup .cp-cell{font-size:calc(var(--u)*13)}
+.cl-grid{display:flex;padding:calc(var(--u)*5)}
 .cl-grid .cp-grid{flex:1}
-.cl-grid .cp-cell{font-size:calc(var(--cu)*14)}
-.cl-feature{display:flex;flex-direction:column;padding:calc(var(--cu)*5);gap:calc(var(--cu)*3)}
-.cl-feature .cp-big{font-size:calc(var(--cu)*24);font-weight:800;text-align:center;line-height:1;padding:calc(var(--cu)*2) 0}
+.cl-grid .cp-cell{font-size:calc(var(--u)*14)}
+.cl-feature{display:flex;flex-direction:column;padding:calc(var(--u)*5);gap:calc(var(--u)*3)}
+.cl-feature .cp-big{font-size:calc(var(--u)*24);font-weight:800;text-align:center;line-height:1;padding:calc(var(--u)*2) 0}
 .cl-feature .cp-grid{flex:1}
-.cl-feature .cp-cell{font-size:calc(var(--cu)*12)}
-.cl-ticket{display:flex;flex-direction:column;padding:calc(var(--cu)*5);gap:calc(var(--cu)*3)}
-.cl-ticket .cp-big{font-size:calc(var(--cu)*20);font-weight:800;text-align:center;letter-spacing:.04em;line-height:1;padding:calc(var(--cu)*4) 0;border-radius:calc(var(--cu)*2.5)}
+.cl-feature .cp-cell{font-size:calc(var(--u)*12)}
+.cl-ticket{display:flex;flex-direction:column;padding:calc(var(--u)*5);gap:calc(var(--u)*3)}
+.cl-ticket .cp-big{font-size:calc(var(--u)*20);font-weight:800;text-align:center;letter-spacing:.04em;line-height:1;padding:calc(var(--u)*4) 0;border-radius:calc(var(--u)*2.5)}
 .cl-ticket .cp-grid{flex:1}
-.cl-ticket .cp-cell{font-size:calc(var(--cu)*11)}
+.cl-ticket .cp-cell{font-size:calc(var(--u)*11)}
 .wg-call2.thm-dark{background:#20242C;color:#fff}
 .thm-dark .cp-cell{background:#111318;color:#fff}
 .thm-dark .cp-cell.hi,.thm-dark .cp-big{color:#F7C860}

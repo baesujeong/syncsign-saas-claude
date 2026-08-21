@@ -632,26 +632,18 @@ const CALL_LAYOUTS=[
  {id:'feature',name:'대기 번호', ratio:600/900},
  {id:'ticket', name:'번호표',    ratio:600/720},
 ];
-/* 반응형(cqw) 마크업 — 캔버스·미리보기 어디서든 컨테이너 크기에 맞춰 스케일 */
-function callWidgetHtml(layout,theme){
+/* 마크업 — 렌더 폭(w px)을 받아 --u(=w/100)로 텍스트·여백을 스케일. 캔버스=객체 폭, 미리보기=고정 패널 기준 폭 */
+function callWidgetHtml(layout,theme,w){
  const t=theme==='dark'?'thm-dark':'thm-light';
+ const u=` style="--u:${((+w||300)/100).toFixed(3)}px"`;
  const cell=(n,hi)=>`<div class="cp-cell${hi?' hi':''}${n===''?' empty':''}">${n}</div>`;
  if(layout==='grid')
-  return `<div class="wg-call2 cl-grid ${t}"><div class="cp-grid">${cell(131,1)}${cell(130)}${cell(129)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}</div></div>`;
+  return `<div class="wg-call2 cl-grid ${t}"${u}><div class="cp-grid">${cell(131,1)}${cell(130)}${cell(129)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}</div></div>`;
  if(layout==='feature')
-  return `<div class="wg-call2 cl-feature ${t}"><div class="cp-big hi">130</div><div class="cp-grid">${cell(129)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}${cell(123)}${cell('')}</div></div>`;
+  return `<div class="wg-call2 cl-feature ${t}"${u}><div class="cp-big hi">130</div><div class="cp-grid">${cell(129)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}${cell(123)}${cell('')}</div></div>`;
  if(layout==='ticket')
-  return `<div class="wg-call2 cl-ticket ${t}"><div class="cp-big hi">00001</div><div class="cp-grid">${cell('00002')}${cell('00003')}${cell('00004')}${cell('00005')}${cell('00006')}${cell('00007')}</div></div>`;
- return `<div class="wg-call2 cl-pickup ${t}"><div class="cp-title">PICK UP</div><div class="cp-sub"><b>영수증</b> 번호를 확인해주세요</div><div class="cp-grid">${cell(129,1)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}${cell(123)}${cell('')}</div></div>`;
-}
-/* 대기/호출 위젯 텍스트/여백 스케일 — 컨테이너 실측 폭의 1%를 --cu로 설정(캔버스·미리보기 공용) */
-function fitCallWidgets(root){
- const run=()=>{(root||document).querySelectorAll('.wg-call2').forEach(el=>{
-  const w=el.getBoundingClientRect().width;
-  if(w)el.style.setProperty('--cu',(w/100)+'px');
- });};
- run();
- requestAnimationFrame(run); /* 그리드·aspect-ratio 레이아웃 확정 후 재측정 */
+  return `<div class="wg-call2 cl-ticket ${t}"${u}><div class="cp-big hi">00001</div><div class="cp-grid">${cell('00002')}${cell('00003')}${cell('00004')}${cell('00005')}${cell('00006')}${cell('00007')}</div></div>`;
+ return `<div class="wg-call2 cl-pickup ${t}"${u}><div class="cp-title">PICK UP</div><div class="cp-sub"><b>영수증</b> 번호를 확인해주세요</div><div class="cp-grid">${cell(129,1)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}${cell(123)}${cell('')}</div></div>`;
 }
 /* 날씨 위젯 : 국가 → 도시 2단 선택 (글로벌 사용자 지원) */
 const WEATHER_REGIONS={
@@ -855,7 +847,6 @@ function renderStage(){
  const sorted=[...objects].sort((a,b)=>a.z-b.z);
  stage.innerHTML=sorted.map(o=>objectHtml(o)).join('')+'<div class="guide-layer" id="guide-layer"></div>';
  sorted.forEach(o=>attachObjectEvents(stage.querySelector(`[data-eo="${o.id}"]`),o));
- fitCallWidgets(stage);
 }
 function objectHtml(o){
  const sel=selIds.has(o.id);
@@ -895,7 +886,7 @@ function shapeOutlineSvg(shape){
  return'';
 }
 function widgetInnerHtml(o){
- if(o.kind==='call')return callWidgetHtml(o.layout||'pickup',o.theme||'light');
+ if(o.kind==='call')return callWidgetHtml(o.layout||'pickup',o.theme||'light',o.w);
  if(o.kind==='weather'){
   if(o.styleId==='compact')return `<div class="wg wg-weather st-compact"><span class="e">☀️</span><span class="num">24°</span><span class="region">${o.region}</span></div>`;
   if(o.styleId==='mono')return `<div class="wg wg-weather st-mono"><span class="num">24°</span><span class="region">${o.region} · 맑음</span></div>`;
@@ -1132,7 +1123,6 @@ function startResizeObject(e,o,handle){
   if(el){
    el.style.left=o.x+'px';el.style.top=o.y+'px';el.style.width=o.w+'px';el.style.height=o.h+'px';
    if(textScale){const inner=el.querySelector('.eo-text');if(inner)inner.style.fontSize=o.size+'px';}
-   if(ratioLock)fitCallWidgets(el); /* 리사이즈 중 위젯 텍스트 실시간 스케일 */
   }
   updateXYWHInputsLive(o);
  };
@@ -1571,8 +1561,7 @@ function drawWgBody(body,hasMenu){
  }else if(wgTab==='call'){
   /* 대기/호출 — 4가지 레이아웃 카드(실제 번호 미리보기, 라이트 기준). 추가 후 테마 전환 */
   body.innerHTML=`<p style="font-size:13px;color:var(--text-2);margin:0 0 12px;line-height:1.6">서비스에서 제공하는 4가지 레이아웃 중 원하는 스타일을 선택해 추가하세요. 추가 후 Light/Dark 테마를 바꿀 수 있어요.</p>
-   <div class="wcall-lib">${CALL_LAYOUTS.map(L=>`<button class="wcall-card" data-wgadd="${L.id}"><div class="wcall-prev" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,'light')}</div><div class="wcall-cap">${L.name}</div></button>`).join('')}</div>`;
-  fitCallWidgets(body);
+   <div class="wcall-lib">${CALL_LAYOUTS.map(L=>`<button class="wcall-card" data-wgadd="${L.id}"><div class="wcall-prev" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,'light',129)}</div><div class="wcall-cap">${L.name}</div></button>`).join('')}</div>`;
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{const L=CALL_LAYOUTS.find(x=>x.id===b.dataset.wgadd);const w=Math.round(canvasW*0.31);addObject('widget',{kind:'call',layout:L.id,theme:'light',ratio:L.ratio,w,h:Math.round(w/L.ratio)});});
  }else{
   const DEFS=wgTab==='weather'?WEATHER_STYLES:NEWS_STYLES;
@@ -2007,15 +1996,14 @@ function renderCallPanel(o){
    <div class="bg-divider"></div>
    <div class="tx-sec">
     <div class="tx-sec-lbl">레이아웃</div>
-    <div class="cw-layouts">${CALL_LAYOUTS.map(L=>`<button class="cw-layout ${layout===L.id?'on':''}" data-cwlayout="${L.id}" aria-label="${L.name}" title="${L.name}"><div class="cw-mini" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,theme)}</div></button>`).join('')}</div>
+    <div class="cw-layouts">${CALL_LAYOUTS.map(L=>`<button class="cw-layout ${layout===L.id?'on':''}" data-cwlayout="${L.id}" aria-label="${L.name}" title="${L.name}"><div class="cw-mini" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,theme,61)}</div></button>`).join('')}</div>
    </div>
    <div class="bg-divider"></div>
    <div class="tx-sec">
     <div class="cw-theme-head"><span class="tx-sec-lbl" style="margin:0">테마 스타일</span><span class="cw-theme-lbl ${theme==='light'?'on':''}">Light</span><button class="bg-toggle ${theme==='light'?'on':''}" id="cw-theme" role="switch" aria-checked="${theme==='light'}" aria-label="Light 테마"><i></i></button></div>
-    <div class="cw-preview"><div class="cw-preview-fit" style="aspect-ratio:${ratio}">${callWidgetHtml(layout,theme)}</div></div>
+    <div class="cw-preview"><div class="cw-preview-fit" style="aspect-ratio:${ratio}">${callWidgetHtml(layout,theme,Math.round(126*ratio))}</div></div>
    </div>
   </div>`;
- fitCallWidgets(set); /* 레이아웃 썸네일 + 테마 미리보기 스케일 */
  set.querySelector('#cw-copy').onclick=()=>duplicateSelection();
  set.querySelector('#cw-delete').onclick=()=>{deleteSelected();toast('위젯을 삭제했어요');};
  wireAlignOrder(set,false);
