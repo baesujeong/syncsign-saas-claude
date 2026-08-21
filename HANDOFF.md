@@ -76,6 +76,9 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 | `bindListEvents`의 `[data-fav]` 토글 | 화면 즐겨찾기 | 사용자별 즐겨찾기 저장 PUT/DELETE (현재 로컬 `p.fav`만 변경) |
 | `mod-products.js` `bgUpload()` | 배경 콘텐츠 업로드 | 파일 업로드 POST → 자산 라이브러리 추가 (현재 샘플 이미지로 대체) |
 | `mod-products.js` `renderBgLayer()` | 배경 콘텐츠 렌더 | 실제 자산 URL이면 `<img>`/`<video>`를 `object-fit:cover`로 렌더 (프로토타입은 자산 그라디언트로 대체, cover·비율 유지) |
+| `mod-products.js` `renderGraphicLib()` 무료 이미지 탭 (`FREE_IMAGES`/`FREE_PROVIDERS`/`registerFreeAsset`) | 무료 이미지 목록 | 무료 이미지 API 연동(Pixabay·Pexels·공유마당 등, 프로바이더별 검색·페이지네이션). 현재는 그라디언트 mock. 프로바이더 추가/변경 쉽게 분리해 둠 |
+| `mod-products.js` `renderGraphicLib()` 업로드 카드(`#gph-upload`) | 그래픽 업로드 | 파일 업로드 POST → 자산 라이브러리 추가 (현재 샘플 이미지로 대체) |
+| `mod-products.js` 그래픽 `o.crop`(objectHtml/`exitCropMode`) | 이미지 크롭 | `crop={x,y,w,h}`(원본 대비 0~1 비율)을 실제 이미지에 적용해 렌더/내보내기. 프로토타입은 `background-size/position`으로 표현 |
 
 > **API Response 소비처(어느 렌더 함수가 쓰는지):**
 > `PANELS/STORES/GROUPS` → `renderList`·`renderRail`·`renderScope`·`openPanelDrawer` (화면 관리) 및
