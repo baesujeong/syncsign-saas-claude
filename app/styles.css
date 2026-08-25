@@ -1958,15 +1958,15 @@ table.grid tr.checked td{background:var(--blue-50)}
 .stb-guide .step .num{font-weight:700;color:var(--text-2)}
 
 /* ─── 좌측 레일 비디오월 항목 — 이름(선택=구성 화면 목록업) + 우측 카운트, 호버 시 카운트→⋯ 교체 ─── */
-.rail-item.rail-wall{padding:8px 8px;gap:8px}
+.rail-item.rail-wall,.rail-item.rail-group{padding:8px 8px;gap:8px}
 .rail-wall-hit{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0;color:inherit;cursor:pointer;background:none;border:0;font:inherit;text-align:left}
 .rail-wall-hit .rail-wall-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 우측 고정 슬롯: 위 리스트 카운트와 동일하게 우측 정렬. 카운트와 ⋯ 가 같은 자리를 공유 */
 .rail-wall-right{flex:none;position:relative;width:26px;height:26px;display:flex;align-items:center;justify-content:flex-end}
 .rail-wall-right .cnt{margin:0;transition:opacity .12s}
 .rail-wall-right .rail-more{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;width:26px;height:26px;color:var(--text-3);opacity:0;transition:opacity .12s;border-radius:6px}
-.rail-item.rail-wall:hover .rail-wall-right .cnt{opacity:0}
-.rail-item.rail-wall:hover .rail-wall-right .rail-more{opacity:1}
+.rail-item.rail-wall:hover .rail-wall-right .cnt,.rail-item.rail-group:hover .rail-wall-right .cnt{opacity:0}
+.rail-item.rail-wall:hover .rail-wall-right .rail-more,.rail-item.rail-group:hover .rail-wall-right .rail-more{opacity:1}
 
 /* ═══ 편성일정 다중 대상 개편 ═══ */
 /* 상단 적용 대상 요약 */

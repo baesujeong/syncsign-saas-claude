@@ -390,8 +390,10 @@ function renderRail(){
   flt={...flt,store:flt.store===b.dataset.store?null:b.dataset.store,region:null,group:null,wall:null,view:'all'};
   page=1;renderAll();
  });
- /* 그룹 */
- $('#group-list').innerHTML=GROUPS.map(g=>`<button class="rail-item ${flt.group===g.id?'on':''}" data-group="${g.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" stroke-linecap="round"/></svg>${g.name}<span class="cnt num">${g.ids.length}</span></button>`).join('')
+ /* 그룹 — 비디오월과 동일하게 hover 시 ⋯(더보기) 노출: 이름 수정·삭제 */
+ $('#group-list').innerHTML=GROUPS.map(g=>`<div class="rail-item rail-group ${flt.group===g.id?'on':''}">
+    <button class="rail-wall-hit" data-group="${g.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" stroke-linecap="round"/></svg><span class="rail-wall-nm">${g.name}</span></button>
+    <span class="rail-wall-right"><span class="cnt num">${g.ids.length}</span><button class="icon-btn rail-more" data-groupmenu="${g.id}" aria-label="그룹 관리">${IC.dots}</button></span></div>`).join('')
   +WALLS.map(w=>`<div class="rail-item rail-wall ${flt.wall===w.id?'on':''}">
     <button class="rail-wall-hit" data-wallnav="${w.id}">${IC.wall}<span class="rail-wall-nm">${w.name}</span></button>
     <span class="rail-wall-right"><span class="cnt num">${w.cells.length}</span><button class="icon-btn rail-more" data-wallnavmenu="${w.id}" aria-label="비디오월 관리">${IC.dots}</button></span></div>`).join('');
@@ -399,6 +401,8 @@ function renderRail(){
   flt={...flt,group:flt.group===b.dataset.group?null:b.dataset.group,store:null,region:null,wall:null,view:'all'};
   page=1;renderAll();
  });
+ /* 그룹 관리(이름 수정·삭제)는 그룹명 옆 ⋯ 에서 */
+ $$('[data-groupmenu]').forEach(b=>b.onclick=e=>{e.stopPropagation();groupManageMenu(b,GROUPS.find(g=>g.id===b.dataset.groupmenu));});
  /* 비디오월 선택 = 구성 화면 목록업(일반 매장 선택과 동일). 비디오월 정보 Drawer는 더 이상 자동으로 열지 않는다. */
  $$('[data-wallnav]').forEach(b=>b.onclick=()=>{const id=b.dataset.wallnav;flt={...flt,wall:flt.wall===id?null:id,store:null,region:null,group:null,view:'all',status:'all'};page=1;renderAll();});
  /* 비디오월 자체 관리(이름 수정·레이아웃·일정·해제)는 그룹명 옆 ⋯ 에서 */
@@ -702,28 +706,22 @@ function renamePanel(p,after){
 function panelManageMenu(anchor,p,opt){
  opt=opt||{};const after=opt.after,del=opt.onDelete;
  popMenu(anchor,p.stb?[
-  {title:'화면 관리'},
   {label:'화면 이름 수정',icon:IC.edit,onClick:()=>renamePanel(p,after)},
   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
   'sep',
-  {title:'셋탑 관리'},
   {label:'셋탑 재연결',icon:IC.stb,onClick:()=>openStbModal(p)},
   {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요.`)},
   'sep',
-  {title:'위험 작업'},
   {label:'셋탑 연결 해제',icon:IC.unlink,danger:true,onClick:()=>detachStb(p,after)},
   {label:'화면 삭제',icon:IC.trash,danger:true,onClick:()=>deletePanel(p,del)},
  ]:[
-  {title:'화면 관리'},
   {label:'화면 이름 수정',icon:IC.edit,onClick:()=>renamePanel(p,after)},
   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
   'sep',
-  {title:'셋탑 관리'},
   {label:'셋탑 연결하기',icon:IC.stb,onClick:()=>openStbModal(p)},
   'sep',
-  {title:'위험 작업'},
   {label:'화면 삭제',icon:IC.trash,danger:true,onClick:()=>deletePanel(p,del)},
  ],{cls:'mp-manage'});
 }
@@ -1049,13 +1047,11 @@ function wallMoreMenu(anchor,w,opts={}){
    레이아웃·구성 변경은 여기(비디오월 단위)에서만, 개별 화면 관리 메뉴에는 넣지 않는다. */
 function wallManageMenu(anchor,w){
  popMenu(anchor,[
-  {title:'비디오월'},
   {label:'비디오월 정보',icon:IC.wall,onClick:()=>openWallDrawer(w)},
   {label:'비디오월 이름 수정',icon:IC.edit,onClick:()=>renameWall(w)},
   {label:'레이아웃 편집',icon:IC.monitor,onClick:()=>openWallWizard(w)},
   {label:'일정 편집',icon:IC.cal,onClick:()=>openWallWizard(w,{schedOnly:true})},
   'sep',
-  {title:'위험 작업'},
   {label:'비디오월 해제',icon:IC.x,danger:true,onClick:()=>disbandWall(w)},
  ],{cls:'mp-manage'});
 }
@@ -1071,6 +1067,35 @@ function renameWall(w){
    if(v===w.name){ov.remove();return}
    w.name=v;ov.remove();renderRail();renderList();wallsRefresh();toast(`비디오월 이름을 '${v}'로 변경했어요.`);};
   ov.querySelector('#wr-ok').onclick=save;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
+ }});
+}
+/* 그룹 관리 메뉴 — 레일 그룹 ⋯ 에서 열림. 이름 수정·삭제. 비디오월(wallManageMenu)과 분리. */
+function groupManageMenu(anchor,g){
+ if(!g)return;
+ popMenu(anchor,[
+  {label:'이름 수정',icon:IC.edit,onClick:()=>renameGroup(g)},
+  'sep',
+  {label:'삭제',icon:IC.trash,danger:true,onClick:()=>confirmDialog({title:`'${g.name}' 그룹을 삭제할까요?`,desc:'그룹 묶음만 사라져요. 포함된 화면과 일정·태그 설정은 그대로 유지돼요.',confirmText:'삭제',danger:true,onConfirm:()=>{
+    const i=GROUPS.indexOf(g);GROUPS.splice(i,1);
+    if(flt.group===g.id)flt={...flt,group:null};
+    renderAll();
+    toast(`'${g.name}' 그룹을 삭제했어요.`,{action:'실행 취소',onAction:()=>{GROUPS.splice(Math.min(i,GROUPS.length),0,g);renderAll();}});
+   }})},
+ ],{cls:'mp-manage'});
+}
+function renameGroup(g){
+ openModal(`
+  <div class="modal-head"><div><h2>그룹 이름 수정</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>그룹 이름 <span class="req">*</span></label><input class="input" id="gr-name" maxlength="40" placeholder="예) 프랜차이즈 B, 수도권 쇼윈도"></div></div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="gr-ok">저장</button></div>`,
+ {width:'420px',onMount:ov=>{
+  const inp=ov.querySelector('#gr-name');inp.value=g.name;inp.focus();inp.select();
+  inp.addEventListener('input',()=>inp.classList.remove('error'));
+  const save=()=>{const v=inp.value.trim();if(!v){inp.classList.add('error');inp.focus();toast('그룹 이름을 입력해주세요.',{err:true});return}
+   if(v===g.name){ov.remove();return}
+   g.name=v;ov.remove();renderAll();toast(`그룹 이름을 '${v}'로 변경했어요.`);};
+  ov.querySelector('#gr-ok').onclick=save;
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
  }});
 }
