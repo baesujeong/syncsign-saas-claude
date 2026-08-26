@@ -1839,19 +1839,25 @@ table.grid tr.checked td{background:var(--blue-50)}
 .chip-add{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 12px;border-radius:99px;border:1px dashed var(--border-2);background:none;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;transition:all .15s}
 .chip-add:hover{color:var(--blue);border-color:var(--blue-200);background:var(--blue-50)}
 .chip-add svg{width:14px;height:14px}
-.tm-add{display:flex;gap:8px;margin:2px 0 14px}
+/* [추가] 버튼 우측 끝을 정렬 기준으로: 목록 행의 우측 슬롯도 동일하게 6px 인셋 */
+.tm-add{display:flex;gap:8px;margin:2px 0 14px;padding-right:6px}
 .tm-add input{flex:1}
 .tm-add .btn{height:32px;padding:0 12px;font-size:13px}
 .tm-add .btn svg{width:14px;height:14px}
-.tm-list{display:flex;flex-direction:column;gap:2px;padding-bottom:12px;min-height:96px}
+/* 모달 높이 고정 — 태그가 늘어나도 목록 영역만 내부 세로 스크롤(외부 페이지 스크롤 X) */
+.modal-body:has(.tm-list){display:flex;flex-direction:column;overflow:visible}
+.tm-list{display:flex;flex-direction:column;gap:2px;height:min(336px,46vh);overflow-y:auto;padding:2px 0 4px}
 .tm-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:var(--r-md)}
 .tm-row:hover{background:var(--sunken)}
-.tm-nm{flex:1;font-size:14px;font-weight:500}
+.tm-nm{flex:1;min-width:0;font-size:14px;font-weight:500}
 .tm-nm input{width:100%}
-.tm-cnt{font-size:12px;color:var(--text-3)}
+/* n개 항목 ↔ 수정/삭제: 같은 우측 슬롯에서 교체 노출(동시 노출 X) */
+.tm-meta{position:relative;flex:none;display:flex;align-items:center;justify-content:flex-end;min-width:66px}
+.tm-cnt{font-size:12px;color:var(--text-3);white-space:nowrap}
 .tm-cnt::after{content:'개 항목';margin-left:2px}
-.tm-tools{display:flex;gap:2px;opacity:0;transition:opacity .12s}
-.tm-row:hover .tm-tools,.tm-row:focus-within .tm-tools{opacity:1}
+.tm-row:hover .tm-cnt,.tm-row:focus-within .tm-cnt{visibility:hidden}
+.tm-tools{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:2px;opacity:0;pointer-events:none;transition:opacity .12s}
+.tm-row:hover .tm-tools,.tm-row:focus-within .tm-tools{opacity:1;pointer-events:auto}
 .tm-tools .icon-btn{width:28px;height:28px}
 .tm-tools .icon-btn svg{width:15px;height:15px}
 
