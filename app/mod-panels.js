@@ -497,12 +497,16 @@ function renderList(){
     <td><button class="icon-btn" data-pmenu="${p.id}">${IC.dots}</button></td></tr>`;
   }).join('')||`<tr><td colspan="10">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  }
- $('#pagi').innerHTML=`<span class="num">${arr.length?fmt((page-1)*per+1)+'–'+fmt(Math.min(page*per,arr.length)):0} / ${fmt(arr.length)}개</span>
-  <button class="icon-btn" id="pg-prev" ${page<=1?'disabled':''} aria-label="이전 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
-  <span class="num">${page} / ${pages}</span>
-  <button class="icon-btn" id="pg-next" ${page>=pages?'disabled':''} aria-label="다음 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>`;
- $('#pg-prev').onclick=()=>{page--;renderList();$('#content-area').scrollTop=0};
- $('#pg-next').onclick=()=>{page++;renderList();$('#content-area').scrollTop=0};
+ /* 결과가 없으면(검색·필터 결과 없음 등 empty) 페이지네이션 숨김 */
+ if(!arr.length){$('#pagi').innerHTML='';}
+ else{
+  $('#pagi').innerHTML=`<span class="num">${fmt((page-1)*per+1)+'–'+fmt(Math.min(page*per,arr.length))} / ${fmt(arr.length)}개</span>
+   <button class="icon-btn" id="pg-prev" ${page<=1?'disabled':''} aria-label="이전 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
+   <span class="num">${page} / ${pages}</span>
+   <button class="icon-btn" id="pg-next" ${page>=pages?'disabled':''} aria-label="다음 페이지"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>`;
+  $('#pg-prev').onclick=()=>{page--;renderList();$('#content-area').scrollTop=0};
+  $('#pg-next').onclick=()=>{page++;renderList();$('#content-area').scrollTop=0};
+ }
  const _psi=$('#panel-search');if(_psi&&_psi.__suxCount)_psi.__suxCount(arr.length);
  document.querySelectorAll('#pgrid [data-se-reset],#ptbody [data-se-reset]').forEach(b=>b.onclick=()=>{flt.q='';if(_psi)_psi.value='';page=1;renderList();renderScope();_psi&&_psi.focus();});
  bindListEvents();updateBulk();
