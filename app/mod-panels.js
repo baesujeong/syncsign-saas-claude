@@ -276,8 +276,8 @@ function confirmDialog({title,desc,confirmText=t('common.confirm'),danger=false,
  {width:'420px',onMount:ov=>ov.querySelector('#cf-ok').onclick=()=>{ov.remove();onConfirm()}});
 }
 const STB_IC=w=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0V7ZM12 16v5"/></svg>`;
-const thumbHtml=(p,big,fav='')=>{
- if(p.wall)return '';
+const thumbHtml=(p,big,fav='',forceWall)=>{
+ if(p.wall&&!forceWall)return '';
  /* 좌상단 오버레이: 상태 뱃지 + (카드 뷰) 즐겨찾기 버튼이 4px 간격으로 나란히 */
  const tl=live=>(live||fav)?`<div class="tl">${live||''}${fav}</div>`:'';
  if(!p.stb)return tl('')+`<div class="offmsg">${STB_IC(big?26:20)}셋탑 미연결 · 연결하면 송출을 시작해요</div>`;
@@ -285,7 +285,7 @@ const thumbHtml=(p,big,fav='')=>{
  if(p.unsch)return tl('')+`<div class="offmsg">${IC.cal}편성된 콘텐츠 없음</div>`;
  const c=contentOf(p.content);
  return `<span class="cname">${c.name}</span>
-  ${tl(`<span class="live"><span class="dot on"></span>LIVE</span>`)}`;
+  ${tl(`<span class="live"><span class="dot on"></span>연결됨</span>`)}`;
 };
 const thumbBg=p=>!p.stb?'#1B212B':p.status==='off'?'#14181F':p.unsch?'#1B212B':contentOf(p.content).g;
 
@@ -423,18 +423,19 @@ function renderScope(){
   chip.querySelector('.clear').onclick=()=>{flt={...flt,store:null,region:null,group:null,wall:null,view:'all'};page=1;renderAll();};}
 }
 /* ═══════════ 렌더: 목록 ═══════════ */
-function wallCardHtml(w){
- const total=w.cells.length,on=w.cells.filter(id=>panelOf(id).status==='on').length,ok=on===total;
- return `<div class="pcard wall" data-wall="${w.id}">
-  <div class="thumb">
-   ${wallCellsHtml(w,t=>`<i style="background:${wallTileContent(w,t).g};position:absolute;inset:0"></i>`)}
-   <div class="tl"><span class="live"><span class="dot ${ok?'on':'off'}"></span>${ok?'LIVE':'일부 오프라인'}</span></div>
-   <span class="cname" style="z-index:3">${wallContentLabel(w)}</span>
-  </div>
+/* 비디오월 카드 — 매장 화면 목록에서 비디오월당 1개(대표 화면 rep)로 접혀 노출.
+   비디오월이라도 결국 개별 화면이므로 상태·클릭·⋯메뉴는 대표 화면(rep) 기준으로 동작한다
+   (개별 화면 상태 노출 · 클릭 시 개별 화면 drawer). '비디오월 N×N' 뱃지로 구분하고,
+   ⋯메뉴는 panelManageMenu(rep)를 그대로 사용 — p.wall이면 상단에 '비디오월 정보'가 자동 추가된다. */
+function wallCardHtml(w,rep){
+ rep=rep||panelOf(w.cells[0])||{};
+ return `<div class="pcard wall" data-panel="${rep.id}">
+  <div class="thumb">${thumbHtml(rep,false,'',true)}</div>
+  <button class="fav ${rep.fav?'on':''}" data-fav="${rep.id}" aria-label="즐겨찾기">${rep.fav?IC.star:IC.starO}</button>
   <div class="body">
    <div class="nm">${w.name}</div>
-   <div class="sub">${storeHtml(w.store)} · ${w.orient||'가로형'} · ${w.res||'FHD (1920×1080)'}</div>
-   <div class="badges"><span class="badge badge-gray">${(w.gw||w.cols)}×${(w.gh||w.rows)} 캔버스</span><span class="badge badge-gray">일정 ${wallSchedN(w)}건</span><span class="wall-on ${ok?'':'issue'}"><span class="dot ${ok?'on':'err'}"></span>온라인 ${on}/${total}</span></div>
+   <div class="sub">${storeHtml(w.store)} · ${!rep.stb?'셋탑 연결 대기':ago(rep.lastMin)}</div>
+   <div class="badges"><div class="badge-row"><span class="badge badge-gray">비디오월 ${(w.gw||w.cols)}×${(w.gh||w.rows)}</span><span class="badge badge-gray">일정 ${wallSchedN(w)}건</span></div><button class="icon-btn card-more" data-pmenu="${rep.id}" aria-label="비디오월 화면 관리">${IC.dots}</button></div>
   </div></div>`;
 }
 /* 화면이 하나도 없을 때 — 매장이 없어도 '미지정'으로 바로 등록할 수 있으므로 매장 등록을 선행 조건으로 안내하지 않는다 */
@@ -449,7 +450,18 @@ function renderList(){
  if(view==='grid'){
   $('#pgrid').hidden=false;$('#ptable-wrap').hidden=true;
   $('#pgrid').innerHTML=slice.map(p=>{
-   if(p.wall&&!flt.wall)return wallCardHtml(WALLS.find(w=>w.id===p.wall));
+   if(p.wall&&!flt.wall)return wallCardHtml(WALLS.find(w=>w.id===p.wall),p);
+   if(p.wall){/* 비디오월 선택 시 구성 화면 — 비디오월 카드와 동일 스타일(개별 상태·비디오월 N×N·⋯ 비디오월 정보) */
+    const w=WALLS.find(x=>x.id===p.wall);
+    return `<div class="pcard wall" data-panel="${p.id}">
+     <div class="thumb">${thumbHtml(p,false,'',true)}</div>
+     <button class="fav ${p.fav?'on':''}" data-fav="${p.id}" aria-label="즐겨찾기">${p.fav?IC.star:IC.starO}</button>
+     <div class="body">
+      <div class="nm">${p.name}</div>
+      <div class="sub">${storeHtml(p.store)} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
+      <div class="badges"><div class="badge-row"><span class="badge badge-gray">비디오월 ${(w.gw||w.cols)}×${(w.gh||w.rows)}</span>${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
+     </div></div>`;
+   }
    return `<div class="pcard ${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
     <div class="thumb" style="background:${thumbBg(p)}">${thumbHtml(p,false)}</div>
     <span class="checkbox check ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span>
@@ -523,7 +535,7 @@ $('#th-check')?.addEventListener('click',()=>{
  renderList();
 });
 $('#bulk-schedule').onclick=()=>openSchedule([...checked]);
-$('#bulk-restart').onclick=()=>confirmDialog({title:`화면 ${fmt(checked.size)}개 재시작`,desc:'재시작 중 약 30초간 화면이 꺼져요. 영업시간에는 주의하세요.',confirmText:'재시작',danger:true,onConfirm:()=>{toast(`${fmt(checked.size)}개 화면에 재시작 명령을 보냈어요.`);checked.clear();renderList();}});
+$('#bulk-restart').onclick=()=>confirmDialog({title:`${fmt(checked.size)}개 화면을 재시작할까요?`,desc:'재시작하는 동안 화면이 잠시 꺼집니다. 화면 이용 중에는 재시작에 주의해주세요.',confirmText:'재시작',danger:true,onConfirm:()=>{toast(`${fmt(checked.size)}개의 화면에 재시작을 요청했어요.`);checked.clear();renderList();}});
 /* 선택한 화면의 소속 매장을 한 번에 지정 — 매장 삭제로 미지정이 된 화면을 다시 배정할 때 주로 쓴다 */
 $('#bulk-store').onclick=()=>openStorePicker([...checked].map(panelOf).filter(Boolean));
 $('#bulk-group').onclick=e=>{
@@ -705,17 +717,21 @@ function renamePanel(p,after){
    after: 이름·매장·연결 해제 후 상세 드로어를 다시 그리는 콜백(목록은 renderAll이 처리) · onDelete: 삭제 후 처리(드로어 닫기 등) */
 function panelManageMenu(anchor,p,opt){
  opt=opt||{};const after=opt.after,del=opt.onDelete;
+ /* 비디오월 소속 화면이면 상단에 '비디오월 정보'(→ 비디오월 drawer)를 추가. 일반 화면은 미노출. */
+ const wallTop=p.wall?[{label:'비디오월 정보',icon:IC.wall,onClick:()=>{const w=WALLS.find(x=>x.id===p.wall);if(w)openWallDrawer(w);}},'sep']:[];
  popMenu(anchor,p.stb?[
+  ...wallTop,
   {label:'화면 이름 수정',icon:IC.edit,onClick:()=>renamePanel(p,after)},
   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
   'sep',
   {label:'셋탑 재연결',icon:IC.stb,onClick:()=>openStbModal(p)},
-  {label:'화면 재시작',icon:IC.restart,onClick:()=>toast(`'${p.name}' 재시작 명령을 보냈어요.`)},
+  {label:'화면 재시작',icon:IC.restart,onClick:()=>confirmDialog({title:'화면을 재시작할까요?',desc:'재시작하는 동안 화면이 잠시 꺼집니다. 화면 이용 중에는 재시작에 주의해주세요.',confirmText:'재시작',danger:true,onConfirm:()=>toast(`'${p.name}'에 재시작을 요청했어요.`)})},
   'sep',
   {label:'셋탑 연결 해제',icon:IC.unlink,danger:true,onClick:()=>detachStb(p,after)},
   {label:'화면 삭제',icon:IC.trash,danger:true,onClick:()=>deletePanel(p,del)},
  ]:[
+  ...wallTop,
   {label:'화면 이름 수정',icon:IC.edit,onClick:()=>renamePanel(p,after)},
   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
