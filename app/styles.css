@@ -789,7 +789,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 .img-tile:hover{border-color:var(--blue-200)}
 .img-tile.dragging{opacity:.35;cursor:grabbing}
 .img-tile.dragover{border-color:var(--blue);border-style:dashed;background:var(--blue-50)}
-.img-tile.main{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.img-tile.is-main{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
 .img-tile .main-tag{position:absolute;left:-1.5px;top:-1.5px;background:var(--blue);color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:7px 0 7px 0;letter-spacing:.02em}
 .img-tile .del{position:absolute;right:-7px;top:-7px;width:20px;height:20px;border-radius:50%;background:#242B38;color:#fff;display:none;align-items:center;justify-content:center;box-shadow:var(--sh-sm)}
 .img-tile:hover .del{display:flex}

@@ -335,7 +335,7 @@ function openDrawer(edit){
  const ilist=wrap.querySelector('#img-list');
  let dragImgIdx=null;
  const drawImgs=()=>{
-  ilist.innerHTML=imgs.map((im,i)=>`<button type="button" draggable="true" class="img-tile ${i===mainIdx?'main':''}" data-imi="${i}" aria-label="${i===mainIdx?'대표 이미지':'대표 이미지로 지정'}" style="background:linear-gradient(135deg,hsl(${im.h} 75% 93%),hsl(${im.h} 65% 84%))">${im.e}${i===mainIdx?'<span class="main-tag">대표</span>':''}<span class="del" data-imdel role="button" aria-label="이미지 삭제"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></button>`).join('')
+  ilist.innerHTML=imgs.map((im,i)=>`<button type="button" draggable="true" class="img-tile ${i===mainIdx?'is-main':''}" data-imi="${i}" aria-label="${i===mainIdx?'대표 이미지':'대표 이미지로 지정'}" style="background:linear-gradient(135deg,hsl(${im.h} 75% 93%),hsl(${im.h} 65% 84%))">${im.e}${i===mainIdx?'<span class="main-tag">대표</span>':''}<span class="del" data-imdel role="button" aria-label="이미지 삭제"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></button>`).join('')
    +(imgs.length<5?`<button type="button" class="img-tile add" id="img-add"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>업로드</button>`:'');
   ilist.querySelectorAll('[data-imi]').forEach(t=>{
    const i=+t.dataset.imi;
