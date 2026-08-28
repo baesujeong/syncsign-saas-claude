@@ -359,7 +359,6 @@ function renderRail(){
   ['nostb','셋탑 미연결',nostb?`<span class="warn">${fmt(nostb)}</span>`:'—',STB_IC(14)],
   ['unscheduled','미편성 화면',fmt(PANELS.filter(p=>p.unsch).length),IC.cal],
   ['fav','즐겨찾기',fmt(PANELS.filter(p=>p.fav).length),IC.starO],
-  ['recent','최근 관리',RECENT.length||'—','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>'],
  ];
  $('#smart-views').innerHTML='<div class="sec-title">스마트 뷰</div>'+
   smart.map(([k,l,c,ic])=>`<button class="rail-item ${flt.view===k&&!flt.store&&!flt.region&&!flt.group?'on':''}" data-view="${k}">${ic}${l}<span class="cnt num">${c}</span></button>`).join('');
@@ -417,7 +416,7 @@ function renderScope(){
  else if(flt.region)label=`지역: <b>${REGIONS.find(r=>r.id===flt.region).name}</b>`;
  else if(flt.group)label=`그룹: <b>${GROUPS.find(g=>g.id===flt.group).name}</b>`;
  else if(flt.wall){const w=WALLS.find(x=>x.id===flt.wall);if(w)label=`비디오월: <b>${w.name}</b> · 화면 ${w.cells.length}개`;}
- else if(flt.view!=='all')label=`뷰: <b>${{attention:'주의 필요',unscheduled:'미편성',nostb:'셋탑 미연결',fav:'즐겨찾기',recent:'최근 관리'}[flt.view]}</b>`;
+ else if(flt.view!=='all')label=`뷰: <b>${{attention:'주의 필요',unscheduled:'미편성',nostb:'셋탑 미연결',fav:'즐겨찾기'}[flt.view]}</b>`;
  chip.hidden=!label;
  if(label){chip.innerHTML=label+`<button class="clear" aria-label="범위 해제">${IC.xs}</button>`;
   chip.querySelector('.clear').onclick=()=>{flt={...flt,store:null,region:null,group:null,wall:null,view:'all'};page=1;renderAll();};}
