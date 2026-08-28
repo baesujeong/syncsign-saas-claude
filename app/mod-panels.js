@@ -1127,7 +1127,7 @@ function openWallDrawer(w){
    <div class="sync-note">${IC.info}<span><b>일정은 비디오월 단위, 콘텐츠는 화면별</b>로 편성돼요. 각 화면은 자기 타일 영역만 재생하고, 프레임은 자동으로 동기화돼요.</span></div>
    <div class="dsec"><h3>화면별 콘텐츠</h3>
     ${wallTiles(w).map(t=>{const p=panelOf(t.p);const ref=w.cm&&w.cm[t.p];const a=ref?contentOf(ref):null;
-     return `<div class="tl-item"><span class="cthumb" style="background:${a?a.g:c.g}">${a?a.e:''}</span><span class="nm">${p?p.name:'빈 칸'} <span style="color:var(--text-3);font-weight:500">· ${t.w}×${t.h}</span></span><span style="font-size:12px;color:var(--text-2);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%">${a?a.name:c.name}</span></div>`}).join('')}
+     return `<div class="tl-item"><span class="cthumb" style="background:${a?a.g:c.g}">${a?a.e:''}</span><span class="nm">${p?p.name:'빈 칸'}</span><span style="font-size:12px;color:var(--text-2);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%">${a?a.name:c.name}</span></div>`}).join('')}
    </div>
   </div>
   <div class="drawer-foot ro-foot">
@@ -1929,9 +1929,9 @@ function openAssetPicker(current,onPick){
 /* ═══════════ 그룹 만들기 ═══════════ */
 function openGroupModal(ids){
  openModal(`
-  <div class="modal-head"><div><h2>그룹 만들기</h2><div class="sub">그룹으로 묶으면 일정 등록·재시작을 그룹 단위로 할 수 있어요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-head"><div><h2>그룹 만들기</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
-   <div class="f-row"><label>그룹 이름</label><input class="input" id="g-nm" placeholder="예) 프랜차이즈 B, 수도권 쇼윈도"></div>
+   <div class="f-row"><label>그룹 이름</label><input class="input" id="g-nm" placeholder="예) 프랜차이즈 B, 수도권 쇼윈도"><div class="ferr" id="g-nm-err" style="display:none">그룹 이름을 입력해주세요.</div></div>
    <div class="f-row"><label>포함 화면</label>
     ${ids.length?`<div class="sync-note" style="margin:0">${IC.check}<span>화면 관리에서 선택한 <b>${fmt(ids.length)}개 화면</b>이 포함돼요.</span></div>`
     :`<div class="sync-note" style="margin:0">${IC.info}<span>화면 관리 목록에서 화면을 먼저 선택하면 바로 담을 수 있어요. 지금은 빈 그룹으로 만들고 나중에 추가해도 돼요.</span></div>`}
@@ -1940,8 +1940,10 @@ function openGroupModal(ids){
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="g-ok">만들기</button></div>`,
  {width:'440px',onMount:ov=>{
   const i=ov.querySelector('#g-nm');i.focus();
+  const nmErr=ov.querySelector('#g-nm-err');
+  i.addEventListener('input',()=>{i.classList.remove('error');nmErr.style.display='none';});
   ov.querySelector('#g-ok').onclick=()=>{
-   const v=i.value.trim();if(!v){i.focus();toast('그룹 이름을 입력해주세요.',{err:true});return}
+   const v=i.value.trim();if(!v){i.classList.add('error');nmErr.style.display='flex';i.focus();return}
    GROUPS.push({id:'g'+Date.now(),name:v,ids:[...ids]});
    ov.remove();checked.clear();renderAll();
    toast(`'${v}' 그룹을 만들었어요. 좌측 그룹 목록에서 확인하세요.`);
