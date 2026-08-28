@@ -980,8 +980,9 @@ function openPanelDrawer(p,tab='overview'){
    <div class="dcard"><h3>화면 정보</h3>
     <dl class="info-grid">
      <div><dt>매장</dt><dd>${storeHtml(p.store)} <button class="lnk" id="if-store">${p.store?'변경':'매장 지정'}</button></dd></div>
-     <div><dt>펌웨어</dt><dd>${p.stb?`${p.fw} <span class="badge badge-green">최신</span>`:'—'}</dd></div>
-     <div><dt>해상도</dt><dd>${p.res}</dd></div>
+     <div><dt>앱 버전</dt><dd>${p.stb?'v 1.0':'—'}</dd></div>
+     <div><dt>해상도</dt><dd>${p.res.split(' · ')[0]}</dd></div>
+     <div><dt>펌웨어</dt><dd>${p.stb?p.fw:'—'}</dd></div>
      <div><dt>네트워크</dt><dd>${!p.stb?'—':p.status==='off'?'연결 끊김':'유선 · 32ms'}</dd></div>
      <div><dt>셋탑 S/N</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span>`:'<span class="badge badge-amber">미연결</span>'}</dd></div>
      <div><dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd></div>
