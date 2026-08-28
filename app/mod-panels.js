@@ -429,8 +429,10 @@ function renderScope(){
    ⋯메뉴는 panelManageMenu(rep)를 그대로 사용 — p.wall이면 상단에 '비디오월 정보'가 자동 추가된다. */
 function wallCardHtml(w,rep){
  rep=rep||panelOf(w.cells[0])||{};
- return `<div class="pcard wall" data-panel="${rep.id}">
+ const allOn=w.cells.length>0&&w.cells.every(id=>checked.has(id)); /* 구성 화면이 모두 선택되면 비디오월 선택 상태 */
+ return `<div class="pcard wall ${allOn?'checked':''}" data-panel="${rep.id}">
   <div class="thumb">${thumbHtml(rep,false,'',true)}</div>
+  <span class="checkbox check ${allOn?'on':''}" data-wallcheck="${w.id}" role="checkbox" aria-checked="${allOn}" aria-label="${w.name} 선택">${IC.check}</span>
   <button class="fav ${rep.fav?'on':''}" data-fav="${rep.id}" aria-label="즐겨찾기">${rep.fav?IC.star:IC.starO}</button>
   <div class="body">
    <div class="nm">${w.name}</div>
@@ -453,8 +455,9 @@ function renderList(){
    if(p.wall&&!flt.wall)return wallCardHtml(WALLS.find(w=>w.id===p.wall),p);
    if(p.wall){/* 비디오월 선택 시 구성 화면 — 비디오월 카드와 동일 스타일(개별 상태·비디오월 N×N·⋯ 비디오월 정보) */
     const w=WALLS.find(x=>x.id===p.wall);
-    return `<div class="pcard wall" data-panel="${p.id}">
+    return `<div class="pcard wall ${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
      <div class="thumb">${thumbHtml(p,false,'',true)}</div>
+     <span class="checkbox check ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span>
      <button class="fav ${p.fav?'on':''}" data-fav="${p.id}" aria-label="즐겨찾기">${p.fav?IC.star:IC.starO}</button>
      <div class="body">
       <div class="nm">${p.name}</div>
@@ -513,11 +516,13 @@ function renderList(){
 }
 function bindListEvents(){
  $$('[data-check]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.check;checked.has(id)?checked.delete(id):checked.add(id);renderList();});
+ /* 비디오월 카드 선택 = 구성 화면(셀) 전체 선택/해제 — 벌크 작업이 비디오월 단위로 동작 */
+ $$('[data-wallcheck]').forEach(c=>c.onclick=e=>{e.stopPropagation();const w=WALLS.find(x=>x.id===c.dataset.wallcheck);if(!w)return;const allOn=w.cells.length>0&&w.cells.every(id=>checked.has(id));w.cells.forEach(id=>{allOn?checked.delete(id):checked.add(id);});renderList();});
  /* 즐겨찾기 토글(그리드·리스트 공용). stopPropagation으로 row 클릭(drawer 열기)과 분리.
     TODO(API): 현재 로컬 p.fav만 변경 — 서버에 사용자별 즐겨찾기 저장(PUT/DELETE) 연동 필요 */
  $$('[data-fav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const p=panelOf(b.dataset.fav);p.fav=!p.fav;renderRail();renderList();toast(p.fav?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요');});
  $$('[data-panel]').forEach(el=>el.addEventListener('click',e=>{
-  if(e.target.closest('[data-check],[data-fav],[data-pmenu]'))return;
+  if(e.target.closest('[data-check],[data-wallcheck],[data-fav],[data-pmenu]'))return;
   openPanelDrawer(panelOf(el.dataset.panel));
  }));
  $$('[data-wall]').forEach(el=>el.addEventListener('click',e=>{
@@ -540,6 +545,23 @@ $('#th-check')?.addEventListener('click',()=>{
 });
 $('#bulk-schedule').onclick=()=>openSchedule([...checked]);
 $('#bulk-restart').onclick=()=>confirmDialog({title:`${fmt(checked.size)}개 화면을 재시작할까요?`,desc:'재시작하는 동안 화면이 잠시 꺼집니다. 화면 이용 중에는 재시작에 주의해주세요.',confirmText:'재시작',danger:true,onConfirm:()=>{toast(`${fmt(checked.size)}개의 화면에 재시작을 요청했어요.`);checked.clear();renderList();}});
+/* 선택한 화면 일괄 삭제. TODO(API): 확인 후 DELETE 호출 → 로컬 배열 정리. 비디오월 셀·그룹·최근 목록도 함께 정리. */
+$('#bulk-delete').onclick=()=>{
+ const ids=[...checked],n=ids.length;if(!n)return;
+ confirmDialog({title:`화면 ${fmt(n)}개를 삭제할까요?`,desc:'화면을 삭제하면 송출이 즉시 중단되고, 화면 정보·일정·태그 설정도 함께 삭제되며 복구할 수 없습니다.',confirmText:'삭제',danger:true,onConfirm:()=>{
+  ids.forEach(id=>{
+   const p=panelOf(id);if(!p)return;
+   const w=p.wall?WALLS.find(x=>x.id===p.wall):null;
+   if(w){w.cells=w.cells.filter(cid=>cid!==p.id);if(w.tiles)w.tiles=w.tiles.filter(t=>t.p!==p.id);if(w.cm)delete w.cm[p.id];}
+   const idx=PANELS.indexOf(p);if(idx>=0)PANELS.splice(idx,1);
+   RECENT=RECENT.filter(x=>x!==id);
+   GROUPS.forEach(g=>{if(g.ids)g.ids=g.ids.filter(x=>x!==id)});
+  });
+  for(let i=WALLS.length-1;i>=0;i--){if(!WALLS[i].cells.length)WALLS.splice(i,1);} /* 구성 화면이 모두 삭제된 비디오월 정리 */
+  checked.clear();renderAll();wallsRefresh();
+  toast(`화면 ${fmt(n)}개를 삭제했어요.`);
+ }});
+};
 /* 선택한 화면의 소속 매장을 한 번에 지정 — 매장 삭제로 미지정이 된 화면을 다시 배정할 때 주로 쓴다 */
 $('#bulk-store').onclick=()=>openStorePicker([...checked].map(panelOf).filter(Boolean));
 $('#bulk-group').onclick=e=>{
@@ -835,6 +857,79 @@ function shotTabHtml(p,idx,asc){
   :histEmpty('해당 날짜에 업로드된 스크린샷이 없어요.','셋탑이 꺼져 있었거나 업로드가 없던 날이에요.');
  return datePickHtml(d,idx>=H.days.length-1,idx<=0,asc?'오래된순':'최신순')+grid;
 }
+/* ═══════════ 활동 로그 (조회 전용, 화면별 개별) ═══════════
+   상태·행동이 실제로 '바뀐 시점'만 기록(주기 수집 아님). 동일 상태가 유지되는 동안은 반복 기록하지 않는다.
+   유형: 송출(broadcast) / 일정(schedule) / 화면 상태(screen) / 셋탑(stb) / 사용자(user) / 시스템(system).
+   TODO(API): 실제 이벤트 스트림 연동. 프로토타입은 화면 id 기반 시드로 결정적 생성(p._log 캐시). */
+const LOG_ADMINS=['김민규','박서연','이준호'];
+const LOG_BROADCAST=['브랜드 무비','여름 시즌 스팟','신제품 티저','시그니처 메뉴','오픈 이벤트'];
+const LOG_SCHED=['여름 프로모션','가을 신메뉴','주말 이벤트','오전 브런치','저녁 해피아워'];
+const LOG_NOW_M=21*60+40; /* 데모 '지금' — 오늘 21:40. 오늘의 가장 최근 이벤트는 '방금 전' */
+/* 카테고리: 송출/일정/상태/셋탑/기타. prefix는 '전체' 보기에서만 노출(특정 필터 시 중복 제거) */
+const LOG_CATS={broadcast:'송출',schedule:'일정',state:'상태',stb:'셋탑',etc:'기타'};
+const LOG_FILTERS=[['all','전체'],['broadcast','송출'],['schedule','일정'],['state','상태'],['stb','셋탑'],['etc','기타']];
+/* 활동 로그 시드 — 케이스·문구는 명세표 기준. 상태·행동이 실제로 바뀐 시점만 기록(동일 상태 반복 없음).
+   TODO(API): 실제 이벤트 스트림 연동. 프로토타입은 화면 id 기반 시드로 결정적 생성(p._log 캐시). */
+function logHistory(p){
+ if(!p.stb)return{days:[],byDate:{}};
+ if(p._log)return p._log;
+ const byDate={};
+ HIST_DAYS.forEach((d,di)=>{
+  const rng=seededRng(p.id+'|log|'+d),isToday=di===0;
+  const cap=isToday?LOG_NOW_M:22*60+40;
+  const ev=[];
+  const add=(mm,cat,text)=>{if(mm>=0&&mm<=cap)ev.push({m:mm,sec:Math.floor(rng()*60),cat,text});};
+  const C=()=>LOG_BROADCAST[Math.floor(rng()*LOG_BROADCAST.length)];
+  const S=()=>LOG_SCHED[Math.floor(rng()*LOG_SCHED.length)];
+  const A=()=>LOG_ADMINS[Math.floor(rng()*LOG_ADMINS.length)];
+  if(!isToday&&rng()<0.14){byDate[d]=[];return;} /* 하루 종일 변화 없던 날 = 빈 상태 */
+  let m=8*60+Math.floor(rng()*30);
+  add(m,'state','온라인 상태로 전환');m+=2;
+  let c=C();add(m,'broadcast',`‘${c}’ 송출 시작`);
+  if(rng()<0.6){m+=15+Math.floor(rng()*25);add(m,'schedule',`관리자 ${A()} - ‘${S()}’ 일정 송출 예약`);}
+  const cycles=1+Math.floor(rng()*3);
+  for(let i=0;i<cycles;i++){m+=40+Math.floor(rng()*110);add(m,'broadcast',`‘${c}’ 송출 종료`);m+=1;c=C();add(m,'broadcast',`‘${c}’ 송출 시작`);}
+  if(rng()<0.4){m+=18+Math.floor(rng()*35);add(m,'broadcast',`‘${c}’ 송출 실패`);m+=2;add(m,'state','오프라인 상태로 전환');m+=3;add(m,'state','온라인 상태로 전환');m+=1;add(m,'broadcast',`‘${c}’ 송출 시작`);}
+  if(rng()<0.45){m+=22+Math.floor(rng()*35);const a=A();add(m,'broadcast',`관리자 ${a} - ‘${c}’ 수동 송출 중단`);m+=3;add(m,'broadcast',`관리자 ${a} - ‘${c}’ 수동 송출 시작`);}
+  if(rng()<0.4){m+=18+Math.floor(rng()*35);add(m,'schedule',`관리자 ${A()} - ‘${S()}’ 일정 수정`);}
+  if(rng()<0.18){m+=14;add(m,'schedule',`관리자 ${A()} - ‘${S()}’ 일정 삭제`);}
+  if(rng()<0.3){m+=18+Math.floor(rng()*30);add(m,'stb','셋탑 재연결');}
+  if(rng()<0.14){m+=12;add(m,'stb','셋탑 연결 해제');m+=5;add(m,'stb','셋탑 연결');}
+  if(rng()<0.28){m+=16;add(m,'etc','화면 재시작');}
+  if(rng()<0.16){m+=10;add(m,'etc','셋탑 재시작');}
+  if(rng()<0.22){m+=16;add(m,'etc',`관리자 ${A()} - 화면 이름 변경`);}
+  if(rng()<0.12){m+=12;add(m,'etc',`관리자 ${A()} - 매장 변경`);}
+  if(!isToday){let em=21*60+Math.floor(rng()*40);add(em,'broadcast',`‘${c}’ 송출 종료`);em+=2;add(em,'state','오프라인 상태로 전환');}
+  if(isToday){ /* 오늘 마지막 이벤트 = 현재 상태 (방금 전) */
+   if(p.status==='off')add(LOG_NOW_M,'state','오프라인 상태로 전환');
+   else if(p.unsch)add(LOG_NOW_M,'state','미편성 상태로 전환');
+   else add(LOG_NOW_M,'broadcast',`‘${C()}’ 송출 시작`);
+  }
+  byDate[d]=ev.sort((a,b)=>a.m-b.m||a.sec-b.sec);
+ });
+ return p._log={days:HIST_DAYS,byDate};
+}
+/* 표기(명세): 1분 이내=방금 전 / 오늘 HH:MM / 어제 HH:MM / (올해)MM/DD HH:MM / (이전 연도)YYYY.MM.DD HH:MM. 호버=전체+초 */
+function logTimeLabel(d,m){
+ const t=hm(m);
+ if(d===TODAY_D)return(LOG_NOW_M>=m&&LOG_NOW_M-m<1)?'방금 전':'오늘 '+t;
+ if(d===HIST_DAYS[1])return '어제 '+t;
+ const pp=d.split('.');
+ if(pp[0]===TODAY_D.split('.')[0])return `${pp[1]}/${pp[2]} ${t}`;
+ return `${d} ${t}`;
+}
+const logTimeFull=(d,m,sec)=>`${d} ${hm(m)}:${String(sec).padStart(2,'0')}`;
+function logTabHtml(p,idx,asc,filter){
+ if(!p.stb)return histEmpty('셋탑이 연결되지 않아 활동 로그가 없어요.','셋탑을 연결하면 송출·일정·상태 변화가 자동으로 기록돼요.');
+ const H=logHistory(p),d=H.days[idx],all=H.byDate[d]||[];
+ const showPrefix=(!filter||filter==='all'); /* '전체' 보기에서만 카테고리 prefix 노출 */
+ const filt=showPrefix?all:all.filter(e=>e.cat===filter);
+ const list=asc?filt:[...filt].reverse();  /* all=과거→현재. 기본(최신순)은 뒤집기 */
+ const chips=`<div class="log-filters">${LOG_FILTERS.map(([k,l])=>{const n=k==='all'?all.length:all.filter(e=>e.cat===k).length;return `<button class="chip chip-sm ${(filter||'all')===k?'on':''}" data-lfilter="${k}">${l}${n?`<span class="cnt num">${n}</span>`:''}</button>`;}).join('')}</div>`;
+ const rows=list.length?`<div class="log-list">${list.map(e=>`<div class="log-item"><span class="log-tx">${showPrefix?`<span class="log-cat">[${LOG_CATS[e.cat]||'기타'}]</span> `:''}${e.text}</span><span class="log-t num" title="${logTimeFull(d,e.m,e.sec)}">${logTimeLabel(d,e.m)}</span></div>`).join('')}</div>`
+  :histEmpty(all.length?'이 유형의 활동이 없어요.':'해당 날짜의 활동 로그가 없어요.',all.length?'다른 유형 필터를 선택해보세요.':'상태·송출·일정에 변화가 없던 날은 기록이 남지 않아요.');
+ return datePickHtml(d,idx>=H.days.length-1,idx<=0,asc?'오래된순':'최신순')+chips+rows;
+}
 function openShotModal(p,t,nosch){
  openModal(`
   <div class="modal-head"><div><h2>스크린샷</h2><div class="sub">'${p.name}' · ${storeName(p.store)} · ${TODAY_D} ${t}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
@@ -913,7 +1008,7 @@ function openPanelDrawer(p,tab='overview'){
  const wrap=document.createElement('div');wrap.className='drawer-wrap';
  /* 네트워크·스크린샷 탭의 선택 날짜·정렬은 드로어가 열려 있는 동안 유지(탭 전환에도 보존).
     asc=false = 최신순(기본), asc=true = 오래된순 — 두 탭 동일 기준. */
- let netIdx=0,shotIdx=0,netAsc=false,shotAsc=false;
+ let netIdx=0,shotIdx=0,netAsc=false,shotAsc=false,logIdx=0,logAsc=false,logFilter='all';
  const draw=(tab)=>{
   const st=!p.stb?['셋탑 미연결','badge-amber']:p.status==='on'?(p.unsch?['미편성','badge-amber']:['온라인','badge-green']):['오프라인','badge-gray'];
   wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true">
@@ -1004,8 +1099,13 @@ function openPanelDrawer(p,tab='overview'){
    body.querySelectorAll('[data-dnav]').forEach(b=>b.onclick=()=>{const k=b.dataset.dnav;shotIdx=k==='prev'?Math.min(shotIdx+1,H.days.length-1):k==='next'?Math.max(shotIdx-1,0):0;draw('screenshot');});
    const _so=body.querySelector('[data-dsort]');if(_so)_so.onclick=()=>{shotAsc=!shotAsc;draw('screenshot');};
    body.querySelectorAll('[data-shot]').forEach(c=>c.onclick=()=>openShotModal(p,c.dataset.shot,c.dataset.nosch==='1'));
-  }else{
-   body.innerHTML=[['방금 전','실시간 미리보기 조회'],['10분 전',`'${contentOf(p.content||'c2').name}' 송출 시작`],['오늘 08:00','일일 편성 자동 갱신'],['어제 22:00','절전 모드 진입'],['어제 14:20','관리자 김민규 — 일정 수정']].map(([tm,tx])=>`<div class="log-item"><span class="tm">${tm}</span><span>${tx}</span></div>`).join('');
+  }else{ /* 활동 로그 */
+   const H=logHistory(p);
+   if(logIdx>H.days.length-1)logIdx=Math.max(0,H.days.length-1);
+   body.innerHTML=logTabHtml(p,logIdx,logAsc,logFilter);
+   body.querySelectorAll('[data-dnav]').forEach(b=>b.onclick=()=>{const k=b.dataset.dnav;logIdx=k==='prev'?Math.min(logIdx+1,H.days.length-1):k==='next'?Math.max(logIdx-1,0):0;draw('log');});
+   const _so=body.querySelector('[data-dsort]');if(_so)_so.onclick=()=>{logAsc=!logAsc;draw('log');};
+   body.querySelectorAll('[data-lfilter]').forEach(b=>b.onclick=()=>{logFilter=b.dataset.lfilter;draw('log');});
   }
  };
  draw(tab);

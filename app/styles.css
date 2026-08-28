@@ -308,8 +308,6 @@ table.grid tr.checked td{background:var(--blue-50)}
 .pl-card .check,.p-card .check{position:absolute;left:9px;top:9px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px;box-shadow:var(--sh-sm)}
 .pl-card:hover .check,.pl-card .check.on,.p-card:hover .check,.p-card .check.on{opacity:1}
 .pl-card.checked,.p-card.checked{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
-.pcard.wall .check{position:absolute;right:9px;left:auto;top:9px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px}
-.pcard.wall:hover .check,.pcard.wall .check.on{opacity:1}
 /* ─── 사용자 관리 ─── */
 .u-cell{display:flex;align-items:center;gap:10px}
 .u-cell .nm{font-weight:700;font-size:14px}
@@ -1471,7 +1469,7 @@ svg{display:block;flex:none}
 /* 상태 뱃지 ↔ 선택 체크박스는 좌측 상단을 공유한다(콘텐츠 관리 lib-card와 동일 UX·스타일).
    Default = 상태 뱃지만 · Hover/Selected = 뱃지를 숨기고 같은 자리에 체크박스 노출.
    ★ 즐겨찾기는 우측 상단 코너로 분리(템플릿 카드와 동일). 비디오월 카드는 선택이 없어 뱃지 유지. */
-.pcard:not(.wall):hover .thumb .tl,.pcard:not(.wall).checked .thumb .tl{opacity:0}
+.pcard:hover .thumb .tl,.pcard.checked .thumb .tl{opacity:0}
 .pcard .check{position:absolute;left:10px;top:9px;right:auto;z-index:4;opacity:0;transition:opacity .12s;background:rgba(255,255,255,.94);border-radius:5px;box-shadow:var(--sh-sm)}
 .pcard:hover .check,.pcard .check.on{opacity:1}
 /* 선택(체크) 상태는 파란 배경 + 흰 체크 — .pcard .check 흰 배경이 .checkbox.on 을 덮지 않도록 명시 */
@@ -1586,8 +1584,16 @@ table.grid tr.checked td{background:var(--blue-50)}
 .sync-note svg{margin-top:1px;color:var(--blue);flex:none}
 .tag-row{display:flex;gap:6px;flex-wrap:wrap}
 .tag-row .chip{height:26px;font-size:12px;padding:0 10px}
-.log-item{display:flex;gap:10px;font-size:13px;padding:8px 2px;border-bottom:1px solid var(--border)}
-.log-item .tm{color:var(--text-3);width:88px;flex:none}
+/* ═══ 활동 로그 ═══ */
+.log-filters{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}
+.chip.chip-sm{height:30px;padding:0 12px;font-size:13px;gap:5px}
+.chip.chip-sm .cnt{font-size:12px}
+.log-list{display:flex;flex-direction:column}
+.log-item{display:flex;align-items:baseline;gap:12px;font-size:14px;padding:14px 2px;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:0}
+.log-tx{flex:1;min-width:0;color:var(--text-1);line-height:1.55;word-break:keep-all}
+.log-cat{color:var(--text-3);font-weight:500;margin-right:2px}
+.log-t{flex:none;color:var(--text-3);font-size:13px;white-space:nowrap;cursor:default}
 /* ─── 일정 관리 화면 ─── */
 #screen-schedule{display:flex;flex-direction:column;height:100vh;background:var(--bg)}
 .sc-top{display:flex;align-items:center;gap:10px;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex:none}
