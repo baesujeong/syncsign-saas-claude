@@ -576,20 +576,23 @@ function openAddPanelModal(opts){
  openModal(`
  <div class="modal-head"><div><h2>화면 추가</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
  <div class="modal-body">
-  <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"></div>
+  <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"><div class="ferr" id="ap-name-err" style="display:none">필수항목입니다. 화면 이름을 입력해주세요.</div></div>
   <div class="f-row"><label>설치 매장</label>
    <select class="select" id="ap-store">
     <option value="" ${defStore?'':'selected'}>${NO_STORE}</option>
     ${STORES.length?`<optgroup label="매장">${storeOptions(defStore).map(s=>`<option value="${s.id}" ${s.id===defStore?'selected':''}>${s.name}</option>`).join('')}</optgroup>`:''}
    </select></div>
-  <div class="f-row" style="margin-bottom:0"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ">
+  <div class="f-row" style="margin-bottom:0"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ"><div class="ferr" id="ap-code-err" style="display:none">연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.</div>
    <div class="info-note" style="margin-top:10px">${IC.info}<span>셋탑박스를 TV에 연결하고, 앱을 실행하면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 나중에 연결해도 괜찮아요.</span></div></div>
  </div>
  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="ap-ok">추가하기</button></div>`,
  {width:'440px',onMount:ov=>{
   const nmField=ov.querySelector('#ap-name');nmField.focus();
-  nmField.addEventListener('input',()=>nmField.classList.remove('error'));
+  const nmErr=ov.querySelector('#ap-name-err');
+  nmField.addEventListener('input',()=>{nmField.classList.remove('error');nmErr.style.display='none';});
   const apCode=bindStbCodeInput(ov.querySelector('#ap-code'));
+  const codeErr=ov.querySelector('#ap-code-err');
+  apCode.addEventListener('input',()=>{codeErr.style.display='none';});
   const create=(nm,stb)=>{
    /* 빈 문자열 = 미지정 — 매장이 없어도 화면은 등록할 수 있다 */
    const sid=ov.querySelector('#ap-store').value||null;
@@ -601,10 +604,10 @@ function openAddPanelModal(opts){
   };
   ov.querySelector('#ap-ok').onclick=()=>{
    const nm=(nmField.value||'').trim();
-   if(!nm){nmField.classList.add('error');nmField.focus();toast('화면 이름을 입력해주세요. 설치 위치를 알 수 있는 이름이 좋아요.',{err:true});return}
+   if(!nm){nmField.classList.add('error');nmErr.style.display='flex';nmField.focus();return}
    /* 코드를 입력하다 만 경우만 막고, 아예 비워 뒀다면 '나중에 연결'로 처리한다 */
    const code=normStbCode(apCode.value);
-   if(code&&code.length<STB_CODE_LEN){apCode.classList.add('error');apCode.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return}
+   if(code&&code.length<STB_CODE_LEN){apCode.classList.add('error');codeErr.style.display='flex';apCode.focus();return}
    const p=create(nm,!!code);
    if(opts.onCreated){opts.onCreated(p);return}
    if(!code)toast(`'${p.name}' 화면을 만들었어요. 셋탑박스가 준비되면 [셋탑 연결하기]로 연결하세요.`,{action:'지금 연결',onAction:()=>openStbModal(p)});
@@ -621,7 +624,7 @@ function openStbModal(p,reconnect){
  const ov=openModal(`
   <div class="modal-head"><div><h2>${p.stb?'셋탑 재연결':'셋탑 연결하기'}</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body">
-   <div class="f-row" style="margin-bottom:0"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F82KQ"></div>
+   <div class="f-row" style="margin-bottom:0"><label>${p.stb?'새 연결 코드':'연결 코드'} <span class="req">*</span></label><input class="input" id="stb-code" placeholder="예) 3F82KQ"><div class="ferr" id="stb-code-err" style="display:none"></div></div>
    ${p.stb?`<div class="stb-guide"><b>재연결 안내</b>
     <div class="step">새 셋탑의 6자리 연결 코드를 입력하면 재연결돼요.</div>
     <div class="step">기존 일정, 태그는 그대로 유지됩니다.</div></div>`
@@ -633,10 +636,12 @@ function openStbModal(p,reconnect){
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="stb-ok">${p.stb?'재연결':'연결'}</button></div>`,
  {width:'440px',onMount:ov=>{
   const input=bindStbCodeInput(ov.querySelector('#stb-code'));input.focus();
+  const codeErr=ov.querySelector('#stb-code-err');
+  input.addEventListener('input',()=>{codeErr.style.display='none';});
   ov.querySelector('#stb-ok').onclick=()=>{
    const code=normStbCode(input.value);
-   if(!code){input.classList.add('error');input.focus();toast('연결 코드를 입력해주세요.',{err:true});return}
-   if(code.length<STB_CODE_LEN){input.classList.add('error');input.focus();toast(`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`,{err:true});return}
+   if(!code){input.classList.add('error');codeErr.textContent='필수항목입니다. 연결 코드를 입력해주세요.';codeErr.style.display='flex';input.focus();return}
+   if(code.length<STB_CODE_LEN){input.classList.add('error');codeErr.textContent=`연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.`;codeErr.style.display='flex';input.focus();return}
    const wasRe=!!p.stb;
    p.stb={sn:'STB-'+String(++pSeq).padStart(6,'0')};
    p.status='on';p.lastMin=0;if(p.res==='—'){p.res='1920×1080 · 가로';p.fw='v3.6';}
