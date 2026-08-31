@@ -40,7 +40,7 @@ a{color:inherit}
 .input,.select,textarea.input{height:40px;padding:0 12px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);width:100%;transition:border-color .15s,box-shadow .15s}
 textarea.input{height:auto;padding:10px 12px;resize:vertical}
 .input:focus,.select:focus,textarea.input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
-.input.error,.input.error:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.input.error,.input.error:focus,.select.error,.select.error:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
 .input-sm,.select-sm{height:32px;font-size:13px;border-radius:var(--r-sm)}
 .select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235C6577' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:32px;cursor:pointer}
 .search-wrap{position:relative;display:flex;align-items:center}
@@ -1635,8 +1635,10 @@ table.grid tr.checked td{background:var(--blue-50)}
 .now-line::before{content:"";position:absolute;left:-5px;top:-3.5px;width:9px;height:9px;border-radius:50%;background:var(--red)}
 /* 일정 등록 사이드 */
 .sc-side{width:340px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex:none;min-height:0}
-.sc-side-head{padding:16px 20px 0;flex:none}
-.sc-side-head h2{margin:0 0 12px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+.sc-side-head{padding:16px 20px 12px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sc-side-head h2{margin:0;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+.sc-del{display:inline-flex;align-items:center;gap:4px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;flex:none}
+.sc-del:hover{text-decoration:underline}
 .sc-side-body{flex:1;overflow-y:auto;padding:4px 20px 24px;display:flex;flex-direction:column;gap:20px}
 .sc-side-body>.f-row{margin:0}
 .sc-side-body>#conflict-area:empty{display:none}
@@ -2217,12 +2219,6 @@ table.grid tr.checked td{background:var(--blue-50)}
 .prog-card-kv>div{display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:baseline}
 .prog-card-kv dt{color:var(--text-3);flex:none}
 .prog-card-kv dd{color:var(--text-2);font-weight:600;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.prog-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:72px 24px;gap:8px}
-.prog-empty-ic{width:56px;height:56px;border-radius:50%;background:var(--blue-50);color:var(--blue);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
-.prog-empty-ic svg{width:26px;height:26px}
-.prog-empty b{font-size:16px;font-weight:800;color:var(--text)}
-.prog-empty-sub{font-size:13px;color:var(--text-3);line-height:1.6}
-.prog-empty .btn{margin-top:8px}
 /* ═══════ 편성표 편집기 (Takeover) ═══════ */
 .sc-top .name-input{border:1px solid transparent;border-radius:var(--r-md);height:38px;width:280px;font-weight:700;font-size:15px;padding:0 10px;background:transparent;color:var(--text)}
 .sc-top .name-input::placeholder{color:var(--text-3);font-weight:600}

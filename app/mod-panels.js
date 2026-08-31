@@ -1428,9 +1428,9 @@ function filteredPrograms(){
 function drawProgList(){
  const wrap=document.getElementById('prog-listwrap');if(!wrap)return;
  const arr=filteredPrograms();
- if(!PROGRAMS.length){wrap.innerHTML=`<div class="prog-empty"><span class="prog-empty-ic">${IC.cal}</span><b>아직 만든 편성표가 없어요</b><span class="prog-empty-sub">여러 일정을 담은 편성표를 만들어 화면에 송출해보세요.<br>대상 없이 먼저 저장해 두고, 나중에 송출 대상을 지정할 수 있어요.</span><button class="btn btn-primary" id="prog-empty-new">${IC.plus}일정 등록</button></div>`;
+ if(!PROGRAMS.length){wrap.innerHTML=`<div class="empty"><b>아직 만든 편성표가 없어요</b><span>여러 일정을 담은 편성표를 만들어 화면에 송출해보세요.<br>대상 없이 먼저 저장해 두고, 나중에 송출 대상을 지정할 수 있어요.</span><button class="btn btn-primary btn-sm" id="prog-empty-new">${IC.plus}일정 등록</button></div>`;
   wrap.querySelector('#prog-empty-new').onclick=()=>openProgramEditor(mkProgram({}),true);updateProgBulk();return;}
- if(!arr.length){wrap.innerHTML=`<div class="prog-empty"><b>조건에 맞는 편성표가 없어요</b><span class="prog-empty-sub">검색어나 필터를 바꿔보세요.</span></div>`;updateProgBulk();return;}
+ if(!arr.length){wrap.innerHTML=`<div class="empty"><b>조건에 맞는 편성표가 없어요</b><span>검색어나 필터를 바꿔보세요.</span></div>`;updateProgBulk();return;}
  wrap.innerHTML=progTableHtml(arr);
  wrap.querySelectorAll('[data-prow]').forEach(r=>r.addEventListener('click',e=>{if(e.target.closest('[data-pcheck],[data-pmenu],[data-tgt]'))return;openProgramEditor(PROGRAMS.find(p=>p.id===r.dataset.prow));}));
  wrap.querySelectorAll('[data-pcheck]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.pcheck;progChecked.has(id)?progChecked.delete(id):progChecked.add(id);drawProgList();});
@@ -1613,7 +1613,7 @@ function renderProgCal(){
  const scroll=$('#cal-scroll');if(scroll&&!scroll._scrolled){scroll.scrollTop=30;scroll._scrolled=true;}
 }
 function renderProgSideEmpty(){
- pcalSelGid=null;$('#sc-side-foot').hidden=true;$('#sc-side-title').textContent='일정 설정';
+ pcalSelGid=null;$('#sc-side-foot').hidden=true;$('#sc-side-title').textContent='일정 설정';$('#sc-del').hidden=true;
  $('#sc-side-body').innerHTML=`<div class="bs-empty"><span class="bs-empty-ic">${IC.cal}</span><b>일정을 선택하세요</b><span>캘린더에서 일정을 클릭해 설정을 편집하거나,<br>빈 시간을 클릭해 새 일정을 추가하세요.</span></div>`;
  renderProgCal();
 }
@@ -1621,6 +1621,9 @@ function renderProgSideEmpty(){
 function openBlockSide(cfg){
  $('#sc-side-foot').hidden=false;
  $('#sc-side-title').textContent=cfg.edit?'일정 수정':'일정 추가';
+ const _del=$('#sc-del');
+ if(cfg.edit){_del.hidden=false;_del.innerHTML=`${IC.trash}일정 삭제`;_del.onclick=()=>{curProg.blocks=curProg.blocks.filter(b=>b.gid!==cfg.edit.gid);toast('일정을 삭제했어요.');renderProgSideEmpty();};}
+ else{_del.hidden=true;_del.onclick=null;}
  pcalSelGid=cfg.edit?cfg.edit.gid:null;
  let sel={content:cfg.content,type:cfg.type||'normal',s:cfg.s,e:cfg.e,days:[...cfg.days],sd:cfg.sd||PROG_NOW,ed:cfg.ed||null,noEnd:!cfg.ed};
  const body=$('#sc-side-body');
@@ -1635,15 +1638,13 @@ function openBlockSide(cfg){
    ${periodField(sel.sd,sel.ed,sel.noEnd,'bs')}
    <div class="f-row"><label>송출 시간</label><div class="time-row"><select class="select select-sm" id="bs-ts">${times.filter(h=>h<23).map(h=>`<option value="${h}" ${h===sel.s?'selected':''}>${hLabel(h)}</option>`).join('')}</select><span class="time-dash">~</span><select class="select select-sm" id="bs-te">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===sel.e?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
    <div class="f-row"><label>반복 주기</label><div class="day-chips">${REPEAT_N.map((d,i)=>`<button class="day-chip ${sel.days.includes(i)?'on':''}" data-bsd="${i}">${d}</button>`).join('')}</div></div>
-   <div class="f-row"><label>유형 ${IC.info}</label><div class="seg" style="width:100%"><button class="${sel.type==='normal'?'on':''}" data-bsty="normal" style="flex:1">일반</button><button class="${sel.type==='urgent'?'on':''}" data-bsty="urgent" style="flex:1">긴급 (즉시 교체)</button></div>${sel.type==='urgent'?'<p class="bs-note">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>
-   ${cfg.edit?`<button class="btn btn-sm btn-danger-t" id="bs-del" style="width:100%;margin-top:2px">${IC.trash}이 일정 삭제</button>`:''}`;
+   <div class="f-row"><label>유형 ${IC.info}</label><div class="seg" style="width:100%"><button class="${sel.type==='normal'?'on':''}" data-bsty="normal" style="flex:1">일반</button><button class="${sel.type==='urgent'?'on':''}" data-bsty="urgent" style="flex:1">긴급</button></div>${sel.type==='urgent'?'<p class="bs-note">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>`;
   body.querySelector('#bs-content').onclick=()=>openAssetPicker(sel.content,ref=>{sel.content=ref;draw();});
   bindPeriod(body,'bs',sel,draw);
   body.querySelector('#bs-ts').onchange=e=>{sel.s=+e.target.value;if(sel.e<=sel.s)sel.e=Math.min(23,sel.s+.5);draw();};
   body.querySelector('#bs-te').onchange=e=>{sel.e=+e.target.value;draw();};
   body.querySelectorAll('[data-bsd]').forEach(b=>b.onclick=()=>{const i=+b.dataset.bsd;sel.days=sel.days.includes(i)?sel.days.filter(x=>x!==i):[...sel.days,i];draw();});
   body.querySelectorAll('[data-bsty]').forEach(b=>b.onclick=()=>{sel.type=b.dataset.bsty;draw();});
-  body.querySelector('#bs-del')?.addEventListener('click',()=>{curProg.blocks=curProg.blocks.filter(b=>b.gid!==cfg.edit.gid);toast('일정을 삭제했어요.');renderProgSideEmpty();});
  };
  draw();
  $('#sc-cancel').onclick=renderProgSideEmpty;
@@ -1681,7 +1682,7 @@ function commitProgram(broadcast){
 function saveProgram(broadcast){
  curProg.name=($('#prog-name').value||'').trim();
  if(!curProg.name)return requireProgName();
- if(!curProg.blocks.length)return toast('편성표에 일정을 한 개 이상 추가해주세요. 캘린더의 빈 시간을 클릭해보세요.',{err:true});
+ if(!curProg.blocks.length)return toast('편성표에 일정을 한 개 이상 추가해주세요.',{err:true});
  if(broadcast){/* 종료된 편성 기간 그대로는 송출 불가 — 먼저 편성 기간을 수정해야 함 */
   const pr=progPeriod(curProg);if(pr&&pr.ed&&pr.ed<PROG_NOW)return toast('편성 종료일이 지났어요. 편성 기간을 현재·미래로 수정한 뒤 송출해주세요.',{err:true});}
  if(broadcast&&!progUnique(curProg).length){
@@ -1854,14 +1855,13 @@ function openAssetPicker(current,onPick){
  const emptyBox=(msg,cta,page)=>`<div class="empty" style="padding:40px 20px"><b>${msg}</b><span>${cta}</span><button class="btn btn-tonal btn-sm" data-apk-go="${page}">바로 가기</button></div>`;
  const inFolder=(itemFolder)=>{
   if(folder==='all')return true;
-  if(folder==='__shared__')return false;
   const ids=A.fDescIds?A.fDescIds(fsOf(),folder):[folder];
   return ids.includes(itemFolder);
  };
  const draw=()=>{
   wrap.querySelector('#apk-tabs').innerHTML=[['lib',`콘텐츠 ${A.lib.length}`],['tpl',`템플릿 ${A.tpls.length}`],['pl',`재생목록 ${A.pls.length}`]]
    .map(([k,l])=>`<button class="${tab===k?'on':''}" data-apkt="${k}">${l}</button>`).join('');
-  /* 좌측 폴더 트리 — 전체 + 3Depth 들여쓰기 (템플릿 탭은 '공유 템플릿' 가상 폴더 포함) */
+  /* 좌측 폴더 트리 — 전체 + 3Depth 들여쓰기 */
   const fs=fsOf();
   const countIn=fid=>{
    const ids=A.fDescIds?A.fDescIds(fs,fid):[fid];
@@ -1872,28 +1872,21 @@ function openAssetPicker(current,onPick){
   const totalN=tab==='lib'?A.lib.filter(c=>!c.error).length:tab==='tpl'?A.tpls.length:A.pls.length;
   wrap.querySelector('#apk-folders').innerHTML=
    `<div class="fr-item ${folder==='all'?'on':''}" data-apkf="all" role="button" tabindex="0">${IC.folder}<span class="fr-nm">전체</span><span class="cnt num">${totalN}</span></div>`
-   +(A.fFlat?A.fFlat(fs).map(({f,depth})=>`<div class="fr-item ${folder===f.id?'on':''}" data-apkf="${f.id}" role="button" tabindex="0" style="padding-left:${8+(depth-1)*16}px">${IC.folder}<span class="fr-nm">${f.name}</span><span class="cnt num">${countIn(f.id)}</span></div>`).join(''):'')
-   +(tab==='tpl'?`<div class="fr-item ${folder==='__shared__'?'on':''}" data-apkf="__shared__" role="button" tabindex="0" style="margin-top:6px;border-top:1px solid var(--border);padding-top:8px">${IC.starO}<span class="fr-nm">공유 템플릿</span><span class="cnt num">${A.gals.length}</span></div>`:'');
+   +(A.fFlat?A.fFlat(fs).map(({f,depth})=>`<div class="fr-item ${folder===f.id?'on':''}" data-apkf="${f.id}" role="button" tabindex="0" style="padding-left:${8+(depth-1)*16}px">${IC.folder}<span class="fr-nm">${f.name}</span><span class="cnt num">${countIn(f.id)}</span></div>`).join(''):'');
   const typEl=wrap.querySelector('#apk-type');
   typEl.innerHTML=tab==='lib'?[['all','전체'],['image','이미지'],['video','동영상'],['url','웹 URL']].map(([k,l])=>`<button class="chip ${typ===k?'on':''}" data-apkty="${k}">${l}</button>`).join(''):'';
   const list=wrap.querySelector('#apk-list');
   const match=n=>!q||n.toLowerCase().includes(q.toLowerCase());
   if(tab==='lib'){
    const items=A.lib.filter(c=>!c.error&&inFolder(c.folder)&&(typ==='all'||c.type===typ)&&(match(c.name)||(c.tags||[]).some(t=>t.includes(q))));
-   list.innerHTML=items.map(c=>row('L:'+c.id,c.g,c.e,c.name,`${c.type==='video'?'동영상 · '+durFmt(c.dur):c.type==='url'?'웹 URL':'이미지'} · ${c.size}${folder==='all'&&c.folder&&A.fPath?` · ${A.fPath(A.lf,c.folder)}`:''}`)).join('')
+   list.innerHTML=items.map(c=>row('L:'+c.id,c.g,c.e,c.name,`${c.type==='video'?'동영상 · '+durFmt(c.dur):c.type==='url'?'웹 URL':'이미지'} · ${c.size}`)).join('')
     ||(A.lib.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 콘텐츠가 없어요</b><span>다른 폴더나 검색어를 확인해보세요.</span></div>'
      /* 콘텐츠 빈 상태: 페이지 이동 없이 드로어 안에서 바로 업로드·URL 등록 — 완료 즉시 목록 갱신되어 이어서 선택 */
      :`<div class="empty" style="padding:40px 20px"><b>아직 등록된 콘텐츠가 없어요</b><span>이미지·동영상·웹 URL을 등록하면 여기서 바로 편성에 사용할 수 있어요.</span><div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-primary btn-sm" data-apk-upload>${IC.upload}업로드</button><button class="btn btn-tonal btn-sm" data-apk-url>${IC.link}웹 URL 추가</button></div></div>`);
   }else if(tab==='tpl'){
-   if(folder==='__shared__'){
-    const shared=A.gals.filter(t=>match(t.name)).sort((a,b)=>b.uses-a.uses);
-    list.innerHTML=shared.map(t=>row('T:'+t.id,t.g,t.e,t.name,`${t.ind} · ${t.cat} · ${fmt(t.uses)}회 사용됨`,'<span class="badge badge-violet">공유</span>')).join('')
-     ||'<div class="empty" style="padding:30px"><b>조건에 맞는 템플릿이 없어요</b></div>';
-   }else{
-    const mine=A.tpls.filter(t=>inFolder(t.folder)&&match(t.name));
-    list.innerHTML=mine.map(t=>row('T:'+t.id,t.g,t.e,t.name,`${t.ratio} · 수정 ${t.mod}${folder==='all'&&t.folder&&A.fPath?` · ${A.fPath(A.tf,t.folder)}`:''}`)).join('')
-     ||(A.tpls.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 템플릿이 없어요</b><span>다른 폴더나 검색어를 확인해보세요.</span></div>':emptyBox('아직 사용할 템플릿이 없어요','템플릿 갤러리에서 우리 매장에 맞는 템플릿을 만들어보세요','templates'));
-   }
+   const mine=A.tpls.filter(t=>inFolder(t.folder)&&match(t.name));
+   list.innerHTML=mine.map(t=>row('T:'+t.id,t.g,t.e,t.name,`${t.ratio} · 수정 ${t.mod}`)).join('')
+    ||(A.tpls.length?'<div class="empty" style="padding:30px"><b>조건에 맞는 템플릿이 없어요</b><span>다른 폴더나 검색어를 확인해보세요.</span></div>':emptyBox('아직 사용할 템플릿이 없어요','템플릿 갤러리에서 우리 매장에 맞는 템플릿을 만들어보세요','templates'));
   }else{
    const items=A.pls.filter(p=>inFolder(p.folder)&&match(p.name));
    list.innerHTML=items.map(p=>row('P:'+p.id,contentOf('P:'+p.id).g,contentOf('P:'+p.id).e,p.name,`콘텐츠 ${p.items.length}개 · ${durFmt(A.plDur(p))}${p.repeat?' · 반복 재생':''}`)).join('')
@@ -2160,7 +2153,7 @@ function openWallWizard(existing,opts={}){
        <div class="f-row" style="margin:0"><label>송출 시간</label><div class="time-row">
         <select class="select select-sm" id="w3-s" aria-label="시작 시간">${times.filter(h=>h<23).map(h=>`<option value="${h}" ${h===scS?'selected':''}>${hLabel(h)}</option>`).join('')}</select>
         <span style="color:var(--text-3)">–</span>
-        <select class="select select-sm" id="w3-e" aria-label="종료 시간">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===scE?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
+        <select class="select select-sm" id="w3-e" aria-label="종료 시간">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===scE?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div><div class="ferr" id="w3-time-err" style="display:none">종료 시간이 시작 시간보다 빨라요</div></div>
        <div class="f-row" style="margin:0"><label>재생 주기</label>
         <div class="time-row">
          <input class="input input-sm" id="w3-cyc" type="number" min="0" inputmode="numeric" value="${scCycN}" ${scCont?'disabled':''} aria-label="재생 주기 값" style="flex:1;min-width:0">
@@ -2190,8 +2183,11 @@ function openWallWizard(existing,opts={}){
    const _cont=body.querySelector('#w3-cont');
    if(_cont){const toggleCont=()=>{scCont=!scCont;draw()};_cont.onclick=toggleCont;_cont.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleCont()}});}
    bindPeriod(body,'w3',scPd,draw);
-   body.querySelector('#w3-s').onchange=e=>scS=+e.target.value;
-   body.querySelector('#w3-e').onchange=e=>scE=+e.target.value;
+   const _ws=body.querySelector('#w3-s'),_we=body.querySelector('#w3-e'),_wte=body.querySelector('#w3-time-err');
+   const validTime=()=>{const bad=scE<=scS;_wte.style.display=bad?'flex':'none';_ws.classList.toggle('error',bad);_we.classList.toggle('error',bad);return !bad;};
+   _ws.onchange=e=>{scS=+e.target.value;validTime();};
+   _we.onchange=e=>{scE=+e.target.value;validTime();};
+   validTime();
   }
  };
  ov.querySelector('#wz-prev').onclick=()=>{if(step===3){step=2;}else{step=1;}draw()};
@@ -2201,7 +2197,7 @@ function openWallWizard(existing,opts={}){
   const an=placed.filter(t=>cm[t.p]).length;
   if(an){
    const pdErr=periodError(scPd);if(pdErr){toast(pdErr,{err:true});return}
-   if(scE<=scS){toast('종료 시간이 시작 시간보다 빨라요',{err:true});return}
+   if(scE<=scS){const _te=ov.querySelector('#w3-time-err'),_es=ov.querySelector('#w3-s'),_ee=ov.querySelector('#w3-e');if(_te)_te.style.display='flex';if(_es)_es.classList.add('error');if(_ee){_ee.classList.add('error');_ee.focus();}return}
    if(!scDays.length){toast('반복 요일을 선택해주세요.',{err:true});return}
   }
   const endedPeriod=!scPd.noEnd&&scPd.ed&&scPd.ed<PROG_NOW;
