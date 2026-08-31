@@ -100,6 +100,8 @@ const IC={
  search:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
  star:'<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.7 5.6 6.3.9-4.5 4.3 1 6.2-5.5-3-5.5 3 1-6.2L3 9.5l6.3-.9L12 3Z"/></svg>',
  starO:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.3.9-4.5 4.3 1 6.2-5.5-3-5.5 3 1-6.2L3 9.5l6.3-.9L12 3Z"/></svg>',
+ /* 리스트 뷰 즐겨찾기용 별(단색) — 화면 관리 리스트와 동일. 활성/비활성은 .fav-col / .fav-col.on 색으로 구분 */
+ likeStar:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.9996 17.0662L8.12169 19.3593C7.95037 19.4664 7.77127 19.5122 7.58439 19.4969C7.3975 19.4816 7.23397 19.4205 7.09381 19.3135C6.95364 19.2065 6.84462 19.0729 6.76675 18.9126C6.68888 18.7524 6.67331 18.5727 6.72003 18.3733L7.74791 14.0393L4.31385 11.1271C4.15812 10.9895 4.06093 10.8326 4.02231 10.6565C3.98369 10.4804 3.99521 10.3086 4.05688 10.141C4.11856 9.9735 4.212 9.83591 4.33722 9.72829C4.46243 9.62066 4.63374 9.55187 4.85116 9.52191L9.38318 9.13208L11.1352 5.05035C11.2131 4.8669 11.334 4.72931 11.4978 4.63759C11.6616 4.54586 11.8289 4.5 11.9996 4.5C12.1703 4.5 12.3376 4.54586 12.5014 4.63759C12.6652 4.72931 12.7861 4.8669 12.864 5.05035L14.616 9.13208L19.148 9.52191C19.3661 9.55248 19.5374 9.62128 19.662 9.72829C19.7866 9.8353 19.88 9.97289 19.9423 10.141C20.0046 10.3092 20.0164 10.4813 19.9778 10.6575C19.9392 10.8336 19.8417 10.9901 19.6853 11.1271L16.2513 14.0393L17.2792 18.3733C17.3259 18.572 17.3103 18.7518 17.2325 18.9126C17.1546 19.0735 17.0456 19.2071 16.9054 19.3135C16.7652 19.4199 16.6017 19.481 16.4148 19.4969C16.2279 19.5128 16.0488 19.467 15.8775 19.3593L11.9996 17.0662Z"/></svg>',
  folder:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>',
  info:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-width="2"/></svg>',
  edit:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3.5 20.5 7 8 19.5 3.5 20.5 4.5 16 17 3.5Z"/></svg>',
@@ -337,22 +339,25 @@ const G={g1:'linear-gradient(135deg,#7A1E1E,#3D0E0E)',g2:'linear-gradient(135deg
 let tSeq=100;
 let MY_FOLDERS=[{id:'tf1',name:'여름 시즌'},{id:'tf2',name:'메뉴판'},{id:'tf3',name:'이벤트'}];
 let MY_TPLS=[
- {id:'t1',name:'싱크사인 메인메뉴',folder:'tf2',ratio:'16:9',mod:'07.03',fav:true,g:G.g2,e:'☕',tt:'SIGNATURE MENU'},
- {id:'t2',name:'여름 스무디 프로모션',folder:'tf1',ratio:'16:9',mod:'07.01',fav:true,g:G.g3,e:'🏖️',tt:'SUMMER'},
- {id:'t3',name:'신메뉴 출시 안내',folder:'tf1',ratio:'16:9',mod:'06.28',fav:false,g:G.g4,e:'✨',tt:'NEW'},
- {id:'t4',name:'주말 이벤트 세로형',folder:'tf3',ratio:'9:16',mod:'06.25',fav:false,g:G.g6,e:'🎁',tt:'EVENT'},
- {id:'t5',name:'대기 호출 화면',folder:'tf3',ratio:'16:9',mod:'06.21',fav:false,g:G.g5,e:'🔔',tt:'NO. 128'},
- {id:'t6',name:'디저트 메뉴판',folder:'tf2',ratio:'16:9',mod:'06.18',fav:false,g:G.g8,e:'🍰',tt:'DESSERT'},
+ {id:'t1',name:'싱크사인 메인메뉴',folder:'tf2',ratio:'16:9',size:'1920×1080',mod:'07.03',fav:true,g:G.g2,e:'☕',tt:'SIGNATURE MENU'},
+ {id:'t2',name:'여름 스무디 프로모션',folder:'tf1',ratio:'16:9',size:'1920×1080',mod:'07.01',fav:true,g:G.g3,e:'🏖️',tt:'SUMMER'},
+ {id:'t3',name:'신메뉴 출시 안내',folder:'tf1',ratio:'16:9',size:'3840×2160',mod:'06.28',fav:false,g:G.g4,e:'✨',tt:'NEW'},
+ {id:'t4',name:'주말 이벤트 세로형',folder:'tf3',ratio:'9:16',size:'1080×1920',mod:'06.25',fav:false,g:G.g6,e:'🎁',tt:'EVENT'},
+ {id:'t5',name:'대기 호출 화면',folder:'tf3',ratio:'16:9',size:'1280×720',mod:'06.21',fav:false,g:G.g5,e:'🔔',tt:'NO. 128'},
+ {id:'t6',name:'디저트 메뉴판',folder:'tf2',ratio:'16:9',size:'2560×1440',mod:'06.18',fav:false,g:G.g8,e:'🍰',tt:'DESSERT'},
 ];
 MY_TPLS[0].by='김민규';MY_TPLS[1].by='박서연';MY_TPLS[3].by='이준호';MY_TPLS[4].by='박서연';
-const GAL_IND=['카페','음식점','뷰티','리테일','병원'];
-const GAL_CAT=['메뉴판','프로모션','안내','이벤트','번호호출'];
-const GAL_E={카페:'☕',음식점:'🍜',뷰티:'💇',리테일:'🛍️',병원:'🏥'};
+const GAL_USE=['메뉴','이벤트','광고','안내','소개','기타'];
+const GAL_PLACE=['건강','교육기관','기업','공공 · 센터 · 협회','병원 · 의원','여행 · 관광','요식업','부동산','의류 · 뷰티','종교단체','판매','기타'];
+const GAL_UE={메뉴:'🍽️',이벤트:'🎉',광고:'📢',안내:'ℹ️',소개:'✨',기타:'📄'};
 let GALLERY=[];
 {let i=0;const gs=Object.values(G);
- GAL_IND.forEach(ind=>GAL_CAT.forEach(cat=>{
-  GALLERY.push({id:'gt'+(i++),name:`${ind} ${cat} ${['클래식','모던','볼드'][i%3]}`,ind,cat,ratio:i%4===3?'9:16':'16:9',g:gs[i%8],e:GAL_E[ind],fav:false,uses:120+(i*37)%900});
- }));}
+ /* 사용처마다 5개씩(=사용처 카운트 균일), 용도는 사용처별로 흩어 배치 */
+ GAL_PLACE.forEach((place,pi)=>{for(let k=0;k<5;k++){
+  const use=GAL_USE[(pi*7+k*5)%GAL_USE.length];
+  GALLERY.push({id:'gt'+i,name:`${place} ${use} ${['클래식','모던','볼드'][i%3]}`,use,place,ratio:i%4===3?'9:16':'16:9',size:i%4===3?['1080×1920','2160×3840','720×1280'][i%3]:['1920×1080','3840×2160','1280×720','2560×1440'][i%4],g:gs[i%8],e:GAL_UE[use],fav:false,uses:120+(i*37)%900});
+  i++;
+ }});}
 /* 라이브러리 */
 let cSeq=100;
 let LIB_FOLDERS=[{id:'lf1',name:'브랜드 에셋'},{id:'lf2',name:'메뉴 사진'},{id:'lf3',name:'2026 여름 프로모션'},{id:'lf4',name:'이벤트'}];
@@ -1283,23 +1288,25 @@ function openCallRequestModal(s,m,onDone){
 <script>
 /* ═══════════ 템플릿 관리 ═══════════ */
 let tTab='mine',tFolder='all',tQ='',tSort='mod',tRatio='all',tChecked=new Set(),tView='grid';
-let gInd='all',gCat='all',gRatio='all',gSort='pop',gQ='';
+let gUse='all',gPlace='all',gRatio='all',gSort='pop',gQ='';
 function renderTemplatesPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.templates.t')}</h1>
    <div class="seg" style="margin-left:6px"><button class="${tTab==='mine'?'on':''}" data-tt="mine">내 템플릿</button><button class="${tTab==='gallery'?'on':''}" data-tt="gallery">템플릿 갤러리</button></div>
    <div class="actions">
-    ${tTab==='mine'?`<button class="btn btn-primary" id="btn-new-tpl" ${canEdit('templates')?'':'disabled'}>${IC.plus}새 템플릿 만들기</button>`:''}
+    <button class="btn btn-primary" id="btn-new-tpl" ${canEdit('templates')?'':'disabled'}>${IC.plus}새 템플릿 만들기</button>
    </div></header>
   <div id="tpl-body" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>`;
  root.querySelectorAll('[data-tt]').forEach(b=>b.onclick=()=>{tTab=b.dataset.tt;tChecked.clear();renderTemplatesPage(root)});
- root.querySelector('#btn-new-tpl')?.addEventListener('click',()=>{openMenuEditorInline();toast('에디터에서 새 템플릿을 만들어요. 위젯 탭에서 메뉴판 위젯을 추가해보세요.')});
+ root.querySelector('#btn-new-tpl')?.addEventListener('click',()=>{openMenuEditorInline();});
  if(tTab==='mine')drawMyTpls();else drawGallery();
 }
 function tplThumb(t){
  if(t.ratio==='9:16')return `<div class="thumb vert"><span class="vwrap" style="background:${t.g}"></span></div>`;
- return `<div class="thumb" style="background:${t.g}"><span class="tt">${t.tt||''}</span></div>`;
+ return `<div class="thumb" style="background:${t.g}"></div>`;
 }
+/* 카드에 표시할 템플릿 사이즈(해상도). size가 없으면 비율 기준 기본값으로 폴백 */
+const tplSize=t=>t.size||(t.ratio==='9:16'?'1080×1920':'1920×1080');
 /* 표준 레이아웃(상품 관리 기준): 좌측=탐색, 우측 카드=툴바(검색·필터·정렬·보기·전체선택)+선택배너+리스트 */
 function tplFiltered(){
  const arr=MY_TPLS.filter(t=>
@@ -1316,7 +1323,7 @@ function drawMyTpls(){
    <div class="rail-main std">
     <div class="prod-toolbar">
      <div class="search-wrap">${IC.search}<input class="input input-sm" id="t-q" placeholder="${t('ph.templates')}" value="${tQ}"></div>
-     <div style="display:flex;gap:6px">${[['all','전체'],['16:9','가로 16:9'],['9:16','세로 9:16']].map(([k,l])=>`<button class="chip ${tRatio===k?'on':''}" data-tr="${k}">${l}</button>`).join('')}</div>
+     <div style="display:flex;gap:6px">${[['all','전체'],['16:9','가로'],['9:16','세로']].map(([k,l])=>`<button class="chip ${tRatio===k?'on':''}" data-tr="${k}">${l}</button>`).join('')}</div>
      <label class="sel-all"><span class="checkbox" id="t-selall" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span>전체 선택</label>
      <div class="spacer"></div>
      <select class="select select-sm" id="t-sort" style="width:120px" aria-label="정렬"><option value="mod">최근 수정순</option><option value="name">이름순</option></select>
@@ -1372,7 +1379,7 @@ function drawTplGrid(){
    <span class="checkbox check ${tChecked.has(t.id)?'on':''}" data-tc="${t.id}" role="checkbox" aria-label="${t.name} 선택">${IC.check}</span>
    <button class="fav ${t.fav?'on':''}" data-tfav="${t.id}" aria-label="${t.name} 즐겨찾기">${t.fav?IC.star:IC.starO}</button>
    <div class="body"><div class="nm">${t.name}</div>
-    <div class="sub"><span class="badge badge-gray">${t.ratio}</span>수정 ${t.mod}<button class="icon-btn" data-tm="${t.id}" style="margin-left:auto;width:26px;height:26px" aria-label="더보기">${IC.dots}</button></div></div>
+    <div class="sub"><span class="badge badge-gray">${tplSize(t)}</span>수정 ${t.mod}<button class="icon-btn" data-tm="${t.id}" style="margin-left:auto;width:26px;height:26px" aria-label="더보기">${IC.dots}</button></div></div>
   </div>`).join('')||(tQ?`<div style="grid-column:1/-1">${searchEmptyHtml(tQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${MY_TPLS.length===0?'아직 만든 템플릿이 없어요':'이 폴더는 비어 있어요'}</b><span>갤러리에서 마음에 드는 템플릿을 가져오거나 새로 만들어보세요.</span><button class="btn btn-tonal btn-sm" id="t-empty-gal">갤러리 둘러보기</button></div>`);
  grid.querySelector('#t-empty-gal')?.addEventListener('click',()=>{tTab='gallery';renderTemplatesPage($('#page-root'))});
  {const _q=$('#t-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
@@ -1416,16 +1423,14 @@ function drawTplList(grid,arr){
  }
  grid.innerHTML=`<div class="ptable-wrap"><table class="grid"><thead><tr>
   <th style="width:38px"><span class="checkbox ${arr.every(t=>tChecked.has(t.id))?'on':''}" id="t-all" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span></th>
-  <th>템플릿</th><th>폴더</th><th>비율</th><th>작성자</th><th>수정일</th><th style="width:60px;text-align:center">즐겨찾기</th><th style="width:40px"></th>
+  <th>템플릿</th><th>사이즈</th><th>수정일</th><th class="fav-th">즐겨찾기</th><th style="width:40px"></th>
  </tr></thead><tbody>
  ${arr.map(t=>`<tr class="${tChecked.has(t.id)?'checked':''}" data-tpl="${t.id}" style="cursor:pointer">
   <td><span class="checkbox ${tChecked.has(t.id)?'on':''}" data-tc="${t.id}" role="checkbox" aria-label="${t.name} 선택">${IC.check}</span></td>
   <td><div style="display:flex;align-items:center;gap:12px"><span style="width:58px;height:33px;border-radius:5px;background:${t.g};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex:none">${t.e}</span><b style="font-size:14px">${t.name}</b></div></td>
-  <td style="font-size:13px">${t.folder?(fPath(MY_FOLDERS,t.folder)||'—'):'—'}</td>
-  <td><span class="badge badge-gray">${t.ratio}</span></td>
-  <td style="font-size:13px">${t.by||'김민규'}</td>
+  <td><span class="badge badge-gray">${tplSize(t)}</span></td>
   <td class="num" style="font-size:13px;color:var(--text-3)">2026.${t.mod}</td>
-  <td style="text-align:center"><button class="icon-btn" data-tfav="${t.id}" style="width:26px;height:26px;color:${t.fav?'#F5B301':'var(--text-3)'}" aria-label="${t.name} 즐겨찾기">${t.fav?IC.star:IC.starO}</button></td>
+  <td class="fav-cell"><button class="fav-col ${t.fav?'on':''}" data-tfav="${t.id}" aria-label="${t.name} 즐겨찾기" aria-pressed="${t.fav?'true':'false'}">${IC.likeStar}</button></td>
   <td><button class="icon-btn" data-tm="${t.id}" aria-label="더보기">${IC.dots}</button></td></tr>`).join('')}
  </tbody></table></div>`;
  grid.querySelector('#t-all').onclick=()=>{const all=arr.every(t=>tChecked.has(t.id));arr.forEach(t=>all?tChecked.delete(t.id):tChecked.add(t.id));drawTplGrid()};
@@ -1440,8 +1445,8 @@ function drawGallery(){
  body.innerHTML=`
   <div class="gal-layout">
    <aside class="gal-rail">
-    <div class="gal-sec"><div class="t">업종</div>${[['all','전체'],...GAL_IND.map(i=>[i,i])].map(([k,l])=>`<button class="fr-item ${gInd===k?'on':''}" data-gi="${k}">${l}<span class="cnt num">${k==='all'?GALLERY.length:GALLERY.filter(g=>g.ind===k).length}</span></button>`).join('')}</div>
-    <div class="gal-sec"><div class="t">카테고리</div>${[['all','전체'],...GAL_CAT.map(c=>[c,c])].map(([k,l])=>`<button class="fr-item ${gCat===k?'on':''}" data-gc="${k}">${l}</button>`).join('')}</div>
+    <div class="gal-sec"><div class="t">용도</div>${[['all','전체'],...GAL_USE.map(u=>[u,u])].map(([k,l])=>`<button class="fr-item ${(k==='all'?(gUse==='all'&&gPlace==='all'):gUse===k)?'on':''}" data-gu="${k}">${l}<span class="cnt num">${k==='all'?GALLERY.length:GALLERY.filter(g=>g.use===k).length}</span></button>`).join('')}</div>
+    <div class="gal-sec"><div class="t">사용처</div>${[['all','전체'],...GAL_PLACE.map(p=>[p,p])].map(([k,l])=>`<button class="fr-item ${(k==='all'?(gUse==='all'&&gPlace==='all'):gPlace===k)?'on':''}" data-gp="${k}">${l}<span class="cnt num">${k==='all'?GALLERY.length:GALLERY.filter(g=>g.place===k).length}</span></button>`).join('')}</div>
    </aside>
    <div class="gal-main">
     <div class="gal-toolbar">
@@ -1453,23 +1458,24 @@ function drawGallery(){
     <div class="gal-scroll"><div class="tpl-grid" id="g-grid"></div></div>
    </div>
   </div>`;
- body.querySelectorAll('[data-gi]').forEach(b=>b.onclick=()=>{gInd=b.dataset.gi;drawGallery()});
- body.querySelectorAll('[data-gc]').forEach(b=>b.onclick=()=>{gCat=b.dataset.gc;drawGallery()});
+ /* 용도·사용처는 상호 배타 — 한쪽 선택 시 다른쪽은 전체로 리셋 */
+ body.querySelectorAll('[data-gu]').forEach(b=>b.onclick=()=>{gUse=b.dataset.gu;gPlace='all';drawGallery()});
+ body.querySelectorAll('[data-gp]').forEach(b=>b.onclick=()=>{gPlace=b.dataset.gp;gUse='all';drawGallery()});
  body.querySelectorAll('[data-gr]').forEach(b=>b.onclick=()=>{gRatio=b.dataset.gr;drawGallery()});
  const grid=body.querySelector('#g-grid');
  /* 검색·정렬은 셸 재렌더 없이 그리드만 다시 그림 */
  const paint=()=>{
-  let arr=GALLERY.filter(g=>(gInd==='all'||g.ind===gInd)&&(gCat==='all'||g.cat===gCat)&&(gRatio==='all'||g.ratio===gRatio)&&(!gQ||(g.name+' '+g.ind+' '+g.cat).toLowerCase().includes(gQ.toLowerCase())));
+  let arr=GALLERY.filter(g=>(gUse==='all'||g.use===gUse)&&(gPlace==='all'||g.place===gPlace)&&(gRatio==='all'||g.ratio===gRatio)&&(!gQ||(g.name+' '+g.use+' '+g.place).toLowerCase().includes(gQ.toLowerCase())));
   arr=gSort==='name'?[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko')):[...arr].sort((a,b)=>b.uses-a.uses);
   grid.innerHTML=arr.map(g=>`
    <div class="tpl-card" data-gt="${g.id}">
     <div class="tpl-thumb-wrap">
-     ${tplThumb({...g,tt:g.cat})}
+     ${tplThumb({...g,tt:g.use})}
      <button class="fav ${g.fav?'on':''}" data-gfav="${g.id}">${g.fav?IC.star:IC.starO}</button>
      <div class="hover-actions"><button class="btn btn-sm" data-gpv="${g.id}">미리보기</button><button class="btn btn-sm btn-primary" data-gedit="${g.id}">편집하기</button></div>
     </div>
-    <div class="body"><div class="nm">${g.name}</div><div class="sub"><span class="badge badge-gray">${g.ratio}</span>${g.ind} · ${g.cat}<span style="margin-left:auto" class="num">${fmt(g.uses)}회 사용</span></div></div>
-   </div>`).join('')||(gQ?searchEmptyHtml(gQ):'<div class="empty" style="grid-column:1/-1"><b>조건에 맞는 템플릿이 없어요</b></div>');
+    <div class="body"><div class="nm">${g.name}</div><div class="sub"><span class="badge badge-gray">${tplSize(g)}</span>${g.use} · ${g.place}<span style="margin-left:auto" class="num">${fmt(g.uses)}회 사용</span></div></div>
+   </div>`).join('')||(gQ?`<div style="grid-column:1/-1">${searchEmptyHtml(gQ)}</div>`:'<div class="empty" style="grid-column:1/-1"><b>조건에 맞는 템플릿이 없어요</b></div>');
   grid.querySelectorAll('[data-gfav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const g=GALLERY.find(x=>x.id===b.dataset.gfav);g.fav=!g.fav;paint()});
   grid.querySelectorAll('[data-gpv]').forEach(b=>b.onclick=e=>{e.stopPropagation();openGalPreview(GALLERY.find(x=>x.id===b.dataset.gpv))});
   grid.querySelectorAll('[data-gedit]').forEach(b=>b.onclick=e=>{e.stopPropagation();editGalTpl(GALLERY.find(x=>x.id===b.dataset.gedit))});
@@ -1483,12 +1489,12 @@ function drawGallery(){
 }
 /* 갤러리 템플릿 편집하기 — 내 템플릿으로 사본을 만들고 바로 에디터로 진입 */
 function editGalTpl(g){
- MY_TPLS.unshift({id:'t'+(tSeq++),name:g.name,folder:MY_FOLDERS[0]?.id||null,ratio:g.ratio,mod:'07.04',fav:false,g:g.g,e:g.e,tt:g.cat});
+ MY_TPLS.unshift({id:'t'+(tSeq++),name:g.name,folder:MY_FOLDERS[0]?.id||null,ratio:g.ratio,size:g.size,mod:'07.04',fav:false,g:g.g,e:g.e,tt:g.use});
  openMenuEditorInline();
 }
 function openGalPreview(g){
  openModal(`
-  <div class="modal-head"><div><h2>${g.name}</h2><div class="sub">${g.ind} · ${g.cat} · ${g.ratio} · ${fmt(g.uses)}회 사용됨</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
+  <div class="modal-head"><div><h2>${g.name}</h2><div class="sub">${g.use} · ${g.place} · ${tplSize(g)} · ${fmt(g.uses)}회 사용됨</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body" style="padding-bottom:8px">
    <div style="${g.ratio==='9:16'?'display:flex;justify-content:center;background:#EDF0F4;border-radius:12px;padding:14px':''}">
     <div class="gp-thumb" style="background:${g.g};${g.ratio==='9:16'?'height:440px;aspect-ratio:9/16':'aspect-ratio:16/9'}">
@@ -2464,10 +2470,9 @@ function bindFolderRail(el,cfg){
 }
 function openFolderMenu(anchor,cfg,f){
  const fs=cfg.fs,items=[];
+ /* 최대 깊이(F_MAX) 폴더에는 '새 하위 폴더' 항목을 아예 노출하지 않는다(추가 시도 불가) */
  if(fDepth(fs,f.id)<F_MAX)
   items.push({label:'새 하위 폴더',icon:IC.plus,onClick:()=>folderNameModal({title:`'${f.name}' 안에 새 폴더`,onSave:nm=>{fs.push({id:cfg.makeId(),name:nm,parent:f.id});cfg.onChanged();toast(`'${nm}' 폴더를 만들었어요.`)}})});
- else
-  items.push({label:'새 하위 폴더 (3단계 제한)',icon:IC.plus,onClick:()=>toast('폴더는 최대 3단계까지만 만들 수 있어요.',{err:true})});
  items.push({label:'이름 변경',icon:IC.edit,onClick:()=>folderNameModal({title:'폴더 이름 변경',initial:f.name,onSave:nm=>{f.name=nm;cfg.onChanged();toast('폴더 이름을 변경했어요.')}})});
  /* 폴더 이동 — 메뉴에는 액션만, 대상 선택은 공용 폴더 이동 모달에서 (인라인 목록 펼침 금지) */
  {

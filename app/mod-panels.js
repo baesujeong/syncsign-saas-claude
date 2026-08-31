@@ -728,14 +728,14 @@ const genStbCode=()=>{
 function renamePanel(p,after){
  openModal(`
   <div class="modal-head"><div><h2>화면 이름 수정</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
-  <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>화면 이름 <span class="req">*</span></label><input class="input" id="rn-name" maxlength="40" placeholder="예) 카운터 좌측"></div></div>
+  <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>화면 이름 <span class="req">*</span></label><input class="input" id="rn-name" maxlength="40" placeholder="예) 카운터 좌측"><div class="ferr" id="rn-name-err" style="display:none">화면 이름을 입력해주세요.</div></div></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="rn-ok">저장</button></div>`,
  {width:'420px',onMount:ov=>{
-  const inp=ov.querySelector('#rn-name');inp.value=p.name;inp.focus();inp.select();
-  inp.addEventListener('input',()=>inp.classList.remove('error'));
+  const inp=ov.querySelector('#rn-name');const nmErr=ov.querySelector('#rn-name-err');inp.value=p.name;inp.focus();inp.select();
+  inp.addEventListener('input',()=>{inp.classList.remove('error');nmErr.style.display='none';});
   const save=()=>{
    const v=inp.value.trim();
-   if(!v){inp.classList.add('error');inp.focus();toast('화면 이름을 입력해주세요. 설치 위치를 알 수 있는 이름이 좋아요.',{err:true});return}
+   if(!v){inp.classList.add('error');nmErr.style.display='flex';inp.focus();return}
    if(v===p.name){ov.remove();return}
    p.name=v;ov.remove();renderAll();after&&after();toast(`화면 이름을 '${v}'로 변경했어요.`);
   };
@@ -1183,12 +1183,12 @@ function wallManageMenu(anchor,w){
 function renameWall(w){
  openModal(`
   <div class="modal-head"><div><h2>비디오월 이름 수정</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
-  <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>비디오월 이름 <span class="req">*</span></label><input class="input" id="wr-name" maxlength="40" placeholder="예) 잠실 미디어월"></div></div>
+  <div class="modal-body"><div class="f-row" style="margin-bottom:0"><label>비디오월 이름 <span class="req">*</span></label><input class="input" id="wr-name" maxlength="40" placeholder="예) 잠실 미디어월"><div class="ferr" id="wr-name-err" style="display:none">비디오월 이름을 입력해주세요.</div></div></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="wr-ok">저장</button></div>`,
  {width:'420px',onMount:ov=>{
-  const inp=ov.querySelector('#wr-name');inp.value=w.name;inp.focus();inp.select();
-  inp.addEventListener('input',()=>inp.classList.remove('error'));
-  const save=()=>{const v=inp.value.trim();if(!v){inp.classList.add('error');inp.focus();toast('비디오월 이름을 입력해주세요.',{err:true});return}
+  const inp=ov.querySelector('#wr-name');const nmErr=ov.querySelector('#wr-name-err');inp.value=w.name;inp.focus();inp.select();
+  inp.addEventListener('input',()=>{inp.classList.remove('error');nmErr.style.display='none';});
+  const save=()=>{const v=inp.value.trim();if(!v){inp.classList.add('error');nmErr.style.display='flex';inp.focus();return}
    if(v===w.name){ov.remove();return}
    w.name=v;ov.remove();renderRail();renderList();wallsRefresh();toast(`비디오월 이름을 '${v}'로 변경했어요.`);};
   ov.querySelector('#wr-ok').onclick=save;
@@ -1966,8 +1966,7 @@ const WALL_PRESETS=[
 const presetTiles=pr=>pr.tiles==='grid'
  ?Array.from({length:pr.gw*pr.gh},(_,i)=>({p:null,x:i%pr.gw,y:Math.floor(i/pr.gw),w:1,h:1}))
  :pr.tiles.map(([x,y,w,h])=>({p:null,x,y,w,h}));
-let MY_WALL_LAYOUTS=[]; /* 사용자가 저장한 재사용 레이아웃 {id,name,gw,gh,tiles:[[x,y,w,h],…]} */
-let wlSeq=0;
+let MY_WALL_LAYOUTS=[]; /* TODO(API): 재사용 가능한 저장 레이아웃 {id,name,gw,gh,tiles:[[x,y,w,h],…]} — 서버에서 로드(인라인 '레이아웃 저장' 제거됨) */
 
 function openWallWizard(existing,opts={}){
  /* schedOnly: 비디오월 카드 [일정 편집] 진입 — 레이아웃 단계는 건너뛰고
@@ -2078,8 +2077,6 @@ function openWallWizard(existing,opts={}){
       <div class="seg"><button data-cv="gw-" aria-label="열 줄이기">−</button><button disabled style="opacity:1;color:var(--text)">${gw}열</button><button data-cv="gw+" aria-label="열 늘리기">＋</button></div>
       <div class="seg"><button data-cv="gh-" aria-label="행 줄이기">−</button><button disabled style="opacity:1;color:var(--text)">${gh}행</button><button data-cv="gh+" aria-label="행 늘리기">＋</button></div>
       <div class="seg" id="wz-orient"><button data-o="가로형" class="${orient==='가로형'?'on':''}">가로형</button><button data-o="세로형" class="${orient==='세로형'?'on':''}">세로형</button></div>
-      <span class="grow"></span>
-      <button class="btn btn-sm" id="vwb-save-layout" ${tiles.length?'':'disabled'}>레이아웃 저장</button>
      </div>
      <div class="vwb-stage"><div class="vwb-canvas" style="grid-template-columns:repeat(${gw},1fr);grid-template-rows:repeat(${gh},1fr);aspect-ratio:${orient==='세로형'?gw*9+'/'+gh*16:gw*16+'/'+gh*9}">
       ${tiles.map((t,i)=>{const p=t.p?panelOf(t.p):null;
@@ -2141,12 +2138,6 @@ function openWallWizard(existing,opts={}){
     draw();
    });
    body.querySelectorAll('#wz-orient button').forEach(b=>b.onclick=()=>{orient=b.dataset.o;draw()});
-   body.querySelector('#vwb-save-layout').onclick=()=>{
-    if(!tiles.length)return;
-    const save=nm=>{MY_WALL_LAYOUTS.push({id:'wl'+(++wlSeq),name:nm,gw,gh,tiles:tiles.map(t=>[t.x,t.y,t.w,t.h])});toast(`'${nm}' 레이아웃을 저장했어요. 다음 비디오월부터 시작점에서 바로 쓸 수 있어요.`)};
-    if(window.folderNameModal)folderNameModal({title:'레이아웃 저장',initial:`${gw}×${gh} ${tiles.length}칸 레이아웃`,onSave:save});
-    else save(`${gw}×${gh} ${tiles.length}칸 레이아웃`);
-   };
   }else{
    /* ── 3단계: 화면별 콘텐츠 지정 + 일정 설정 — 생성부터 송출 준비까지 한 흐름으로 ── */
    const placed=tiles.filter(t=>t.p);
@@ -2157,7 +2148,7 @@ function openWallWizard(existing,opts={}){
      <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">화면별 콘텐츠</b><span style="font-size:12px;color:var(--text-3)">${an} / ${placed.length} 지정</span><span class="spacer"></span><button class="btn btn-sm" id="w3-fill" ${placed.length?'':'disabled'}>전체 같은 콘텐츠</button></div>
      <div class="content-scroll" style="padding:10px;display:flex;flex-direction:column;gap:2px">
       ${placed.map(t=>{const p=panelOf(t.p);const ref=cm[t.p];const a=ref?contentOf(ref):null;
-       return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'var(--sunken)'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'} <span style="font-weight:500;color:var(--text-3)">· ${t.w}×${t.h}</span></b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요.</span></div>'}
+       return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'var(--sunken)'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'}</b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요.</span></div>'}
       <p style="font-size:12px;color:var(--text-3);margin:8px 4px 0;line-height:1.5">화면마다 서로 다른 콘텐츠를 지정할 수 있어요. 지정하지 않은 화면은 검은 화면으로 대기해요.</p>
      </div>
     </div>

@@ -456,6 +456,7 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .gal-rail{width:210px;flex:none;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 10px}
 .gal-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
 .gal-toolbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
+.gal-toolbar .spacer{flex:1}
 .gal-ratio{display:flex;gap:6px}
 .gal-scroll{flex:1;overflow-y:auto;padding:16px}
 .gal-scroll .tpl-grid{grid-template-columns:repeat(auto-fill,minmax(255px,1fr))}
