@@ -164,7 +164,8 @@ const wallTileContent=(w,t)=>(w.cm&&t.p&&w.cm[t.p]&&contentOf(w.cm[t.p]))||conte
 const wallContentLabel=w=>{const n=w.cm?Object.values(w.cm).filter(Boolean).length:0;return n?`화면별 콘텐츠 ${n}개`:contentOf(w.content).name;};
 let GROUPS=[
  {id:'g1',name:'프랜차이즈 A',ids:['강남GT타워점','성수연무장점','여의도IFC점','명동중앙점','신촌점'].map(storeByName).filter(Boolean).flatMap(s=>panelsOf(s.id).map(p=>p.id))},
- {id:'g2',name:'신규 오픈 매장',ids:panelsOf(storeByName('마곡나루점').id).concat(panelsOf(storeByName('광교엘리웨이점').id)).map(p=>p.id)},
+ /* g2는 성수연무장점(그룹A 소속 매장) 화면을 공유 — 매장·그룹A·그룹B 3중 중복 화면으로 개별 ID 기준 선택 테스트용 */
+ {id:'g2',name:'신규 오픈 매장',ids:[...new Set(panelsOf(storeByName('마곡나루점').id).concat(panelsOf(storeByName('광교엘리웨이점').id)).concat(panelsOf(storeByName('성수연무장점').id)).map(p=>p.id))]},
 ];
 function rndSeed(str){let h=0;for(const c of str)h=(h*31+c.charCodeAt(0))%997;return h/997}
 /* 데모: 매장 미지정 화면 — '매장을 삭제해도 화면은 미지정으로 남는다' 정책을 보여주기 위한 시드 */
@@ -1739,29 +1740,37 @@ $$('#cal-mode [data-calm]').forEach(b=>b.onclick=()=>{pcalMode=b.dataset.calm;re
    Footer는 선택 범위 칩 + 중복 제거한 실제 고유 화면 수를 고정 표시. */
 function openScopePicker(state){
  let q='';
- const sel=(state.scopes||[]).map(x=>({...x}));            /* 작업용 복사본 — 취소 시 원복 */
- const expRegions=new Set(), expUnits=new Set();           /* expUnits: 매장/미지정 펼침(scopeKey 기준) */
+ const expRegions=new Set(), expUnits=new Set();           /* expUnits: 매장/그룹/미지정 펼침(key 기준) */
  /* 데이터 캐시 (편성 가능 화면만) */
  const schedByStore={}; PANELS.forEach(p=>{if(SCHEDULABLE(p)){const k=p.store||NO_STORE_KEY;(schedByStore[k]=schedByStore[k]||[]).push(p.id);}});
  const storePanels=sid=>schedByStore[sid]||[];
- const ALL_CNT=PANELS.filter(SCHEDULABLE).length;
+ const groupPanels=g=>g?(g.ids||[]).filter(id=>SCHEDULABLE(panelOf(id))):[];
+ const ALL_IDS=PANELS.filter(SCHEDULABLE).map(p=>p.id);
+ const ALL_CNT=ALL_IDS.length;
  const UNASSIGNED=schedByStore[NO_STORE_KEY]||[];
  const regionPanels=region=>region.storeIds.reduce((n,sid)=>n+storePanels(sid).length,0);
- /* 선택 상태 조작 (sel 배열) */
- const has=sc=>sel.some(s=>scopeKey(s)===scopeKey(sc));
- const hasAll=()=>sel.some(s=>s.type==='all');
- const rm=k=>{const i=sel.findIndex(s=>scopeKey(s)===k);if(i>=0)sel.splice(i,1);};
- const uniqSet=()=>{const set=new Set();sel.forEach(sc=>scopeIds(sc).forEach(id=>set.add(id)));return set;};
- const rawSum=()=>sel.reduce((n,sc)=>n+scopeCount(sc),0);
- /* 매장·미지정을 하나의 '단위(unit)'로 일반화 — scope는 범위(store/unassigned), panels는 하위 화면 */
- const unitOf=key=>key==='unassigned:'?{scope:{type:'unassigned'},panels:UNASSIGNED}:{scope:{type:'store',id:key.slice(6)},panels:storePanels(key.slice(6))};
- const unitState=(panels,scope)=>{if(has(scope))return 'full';if(!panels.length)return 'none';const s=panels.filter(id=>has({type:'panel',id})).length;return s===0?'none':s===panels.length?'full':'partial';};
- const collapseUnit=(panels,scope)=>{if(panels.length&&panels.every(id=>has({type:'panel',id}))){panels.forEach(id=>rm('panel:'+id));if(!has(scope))sel.push(scope);}};
- const toggleUnit=(panels,scope)=>{if(hasAll())return;const st=unitState(panels,scope);panels.forEach(id=>rm('panel:'+id));rm(scopeKey(scope));if(st!=='full')sel.push(scope);};
- const togglePanelIn=(panels,scope,pid)=>{if(hasAll())return;if(has(scope)){rm(scopeKey(scope));panels.forEach(id=>{if(id!==pid)sel.push({type:'panel',id});});}else{has({type:'panel',id:pid})?rm('panel:'+pid):sel.push({type:'panel',id:pid});}collapseUnit(panels,scope);};
- const panelCk=(scope,pid)=>has(scope)||has({type:'panel',id:pid});
- const toggleGroup=g=>{if(hasAll())return;has({type:'group',id:g.id})?rm('group:'+g.id):sel.push({type:'group',id:g.id});};
- const toggleAll=()=>{if(hasAll())rm('all:');else{sel.length=0;sel.push({type:'all'});}};
+ /* ── 실제 선택은 개별 화면 ID 기준(중복 자동 제거). 매장/그룹/전체는 이 집합을 조작하는 편의 토글일 뿐 ── */
+ const selSet=new Set();
+ (state.scopes||[]).forEach(sc=>scopeIds(sc).forEach(id=>selSet.add(id)));
+ const panelsOfKey=key=>key==='unassigned:'?UNASSIGNED:key.startsWith('store:')?storePanels(key.slice(6)):key.startsWith('group:')?groupPanels(GROUPS.find(g=>g.id===key.slice(6))):[];
+ const idsState=ids=>{if(!ids.length)return 'none';let s=0;ids.forEach(id=>{if(selSet.has(id))s++;});return s===0?'none':s===ids.length?'full':'partial';};
+ const allState=()=>{const s=selSet.size;return s===0?'none':s>=ALL_CNT?'full':'partial';};
+ const setIds=(ids,on)=>ids.forEach(id=>{on?selSet.add(id):selSet.delete(id);});
+ const toggleIds=ids=>setIds(ids,idsState(ids)!=='full');   /* 전체선택 상태면 해제, 아니면 전부 선택 */
+ const togglePanel=pid=>{selSet.has(pid)?selSet.delete(pid):selSet.add(pid);};
+ const toggleAll=()=>{if(selSet.size>=ALL_CNT)selSet.clear();else setIds(ALL_IDS,true);};
+ /* selSet → scopes(칩·저장용): 완전 선택된 매장/그룹은 하나로 묶고, 나머지는 개별 화면으로 */
+ const selToScopes=()=>{
+  if(!selSet.size)return [];
+  if(selSet.size>=ALL_CNT)return [{type:'all'}];
+  const scopes=[],covered=new Set();
+  /* 그룹 우선 묶음(사용자가 그룹을 고르면 그룹 칩으로) → 매장 → 미지정 → 남은 개별 화면 */
+  GROUPS.forEach(g=>{const ps=groupPanels(g);if(ps.length&&ps.every(id=>selSet.has(id))&&ps.some(id=>!covered.has(id))){scopes.push({type:'group',id:g.id});ps.forEach(id=>covered.add(id));}});
+  STORES.forEach(s=>{const ps=storePanels(s.id);if(ps.length&&ps.every(id=>selSet.has(id))&&ps.some(id=>!covered.has(id))){scopes.push({type:'store',id:s.id});ps.forEach(id=>covered.add(id));}});
+  if(UNASSIGNED.length&&UNASSIGNED.every(id=>selSet.has(id))&&UNASSIGNED.some(id=>!covered.has(id))){scopes.push({type:'unassigned'});UNASSIGNED.forEach(id=>covered.add(id));}
+  selSet.forEach(id=>{if(!covered.has(id))scopes.push({type:'panel',id});});
+  return scopes;
+ };
  const CK=(on,ind)=>`<span class="checkbox ${on?'on':ind?'ind':''}">${on?IC.check:''}</span>`;
  const ov=openModal(`
   <div class="modal-head"><h2>적용 대상 추가</h2><div class="sub">편성표를 송출할 대상을 선택하세요. 여러 범위를 함께 선택할 수 있어요.</div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
@@ -1772,9 +1781,9 @@ function openScopePicker(state){
   const scroll=o.querySelector('#scope-scroll'),foot=o.querySelector('#scope-foot');
   const qin=o.querySelector('#scope-q');
   qin.oninput=()=>{q=qin.value.trim().toLowerCase();drawBody();};
-  /* 매장·미지정 공용 행 — 체크박스(전체/일부/미선택) + 펼침 화살표 + 하위 화면 */
-  function unitRow(name,sub,scope,panels){
-   const key=scopeKey(scope),st=unitState(panels,scope),cnt=panels.length,exp=!!q||expUnits.has(key);
+  /* 매장·그룹·미지정 공용 행 — 체크박스(전체/일부/미선택) + 펼침 화살표 + 하위 화면(개별 ID 기준) */
+  function unitRow(name,sub,key,panels){
+   const st=idsState(panels),cnt=panels.length,exp=!!q||expUnits.has(key);
    return `<div class="scope-store">
     <div class="scope-item scope-store-row" data-unit="${key}">
      <span class="ck-hit" data-unit="${key}">${CK(st==='full',st==='partial')}</span>
@@ -1782,29 +1791,28 @@ function openScopePicker(state){
      <span class="scope-item-tx" data-unit="${key}"><b>${name}</b><span>${st==='partial'?'일부 선택됨 · 클릭하면 전체 선택':sub}</span></span>
      <span class="scope-cnt num">${fmt(cnt)}개</span>
     </div>
-    ${exp?`<div class="scope-panels">${panels.map(id=>{const p=panelOf(id),ck=panelCk(scope,id);return `<div class="scope-panel ${ck?'sel':''}" data-panel="${id}" data-punit="${key}">${CK(ck)}<span class="dot ${p.status==='on'?'on':'off'}"></span><span class="scope-panel-nm">${p.name}</span></div>`}).join('')}</div>`:''}
+    ${exp?`<div class="scope-panels">${panels.map(id=>{const p=panelOf(id),ck=selSet.has(id);return `<div class="scope-panel ${ck?'sel':''}" data-panel="${id}">${CK(ck)}<span class="dot ${p.status==='on'?'on':'off'}"></span><span class="scope-panel-nm">${p.name}</span></div>`}).join('')}</div>`:''}
    </div>`;
   }
   function drawBody(){
    const prev=scroll.scrollTop;
-   const dim=hasAll()?' scope-dim':'';
    let html='';
    /* 전체 화면 */
-   if(!q||'전체 화면'.includes(q)) html+=`<div class="scope-sec"><div class="scope-sec-h">전체 화면</div>
-    <div class="scope-item scope-all ${hasAll()?'sel':''}" data-all>${CK(hasAll())}<span class="scope-item-tx"><b>전체 화면</b><span>모든 편성 가능 화면에 적용 · 선택하면 다른 범위는 해제돼요</span></span><span class="scope-cnt num">${fmt(ALL_CNT)}개</span></div></div>`;
+   if(!q||'전체 화면'.includes(q)){const ast=allState();html+=`<div class="scope-sec"><div class="scope-sec-h">전체 화면</div>
+    <div class="scope-item scope-all ${ast==='full'?'sel':''}" data-all>${CK(ast==='full',ast==='partial')}<span class="scope-item-tx"><b>전체 화면</b><span>모든 편성 가능 화면에 적용</span></span><span class="scope-cnt num">${fmt(ALL_CNT)}개</span></div></div>`;}
    /* 매장 — 맨 위 '미지정' + 지역 → 매장 → 화면 */
    let storeInner='';
-   if(UNASSIGNED.length&&(!q||'미지정'.includes(q))) storeInner+=unitRow('미지정','매장이 지정되지 않은 화면 전체',{type:'unassigned'},UNASSIGNED);
+   if(UNASSIGNED.length&&(!q||'미지정'.includes(q))) storeInner+=unitRow('미지정','매장이 지정되지 않은 화면 전체','unassigned:',UNASSIGNED);
    storeInner+=REGIONS.map(region=>{
     const stores=region.storeIds.map(storeOf).filter(s=>s&&storePanels(s.id).length&&(!q||s.name.toLowerCase().includes(q)||region.name.toLowerCase().includes(q)));
     if(!stores.length)return '';
     const exp=!!q||expRegions.has(region.id),show=q?stores:stores.slice(0,40);
-    return `<div class="scope-region"><button class="scope-region-h" data-region="${region.id}"><span class="scope-chev ${exp?'exp':''}">${IC.chev}</span><b>${region.name}</b><span class="scope-region-meta">매장 ${fmt(region.storeIds.length)} · 화면 ${fmt(regionPanels(region))}</span></button>${exp?`<div class="scope-region-body">${show.map(s=>unitRow(`${s.name} 전체`,'이 매장의 편성 가능한 화면 전체',{type:'store',id:s.id},storePanels(s.id))).join('')}${!q&&stores.length>40?`<div class="scope-more">이 지역 매장이 ${fmt(stores.length)}개예요 · 상단 검색으로 좁혀보세요</div>`:''}</div>`:''}</div>`;
+    return `<div class="scope-region"><button class="scope-region-h" data-region="${region.id}"><span class="scope-chev ${exp?'exp':''}">${IC.chev}</span><b>${region.name}</b><span class="scope-region-meta">매장 ${fmt(region.storeIds.length)} · 화면 ${fmt(regionPanels(region))}</span></button>${exp?`<div class="scope-region-body">${show.map(s=>unitRow(`${s.name} 전체`,'이 매장의 편성 가능한 화면 전체','store:'+s.id,storePanels(s.id))).join('')}${!q&&stores.length>40?`<div class="scope-more">이 지역 매장이 ${fmt(stores.length)}개예요 · 상단 검색으로 좁혀보세요</div>`:''}</div>`:''}</div>`;
    }).join('');
-   if(storeInner.trim()) html+=`<div class="scope-sec${dim}"><div class="scope-sec-h">매장</div>${storeInner}</div>`;
-   /* 그룹 */
-   const groups=GROUPS.filter(g=>!q||g.name.toLowerCase().includes(q));
-   if(groups.length) html+=`<div class="scope-sec${dim}"><div class="scope-sec-h">그룹</div>${groups.map(g=>{const ck=has({type:'group',id:g.id});return `<div class="scope-item ${ck?'sel':''}" data-group="${g.id}">${CK(ck)}<span class="scope-item-tx"><b>${g.name}</b><span>그룹에 속한 화면 전체</span></span><span class="scope-cnt num">${fmt(scopeCount({type:'group',id:g.id}))}개</span></div>`}).join('')}</div>`;
+   if(storeInner.trim()) html+=`<div class="scope-sec"><div class="scope-sec-h">매장</div>${storeInner}</div>`;
+   /* 그룹 — 매장과 동일한 계층 구조(펼침·개별 화면·부분선택) */
+   const groups=GROUPS.filter(g=>groupPanels(g).length&&(!q||g.name.toLowerCase().includes(q)));
+   if(groups.length) html+=`<div class="scope-sec"><div class="scope-sec-h">그룹</div>${groups.map(g=>unitRow(g.name,'그룹에 속한 화면 전체','group:'+g.id,groupPanels(g))).join('')}</div>`;
    if(!html.trim()) html=`<div class="scope-empty">검색 결과가 없어요</div>`;
    scroll.innerHTML=html; scroll.scrollTop=prev;
    drawFoot();
@@ -1822,26 +1830,25 @@ function openScopePicker(state){
         prevBtn=foot.querySelector('#scope-chip-prev'),nextBtn=foot.querySelector('#scope-chip-next'),
         totalEl=foot.querySelector('#scope-foot-total'),dupEl=foot.querySelector('#scope-foot-dup'),doneBtn=foot.querySelector('#scope-done');
   foot.querySelector('[data-close]').onclick=()=>ov.remove();
-  doneBtn.onclick=()=>{if(doneBtn.disabled)return;state.scopes.splice(0,state.scopes.length,...sel);state.onChange&&state.onChange();ov.remove();};
+  doneBtn.onclick=()=>{if(doneBtn.disabled)return;state.scopes.splice(0,state.scopes.length,...selToScopes());state.onChange&&state.onChange();ov.remove();};
   const updateChipNav=wireChipScroller(chipScroll,prevBtn,nextBtn,chipWrap);
-  chipScroll.addEventListener('click',e=>{const rc=e.target.closest('[data-rmchip]');if(rc){rm(rc.dataset.rmchip);drawBody();}});
+  chipScroll.addEventListener('click',e=>{const rc=e.target.closest('[data-rmchip]');if(rc){const sc=(foot._scopes||[]).find(s=>scopeKey(s)===rc.dataset.rmchip);if(sc)scopeIds(sc).forEach(id=>selSet.delete(id));drawBody();}});
   function drawFoot(){
-   const uniq=uniqSet().size, overlap=rawSum()>uniq;
-   chipScroll.innerHTML=sel.length?sel.map(sc=>{const range=sc.type!=='panel';const cnt=range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}`:'';
+   const scopes=selToScopes(); foot._scopes=scopes;
+   chipScroll.innerHTML=scopes.length?scopes.map(sc=>{const range=sc.type!=='panel';const cnt=range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}`:'';
     return `<span class="chip on chip-range scope-chip">${range?IC.folder:''}<span class="scope-chip-tx">${scopeLabel(sc)}${cnt}</span><button class="x" data-rmchip="${scopeKey(sc)}" aria-label="제외">${IC.xs}</button></span>`}).join('')
     :`<span class="scope-foot-empty">아직 선택한 대상이 없어요</span>`;
-   totalEl.innerHTML=`총 <b class="num">${fmt(uniq)}</b> 개 화면`;
-   dupEl.hidden=!overlap; if(overlap)dupEl.innerHTML=`${IC.info}일부 화면은 여러 범위에 포함돼 한 번만 적용돼요`;
-   doneBtn.disabled=!uniq;
+   totalEl.innerHTML=`총 <b class="num">${fmt(selSet.size)}</b> 개 화면`;
+   dupEl.hidden=true;
+   doneBtn.disabled=!selSet.size;
    chipScroll.scrollLeft=0; updateChipNav();
   }
   /* 본문(탐색 영역) 이벤트 위임 */
   scroll.addEventListener('click',e=>{
    const ux=e.target.closest('[data-unitexp]'); if(ux){const k=ux.dataset.unitexp;expUnits.has(k)?expUnits.delete(k):expUnits.add(k);drawBody();return;}
    const rg=e.target.closest('[data-region]'); if(rg){const id=rg.dataset.region;expRegions.has(id)?expRegions.delete(id):expRegions.add(id);drawBody();return;}
-   const un=e.target.closest('[data-unit]'); if(un){const {panels,scope}=unitOf(un.dataset.unit);toggleUnit(panels,scope);drawBody();return;}
-   const pn=e.target.closest('[data-panel]'); if(pn){const {panels,scope}=unitOf(pn.dataset.punit);togglePanelIn(panels,scope,pn.dataset.panel);drawBody();return;}
-   const gr=e.target.closest('[data-group]'); if(gr){toggleGroup(GROUPS.find(g=>g.id===gr.dataset.group));drawBody();return;}
+   const un=e.target.closest('[data-unit]'); if(un){toggleIds(panelsOfKey(un.dataset.unit));drawBody();return;}
+   const pn=e.target.closest('[data-panel]'); if(pn){togglePanel(pn.dataset.panel);drawBody();return;}
    if(e.target.closest('[data-all]')){toggleAll();drawBody();return;}
   });
   drawBody();
@@ -1850,16 +1857,12 @@ function openScopePicker(state){
 /* ═══════════ 편성 콘텐츠 선택기 — 우측 Drawer(넓은 작업 공간) + 폴더 트리 탐색 ═══════════
    모달 대비 정보량이 많아도 답답하지 않도록 Drawer로 제공: 탭(콘텐츠/템플릿/재생목록) ×
    좌측 폴더 트리(3Depth) × 검색 × 리스트에서 바로 선택 */
-function openAssetPicker(current,onPick){
+function openAssetPicker(current,onPick,opts={}){
  const A=window.__assets?window.__assets():{lib:[],tpls:[],gals:[],pls:[],lf:[],tf:[],pf:[]};
  let tab=current&&String(current)[1]===':'?({L:'lib',T:'tpl',P:'pl'})[String(current)[0]]||'lib':'lib';
  let q='',typ='all',folder='all';
- const wrap=document.createElement('div');wrap.className='drawer-wrap';
- wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true" style="width:min(760px,94vw)">
-  <div class="drawer-head"><div><h2>편성할 콘텐츠 선택</h2><span class="sub">폴더를 탐색하며 이 시간에 송출할 자산을 선택하세요. 수정하면 재송출 없이 자동 반영돼요.</span></div>
-   <button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button></div>
-  <div class="drawer-body" style="display:flex;flex-direction:column;padding-bottom:0">
-   <div class="dtabs" id="apk-tabs" style="margin:0 0 12px"></div>
+ /* 탭·폴더 트리·검색·필터·리스트 — 드로어/모달 공통 본문 */
+ const bodyInner=`<div class="dtabs" id="apk-tabs" style="margin:0 0 12px"></div>
    <div style="flex:1;display:flex;gap:12px;min-height:0">
     <aside id="apk-folders" style="width:178px;flex:none;border:1px solid var(--border);border-radius:var(--r-md);overflow-y:auto;padding:6px;align-self:stretch"></aside>
     <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px">
@@ -1869,8 +1872,21 @@ function openAssetPicker(current,onPick){
      </div>
      <div id="apk-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-bottom:16px"></div>
     </div>
-   </div>
-  </div></div>`;
+   </div>`;
+ const wrap=document.createElement('div');
+ if(opts.asModal){
+  /* 에디터 등: 폴더 트리·탭을 갖춘 넓은 모달 */
+  wrap.className='overlay';
+  wrap.innerHTML=`<div class="modal apk-modal" role="dialog" aria-modal="true" style="width:min(940px,94vw);height:720px">
+   <div class="modal-head"><div><h2>${opts.title||'콘텐츠 선택'}</h2>${opts.sub?`<span class="sub">${opts.sub}</span>`:''}</div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+   <div class="modal-body" style="display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:20px 24px">${bodyInner}</div></div>`;
+ }else{
+  wrap.className='drawer-wrap';
+  wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true" style="width:min(760px,94vw)">
+   <div class="drawer-head"><div><h2>편성할 콘텐츠 선택</h2><span class="sub">폴더를 탐색하며 이 시간에 송출할 자산을 선택하세요. 수정하면 재송출 없이 자동 반영돼요.</span></div>
+    <button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button></div>
+   <div class="drawer-body" style="display:flex;flex-direction:column;padding-bottom:0">${bodyInner}</div></div>`;
+ }
  document.body.appendChild(wrap);
  wrap.addEventListener('mousedown',e=>{if(e.target===wrap)wrap.remove()});
  wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
@@ -1945,6 +1961,7 @@ function openAssetPicker(current,onPick){
  const qi=wrap.querySelector('#apk-q');qi.focus();
  qi.addEventListener('input',()=>{q=qi.value.trim();draw();});
 }
+window.openAssetPicker=openAssetPicker;   /* 에디터(mod-products)에서 동일 피커 재사용 */
 /* ═══════════ 그룹 만들기 ═══════════ */
 function openGroupModal(ids){
  openModal(`

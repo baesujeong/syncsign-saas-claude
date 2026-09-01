@@ -71,7 +71,10 @@ const IC={
  plus:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
  info:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-width="1.7"/><path d="M12 11v5M12 8h.01"/></svg>',
  spark:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>',
- search:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'
+ search:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+ chev:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+ volume:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg>',
+ mute:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="m22 9-6 6M16 9l6 6"/></svg>'
 };
 function toast(msg,{action,onAction,err}={}){
  const t=document.createElement('div');t.className='toast'+(err?' err':'');
@@ -706,8 +709,9 @@ function escText(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function resolveAsset(ref){
  if(!ref)return null;
  const k=ref.slice(2);
- if(ref[0]==='L'){const c=libOf(k);return c?{name:c.name,g:c.g,e:c.e,badge:c.type==='video'?'동영상':c.type==='url'?'URL':null}:null;}
- if(ref[0]==='P'){const p=PLAYLISTS.find(x=>x.id===k);if(!p)return null;const f=p.items[0]&&libOf(p.items[0].c);return{name:p.name,g:f?f.g:'linear-gradient(135deg,#15243F,#0B1220)',e:f?f.e:'🗂️',badge:'재생목록'};}
+ if(ref[0]==='L'){const c=libOf(k);return c?{name:c.name,g:c.g,e:c.e,type:c.type,dur:c.dur,badge:c.type==='video'?'동영상':c.type==='url'?'URL':null}:null;}
+ if(ref[0]==='T'){const A=window.__assets?window.__assets():null;const t=A&&((A.tpls||[]).find(x=>x.id===k)||(A.gals||[]).find(x=>x.id===k));return t?{name:t.name,g:t.g,e:t.e,type:'template',dur:0,badge:'템플릿'}:null;}
+ if(ref[0]==='P'){const p=PLAYLISTS.find(x=>x.id===k);if(!p)return null;const f=p.items[0]&&libOf(p.items[0].c);return{name:p.name,g:f?f.g:'linear-gradient(135deg,#15243F,#0B1220)',e:f?f.e:'🗂️',type:'playlist',dur:0,badge:'재생목록'};}
  return null;
 }
 
@@ -822,6 +826,29 @@ function setupStageEvents(){
   addObject('graphic',{ref,x:Math.max(0,pt.x-240),y:Math.max(0,pt.y-135)});
  });
 }
+/* 분할 영역 콘텐츠 맞춤 방식 — 채우기(가로 채움, 비율 유지 크롭)/맞추기(세로 맞춤, 비율 유지 레터박스)/늘이기(W×H 채움, 비율 변형) */
+const FIT_OPTS=[{k:'fill',label:'채우기'},{k:'fit',label:'맞추기'},{k:'stretch',label:'늘이기'}];
+const FIT_LABEL={fill:'채우기',fit:'맞추기',stretch:'늘이기'};
+/* 맞춤 방식 예시 아이콘(원본↔영역 비율 차이 시각화) */
+const FIT_SVG={
+ fill:`<svg width="48" height="32" viewBox="0 0 48 32" fill="none"><g clip-path="url(#fcFill)"><rect width="48" height="48" transform="translate(0 -8)" fill="#CAD7F2"/><path d="M12 8.28567C12 7.46728 12.3161 6.68242 12.8787 6.10374C13.4413 5.52505 14.2044 5.19995 15 5.19995H33C33.7956 5.19995 34.5587 5.52505 35.1213 6.10374C35.6839 6.68242 36 7.46728 36 8.28567V23.7142C36 24.5326 35.6839 25.3175 35.1213 25.8962C34.5587 26.4748 33.7956 26.8 33 26.8H15C14.2044 26.8 13.4413 26.4748 12.8787 25.8962C12.3161 25.3175 12 24.5326 12 23.7142V8.28567ZM13.5 22.1714V23.7142C13.5 24.1234 13.658 24.5159 13.9393 24.8052C14.2206 25.0945 14.6022 25.2571 15 25.2571H33C33.3978 25.2571 33.7794 25.0945 34.0607 24.8052C34.342 24.5159 34.5 24.1234 34.5 23.7142V18.3142L28.8345 15.3103C28.6938 15.2378 28.5346 15.2127 28.3792 15.2384C28.2239 15.2642 28.0804 15.3395 27.969 15.4538L22.404 21.1778L18.414 18.4438C18.2699 18.3452 18.0971 18.3008 17.9249 18.3182C17.7527 18.3357 17.5916 18.4139 17.469 18.5395L13.5 22.1714ZM21 12.1428C21 11.529 20.7629 10.9404 20.341 10.5064C19.919 10.0723 19.3467 9.82852 18.75 9.82852C18.1533 9.82852 17.581 10.0723 17.159 10.5064C16.7371 10.9404 16.5 11.529 16.5 12.1428C16.5 12.7566 16.7371 13.3452 17.159 13.7793C17.581 14.2133 18.1533 14.4571 18.75 14.4571C19.3467 14.4571 19.919 14.2133 20.341 13.7793C20.7629 13.3452 21 12.7566 21 12.1428Z" fill="#627AC2"/></g><defs><clipPath id="fcFill"><rect width="48" height="32" rx="4" fill="white"/></clipPath></defs></svg>`,
+ fit:`<svg width="50" height="34" viewBox="0 0 50 34" fill="none"><rect x="0.5" y="0.5" width="49" height="33" rx="4.5" fill="white"/><rect x="0.5" y="0.5" width="49" height="33" rx="4.5" stroke="#D5D5D5"/><rect width="32" height="32" transform="translate(9 1)" fill="#CAD7F2"/><path d="M17 11.8572C17 11.3116 17.2107 10.7884 17.5858 10.4026C17.9609 10.0168 18.4696 9.80005 19 9.80005H31C31.5304 9.80005 32.0391 10.0168 32.4142 10.4026C32.7893 10.7884 33 11.3116 33 11.8572V22.1429C33 22.6885 32.7893 23.2117 32.4142 23.5975C32.0391 23.9833 31.5304 24.2 31 24.2H19C18.4696 24.2 17.9609 23.9833 17.5858 23.5975C17.2107 23.2117 17 22.6885 17 22.1429V11.8572ZM18 21.1143V22.1429C18 22.4157 18.1054 22.6773 18.2929 22.8702C18.4804 23.0631 18.7348 23.1715 19 23.1715H31C31.2652 23.1715 31.5196 23.0631 31.7071 22.8702C31.8946 22.6773 32 22.4157 32 22.1429V18.5429L28.223 16.5403C28.1292 16.492 28.023 16.4752 27.9195 16.4924C27.8159 16.5095 27.7203 16.5598 27.646 16.6359L23.936 20.4519L21.276 18.6293C21.18 18.5635 21.0648 18.534 20.9499 18.5456C20.8351 18.5572 20.7277 18.6093 20.646 18.6931L18 21.1143ZM23 14.4286C23 14.0194 22.842 13.627 22.5607 13.3377C22.2794 13.0483 21.8978 12.8858 21.5 12.8858C21.1022 12.8858 20.7206 13.0483 20.4393 13.3377C20.158 13.627 20 14.0194 20 14.4286C20 14.8378 20.158 15.2302 20.4393 15.5196C20.7206 15.8089 21.1022 15.9715 21.5 15.9715C21.8978 15.9715 22.2794 15.8089 22.5607 15.5196C22.842 15.2302 23 14.8378 23 14.4286Z" fill="#627AC2"/></svg>`,
+ stretch:`<svg width="48" height="32" viewBox="0 0 48 32" fill="none"><g clip-path="url(#fcStretch)"><rect width="48" height="32" fill="#CAD7F2"/><path d="M12 10.8572C12 10.3116 12.3161 9.78836 12.8787 9.40257C13.4413 9.01678 14.2044 8.80005 15 8.80005H33C33.7956 8.80005 34.5587 9.01678 35.1213 9.40257C35.6839 9.78836 36 10.3116 36 10.8572V21.1429C36 21.6885 35.6839 22.2117 35.1213 22.5975C34.5587 22.9833 33.7956 23.2 33 23.2H15C14.2044 23.2 13.4413 22.9833 12.8787 22.5975C12.3161 22.2117 12 21.6885 12 21.1429V10.8572ZM13.5 20.1143V21.1429C13.5 21.4157 13.658 21.6773 13.9393 21.8702C14.2206 22.0631 14.6022 22.1715 15 22.1715H33C33.3978 22.1715 33.7794 22.0631 34.0607 21.8702C34.342 21.6773 34.5 21.4157 34.5 21.1429V17.5429L28.8345 15.5403C28.6938 15.492 28.5346 15.4752 28.3792 15.4924C28.2239 15.5095 28.0804 15.5598 27.969 15.6359L22.404 19.4519L18.414 17.6293C18.2699 17.5635 18.0971 17.534 17.9249 17.5456C17.7527 17.5572 17.5916 17.6093 17.469 17.6931L13.5 20.1143ZM21 13.4286C21 13.0194 20.7629 12.627 20.341 12.3377C19.919 12.0483 19.3467 11.8858 18.75 11.8858C18.1533 11.8858 17.581 12.0483 17.159 12.3377C16.7371 12.627 16.5 13.0194 16.5 13.4286C16.5 13.8378 16.7371 14.2302 17.159 14.5196C17.581 14.8089 18.1533 14.9715 18.75 14.9715C19.3467 14.9715 19.919 14.8089 20.341 14.5196C20.7629 14.2302 21 13.8378 21 13.4286Z" fill="#627AC2"/></g><defs><clipPath id="fcStretch"><rect width="48" height="32" rx="4" fill="white"/></clipPath></defs></svg>`
+};
+function durHMS(sec){sec=Math.max(0,Math.round(sec||0));const p=n=>String(n).padStart(2,'0');return `${p(Math.floor(sec/3600))}:${p(Math.floor(sec%3600/60))}:${p(sec%60)}`;}
+/* 맞춤 방식 드롭다운 — 옵션마다 예시 프리뷰(원본 비율 vs 영역 비율)로 결과를 바로 이해 */
+function openFitMenu(anchor,i){
+ closeMenus();
+ const cur=splitLayout.regions[i].fit||'fill';
+ const m=document.createElement('div');m.className='fit-menu';
+ m.innerHTML=FIT_OPTS.map(o=>`<button class="fit-opt ${o.k===cur?'on':''}" data-fit="${o.k}"><span class="fit-prev">${FIT_SVG[o.k]}</span><span class="fit-opt-lbl">${o.label}</span></button>`).join('');
+ document.body.appendChild(m);
+ const r=anchor.getBoundingClientRect();
+ m.style.top=Math.min(r.bottom+6,innerHeight-m.offsetHeight-10)+'px';
+ m.style.left=Math.max(10,Math.min(r.left,innerWidth-m.offsetWidth-10))+'px';
+ m.querySelectorAll('[data-fit]').forEach(b=>b.onclick=()=>{splitLayout.regions[i].fit=b.dataset.fit;closeMenus();pushHistory();renderStage();});
+ openMenu=m;
+}
 function renderStage(){
  const stage=$('#ed-stage');if(!stage)return;
  if(cropState){renderCropStage();return;} /* 크롭 모드 — 전용 스테이지 */
@@ -834,14 +861,23 @@ function renderStage(){
   const G=Math.round(Math.min(canvasW,canvasH)*0.012);
   stage.innerHTML=splitLayout.regions.map((r,i)=>{
    const a=r.assetRef?resolveAsset(r.assetRef):null;
-   const x=r.x+G,y=r.y+G,w=r.w-G*2,h=r.h-G*2;
-   return `<div class="split-frame ${a?'':'empty'} ${isLightBg()?'sf-light':''}" data-region="${i}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
-    ${a?`<div class="sf-fill" style="background:${a.g}"><span class="sf-e">${a.e}</span><span class="sf-nm">${a.name}</span><button class="icon-btn sf-rm" data-sfrm="${i}" aria-label="비우기">${IC.x}</button></div>`
-    :`<span class="sf-num num">${i+1}</span><span class="sf-add-btn">${IC.plus}콘텐츠 추가</span><span class="sf-lbl">이미지 · 동영상 · URL · 재생목록</span>`}
+   const inset=a?0:G; /* 콘텐츠 있으면 여백 없이 영역 전체를 채우고, 없으면 편집 가이드용 여백 */
+   const x=r.x+inset,y=r.y+inset,w=r.w-inset*2,h=r.h-inset*2;
+   const fit=r.fit||'fill',isVid=!!a&&a.type==='video';
+   return `<div class="split-frame ${a?'filled':'empty'} ${isLightBg()?'sf-light':''}" data-region="${i}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
+    ${a?`<div class="sf-fill sf-fit-${fit}">
+      <div class="sf-media" style="background:${a.g}"><span class="sf-e">${a.e}</span></div>
+      <button class="sf-rm" data-sfrm="${i}" aria-label="콘텐츠 제거">${IC.x}</button>
+      <div class="sf-ctl">${isVid?`<button class="sf-mute ${r.muted?'on':''}" data-sfmute="${i}" aria-label="${r.muted?'음소거 해제':'음소거'}" title="${r.muted?'음소거됨':'음량 켜짐'}">${r.muted?IC.mute:IC.volume}</button>`:''}<button class="sf-fit-btn" data-sffit="${i}" aria-label="콘텐츠 맞춤 방식"><span>${FIT_LABEL[fit]}</span>${IC.chev}</button></div>
+      <div class="sf-info">${isVid?`<span class="sf-dur num">${durHMS(a.dur)}</span>`:''}<span class="sf-name">${a.name}</span></div>
+     </div>`
+    :`<span class="sf-num num">${i+1}</span><span class="sf-add-btn">${IC.plus}콘텐츠 적용</span><span class="sf-lbl">이미지 · 동영상 · URL · 재생목록 · 템플릿</span>`}
    </div>`;
   }).join('');
-  stage.querySelectorAll('[data-region]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-sfrm]'))return;openRegionPicker(+el.dataset.region);}));
-  stage.querySelectorAll('[data-sfrm]').forEach(b=>b.onclick=e=>{e.stopPropagation();splitLayout.regions[+b.dataset.sfrm].assetRef=null;pushHistory();renderStage();});
+  stage.querySelectorAll('[data-region]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-sfrm],[data-sfmute],[data-sffit]'))return;openRegionPicker(+el.dataset.region);}));
+  stage.querySelectorAll('[data-sfrm]').forEach(b=>b.onclick=e=>{e.stopPropagation();const r=splitLayout.regions[+b.dataset.sfrm];r.assetRef=null;r.muted=false;r.fit='fill';pushHistory();renderStage();});
+  stage.querySelectorAll('[data-sfmute]').forEach(b=>b.onclick=e=>{e.stopPropagation();const r=splitLayout.regions[+b.dataset.sfmute];r.muted=!r.muted;pushHistory();renderStage();});
+  stage.querySelectorAll('[data-sffit]').forEach(b=>b.onclick=e=>{e.stopPropagation();openFitMenu(b,+b.dataset.sffit);});
   return;
  }
  const sorted=[...objects].sort((a,b)=>a.z-b.z);
@@ -1198,26 +1234,10 @@ document.addEventListener('keydown',e=>{
 
 /* ─ 분할(Layout) : 프리셋 선택 + 영역별 콘텐츠 지정 ─ */
 function openRegionPicker(i){
- let tab='content',q='';
- const ov=openModal(`
-  <div class="modal-head"><div><h2>영역에 표시할 콘텐츠 선택</h2><div class="sub">이미지·동영상·웹 URL 또는 재생목록을 지정하세요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
-  <div class="modal-body">
-   <div class="wtabs" style="margin-bottom:10px"><button class="on" data-rpt="content">콘텐츠</button><button data-rpt="playlist">재생목록</button></div>
-   <div class="search-wrap" style="margin-bottom:10px">${IC.search}<input class="input input-sm" id="rp-q" placeholder="콘텐츠·재생목록 검색"></div>
-   <div id="rp-list" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
-  </div>
-  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button></div>`,{width:'480px'});
- const draw=()=>{
-  const list=ov.querySelector('#rp-list');const ql=q.toLowerCase();
-  const rows=tab==='content'
-   ?LIB.filter(c=>!c.error&&(!ql||c.name.toLowerCase().includes(ql))).map(c=>({ref:'L:'+c.id,g:c.g,e:c.e,name:c.name}))
-   :PLAYLISTS.filter(p=>!ql||p.name.toLowerCase().includes(ql)).map(p=>{const f=p.items[0]&&libOf(p.items[0].c);return{ref:'P:'+p.id,g:f?f.g:'var(--sunken)',e:f?f.e:'🗂️',name:p.name};});
-  list.innerHTML=rows.map(r=>`<button class="scp-row" style="width:100%;text-align:left" data-rp="${r.ref}"><span class="cthumb" style="background:${r.g};flex:none">${r.e}</span><span class="tx" style="flex:1;min-width:0"><b>${r.name}</b></span></button>`).join('')||'<div class="empty" style="padding:24px"><b>표시할 항목이 없어요</b></div>';
-  list.querySelectorAll('[data-rp]').forEach(b=>b.onclick=()=>{splitLayout.regions[i].assetRef=b.dataset.rp;ov.remove();pushHistory();renderStage();});
- };
- ov.querySelectorAll('[data-rpt]').forEach(b=>b.onclick=()=>{tab=b.dataset.rpt;ov.querySelectorAll('[data-rpt]').forEach(x=>x.classList.toggle('on',x===b));draw()});
- ov.querySelector('#rp-q').addEventListener('input',e=>{q=e.target.value.trim();draw()});
- draw();
+ /* 비디오월과 동일한 리치 피커(탭·폴더 트리·검색·필터)를 에디터에선 넓은 모달로 재사용 */
+ const cur=splitLayout.regions[i].assetRef||null;
+ if(!window.openAssetPicker){toast('콘텐츠 피커를 불러오지 못했어요.',{err:true});return;}
+ window.openAssetPicker(cur,ref=>{splitLayout.regions[i].assetRef=ref;pushHistory();renderStage();},{asModal:true,title:'콘텐츠 선택'});
 }
 
 /* ═══════════ 에디터 : 좌측 라이브러리 패널(도구별) / 우측 속성 패널 ═══════════ */
@@ -1515,8 +1535,8 @@ function renderGraphicLib(el){
  }
 }
 function renderSplitLib(el){
- el.innerHTML=`<div class="ed-panel-head"><h2>분할</h2></div>
-  <div class="ed-panel-body">
+ el.innerHTML=`<div class="ed-panel-head sp-head"><h2>분할</h2></div>
+  <div class="ed-panel-body sp-body">
    ${splitLayout?`<div class="sync-note" style="margin-bottom:12px">${IC.info}<span>분할 레이아웃은 직접 수정할 수 없어요. 각 영역을 클릭해 콘텐츠만 지정해요.</span></div><button class="btn" id="split-clear" style="width:100%;margin-bottom:14px">분할 해제하고 자유 캔버스로</button>`:''}
    <div class="layout-cards" style="grid-template-columns:repeat(2,1fr)">
    ${SPLIT_PRESETS.map(p=>`<button class="layout-card ${splitLayout&&splitLayout.id===p.id?'on':''}" data-split="${p.id}">
@@ -1528,7 +1548,7 @@ function renderSplitLib(el){
  el.querySelectorAll('[data-split]').forEach(b=>b.onclick=()=>{
   const apply=()=>{
    const p=SPLIT_PRESETS.find(x=>x.id===b.dataset.split);
-   splitLayout={id:p.id,regions:p.regions.map(([x,y,w,h])=>({x:x*canvasW,y:y*canvasH,w:w*canvasW,h:h*canvasH,assetRef:null}))};
+   splitLayout={id:p.id,regions:p.regions.map(([x,y,w,h])=>({x:x*canvasW,y:y*canvasH,w:w*canvasW,h:h*canvasH,assetRef:null,muted:false,fit:'fill'}))};
    objects=[];setSel(null);pushHistory();renderEditor();
   };
   if(objects.length)confirmDialog({title:'분할 레이아웃 적용',desc:'현재 캔버스의 객체가 모두 지워지고 분할 레이아웃으로 바뀌어요.',confirmText:'적용',danger:false,onConfirm:apply});
@@ -2204,7 +2224,12 @@ function openCanvasSetupModal(){
   else apply();
  };
 }
-$('#ed-rail-bg').onclick=()=>{cropState=null;activeTool='bg';setSel(null);renderEditor();};
+/* 분할 편집 중 자유 캔버스 도구 클릭 → 확인 후 분할 해제(작업 내용 미저장) */
+function leaveSplitThen(next){
+ if(!splitLayout){next();return;}
+ confirmDialog({title:'자유 캔버스로 돌아갈까요?',desc:'이대로 돌아가면 작업한 내용은 저장되지 않습니다.',confirmText:'돌아가기',danger:true,onConfirm:()=>{splitLayout=null;pushHistory();next();}});
+}
+$('#ed-rail-bg').onclick=()=>leaveSplitThen(()=>{cropState=null;activeTool='bg';setSel(null);renderEditor();});
 $('#ed-undo').onclick=undo;
 $('#ed-redo').onclick=redo;
 /* 그룹 : 선택된 2개 이상 객체를 하나의 그룹으로 묶거나(같은 그룹이면) 해제 */
@@ -2217,7 +2242,7 @@ $('#ed-tool-group').onclick=()=>{
  else{const g='g'+(++objSeq);sel.forEach(o=>o.gid=g);toast('그룹으로 묶었어요.');}
  pushHistory();renderEditor();
 };
-$$('.ed-rail button[data-tool]').forEach(b=>b.onclick=()=>{cropState=null;activeTool=b.dataset.tool;setSel(null);renderEditor();});
+$$('.ed-rail button[data-tool]').forEach(b=>b.onclick=()=>{const go=()=>{cropState=null;activeTool=b.dataset.tool;setSel(null);renderEditor();};if(b.dataset.tool==='split'){go();return;}leaveSplitThen(go);});
 window.addEventListener('resize',()=>{const es=document.getElementById('screen-editor');if(es&&!es.hidden)fitEdCanvas();});
 
 /* ═══════════ 에디터 : 메뉴 위젯 상품 선택 모달 (기존 로직 유지) ═══════════ */
@@ -2360,7 +2385,6 @@ function openBroadcast(){
  };
  draw();
 }
-$('#btn-broadcast').onclick=openBroadcast;
 
 /* ═══════════ 초기화 ═══════════ */
 renderCats();renderProducts();
