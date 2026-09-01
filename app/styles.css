@@ -82,7 +82,7 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 /* ── Date Range Picker ── */
 .drp-field{display:flex;align-items:center;gap:8px;width:100%;cursor:pointer;text-align:left;color:var(--text)}
 .drp-field svg{color:var(--text-3);flex:none}
-.drp-pop{width:284px;padding:12px;max-height:none;overflow:visible}
+.drp-pop{position:fixed;z-index:220;width:284px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);animation:pop .14s ease}
 .drp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .drp-head b{font-size:14px}
 .drp-nav{width:28px;height:28px;border-radius:var(--r-md);font-size:16px;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center}
@@ -1652,6 +1652,14 @@ table.grid tr.checked td{background:var(--blue-50)}
 .day-chips{display:flex;gap:4px}
 .day-chip{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border-2);font-size:12px;font-weight:700;color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s}
 .day-chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+/* 일정 설정 패널(편성일정·비디오월): 반복 주기 버튼을 콘텐츠 폭에 맞춰 7등분 균등 배치 */
+#sc-side-body .day-chips,.vwb-side .day-chips{gap:8px}
+#sc-side-body .day-chip,.vwb-side .day-chip{flex:1;width:auto;height:38px;border-radius:20px;font-size:13px}
+/* 일정 블록 색상 선택 */
+.color-picker{display:flex;gap:10px}
+.color-sw{flex:1;height:44px;border-radius:10px;border:1.5px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--blue);transition:box-shadow .12s,border-color .12s}
+.color-sw.on{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.color-sw svg{width:18px;height:18px}
 .time-row{display:flex;align-items:center;gap:8px}
 .time-row .select{flex:1}
 .conflict-box{border:1.5px solid var(--red);background:var(--red-bg);border-radius:var(--r-md);padding:12px 12px;font-size:13px;color:#B3261E;line-height:1.55;margin-top:12px}
@@ -1825,7 +1833,18 @@ table.grid tr.checked td{background:var(--blue-50)}
 .cm-d{font-size:12px;font-weight:800;margin-bottom:1px}
 .cm-chip{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;color:#353D4A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(53,61,74,.1)}
 .cm-chip.urgent{outline:1.5px solid var(--amber)}
-.cm-more{font-size:12px;color:var(--text-3);font-weight:600;padding-left:2px}
+.cm-more{font-size:12px;color:var(--text-3);font-weight:600;padding-left:2px;cursor:pointer}
+.cm-more:hover{color:var(--blue);text-decoration:underline}
+.cm-pop{position:fixed;z-index:220;width:270px;max-width:calc(100vw - 20px);background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--sh-lg);animation:pop .14s ease;overflow:hidden}
+.cm-pop-head{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 12px 12px;background:#ffffff}
+.cm-pop-dow{font-size:12px;font-weight:700;color:var(--text-2)}
+.cm-pop-d{font-size:26px;font-weight:800;color:var(--text);line-height:1.15}
+.cm-pop-x{position:absolute;right:8px;top:8px;width:28px;height:28px}
+.cm-pop-list{display:flex;flex-direction:column;gap:6px;padding:12px;max-height:min(360px,60vh);overflow-y:auto}
+.cm-pop-chip{display:block;width:100%;text-align:left;font-size:13px;font-weight:600;color:#353D4A;padding:9px 12px;border-radius:8px;border:1px solid rgba(53,61,74,.1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cm-pop-chip:hover{filter:brightness(1.05)}
+.cm-pop-chip.urgent{outline:1.5px solid var(--amber);outline-offset:-1px}
+.cm-pop-empty{padding:22px;text-align:center;color:var(--text-3);font-size:13px}
 
 /* ─── 태그 피커(인라인 생성) & 태그 관리 모달 ─── */
 .tag-pop{min-width:236px;padding:8px}

@@ -62,7 +62,9 @@ const contentOf=id=>{
 };
 /* 편성 캘린더 칩/블록 파스텔 팔레트 (컴포넌트와 동일) */
 const CAL_PAL={c2:'#E7F1FF',c5:'#E7F1FF',c1:'#F0FCFF',c3:'#F0FCFF',c4:'#FEF6FF',c6:'#FEF6FF','T:t1':'#E7F1FF','P:pl1':'#F0FCFF','L:c2':'#FEF6FF','L:c1':'#E7F1FF','L:c12':'#FEF6FF'};
-const calBg=b=>b.type==='urgent'?'#FEF6FF':b.type==='wall'?'#F1EDFF':(CAL_PAL[b.content]||'#E7F1FF');
+/* 일정 블록 색상 옵션(사용자 지정). 지정 시 유형/콘텐츠 기본색보다 우선 적용 */
+const CAL_COLORS=['#DCE8FF','#D9F4F7','#EEE4FB'];
+const calBg=b=>b.color||(b.type==='urgent'?'#FEF6FF':b.type==='wall'?'#F1EDFF':(CAL_PAL[b.content]||'#E7F1FF'));
 const REGION_DEF=[
  ['서울',['강남대로점','강남GT타워점','홍대입구점','성수연무장점','여의도IFC점','잠실롯데월드점','명동중앙점','신촌점','건대입구점','목동점','노원역점','마곡나루점'],142],
  ['경기',['판교테크노밸리점','수원역점','일산라페스타점','분당서현점','광교엘리웨이점','평택역점'],108],
@@ -1248,7 +1250,7 @@ function openRangePicker(anchor,st,redraw){
  closeMenus();
  let ym=(st.sd||todayISO()).slice(0,7);
  let selS=st.sd,selE=st.noEnd?null:st.ed,picking=false;
- const m=document.createElement('div');m.className='menu-pop drp-pop';
+ const m=document.createElement('div');m.className='drp-pop';
  const iso=(y,mo,d)=>`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
  const draw=()=>{
   const[y,mo]=ym.split('-').map(Number);
@@ -1536,7 +1538,7 @@ function openProgramEditor(prog,isNew){
  const first=curProg.blocks.slice().sort((a,b)=>a.s-b.s)[0];
  if(first)openBlockSide(blockCfg(first));else renderProgSideEmpty();
 }
-const blockCfg=b=>({edit:b,days:curProg.blocks.filter(x=>x.gid===b.gid).map(x=>x.day),s:b.s,e:b.e,content:b.content,type:b.type,sd:b.sd,ed:b.ed});
+const blockCfg=b=>({edit:b,days:curProg.blocks.filter(x=>x.gid===b.gid).map(x=>x.day),s:b.s,e:b.e,content:b.content,type:b.type,sd:b.sd,ed:b.ed,color:b.color});
 /* 가로 스크롤 칩 영역 공용 — 세로 휠→가로 이동(트랙패드·Shift+휠 포함) + ‹/› 버튼(양끝 Disabled) + 가장자리 페이드.
    스크롤은 해당 영역 내부에서만 처리해 본문/모달 스크롤과 분리한다. */
 const CHEV_L='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>';
@@ -1592,11 +1594,17 @@ function renderProgCal(){
   const cells=[];
   for(let i=0;i<35;i++){let dnum,inM=true;if(i<2){dnum=29+i;inM=false}else if(i<33){dnum=i-1}else{dnum=i-32;inM=false}const wd=i%7,today=i===6;
    const bs=blocks.filter(b=>b.day===wd).sort((a,b)=>a.s-b.s);
-   cells.push(`<div class="cm-cell ${inM?'':'out'} ${today?'today':''}" data-cmd="${wd}" role="button" tabindex="0"><span class="cm-d num">${dnum}${today?' · 오늘':''}</span>${bs.slice(0,3).map(b=>{const c=contentOf(b.content);return `<span class="cm-chip ${b.type==='urgent'?'urgent':''}" style="background:${calBg(b)}">${hLabel(b.s)} ${c?c.name:''}</span>`}).join('')}${bs.length>3?`<span class="cm-more">+${bs.length-3}건 더</span>`:''}</div>`);}
+   cells.push(`<div class="cm-cell ${inM?'':'out'} ${today?'today':''}" data-cmd="${wd}" role="button" tabindex="0"><span class="cm-d num">${dnum}${today?' · 오늘':''}</span>${bs.slice(0,3).map(b=>{const c=contentOf(b.content);return `<span class="cm-chip ${b.type==='urgent'?'urgent':''}" data-gid="${b.gid}" style="background:${calBg(b)}">${hLabel(b.s)} ${c?c.name:''}</span>`}).join('')}${bs.length>3?`<span class="cm-more" data-more="${wd}" data-dnum="${dnum}">+${bs.length-3}건 더</span>`:''}</div>`);}
   gridEl.innerHTML=`<div class="cal-month">${cells.join('')}</div>`;
+  /* 일정 칩 클릭 → 우측 패널에서 편집(주 뷰 전환 없이) */
+  gridEl.querySelectorAll('.cm-chip[data-gid]').forEach(ch=>ch.onclick=e=>{e.stopPropagation();const b=blocks.find(x=>x.gid===ch.dataset.gid);if(b)openBlockSide(blockCfg(b));});
+  /* [N건 더] 클릭 → 그날 전체 일정 팝업 */
+  gridEl.querySelectorAll('.cm-more[data-more]').forEach(mo=>mo.onclick=e=>{e.stopPropagation();const wd=+mo.dataset.more;openDayPopup(mo,wd,+mo.dataset.dnum,blocks.filter(b=>b.day===wd).sort((a,b)=>a.s-b.s));});
+  /* 빈 칸(날짜) 클릭 → 새 일정 추가(주 뷰로 전환해 시간대 배치) */
   gridEl.querySelectorAll('[data-cmd]').forEach(cell=>cell.onclick=()=>{pcalMode='week';renderProgCal();openBlockSide({days:[+cell.dataset.cmd],s:9,e:11,content:null,type:'normal'});});
   return;
  }
+ gridEl.style.display='';   /* 월 뷰에서 설정된 inline display:block 해제 → CSS의 grid 레이아웃 복원 */
  $('#cal-range').textContent='2026년 6월 29일 – 7월 5일';$('#cal-hint').textContent='빈 시간을 클릭하면 일정을 등록할 수 있어요';
  head.style.gridTemplateColumns='';
  head.innerHTML='<div class="cell"></div>'+DAYS.map((d,i)=>`<div class="cell ${i===TODAY?'today':''}">${d.split(' ')[0]}<span class="d num">${d.split(' ')[1]}</span></div>`).join('');
@@ -1612,6 +1620,20 @@ function renderProgCal(){
  gridEl.querySelectorAll('[data-block]').forEach(bl=>bl.onclick=e=>{e.stopPropagation();const b=blocks.find(x=>x.id===bl.dataset.block);if(b)openBlockSide(blockCfg(b));});
  const scroll=$('#cal-scroll');if(scroll&&!scroll._scrolled){scroll.scrollTop=30;scroll._scrolled=true;}
 }
+/* 월 뷰 [N건 더] 팝업 — 해당 날짜의 전체 일정을 목록으로. 칩 클릭 시 우측 패널에서 편집. */
+function openDayPopup(anchor,wd,dnum,bs){
+ closeMenus();
+ const m=document.createElement('div');m.className='cm-pop';
+ m.innerHTML=`<div class="cm-pop-head"><span class="cm-pop-dow">${REPEAT_N[wd]}</span><button class="icon-btn cm-pop-x" aria-label="닫기">${IC.x}</button><div class="cm-pop-d num">${dnum}</div></div>
+  <div class="cm-pop-list">${bs.map(b=>{const c=contentOf(b.content);return `<button class="cm-pop-chip ${b.type==='urgent'?'urgent':''}" data-pg="${b.gid}" style="background:${calBg(b)}">${hLabel(b.s)} ${c?c.name:'콘텐츠 미지정'}</button>`}).join('')||'<div class="cm-pop-empty">등록된 일정이 없어요</div>'}</div>`;
+ document.body.appendChild(m);
+ const r=anchor.getBoundingClientRect();
+ m.style.top=Math.min(r.bottom+6,innerHeight-m.offsetHeight-10)+'px';
+ let l=r.left-20;if(l+m.offsetWidth>innerWidth-10)l=innerWidth-m.offsetWidth-10;m.style.left=Math.max(10,l)+'px';
+ openMenu=m;
+ m.querySelector('.cm-pop-x').onclick=()=>closeMenus();
+ m.querySelectorAll('[data-pg]').forEach(btn=>btn.onclick=()=>{const b=curProg.blocks.find(x=>x.gid===btn.dataset.pg);closeMenus();if(b)openBlockSide(blockCfg(b));});
+}
 function renderProgSideEmpty(){
  pcalSelGid=null;$('#sc-side-foot').hidden=true;$('#sc-side-title').textContent='일정 설정';$('#sc-del').hidden=true;
  $('#sc-side-body').innerHTML=`<div class="bs-empty"><span class="bs-empty-ic">${IC.cal}</span><b>일정을 선택하세요</b><span>캘린더에서 일정을 클릭해 설정을 편집하거나,<br>빈 시간을 클릭해 새 일정을 추가하세요.</span></div>`;
@@ -1625,26 +1647,28 @@ function openBlockSide(cfg){
  if(cfg.edit){_del.hidden=false;_del.innerHTML=`${IC.trash}일정 삭제`;_del.onclick=()=>{curProg.blocks=curProg.blocks.filter(b=>b.gid!==cfg.edit.gid);toast('일정을 삭제했어요.');renderProgSideEmpty();};}
  else{_del.hidden=true;_del.onclick=null;}
  pcalSelGid=cfg.edit?cfg.edit.gid:null;
- let sel={content:cfg.content,type:cfg.type||'normal',s:cfg.s,e:cfg.e,days:[...cfg.days],sd:cfg.sd||PROG_NOW,ed:cfg.ed||null,noEnd:!cfg.ed};
+ let sel={content:cfg.content,type:cfg.type||'normal',s:cfg.s,e:cfg.e,days:[...cfg.days],sd:cfg.sd||PROG_NOW,ed:cfg.ed||null,noEnd:!cfg.ed,color:cfg.color||CAL_COLORS[0]};
  const body=$('#sc-side-body');
  const times=[];for(let h=7;h<=23;h+=.5)times.push(h);
  const draw=()=>{
   const cur=sel.content?contentOf(sel.content):null;
   const kindL=cur?({lib:'콘텐츠',tpl:'템플릿',pl:'재생목록',wall:'비디오월',gone:'삭제된 자산'})[cur.kind]||'콘텐츠':'';
   body.innerHTML=`
+   <div class="f-row"><label>유형</label><div class="seg" style="width:100%"><button class="${sel.type==='normal'?'on':''}" data-bsty="normal" style="flex:1">일반</button><button class="${sel.type==='urgent'?'on':''}" data-bsty="urgent" style="flex:1">긴급</button></div>${sel.type==='urgent'?'<p class="bs-note">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>
    <div class="f-row"><label>콘텐츠 <span class="req">*</span></label>
     ${cur?`<button class="asset-field" id="bs-content"><span class="cthumb" style="background:${cur.g}">${cur.e||''}</span><span class="asset-tx"><b>${cur.name}</b><span>${kindL}</span></span><span class="asset-chg">변경</span></button>`
      :`<button class="asset-field empty" id="bs-content"><span class="asset-empty-plus"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="asset-empty-tx">콘텐츠 · 템플릿 · 재생목록 선택</span></button>`}</div>
    ${periodField(sel.sd,sel.ed,sel.noEnd,'bs')}
    <div class="f-row"><label>송출 시간</label><div class="time-row"><select class="select select-sm" id="bs-ts">${times.filter(h=>h<23).map(h=>`<option value="${h}" ${h===sel.s?'selected':''}>${hLabel(h)}</option>`).join('')}</select><span class="time-dash">~</span><select class="select select-sm" id="bs-te">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===sel.e?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
    <div class="f-row"><label>반복 주기</label><div class="day-chips">${REPEAT_N.map((d,i)=>`<button class="day-chip ${sel.days.includes(i)?'on':''}" data-bsd="${i}">${d}</button>`).join('')}</div></div>
-   <div class="f-row"><label>유형 ${IC.info}</label><div class="seg" style="width:100%"><button class="${sel.type==='normal'?'on':''}" data-bsty="normal" style="flex:1">일반</button><button class="${sel.type==='urgent'?'on':''}" data-bsty="urgent" style="flex:1">긴급</button></div>${sel.type==='urgent'?'<p class="bs-note">긴급 일정은 같은 시간의 일반 일정보다 우선 재생돼요.</p>':''}</div>`;
+   <div class="f-row"><label>색상</label><div class="color-picker">${CAL_COLORS.map(c=>`<button class="color-sw ${sel.color===c?'on':''}" data-bscolor="${c}" style="background:${c}" aria-label="일정 색상">${sel.color===c?IC.check:''}</button>`).join('')}</div></div>`;
   body.querySelector('#bs-content').onclick=()=>openAssetPicker(sel.content,ref=>{sel.content=ref;draw();});
   bindPeriod(body,'bs',sel,draw);
   body.querySelector('#bs-ts').onchange=e=>{sel.s=+e.target.value;if(sel.e<=sel.s)sel.e=Math.min(23,sel.s+.5);draw();};
   body.querySelector('#bs-te').onchange=e=>{sel.e=+e.target.value;draw();};
   body.querySelectorAll('[data-bsd]').forEach(b=>b.onclick=()=>{const i=+b.dataset.bsd;sel.days=sel.days.includes(i)?sel.days.filter(x=>x!==i):[...sel.days,i];draw();});
   body.querySelectorAll('[data-bsty]').forEach(b=>b.onclick=()=>{sel.type=b.dataset.bsty;draw();});
+  body.querySelectorAll('[data-bscolor]').forEach(b=>b.onclick=()=>{sel.color=b.dataset.bscolor;draw();});
  };
  draw();
  $('#sc-cancel').onclick=renderProgSideEmpty;
@@ -1655,8 +1679,11 @@ function openBlockSide(cfg){
   if(sel.e<=sel.s)return toast('종료 시간이 시작 시간보다 빨라요.',{err:true});
   if(!sel.days.length)return toast('반복 요일을 선택해주세요.',{err:true});
   const gid=cfg.edit?cfg.edit.gid:'g'+(schedSeq++);
+  /* 같은 편성표 내 시간 중복 방지 — 같은 요일·겹치는 시간·같은 유형(긴급은 일반 위 우선 송출이라 예외) */
+  if(sel.days.some(d=>curProg.blocks.some(b=>b.gid!==gid&&b.day===d&&b.type===sel.type&&b.s<sel.e&&sel.s<b.e)))
+   return toast('해당 시간에 중복되는 일정이 있습니다. 중복되지 않는 시간으로 다시 설정해주세요.',{err:true});
   if(cfg.edit)curProg.blocks=curProg.blocks.filter(b=>b.gid!==gid);
-  sel.days.forEach(d=>curProg.blocks.push(mkBlock({content:sel.content,type:sel.type,s:sel.s,e:sel.e,day:d,gid,sd:sel.sd,ed:sel.noEnd?null:sel.ed})));
+  sel.days.forEach(d=>curProg.blocks.push(mkBlock({content:sel.content,type:sel.type,s:sel.s,e:sel.e,day:d,gid,sd:sel.sd,ed:sel.noEnd?null:sel.ed,color:sel.color})));
   pcalSelGid=gid;
   toast(cfg.edit?'일정을 수정했어요.':'편성표에 일정을 추가했어요.');
   renderProgCal();
