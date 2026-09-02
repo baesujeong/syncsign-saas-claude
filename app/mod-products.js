@@ -184,11 +184,17 @@ function delCat(id){
 $('#cat-add-btn').onclick=()=>{
  openModal(`
   <div class="modal-head"><h2>카테고리 추가</h2></div>
-  <div class="modal-body"><div class="f-row"><label>카테고리 이름</label><input class="input" id="cat-nm" placeholder="예) 시즌 한정" maxlength="20"></div></div>
+  <div class="modal-body"><div class="f-row"><label>카테고리 이름</label><input class="input" id="cat-nm" placeholder="예) 시즌 한정" maxlength="20"><div class="ferr" id="cat-nm-err" style="display:none"></div></div></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="cat-save">추가</button></div>
  `,{width:'400px',onMount:ov=>{
-  const inp=ov.querySelector('#cat-nm');inp.focus();
-  const save=()=>{const v=inp.value.trim();if(!v)return;CATS.push({id:'c'+(++seq),name:v,emoji:'🏷️'});ov.remove();renderCats();toast(`'${v}' 카테고리를 추가했어요.`)};
+  const inp=ov.querySelector('#cat-nm'),err=ov.querySelector('#cat-nm-err');inp.focus();
+  inp.addEventListener('input',()=>{inp.classList.remove('error');err.style.display='none';});
+  const save=()=>{
+   const v=inp.value.trim();
+   if(!v){inp.classList.add('error');err.textContent='카테고리 이름을 입력해주세요.';err.style.display='flex';inp.focus();return}
+   if(CATS.some(x=>x.name===v)){inp.classList.add('error');err.textContent='이미 등록된 카테고리입니다. 다시 입력해주세요.';err.style.display='flex';inp.select();return}
+   CATS.push({id:'c'+(++seq),name:v,emoji:'🏷️'});ov.remove();renderCats();toast(`'${v}' 카테고리를 추가했어요.`);
+  };
   ov.querySelector('#cat-save').onclick=save;inp.addEventListener('keydown',e=>e.key==='Enter'&&save());
  }});
 };
