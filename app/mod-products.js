@@ -40,7 +40,6 @@ let style={title:'SIGNATURE MENU',accent:'#F7C860',lang:false};
 
 /* 필터 상태 (상품 관리) */
 let flt={q:'',st:'all',cat:'all',sort:'new'};
-let view='list';
 let checked=new Set();
 
 /* ═══════════ 헬퍼 ═══════════ */
@@ -223,34 +222,21 @@ function renderProducts(){
    <td class="num muted">${p.mod}</td>
    <td><button class="icon-btn" data-menu="${p.id}" aria-label="더보기">${IC.dots}</button></td>
   </tr>`}).join('');
- /* 카드 뷰 — 리스트와 동일한 선택 UX(체크박스·전체 선택) 지원 */
- $('#prod-cards').innerHTML=arr.map(p=>`
-  <div class="p-card ${checked.has(p.id)?'checked':''}" data-id="${p.id}">
-   ${p.status==='soldout'?'<span class="badge badge-red">품절</span>':p.discount?'<span class="badge badge-blue">할인중</span>':''}
-   <span class="checkbox check ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span>
-   <div class="img" style="${thumbStyle(p)}">${mimg(p).e}</div>
-   <div class="body"><div class="nm">${p.name}</div><div class="ds">${p.desc}</div>
-   <div class="row"><span class="price-cell">${priceHtml(p)}</span><button class="icon-btn" data-menu="${p.id}" aria-label="더보기">${IC.dots}</button></div></div>
-  </div>`).join('');
  $('#prod-count-foot').textContent=`총 ${arr.length}개 상품 · 판매중 ${arr.filter(p=>p.status==='sale').length} · 품절 ${arr.filter(p=>p.status==='soldout').length}`;
  const _psi=$('#prod-search');if(_psi&&_psi.__suxCount)_psi.__suxCount(arr.length);
  if(!arr.length){
   const emptyHtml=products.length===0
-   ?`<div class="empty"><b>아직 등록된 상품이 없어요</b><span>첫 상품을 등록하면 메뉴판 위젯에 자동으로 반영돼요.</span><button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-product').click()">＋ 첫 상품 등록하기</button></div>`
+   ?`<div class="empty"><b>아직 등록된 상품이 없어요</b><span>첫 상품을 등록해보세요.</span><button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-product').click()">＋ 첫 상품 등록하기</button></div>`
    :flt.q?searchEmptyHtml(flt.q)
    :`<div class="empty"><b>조건에 맞는 상품이 없어요</b><span>필터를 바꿔보세요.</span></div>`;
   tb.innerHTML=`<tr><td colspan="9">${emptyHtml}</td></tr>`;
-  $('#prod-cards').innerHTML=`<div style="grid-column:1/-1">${emptyHtml}</div>`;
-  const wireSE=root=>{
-   const r=root.querySelector('[data-se-reset]');if(r)r.onclick=()=>{flt.q='';if(_psi)_psi.value='';renderProducts();_psi&&_psi.focus();};
-   const c=root.querySelector('[data-se-cta]');if(c)c.onclick=()=>document.getElementById('btn-add-product').click();
-  };
-  wireSE(tb);wireSE($('#prod-cards'));
+  const r=tb.querySelector('[data-se-reset]');if(r)r.onclick=()=>{flt.q='';if(_psi)_psi.value='';renderProducts();_psi&&_psi.focus();};
+  const c=tb.querySelector('[data-se-cta]');if(c)c.onclick=()=>document.getElementById('btn-add-product').click();
  }
  bindRows();updateBulk();
 }
 function bindRows(){
- $$('#prod-tbody [data-check], #prod-cards [data-check]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.check;checked.has(id)?checked.delete(id):checked.add(id);renderProducts()});
+ $$('#prod-tbody [data-check]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.check;checked.has(id)?checked.delete(id):checked.add(id);renderProducts()});
  $$('[data-status]').forEach(s=>s.onclick=()=>{
   const p=prodOf(s.dataset.status);p.status=p.status==='sale'?'soldout':'sale';
   renderProducts();renderBoard();
@@ -262,8 +248,7 @@ function bindRows(){
    {label:'복사',icon:IC.copy,onClick:()=>{const cp={...p,imgs:p.imgs.map(i=>({...i})),id:'p'+(++seq),name:p.name+' (복사)',mod:'07.04'};products.unshift(cp);renderCats();renderProducts();toast('상품을 복사했어요.')}},
    'sep',
    {label:'삭제',icon:IC.trash,danger:true,onClick:()=>{
-    const u=usedIn(p);
-    confirmDialog({title:`'${p.name}' 상품을 삭제할까요?`,desc:u?`삭제한 상품은 복구할 수 없어요. 이 상품은 '${u}' 메뉴판에서 사용 중이며, 삭제하면 메뉴판에서도 함께 제거돼요.`:'삭제한 상품은 복구할 수 없어요. 이 상품을 사용 중인 메뉴판은 없어요.',onConfirm:()=>{products=products.filter(x=>x.id!==p.id);if(widget)widget.items=widget.items.filter(i=>i!==p.id);renderCats();renderProducts();renderBoard();toast('상품을 삭제했어요.')}});
+    confirmDialog({title:`'${p.name}' 상품을 삭제할까요?`,desc:'삭제한 상품은 복구할 수 없어요. 이 상품을 사용 중인 메뉴 위젯에도 더 이상 상품 정보가 표시되지 않아요.',onConfirm:()=>{products=products.filter(x=>x.id!==p.id);if(widget)widget.items=widget.items.filter(i=>i!==p.id);renderCats();renderProducts();renderBoard();toast('상품을 삭제했어요.')}});
    }},
   ]);
  });
@@ -274,12 +259,12 @@ function bindRows(){
   else if(bs.length)openBoardPreview(bs[0]);
  });
  /* 행/카드 클릭 → 상품 편집 Drawer (판매상태·사용 중인 템플릿·더보기·체크박스 셀은 각자 동작) */
- $$('#prod-tbody tr[data-id], #prod-cards .p-card[data-id]').forEach(el=>el.addEventListener('click',e=>{
+ $$('#prod-tbody tr[data-id]').forEach(el=>el.addEventListener('click',e=>{
   if(e.target.closest('[data-status],[data-used],[data-menu],[data-check]'))return;
   const p=prodOf(el.dataset.id);if(p)openDrawer(p);
  }));
 }
-/* 전체 선택 / 벌크 — 툴바 전체 선택(#prod-selall)은 리스트·카드 어느 보기에서든 동일 동작 */
+/* 전체 선택 / 벌크 — 툴바 전체 선택(#prod-selall) 동작 */
 const toggleAllProducts=()=>{const arr=filtered();if(!arr.length)return;const all=arr.every(p=>checked.has(p.id));arr.forEach(p=>all?checked.delete(p.id):checked.add(p.id));renderProducts()};
 $('#check-all').onclick=toggleAllProducts;
 const _psa=$('#prod-selall');
@@ -299,8 +284,8 @@ function updateBulk(){
 $('#bulk-close').onclick=()=>{checked.clear();renderProducts()};
 $('#bulk-status').onclick=()=>{checked.forEach(id=>prodOf(id)&&(prodOf(id).status='soldout'));const n=checked.size;checked.clear();renderProducts();renderBoard();toast(`${n}개 상품을 품절 처리했어요. 메뉴판에 자동 반영돼요.`)};
 $('#bulk-del').onclick=()=>{
- const n=checked.size;const usedN=[...checked].filter(id=>usedIn(prodOf(id))).length;
- confirmDialog({title:`상품 ${n}개를 삭제할까요?`,desc:usedN?`삭제한 상품은 복구할 수 없어요. 선택한 상품 중 ${usedN}개는 메뉴판에서 사용 중이며, 삭제하면 메뉴판에서도 함께 제거돼요.`:'삭제한 상품은 복구할 수 없어요. 선택한 상품을 사용 중인 메뉴판은 없어요.',onConfirm:()=>{products=products.filter(p=>!checked.has(p.id));if(widget)widget.items=widget.items.filter(i=>!checked.has(i));checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 삭제했어요.`)}});
+ const n=checked.size;
+ confirmDialog({title:`상품 ${n}개를 삭제할까요?`,desc:'삭제한 상품은 복구할 수 없어요. 선택한 상품을 사용 중인 메뉴 위젯에도 더 이상 상품 정보가 표시되지 않아요.',onConfirm:()=>{products=products.filter(p=>!checked.has(p.id));if(widget)widget.items=widget.items.filter(i=>!checked.has(i));checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 삭제했어요.`)}});
 };
 $('#bulk-cat').onclick=e=>{
  popMenu(e.currentTarget,CATS.map(c=>({label:c.emoji+' '+c.name,onClick:()=>{checked.forEach(id=>prodOf(id)&&(prodOf(id).cat=c.id));const n=checked.size;checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 '${c.name}'(으)로 이동했어요.`)}})));
@@ -309,8 +294,6 @@ $('#bulk-cat').onclick=e=>{
 attachSearchUX($('#prod-search'),q=>{flt.q=q;renderProducts()});
 $$('#status-chips .chip').forEach(c=>c.onclick=()=>{$$('#status-chips .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');flt.st=c.dataset.st;renderProducts()});
 $('#prod-sort').onchange=e=>{flt.sort=e.target.value;renderProducts()};
-$('#view-list').onclick=()=>{view='list';$('#view-list').classList.add('on');$('#view-card').classList.remove('on');$('#table-wrap').hidden=false;$('#prod-cards').hidden=true};
-$('#view-card').onclick=()=>{view='card';$('#view-card').classList.add('on');$('#view-list').classList.remove('on');$('#table-wrap').hidden=true;$('#prod-cards').hidden=false};
 
 /* ═══════════ 상품 등록/수정 드로어 ═══════════ */
 const EMOJIS=['☕','🥤','🍵','🧋','🍓','🍰','🥐','🍪','🍫','🍦','🍮','🥪'];

@@ -305,9 +305,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .sel-all{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;flex:none;white-space:nowrap}
 .sel-all:hover{color:var(--text)}
 /* 카드 보기 선택 체크박스 오버레이 (템플릿·콘텐츠 카드와 동일 패턴) */
-.pl-card .check,.p-card .check{position:absolute;left:9px;top:9px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px;box-shadow:var(--sh-sm)}
-.pl-card:hover .check,.pl-card .check.on,.p-card:hover .check,.p-card .check.on{opacity:1}
-.pl-card.checked,.p-card.checked{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.pl-card .check{position:absolute;left:9px;top:9px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px;box-shadow:var(--sh-sm)}
+.pl-card:hover .check,.pl-card .check.on{opacity:1}
+.pl-card.checked{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
 /* ─── 사용자 관리 ─── */
 .u-cell{display:flex;align-items:center;gap:10px}
 .u-cell .nm{font-weight:700;font-size:14px}
@@ -756,21 +756,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .used-link .used-more{flex:none;font-size:11px;font-weight:700;color:var(--text-3);background:var(--sunken);border-radius:99px;padding:1px 6px;margin-left:2px}
 /* 사용 중인 템플릿 미리보기 */
 .board-prev{width:100%;aspect-ratio:16/9;border-radius:12px}
-/* 상품 행/카드 클릭 → 편집 Drawer */
-#prod-tbody tr[data-id],.p-card[data-id]{cursor:pointer}
+/* 상품 행 클릭 → 편집 Drawer */
+#prod-tbody tr[data-id]{cursor:pointer}
 .muted{color:var(--text-3)}
-
-/* 카드 뷰 */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:18px;overflow-y:auto;flex:1;align-content:start;align-items:start;grid-auto-rows:max-content}
-.p-card{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--surface);transition:box-shadow .15s,border-color .15s;position:relative;display:flex;flex-direction:column}
-.p-card:hover{box-shadow:var(--sh-md);border-color:var(--border-2)}
-.p-card .img{aspect-ratio:16/9;width:100%;display:flex;align-items:center;justify-content:center;font-size:44px;flex:none}
-.p-card .body{padding:12px 14px 12px;flex:1;display:flex;flex-direction:column;min-height:0}
-.p-card .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.p-card .ds{font-size:12px;color:var(--text-3);margin:2px 0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.p-card .row{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
-/* 상태 배지는 우상단 — 좌상단은 선택 체크박스 자리(전 페이지 공통 패턴) */
-.p-card>.badge{position:absolute;top:10px;right:10px;left:auto;z-index:2}
 
 /* 빈 상태 */
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--text-3);padding:40px}
