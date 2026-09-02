@@ -27,7 +27,7 @@ window.LOCALES={
   ph:{products:'상품명, 설명 검색',panels:'화면명, 매장, 콘텐츠 검색',walls:'비디오월, 매장 검색',users:'이름, 이메일 검색',stores:'매장명, 주소 검색',templates:'템플릿 검색',library:'파일명, 태그 검색',playlists:'재생목록 검색'},
   common:{confirm:'확인',cancel:'취소',delete:'삭제',save:'저장',close:'닫기',edit:'수정',copy:'복사',more:'더보기',upload:'업로드',selectAll:'전체 선택',prevPage:'이전 페이지',nextPage:'다음 페이지',recentSort:'최근 등록순',nameSort:'이름순',priceAscSort:'가격 낮은순',priceDescSort:'가격 높은순',issueSort:'문제 화면 우선',panelNameSort:'화면 이름순',storeSort:'매장 이름순',updatedSort:'최근 업데이트순'},
   flt:{all:'전체',onSale:'판매중',soldOut:'품절',discount:'할인중'},
-  tbl:{product:'상품',category:'카테고리',price:'가격',option:'옵션',saleStatus:'판매 상태',usedInMenu:'사용 중인 메뉴판',modifiedAt:'수정일',status:'상태',preview:'미리보기',screen:'화면',store:'매장',currentContent:'현재 콘텐츠',schedule:'일정',share:'공유',lastUpdate:'마지막 업데이트'},
+  tbl:{product:'상품',category:'카테고리',price:'가격',option:'옵션',saleStatus:'판매 상태',usedInMenu:'사용 중인 템플릿',modifiedAt:'수정일',status:'상태',preview:'미리보기',screen:'화면',store:'매장',currentContent:'현재 콘텐츠',schedule:'일정',share:'공유',lastUpdate:'마지막 업데이트'},
   act:{optman:'옵션 관리',makeGroup:'그룹 만들기'},
  },
  /* ─────────── English ─────────── */
@@ -52,7 +52,7 @@ window.LOCALES={
   ph:{products:'Search products…',panels:'Search screens, stores, content…',walls:'Search video walls, stores…',users:'Search name or email…',stores:'Search store or address…',templates:'Search templates…',library:'Search files or tags…',playlists:'Search playlists…'},
   common:{confirm:'Confirm',cancel:'Cancel',delete:'Delete',save:'Save',close:'Close',edit:'Edit',copy:'Duplicate',more:'More',upload:'Upload',selectAll:'Select all',prevPage:'Previous page',nextPage:'Next page',recentSort:'Recently added',nameSort:'By name',priceAscSort:'Price: low to high',priceDescSort:'Price: high to low',issueSort:'Issues first',panelNameSort:'By screen name',storeSort:'By store name',updatedSort:'Recently updated'},
   flt:{all:'All',onSale:'On sale',soldOut:'Sold out',discount:'Discounted'},
-  tbl:{product:'Product',category:'Category',price:'Price',option:'Options',saleStatus:'Status',usedInMenu:'Used in menus',modifiedAt:'Modified',status:'Status',preview:'Preview',screen:'Screen',store:'Store',currentContent:'Current content',schedule:'Schedule',share:'Share',lastUpdate:'Last update'},
+  tbl:{product:'Product',category:'Category',price:'Price',option:'Options',saleStatus:'Status',usedInMenu:'Used in templates',modifiedAt:'Modified',status:'Status',preview:'Preview',screen:'Screen',store:'Store',currentContent:'Current content',schedule:'Schedule',share:'Share',lastUpdate:'Last update'},
   act:{optman:'Manage options',makeGroup:'Create group'},
  },
  /* ─────────── 日本語 ─────────── */
@@ -77,7 +77,7 @@ window.LOCALES={
   ph:{products:'商品名・説明で検索',panels:'スクリーン・店舗・コンテンツを検索',walls:'ビデオウォール・店舗を検索',users:'名前・メールで検索',stores:'店舗名・住所で検索',templates:'テンプレートを検索',library:'ファイル名・タグで検索',playlists:'プレイリストを検索'},
   common:{confirm:'確認',cancel:'キャンセル',delete:'削除',save:'保存',close:'閉じる',edit:'編集',copy:'複製',more:'その他',upload:'アップロード',selectAll:'すべて選択',prevPage:'前のページ',nextPage:'次のページ',recentSort:'登録が新しい順',nameSort:'名前順',priceAscSort:'価格が安い順',priceDescSort:'価格が高い順',issueSort:'問題スクリーンを優先',panelNameSort:'スクリーン名順',storeSort:'店舗名順',updatedSort:'更新が新しい順'},
   flt:{all:'すべて',onSale:'販売中',soldOut:'品切れ',discount:'割引中'},
-  tbl:{product:'商品',category:'カテゴリ',price:'価格',option:'オプション',saleStatus:'販売状態',usedInMenu:'使用中のメニュー',modifiedAt:'更新日',status:'状態',preview:'プレビュー',screen:'スクリーン',store:'店舗',currentContent:'現在のコンテンツ',schedule:'スケジュール',share:'共有',lastUpdate:'最終更新'},
+  tbl:{product:'商品',category:'カテゴリ',price:'価格',option:'オプション',saleStatus:'販売状態',usedInMenu:'使用中のテンプレート',modifiedAt:'更新日',status:'状態',preview:'プレビュー',screen:'スクリーン',store:'店舗',currentContent:'現在のコンテンツ',schedule:'スケジュール',share:'共有',lastUpdate:'最終更新'},
   act:{optman:'オプション管理',makeGroup:'グループを作成'},
  },
  /* ─────────── 中文 ─────────── */
@@ -102,7 +102,7 @@ window.LOCALES={
   ph:{products:'搜索商品名称、描述',panels:'搜索屏幕、门店、内容',walls:'搜索视频墙、门店',users:'搜索姓名、邮箱',stores:'搜索门店名、地址',templates:'搜索模板',library:'搜索文件名、标签',playlists:'搜索播放列表'},
   common:{confirm:'确认',cancel:'取消',delete:'删除',save:'保存',close:'关闭',edit:'编辑',copy:'复制',more:'更多',upload:'上传',selectAll:'全选',prevPage:'上一页',nextPage:'下一页',recentSort:'最近添加',nameSort:'按名称',priceAscSort:'价格从低到高',priceDescSort:'价格从高到低',issueSort:'问题屏幕优先',panelNameSort:'按屏幕名称',storeSort:'按门店名称',updatedSort:'最近更新'},
   flt:{all:'全部',onSale:'在售',soldOut:'售罄',discount:'折扣中'},
-  tbl:{product:'商品',category:'分类',price:'价格',option:'选项',saleStatus:'销售状态',usedInMenu:'使用中的菜单板',modifiedAt:'修改日期',status:'状态',preview:'预览',screen:'屏幕',store:'门店',currentContent:'当前内容',schedule:'排程',share:'共享',lastUpdate:'最后更新'},
+  tbl:{product:'商品',category:'分类',price:'价格',option:'选项',saleStatus:'销售状态',usedInMenu:'使用中的模板',modifiedAt:'修改日期',status:'状态',preview:'预览',screen:'屏幕',store:'门店',currentContent:'当前内容',schedule:'排程',share:'共享',lastUpdate:'最后更新'},
   act:{optman:'选项管理',makeGroup:'创建分组'},
  },
 };

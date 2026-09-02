@@ -7,20 +7,20 @@ const CATS=[{id:'coffee',name:'커피',emoji:'☕'},{id:'drink',name:'음료',em
 let seq=100;
 const P=(id,name,desc,cat,price,opt,discount,status,emoji,hue,mod)=>({id,name,desc,cat,price,cur:'KRW',opt,discount,status,mod,imgs:[{e:emoji,h:hue}],mainIdx:0});
 let products=[
- P('p1','아메리카노','산미와 바디감의 밸런스가 좋은 시그니처 블렌드','coffee',4500,true,null,'sale','☕',28,'07.01'),
- P('p2','카페라떼','고소한 우유와 에스프레소의 부드러운 조화','coffee',5000,true,null,'sale','🥛',36,'07.01'),
- P('p3','바닐라라떼','마다가스카르 바닐라빈 시럽을 넣은 라떼','coffee',5500,true,null,'sale','🍦',44,'06.30'),
- P('p4','콜드브루','18시간 저온 추출로 잡미 없이 깔끔한 맛','coffee',5000,true,null,'sale','🧊',210,'06.30'),
- P('p5','카페모카','다크 초콜릿과 에스프레소, 휘핑크림까지','coffee',5500,true,null,'sale','🍫',20,'06.28'),
- P('p6','에스프레소','9기압으로 뽑아낸 진한 한 잔','coffee',3500,false,null,'sale','☕',16,'06.28'),
- P('p7','초코바른 피스타치오 스무디','피스타치오 크림과 초코 코팅의 시그니처 스무디','drink',6500,false,null,'sale','🥤',110,'06.27'),
- P('p8','제주 그린 스무디','제주 말차와 우유를 갈아 만든 스무디','drink',6000,false,null,'sale','🍵',140,'06.27'),
- P('p9','딸기 요거트 스무디','생딸기와 수제 요거트로 만든 인기 메뉴','drink',6000,false,5400,'sale','🍓',350,'06.26'),
- P('p10','자몽에이드','생자몽 과육이 그대로, 탄산 가득','drink',5500,false,null,'sale','🍊',30,'06.26'),
- P('p11','피스타치오 밀크티','피스타치오 크림을 올린 로얄 밀크티','drink',5800,false,null,'sale','🧋',48,'06.25'),
- P('p12','바스크 치즈케이크','겉은 진하게 태우고 속은 촉촉한 치즈케이크','dessert',6500,false,null,'sale','🍰',52,'06.24'),
- P('p13','티라미수','마스카포네 크림을 듬뿍 올린 정통 티라미수','dessert',7000,false,6300,'sale','🍮',40,'06.24'),
- P('p14','소금빵','프랑스산 버터를 넣어 매일 아침 굽는 소금빵','dessert',3800,false,null,'soldout','🥐',60,'06.23'),
+ P('p1','아메리카노','산미와 바디감의 밸런스가 좋은 시그니처 블렌드','coffee',4500,['size','temp','shot'],null,'sale','☕',28,'07.01'),
+ P('p2','카페라떼','고소한 우유와 에스프레소의 부드러운 조화','coffee',5000,['size','temp'],null,'sale','🥛',36,'07.01'),
+ P('p3','바닐라라떼','마다가스카르 바닐라빈 시럽을 넣은 라떼','coffee',5500,['size'],null,'sale','🍦',44,'06.30'),
+ P('p4','콜드브루','18시간 저온 추출로 잡미 없이 깔끔한 맛','coffee',5000,['size'],null,'sale','🧊',210,'06.30'),
+ P('p5','카페모카','다크 초콜릿과 에스프레소, 휘핑크림까지','coffee',5500,['size','shot'],null,'sale','🍫',20,'06.28'),
+ P('p6','에스프레소','9기압으로 뽑아낸 진한 한 잔','coffee',3500,[],null,'sale','☕',16,'06.28'),
+ P('p7','초코바른 피스타치오 스무디','피스타치오 크림과 초코 코팅의 시그니처 스무디','drink',6500,[],null,'sale','🥤',110,'06.27'),
+ P('p8','제주 그린 스무디','제주 말차와 우유를 갈아 만든 스무디','drink',6000,[],null,'sale','🍵',140,'06.27'),
+ P('p9','딸기 요거트 스무디','생딸기와 수제 요거트로 만든 인기 메뉴','drink',6000,[],5400,'sale','🍓',350,'06.26'),
+ P('p10','자몽에이드','생자몽 과육이 그대로, 탄산 가득','drink',5500,[],null,'sale','🍊',30,'06.26'),
+ P('p11','피스타치오 밀크티','피스타치오 크림을 올린 로얄 밀크티','drink',5800,[],null,'sale','🧋',48,'06.25'),
+ P('p12','바스크 치즈케이크','겉은 진하게 태우고 속은 촉촉한 치즈케이크','dessert',6500,[],null,'sale','🍰',52,'06.24'),
+ P('p13','티라미수','마스카포네 크림을 듬뿍 올린 정통 티라미수','dessert',7000,[],6300,'sale','🍮',40,'06.24'),
+ P('p14','소금빵','프랑스산 버터를 넣어 매일 아침 굽는 소금빵','dessert',3800,[],null,'soldout','🥐',60,'06.23'),
 ];
 /* 다중 이미지 샘플: 대표 외 추가 컷 */
 products[0].imgs.push({e:'🫘',h:96},{e:'🧊',h:210});
@@ -179,23 +179,47 @@ function filtered(){
  return arr;
 }
 const usedIn=p=>widget&&widgetItemIds().includes(p.id)?CONTENT_NAME():null;
+/* [MOCK DATA] 상품별 '사용 중인 메뉴판' 표시용 메뉴판 목록. TODO(API): 메뉴판(콘텐츠) 목록을 서버 조회로 대체 */
+let MENU_BOARDS=[
+ {id:'mb1',name:'매장 메인 메뉴판',g:'linear-gradient(135deg,#5B2B2B,#361212)',res:'1920×1080',items:['p1','p2','p3','p5','p6','p12','p13']},
+ {id:'mb2',name:'2층 카페 메뉴판',g:'linear-gradient(135deg,#1E3A5F,#0F2038)',res:'1920×1080',items:['p1','p2','p4','p7','p8']},
+ {id:'mb3',name:'테이크아웃 보드',g:'linear-gradient(135deg,#1F4A3A,#0E2A20)',res:'3840×2160',items:['p1','p9','p10','p11']},
+ {id:'mb4',name:'디저트 쇼케이스',g:'linear-gradient(135deg,#472B52,#28152F)',res:'1920×1080',items:['p12','p13','p14']},
+];
+if(window.EMPTY_MODE)MENU_BOARDS.length=0;
+const usedInBoards=p=>p?MENU_BOARDS.filter(b=>b.items.includes(p.id)):[];
+/* 옵션 세트 — p.opt는 적용된 세트 id 배열. 목록/라벨(예: '사이즈 3 · 온도 2')과 사이즈 옵션 여부 */
+const optSetsOf=p=>((p&&p.opt)||[]).map(id=>optionSets.find(o=>o.id===id)).filter(Boolean);
+const optLabel=p=>{const n=optSetsOf(p).length;return n?`옵션 ${n}개`:null;};
+const hasSize=p=>((p&&p.opt)||[]).includes('size');
+/* 사용 중인 템플릿 미리보기 모달 — 제목 + 미리보기 + 닫기/편집하기(부가정보 없음) */
+function openBoardPreview(board){
+ const ov=openModal(`
+  <div class="modal-head"><div><h2>${board.name}</h2><div class="sub">${board.res||'1920×1080'}</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body"><div class="board-prev" style="background:${board.g||'var(--sunken)'}"></div></div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" id="bprev-edit">편집하기</button></div>`,{width:'660px'});
+ ov.querySelector('#bprev-edit').onclick=()=>{ov.remove();gotoEditor();};
+}
 function priceHtml(p){
  if(p.discount)return `<span class="orig num">${curOf(p.cur).suffix?fmt(p.price):money(p.price,p.cur)}</span><b class="num">${money(p.discount,p.cur)}</b><span class="dc num">${Math.round((1-p.discount/p.price)*100)}%</span>`;
  return `<b class="num">${money(p.price,p.cur)}</b>`;
 }
+/* 메뉴판(위젯) 미리보기 갱신 — 에디터 스테이지가 있을 때만 재렌더(상품 관리 목록에선 no-op).
+   상품·카테고리 변경 시 여러 곳에서 호출되지만 정의가 없어 콘솔 에러가 나던 것을 안전 처리 */
+function renderBoard(){const s=document.getElementById('ed-stage');if(s&&typeof renderStage==='function')renderStage();}
 function renderProducts(){
  const arr=filtered();
  const tb=$('#prod-tbody');
  tb.innerHTML=arr.map(p=>{
-  const u=usedIn(p);
+  const boards=usedInBoards(p);
   return `<tr data-id="${p.id}" class="${checked.has(p.id)?'checked':''}">
    <td><span class="checkbox ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" tabindex="0" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span></td>
    <td><div class="p-cell"><span class="p-thumb" style="${thumbStyle(p)}">${mimg(p).e}${p.imgs.length>1?`<span class="imgn num">+${p.imgs.length-1}</span>`:''}</span><div><div class="nm">${p.name}</div><div class="ds">${p.desc}</div></div></div></td>
    <td><span class="badge badge-gray">${catOf(p.cat)?.name??'미분류'}</span></td>
    <td style="text-align:right" class="price-cell">${priceHtml(p)}</td>
-   <td>${p.opt?'<span class="muted">사이즈 3</span>':'<span class="muted">—</span>'}</td>
+   <td>${optLabel(p)?`<span class="muted">${optLabel(p)}</span>`:'<span class="muted">—</span>'}</td>
    <td><div class="status-cell"><span class="switch switch-sm ${p.status==='sale'?'on':''}" data-status="${p.id}" role="switch" tabindex="0" aria-label="판매 상태"></span><span class="lbl">${p.status==='sale'?'판매중':'품절'}</span></div></td>
-   <td>${u?`<span class="used-link" data-used="${p.id}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8" stroke-linecap="round"/></svg>${u}</span>`:'<span class="muted">—</span>'}</td>
+   <td>${boards.length?`<span class="used-link used-board" data-used="${p.id}" title="${boards.map(b=>b.name).join(', ')}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8" stroke-linecap="round"/></svg><span class="used-nm">${boards[0].name}</span>${boards.length>1?`<span class="used-more num">+${boards.length-1}</span>`:''}</span>`:'<span class="muted">—</span>'}</td>
    <td class="num muted">${p.mod}</td>
    <td><button class="icon-btn" data-menu="${p.id}" aria-label="더보기">${IC.dots}</button></td>
   </tr>`}).join('');
@@ -243,7 +267,17 @@ function bindRows(){
    }},
   ]);
  });
- $$('[data-used]').forEach(b=>b.onclick=()=>gotoEditor());
+ $$('[data-used]').forEach(b=>b.onclick=()=>{
+  const bs=usedInBoards(prodOf(b.dataset.used));
+  const bIc='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8" stroke-linecap="round"/></svg>';
+  if(bs.length>1)popMenu(b,bs.map(bd=>({label:bd.name,icon:bIc,onClick:()=>openBoardPreview(bd)})));
+  else if(bs.length)openBoardPreview(bs[0]);
+ });
+ /* 행/카드 클릭 → 상품 편집 Drawer (판매상태·사용 중인 템플릿·더보기·체크박스 셀은 각자 동작) */
+ $$('#prod-tbody tr[data-id], #prod-cards .p-card[data-id]').forEach(el=>el.addEventListener('click',e=>{
+  if(e.target.closest('[data-status],[data-used],[data-menu],[data-check]'))return;
+  const p=prodOf(el.dataset.id);if(p)openDrawer(p);
+ }));
 }
 /* 전체 선택 / 벌크 — 툴바 전체 선택(#prod-selall)은 리스트·카드 어느 보기에서든 동일 동작 */
 const toggleAllProducts=()=>{const arr=filtered();if(!arr.length)return;const all=arr.every(p=>checked.has(p.id));arr.forEach(p=>all?checked.delete(p.id):checked.add(p.id));renderProducts()};
@@ -303,11 +337,11 @@ function openDrawer(edit){
     <div class="f-row"><label>설명</label><input class="input" id="f-desc" placeholder="메뉴판에 함께 표시할 한 줄 설명" value="${isEdit?edit.desc:''}" maxlength="60"></div>
    </div>
    <div class="form-sec"><h3>추가 설정 <span class="opt-tag">선택</span></h3>
-    <div class="acc ${isEdit&&edit.opt?'open':''}" id="acc-opt">
-     <button class="acc-head" type="button" data-acc2>가격 옵션<span class="st" id="opt-st">${isEdit&&edit.opt?'사이즈 3개 적용 중':'사용 안 함'}</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="acc ${isEdit&&(edit.opt||[]).length?'open':''}" id="acc-opt">
+     <button class="acc-head" type="button" data-acc2>가격 옵션<span class="st" id="opt-st">${isEdit&&(edit.opt||[]).length?`옵션 세트 ${edit.opt.length}개 적용 중`:'사용 안 함'}</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
      <div class="acc-body"><div class="f-row"><label>옵션 세트 선택 <button type="button" class="used-link" id="go-optman" style="margin-left:auto">옵션 관리</button></label>
       <div class="optset-pick">${optionSets.map(o=>`
-       <label class="optset-row" style="cursor:pointer"><span class="checkbox ${isEdit&&edit.opt&&o.id==='size'?'on':''}" data-optset="${o.id}">${IC.check}</span><b>${o.name}</b><span class="vals">${o.vals.map(v=>`<span class="val">${v}</span>`).join('')}</span></label>`).join('')}
+       <label class="optset-row" style="cursor:pointer"><span class="checkbox ${isEdit&&(edit.opt||[]).includes(o.id)?'on':''}" data-optset="${o.id}">${IC.check}</span><b>${o.name}</b><span class="vals">${o.vals.map(v=>`<span class="val">${v}</span>`).join('')}</span></label>`).join('')}
       </div></div></div>
     </div>
     <div class="acc ${isEdit&&edit.discount?'open':''}" id="acc-dc">
@@ -399,7 +433,7 @@ function openDrawer(edit){
   if(dc&&dc>=price){wrap.querySelector('#f-dc').focus();toast('할인 적용가는 기본 가격보다 낮아야 해요.',{err:true});return}
   if(catSel.value==='__new'){ncRow.hidden=false;ncNm.focus();toast('새 카테고리 이름을 먼저 추가해주세요.',{err:true});return}
   const cat=catSel.value;
-  const opt=wrap.querySelectorAll('[data-optset].on').length>0;
+  const opt=[...wrap.querySelectorAll('[data-optset].on')].map(c=>c.dataset.optset);
   const finalImgs=imgs.length?imgs:[{e:'🍽️',h:30}];
   const finalMain=Math.min(mainIdx,finalImgs.length-1);
   if(isEdit){Object.assign(edit,{name,price,cur,desc:wrap.querySelector('#f-desc').value.trim(),cat,opt,discount:dc,imgs:finalImgs,mainIdx:finalMain,mod:'07.04'});toast(usedIn(edit)?`'${name}' 수정을 완료했어요. 사용 중인 메뉴판에 바로 반영됐어요.`:'상품을 수정했어요');}
@@ -943,7 +977,7 @@ function menuInnerHtml(){
   if(so&&widget.soldout==='hide')return'';
   const name=`<span class="nm">${p.name}${so?'<span class="so-badge">SOLD OUT</span>':''}</span>`;
   const desc=s.desc&&p.desc?`<span class="ds">${p.desc}</span>`:'';
-  const hasSz=s.opt&&s.price&&p.opt;
+  const hasSz=s.opt&&s.price&&hasSize(p);
   const base=s.discount&&p.discount?p.discount:p.price;
   const dcHtml=s.discount&&p.discount?`<span class="b-orig num">${fmt(p.price)}</span>`:'';
   const single=s.price?`<span class="pr">${dcHtml}<span class="num" style="color:${style.accent}">${fmt(base)}</span></span>`:'';
@@ -954,7 +988,7 @@ function menuInnerHtml(){
  };
  let inner='';
  const hd=`<div class="hd"><span class="store">GREEDISH FRY</span><span class="ttl">${style.title}</span>${style.lang?'<span class="lang">KO · EN 자동 전환</span>':''}</div>`;
- const anySz=s.opt&&s.price&&ids.some(id=>{const p=prodOf(id);return p.opt&&!(p.status==='soldout'&&widget.soldout==='hide')});
+ const anySz=s.opt&&s.price&&ids.some(id=>{const p=prodOf(id);return hasSize(p)&&!(p.status==='soldout'&&widget.soldout==='hide')});
  if(widget.layout==='list'){
   inner=`<div class="b-list">${anySz?`<div class="size-head">${SIZE_LABELS.map(l=>`<span>${l[0]}</span>`).join('')}</div>`:''}${ids.map(id=>{const p=prodOf(id);const o=item(p);if(o==='')return'';
    return `<div class="it ${o.so?'soldout':''}">${o.th}<span class="tx">${o.name}${o.desc}</span>${anySz?o.cols:o.single}</div>`}).join('')}</div>`;
