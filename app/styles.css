@@ -142,7 +142,7 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 .f-row{margin-bottom:14px}
 .f-row label{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px}
 .f-row label .req{color:var(--red)}
-.f-row .ferr{font-size:12px;color:var(--red);margin-top:4px;display:flex;align-items:center;gap:4px}
+.ferr{font-size:12px;color:var(--red);margin-top:4px;display:flex;align-items:center;gap:4px}
 .kv{display:grid;grid-template-columns:96px 1fr;gap:8px 12px;font-size:13px;margin-bottom:16px}
 .kv dt{color:var(--text-3);font-weight:500}
 .kv dd{margin:0;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}

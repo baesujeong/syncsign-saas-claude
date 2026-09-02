@@ -517,10 +517,13 @@ function openOptMan(){
  openModal(`
   <div class="modal-head"><div><h2>옵션 관리</h2><div class="sub">사이즈·온도처럼 여러 상품이 함께 쓰는 가격 옵션 세트예요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body" id="opt-list"></div>
-  <div class="modal-foot" style="border-top:1px solid var(--border)">
-   <input class="input input-sm" id="opt-nm" placeholder="옵션명 (예: 사이즈)" style="width:130px">
-   <input class="input input-sm" id="opt-vals" placeholder="항목을 쉼표로 구분 (예: Tall +0, Grande +500)" style="flex:1">
-   <button class="btn btn-sm btn-primary" id="opt-add">추가</button>
+  <div class="modal-foot" style="border-top:1px solid var(--border);flex-direction:column;align-items:stretch;gap:0">
+   <div style="display:flex;align-items:center;gap:10px">
+    <input class="input input-sm" id="opt-nm" placeholder="옵션명 (예: 사이즈)" style="width:130px">
+    <input class="input input-sm" id="opt-vals" placeholder="항목을 쉼표로 구분 (예: Tall +0, Grande +500)" style="flex:1">
+    <button class="btn btn-sm btn-primary" id="opt-add">추가</button>
+   </div>
+   <div class="ferr" id="opt-add-err" style="display:none">옵션명과 항목을 입력해주세요.</div>
   </div>
  `,{width:'560px',onMount:ov=>{
   const esc=s=>String(s||'').replace(/"/g,'&quot;');
@@ -543,10 +546,18 @@ function openOptMan(){
    ov.querySelectorAll('[data-osave]').forEach(b=>b.onclick=()=>saveEdit(b.dataset.osave));
    const er=ov.querySelector('.optset-edit');if(er)er.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveEdit(editId);}else if(e.key==='Escape'){e.stopPropagation();editId=null;draw();}}));
   };draw();
+  const nmEl=ov.querySelector('#opt-nm'),valsEl=ov.querySelector('#opt-vals'),addErr=ov.querySelector('#opt-add-err');
+  /* 입력 시 인라인 에러 해제 — 값이 채워진 필드의 테두리를 풀고, 둘 다 채워지면 helper text 숨김 */
+  const clearAddErr=()=>{
+   if(nmEl.value.trim())nmEl.classList.remove('error');
+   if(valsEl.value.trim())valsEl.classList.remove('error');
+   if(nmEl.value.trim()&&valsEl.value.split(',').map(s=>s.trim()).filter(Boolean).length)addErr.style.display='none';
+  };
+  nmEl.addEventListener('input',clearAddErr);valsEl.addEventListener('input',clearAddErr);
   ov.querySelector('#opt-add').onclick=()=>{
-   const nm=ov.querySelector('#opt-nm').value.trim(),vals=ov.querySelector('#opt-vals').value.split(',').map(s=>s.trim()).filter(Boolean);
-   if(!nm||!vals.length){toast('옵션명과 항목을 입력해주세요.',{err:true});return}
-   optionSets.push({id:'o'+(++seq),name:nm,vals});ov.querySelector('#opt-nm').value='';ov.querySelector('#opt-vals').value='';draw();toast(`'${nm}' 옵션을 추가했어요.`);
+   const nm=nmEl.value.trim(),vals=valsEl.value.split(',').map(s=>s.trim()).filter(Boolean);
+   if(!nm||!vals.length){nmEl.classList.toggle('error',!nm);valsEl.classList.toggle('error',!vals.length);addErr.style.display='flex';(!nm?nmEl:valsEl).focus();return}
+   optionSets.push({id:'o'+(++seq),name:nm,vals});nmEl.value='';valsEl.value='';nmEl.classList.remove('error');valsEl.classList.remove('error');addErr.style.display='none';draw();toast(`'${nm}' 옵션을 추가했어요.`);
   };
  }});
 }
