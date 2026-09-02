@@ -150,17 +150,36 @@ function editCat(id){
  const c=catOf(id);
  openModal(`
   <div class="modal-head"><h2>카테고리 이름 수정</h2></div>
-  <div class="modal-body"><div class="f-row"><label>카테고리 이름</label><input class="input" id="cat-nm" value="${c.name}" maxlength="20"></div>
+  <div class="modal-body"><div class="f-row"><label>카테고리 이름</label><input class="input" id="cat-nm" value="${c.name}" maxlength="20"><div class="ferr" id="cat-nm-err" style="display:none"></div></div>
   <p style="font-size:12px;color:var(--text-3);margin:4px 0 8px">이름을 바꾸면 이 카테고리를 연동한 메뉴판에도 바로 반영돼요.</p></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="cat-save">저장</button></div>
  `,{width:'400px',onMount:ov=>{
-  const inp=ov.querySelector('#cat-nm');inp.focus();inp.select();
-  ov.querySelector('#cat-save').onclick=()=>{if(!inp.value.trim())return;c.name=inp.value.trim();ov.remove();renderCats();renderProducts();renderBoard();toast('카테고리 이름을 수정했어요.');};
+  const inp=ov.querySelector('#cat-nm'),err=ov.querySelector('#cat-nm-err');inp.focus();inp.select();
+  inp.addEventListener('input',()=>{inp.classList.remove('error');err.style.display='none';});
+  const save=()=>{
+   const v=inp.value.trim();
+   if(!v){inp.classList.add('error');err.textContent='카테고리 이름을 입력해주세요.';err.style.display='flex';inp.focus();return}
+   if(CATS.some(x=>x.id!==id&&x.name===v)){inp.classList.add('error');err.textContent='이미 등록된 카테고리입니다. 다시 입력해주세요.';err.style.display='flex';inp.select();return}
+   c.name=v;ov.remove();renderCats();renderProducts();renderBoard();toast('카테고리 이름을 수정했어요.');
+  };
+  ov.querySelector('#cat-save').onclick=save;inp.addEventListener('keydown',e=>e.key==='Enter'&&save());
  }});
 }
 function delCat(id){
- const c=catOf(id);const n=products.filter(p=>p.cat===id).length;
- confirmDialog({title:`'${c.name}' 카테고리를 삭제할까요?`,desc:n?`삭제한 카테고리는 복구할 수 없어요. 카테고리에 속한 상품 ${n}개는 '미분류'로 이동하고, 메뉴판 연동도 해제돼요.`:'삭제한 카테고리는 복구할 수 없어요. 이 카테고리에 속한 상품은 없어요.',onConfirm:()=>{toast(`'${c.name}' 카테고리를 삭제했어요.`,{action:'실행 취소'});}});
+ const c=catOf(id);const inCat=products.filter(p=>p.cat===id);const n=inCat.length;
+ /* 카테고리 삭제 = 소속 상품까지 함께 삭제 (미분류로 이동하지 않음) */
+ const doDelete=()=>{
+  const delIds=new Set(inCat.map(p=>p.id));
+  products=products.filter(p=>p.cat!==id);
+  if(widget){widget.items=widget.items.filter(i=>!delIds.has(i));if(widget.cat===id)widget.cat=null;}
+  const idx=CATS.findIndex(x=>x.id===id);if(idx>-1)CATS.splice(idx,1);
+  if(flt.cat===id)flt.cat='all';
+  renderCats();renderProducts();renderBoard();
+  toast(n?`'${c.name}' 카테고리와 상품 ${n}개를 삭제했어요.`:`'${c.name}' 카테고리를 삭제했어요.`);
+ };
+ /* 소속 상품이 없으면 얼럿 없이 바로 삭제 */
+ if(!n){doDelete();return}
+ confirmDialog({title:`'${c.name}' 카테고리를 삭제할까요?`,desc:`카테고리에 속한 상품 ${n}개도 함께 삭제돼요. 삭제한 카테고리와 상품은 복구할 수 없어요.`,onConfirm:doDelete});
 }
 $('#cat-add-btn').onclick=()=>{
  openModal(`
