@@ -50,8 +50,17 @@ const CURRENCIES=[
  {code:'KRW',sym:'₩',label:'KRW (₩)',suffix:'원',dec:0},
  {code:'USD',sym:'$',label:'USD ($)',suffix:null,dec:2},
  {code:'JPY',sym:'¥',label:'JPY (¥)',suffix:null,dec:0},
+ {code:'CNY',sym:'元',label:'CNY (元)',suffix:'元',dec:2},
 ];
 const curOf=c=>CURRENCIES.find(x=>x.code===(c||'KRW'))||CURRENCIES[0];
+/* 다국어 이름·설명 — 상품별 p.i18n={en:{name,desc},zh:{...},ja:{...}} (기본 정보의 한국어가 기준, 언어별로 덮어씀) */
+const I18N_LANGS=[
+ {k:'en',chip:'English',label:'영어',nmph:'예) Americano',dsph:'예) Signature espresso blend'},
+ {k:'zh',chip:'中文',label:'중국어',nmph:'例) 美式咖啡',dsph:'例) 招牌浓缩咖啡'},
+ {k:'ja',chip:'日本語',label:'일본어',nmph:'例) アメリカーノ',dsph:'例) シグネチャーブレンド'},
+];
+const langOn=(p,k)=>!!(p.i18n&&p.i18n[k]&&(((p.i18n[k].name||'').trim())||((p.i18n[k].desc||'').trim())));
+const hasI18n=p=>I18N_LANGS.some(l=>langOn(p,l.k));
 /* 금액 표시: KRW '4,500원' · USD '$4.50' · JPY '¥450' */
 const money=(v,c)=>{const cu=curOf(c);const n=cu.dec?v.toLocaleString('en-US',{minimumFractionDigits:cu.dec,maximumFractionDigits:cu.dec}):fmt(v);return cu.suffix?n+cu.suffix:cu.sym+n;};
 const catOf=id=>CATS.find(c=>c.id===id);
@@ -309,13 +318,14 @@ function openDrawer(edit){
     <div class="f-row"><label>상품 이미지 <span style="font-weight:500;color:var(--text-3);margin-left:2px">최대 5장 · JPG·PNG 10MB</span></label>
      <div class="img-list" id="img-list"></div>
      <p style="font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.6">타일을 클릭하면 <b style="color:var(--text-2);font-weight:600">대표 이미지</b>로 지정되고, 드래그하면 순서를 바꿀 수 있어요. 몇 번째에 있든 대표로 지정한 이미지가 상품 목록과 메뉴판에 표시돼요.</p></div>
-    <div class="f-row"><label>상품 이름 <span class="req">*</span></label><input class="input" id="f-name" placeholder="예) 아메리카노" value="${isEdit?edit.name:''}" maxlength="40"></div>
+    <div class="f-row"><label>상품 이름 <span class="req">*</span></label><input class="input" id="f-name" placeholder="예) 아메리카노" value="${isEdit?edit.name:''}" maxlength="40"><div class="ferr" id="f-name-err" style="display:none">상품 이름을 입력해주세요.</div></div>
     <div class="f-grid">
      <div class="f-row"><label>카테고리 <span class="req">*</span></label><select class="select" id="f-cat">${CATS.map(c=>`<option value="${c.id}" ${isEdit&&edit.cat===c.id?'selected':''}>${c.name}</option>`).join('')}<option value="__new">＋ 새 카테고리 만들기</option></select></div>
-     <div class="f-row"><label>기본 가격 <span class="req">*</span></label><div style="display:flex;gap:6px"><input class="input num" id="f-price" inputmode="decimal" placeholder="0" value="${isEdit?edit.price:''}" style="flex:1"><select class="select" id="f-cur" style="width:104px;flex:none" title="통화 선택">${CURRENCIES.map(c=>`<option value="${c.code}" ${(isEdit?edit.cur||'KRW':'KRW')===c.code?'selected':''}>${c.label}</option>`).join('')}</select></div></div>
+     <div class="f-row"><label>기본 가격 <span class="req">*</span></label><div style="display:flex;gap:6px"><input class="input num" id="f-price" inputmode="decimal" placeholder="0" value="${isEdit?edit.price:''}" style="flex:1"><select class="select" id="f-cur" style="width:104px;flex:none" title="통화 선택">${CURRENCIES.map(c=>`<option value="${c.code}" ${(isEdit?edit.cur||'KRW':'KRW')===c.code?'selected':''}>${c.label}</option>`).join('')}</select></div><div class="ferr" id="f-price-err" style="display:none">기본 가격을 입력해주세요.</div></div>
     </div>
     <div class="f-row" id="new-cat-row" hidden style="background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--r-md);padding:12px"><label style="color:var(--blue)">새 카테고리 이름</label>
      <div style="display:flex;gap:6px"><input class="input" id="new-cat-nm" placeholder="예) 시즌 한정" maxlength="20" style="flex:1;background:var(--surface)"><button type="button" class="btn btn-primary" id="new-cat-ok">추가</button><button type="button" class="btn" id="new-cat-cancel">취소</button></div>
+     <div class="ferr" id="new-cat-err" style="display:none"></div>
      <p style="font-size:12px;color:var(--text-2);margin:8px 0 0">추가하면 이 상품에 바로 적용되고, 카테고리 목록에도 나타나요.</p></div>
     <div class="f-row"><label>설명</label><input class="input" id="f-desc" placeholder="메뉴판에 함께 표시할 한 줄 설명" value="${isEdit?edit.desc:''}" maxlength="60"></div>
    </div>
@@ -329,20 +339,21 @@ function openDrawer(edit){
     </div>
     <div class="acc ${isEdit&&edit.discount?'open':''}" id="acc-dc">
      <button class="acc-head" type="button" data-acc2>할인<span class="st" id="dc-st">${isEdit&&edit.discount?money(edit.discount,edit.cur)+'로 할인 중':'사용 안 함'}</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-     <div class="acc-body"><div class="f-row"><label>할인 적용가</label><div style="position:relative"><input class="input num" id="f-dc" inputmode="decimal" placeholder="예) ${isEdit?Math.round(edit.price*0.9):'4,000'}" value="${isEdit&&edit.discount?edit.discount:''}" style="padding-right:44px"><span id="f-dc-suf" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px">${curOf(isEdit?edit.cur:'KRW').suffix||curOf(isEdit?edit.cur:'KRW').sym}</span></div></div>
+     <div class="acc-body"><div class="f-row"><label>할인 적용가</label><div style="position:relative"><input class="input num" id="f-dc" inputmode="decimal" placeholder="예) ${isEdit?Math.round(edit.price*0.9):'4,000'}" value="${isEdit&&edit.discount?edit.discount:''}" style="padding-right:44px"><span id="f-dc-suf" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px">${curOf(isEdit?edit.cur:'KRW').suffix||curOf(isEdit?edit.cur:'KRW').sym}</span></div><div class="ferr" id="f-dc-err" style="display:none">할인 적용가는 기본 가격보다 낮아야 해요.</div></div>
      <p style="font-size:12px;color:var(--text-3);margin:8px 0 0">메뉴판에는 정가에 취소선이 그어지고 할인가가 강조돼요.</p></div>
     </div>
-    <div class="acc" id="acc-lang">
-     <button class="acc-head" type="button" data-acc2>다국어 이름<span class="st">사용 안 함</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-     <div class="acc-body"><div class="f-row"><label>언어 선택</label><div class="lang-chips"><button type="button" class="chip on">English</button><button type="button" class="chip">中文</button><button type="button" class="chip">日本語</button></div></div>
-      <div class="f-row"><label>영어 이름</label><input class="input" placeholder="예) Americano"></div></div>
+    <div class="acc ${isEdit&&hasI18n(edit)?'open':''}" id="acc-lang">
+     <button class="acc-head" type="button" data-acc2>다국어 이름·설명<span class="st" id="lang-st">사용 안 함</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+     <div class="acc-body">
+      <div class="f-row"><label>언어 선택 <span style="font-weight:500;color:var(--text-3);margin-left:2px">여러 언어를 함께 등록할 수 있어요</span></label><div class="lang-chips" id="lang-chips">${I18N_LANGS.map(l=>`<button type="button" class="chip${isEdit&&langOn(edit,l.k)?' on':''}" data-lang="${l.k}">${l.chip}</button>`).join('')}</div></div>
+      <div id="lang-fields"></div>
+     </div>
     </div>
    </div>
   </div>
   <div class="drawer-foot">
-   <button class="btn" data-close>취소</button><span style="flex:1"></span>
-   ${isEdit?'':'<button class="btn" id="f-save-more">저장 후 계속 추가</button>'}
-   <button class="btn btn-primary" id="f-save">${isEdit?'저장':'등록'}</button>
+   <button class="btn" data-close>취소</button>
+   <button class="btn btn-primary" id="f-save" style="flex:1">${isEdit?'저장':'등록'}</button>
   </div></div>`;
  document.body.appendChild(wrap);
  wrap.addEventListener('mousedown',e=>{if(e.target===wrap)wrap.remove()});
@@ -383,7 +394,8 @@ function openDrawer(edit){
  /* 새 카테고리 인라인 생성 */
  const catSel=wrap.querySelector('#f-cat');
  let prevCat=catSel.value;
- const ncRow=wrap.querySelector('#new-cat-row'),ncNm=wrap.querySelector('#new-cat-nm');
+ const ncRow=wrap.querySelector('#new-cat-row'),ncNm=wrap.querySelector('#new-cat-nm'),ncErr=wrap.querySelector('#new-cat-err');
+ ncNm.addEventListener('input',()=>{ncNm.classList.remove('error');ncErr.style.display='none';});
  catSel.onchange=()=>{
   if(catSel.value==='__new'){ncRow.hidden=false;ncNm.value='';ncNm.focus();}
   else{prevCat=catSel.value;ncRow.hidden=true;}
@@ -391,8 +403,8 @@ function openDrawer(edit){
  const ncCancel=()=>{ncRow.hidden=true;catSel.value=prevCat;};
  const ncOk=()=>{
   const v=ncNm.value.trim();
-  if(!v){ncNm.focus();toast('카테고리 이름을 입력해주세요.',{err:true});return}
-  if(CATS.some(c=>c.name===v)){toast('이미 있는 카테고리 이름이에요.',{err:true});ncNm.select();return}
+  if(!v){ncNm.classList.add('error');ncErr.textContent='카테고리 이름을 입력해주세요.';ncErr.style.display='flex';ncNm.focus();return}
+  if(CATS.some(c=>c.name===v)){ncNm.classList.add('error');ncErr.textContent='이미 있는 카테고리 이름이에요.';ncErr.style.display='flex';ncNm.select();return}
   const nc={id:'c'+(++seq),name:v,emoji:'🏷️'};CATS.push(nc);
   const op=document.createElement('option');op.value=nc.id;op.textContent=v;
   catSel.insertBefore(op,catSel.querySelector('[value="__new"]'));
@@ -406,26 +418,56 @@ function openDrawer(edit){
  /* 통화 변경 시 할인가 접미(원/$/¥) 동기화 */
  const curSel=wrap.querySelector('#f-cur');
  curSel.onchange=()=>{const cu=curOf(curSel.value);const suf=wrap.querySelector('#f-dc-suf');if(suf)suf.textContent=cu.suffix||cu.sym;};
- const save=(keep)=>{
+ /* 입력 시 인라인 에러(입력창 테두리 + helper text) 해제 */
+ nameI.addEventListener('input',()=>{nameI.classList.remove('error');wrap.querySelector('#f-name-err').style.display='none';});
+ const priceInp=wrap.querySelector('#f-price');priceInp.addEventListener('input',()=>{priceInp.classList.remove('error');wrap.querySelector('#f-price-err').style.display='none';});
+ const dcInp=wrap.querySelector('#f-dc');dcInp.addEventListener('input',()=>{dcInp.classList.remove('error');wrap.querySelector('#f-dc-err').style.display='none';});
+ /* 다국어 이름·설명 — 언어 칩 다중 선택 → 선택 언어마다 이름·설명 입력 + 헤더 상태 반영 */
+ const i18nData=isEdit&&edit.i18n?JSON.parse(JSON.stringify(edit.i18n)):{};
+ const selLangs=new Set(I18N_LANGS.filter(l=>langOn({i18n:i18nData},l.k)).map(l=>l.k));
+ const langChipsEl=wrap.querySelector('#lang-chips'),langFieldsEl=wrap.querySelector('#lang-fields'),langStEl=wrap.querySelector('#lang-st');
+ const esc=s=>String(s||'').replace(/"/g,'&quot;');
+ const updateLangStatus=()=>{
+  const n=[...selLangs].filter(k=>((i18nData[k]?.name||'')+(i18nData[k]?.desc||'')).trim()).length;
+  langStEl.textContent=n?`언어 ${n}개 적용 중`:'사용 안 함';
+ };
+ const drawLangFields=()=>{
+  langFieldsEl.innerHTML=I18N_LANGS.filter(l=>selLangs.has(l.k)).map(l=>{const d=i18nData[l.k]||{};
+   return `<div class="lang-block"><div class="lang-block-hd">${l.chip}<span>${l.label}</span></div>
+    <div class="f-row" style="margin-bottom:8px"><label>이름</label><input class="input" data-li="${l.k}:name" placeholder="${l.nmph}" value="${esc(d.name)}" maxlength="40"></div>
+    <div class="f-row" style="margin-bottom:0"><label>설명</label><input class="input" data-li="${l.k}:desc" placeholder="${l.dsph}" value="${esc(d.desc)}" maxlength="60"></div></div>`;}).join('');
+  langFieldsEl.querySelectorAll('[data-li]').forEach(inp=>inp.addEventListener('input',()=>{
+   const[k,f]=inp.dataset.li.split(':');(i18nData[k]=i18nData[k]||{})[f]=inp.value;updateLangStatus();
+  }));
+ };
+ langChipsEl.querySelectorAll('[data-lang]').forEach(ch=>ch.onclick=()=>{
+  const k=ch.dataset.lang;
+  if(selLangs.has(k)){selLangs.delete(k);delete i18nData[k];ch.classList.remove('on');}
+  else{selLangs.add(k);i18nData[k]=i18nData[k]||{name:'',desc:''};ch.classList.add('on');}
+  drawLangFields();updateLangStatus();
+ });
+ drawLangFields();updateLangStatus();
+ const save=()=>{
   const cur=curSel.value;
   const parseMoney=v=>{const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isNaN(n)?0:(curOf(cur).dec?Math.round(n*100)/100:Math.round(n));};
-  const name=nameI.value.trim();const price=parseMoney(wrap.querySelector('#f-price').value);
-  if(!name){nameI.focus();toast('상품 이름을 입력해주세요.',{err:true});return}
-  if(!price){wrap.querySelector('#f-price').focus();toast('기본 가격을 입력해주세요.',{err:true});return}
-  const dc=parseMoney(wrap.querySelector('#f-dc').value)||null;
-  if(dc&&dc>=price){wrap.querySelector('#f-dc').focus();toast('할인 적용가는 기본 가격보다 낮아야 해요.',{err:true});return}
-  if(catSel.value==='__new'){ncRow.hidden=false;ncNm.focus();toast('새 카테고리 이름을 먼저 추가해주세요.',{err:true});return}
+  const name=nameI.value.trim();const priceEl=wrap.querySelector('#f-price');const price=parseMoney(priceEl.value);
+  if(!name){nameI.classList.add('error');wrap.querySelector('#f-name-err').style.display='flex';nameI.focus();return}
+  if(!price){priceEl.classList.add('error');wrap.querySelector('#f-price-err').style.display='flex';priceEl.focus();return}
+  const dcEl=wrap.querySelector('#f-dc');const dc=parseMoney(dcEl.value)||null;
+  if(dc&&dc>=price){dcEl.classList.add('error');wrap.querySelector('#f-dc-err').style.display='flex';dcEl.focus();return}
+  if(catSel.value==='__new'){ncRow.hidden=false;ncNm.classList.add('error');ncErr.textContent='새 카테고리 이름을 먼저 추가해주세요.';ncErr.style.display='flex';ncNm.focus();return}
   const cat=catSel.value;
   const opt=[...wrap.querySelectorAll('[data-optset].on')].map(c=>c.dataset.optset);
   const finalImgs=imgs.length?imgs:[{e:'🍽️',h:30}];
   const finalMain=Math.min(mainIdx,finalImgs.length-1);
-  if(isEdit){Object.assign(edit,{name,price,cur,desc:wrap.querySelector('#f-desc').value.trim(),cat,opt,discount:dc,imgs:finalImgs,mainIdx:finalMain,mod:'07.04'});toast(usedIn(edit)?`'${name}' 수정을 완료했어요. 사용 중인 메뉴판에 바로 반영됐어요.`:'상품을 수정했어요');}
-  else{const np=P('p'+(++seq),name,wrap.querySelector('#f-desc').value.trim(),cat,price,opt,dc,'sale','🍽️',30,'07.04');np.cur=cur;np.imgs=finalImgs;np.mainIdx=finalMain;products.unshift(np);toast(`'${name}'을 등록했어요.`);}
+  /* 다국어: 이름·설명 중 하나라도 입력된 언어만 저장 (백엔드 메뉴 렌더 시 언어별 표시에 사용) */
+  const i18n={};I18N_LANGS.forEach(l=>{const d=i18nData[l.k];if(d&&((d.name||'').trim()||(d.desc||'').trim()))i18n[l.k]={name:(d.name||'').trim(),desc:(d.desc||'').trim()};});
+  if(isEdit){Object.assign(edit,{name,price,cur,desc:wrap.querySelector('#f-desc').value.trim(),cat,opt,discount:dc,imgs:finalImgs,mainIdx:finalMain,i18n,mod:'07.04'});toast(usedIn(edit)?`'${name}' 수정을 완료했어요. 사용 중인 메뉴판에 바로 반영됐어요.`:'상품을 수정했어요');}
+  else{const np=P('p'+(++seq),name,wrap.querySelector('#f-desc').value.trim(),cat,price,opt,dc,'sale','🍽️',30,'07.04');np.cur=cur;np.imgs=finalImgs;np.mainIdx=finalMain;np.i18n=i18n;products.unshift(np);toast(`'${name}'을 등록했어요.`);}
   renderCats();renderProducts();renderBoard();
-  if(keep){wrap.remove();openDrawer();}else wrap.remove();
+  wrap.remove();
  };
- wrap.querySelector('#f-save').onclick=()=>save(false);
- wrap.querySelector('#f-save-more')?.addEventListener('click',()=>save(true));
+ wrap.querySelector('#f-save').onclick=()=>save();
 }
 $('#btn-add-product').onclick=()=>openDrawer();
 $('#btn-add-more').onclick=e=>popMenu(e.currentTarget,[
@@ -481,10 +523,25 @@ function openOptMan(){
    <button class="btn btn-sm btn-primary" id="opt-add">추가</button>
   </div>
  `,{width:'560px',onMount:ov=>{
-  const draw=()=>{ov.querySelector('#opt-list').innerHTML=`<div class="optset-pick" style="padding-bottom:16px">${optionSets.map(o=>`
-   <div class="optset-row"><b>${o.name}</b><span class="vals">${o.vals.map(v=>`<span class="val">${v}</span>`).join('')}</span>
-   <button class="icon-btn" data-odel="${o.id}" aria-label="삭제">${IC.trash}</button></div>`).join('')||'<div class="empty"><b>등록된 옵션이 없어요</b></div>'}</div>`;
-   ov.querySelectorAll('[data-odel]').forEach(b=>b.onclick=()=>{optionSets=optionSets.filter(o=>o.id!==b.dataset.odel);draw();toast('옵션 세트를 삭제했어요.')});
+  const esc=s=>String(s||'').replace(/"/g,'&quot;');
+  let editId=null;
+  const draw=()=>{ov.querySelector('#opt-list').innerHTML=`<div class="optset-pick" style="padding-bottom:16px">${optionSets.map(o=>o.id===editId
+   ?`<div class="optset-row optset-edit">
+     <input class="input input-sm" data-oenm placeholder="옵션명" value="${esc(o.name)}" maxlength="20" style="width:110px">
+     <input class="input input-sm" data-oevals placeholder="항목을 쉼표로 구분 (예: Tall +0, Grande +500)" value="${esc(o.vals.join(', '))}" style="flex:1">
+     <button class="btn btn-sm btn-primary" data-osave="${o.id}">저장</button>
+     <button class="btn btn-sm" data-ocancel aria-label="취소">취소</button></div>`
+   :`<div class="optset-row"><b>${o.name}</b><span class="vals">${o.vals.map(v=>`<span class="val">${v}</span>`).join('')}</span>
+     <button class="icon-btn" data-oedit="${o.id}" aria-label="수정">${IC.edit}</button>
+     <button class="icon-btn" data-odel="${o.id}" aria-label="삭제">${IC.trash}</button></div>`).join('')||'<div class="empty"><b>등록된 옵션이 없어요</b></div>'}</div>`;
+   ov.querySelectorAll('[data-oedit]').forEach(b=>b.onclick=()=>{editId=b.dataset.oedit;draw();const i=ov.querySelector('[data-oenm]');if(i){i.focus();i.select();}});
+   ov.querySelectorAll('[data-odel]').forEach(b=>b.onclick=()=>{optionSets=optionSets.filter(o=>o.id!==b.dataset.odel);if(editId===b.dataset.odel)editId=null;draw();renderProducts();renderBoard();toast('옵션 세트를 삭제했어요.')});
+   ov.querySelectorAll('[data-ocancel]').forEach(b=>b.onclick=()=>{editId=null;draw();});
+   const saveEdit=id=>{const row=ov.querySelector('.optset-edit');const nm=row.querySelector('[data-oenm]').value.trim(),vals=row.querySelector('[data-oevals]').value.split(',').map(s=>s.trim()).filter(Boolean);
+    if(!nm||!vals.length){toast('옵션명과 항목을 입력해주세요.',{err:true});return}
+    const o=optionSets.find(x=>x.id===id);if(o){o.name=nm;o.vals=vals;}editId=null;draw();renderProducts();renderBoard();toast(`'${nm}' 옵션을 수정했어요.`);};
+   ov.querySelectorAll('[data-osave]').forEach(b=>b.onclick=()=>saveEdit(b.dataset.osave));
+   const er=ov.querySelector('.optset-edit');if(er)er.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveEdit(editId);}else if(e.key==='Escape'){e.stopPropagation();editId=null;draw();}}));
   };draw();
   ov.querySelector('#opt-add').onclick=()=>{
    const nm=ov.querySelector('#opt-nm').value.trim(),vals=ov.querySelector('#opt-vals').value.split(',').map(s=>s.trim()).filter(Boolean);
