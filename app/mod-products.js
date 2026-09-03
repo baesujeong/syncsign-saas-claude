@@ -748,10 +748,10 @@ const SPLIT_PRESETS=[
 ];
 /* 대기/호출 위젯 — 서비스 제공 4가지 레이아웃(고정 비율) × Light/Dark 테마. 사용자는 디자인을 직접 편집하지 않고 조합만 선택 */
 const CALL_LAYOUTS=[
- {id:'pickup', name:'픽업 보드', ratio:600/1015},
- {id:'grid',   name:'번호판',    ratio:600/760},
- {id:'feature',name:'대기 번호', ratio:600/900},
- {id:'ticket', name:'번호표',    ratio:600/720},
+ {id:'pickup', name:'픽업 보드', desc:'PICK UP 안내 + 대기 번호', ratio:600/1015},
+ {id:'grid',   name:'번호판',    desc:'번호 격자 표시',          ratio:600/760},
+ {id:'feature',name:'대기 번호', desc:'최근 호출 번호 강조',      ratio:600/900},
+ {id:'ticket', name:'번호표',    desc:'현재 번호 + 대기 목록',    ratio:600/720},
 ];
 /* 마크업 — 렌더 폭(w px)을 받아 --u(=w/100)로 텍스트·여백을 스케일. 캔버스=객체 폭, 미리보기=고정 패널 기준 폭 */
 function callWidgetHtml(layout,theme,w){
@@ -1709,9 +1709,12 @@ function drawWgBody(body,hasMenu){
     </button>`).join('')}</div>`;
   body.querySelectorAll('[data-mtype]').forEach(b=>b.onclick=()=>{const t=b.dataset.mtype;createWidget({type:t});toast(`타입 ${t} 메뉴판을 추가했어요. 상품을 불러와 채워보세요.`);});
  }else if(wgTab==='call'){
-  /* 대기/호출 — 4가지 레이아웃 카드(실제 번호 미리보기, 라이트 기준). 추가 후 테마 전환 */
-  body.innerHTML=`<p style="font-size:13px;color:var(--text-2);margin:0 0 12px;line-height:1.6">서비스에서 제공하는 4가지 레이아웃 중 원하는 스타일을 선택해 추가하세요. 추가 후 Light/Dark 테마를 바꿀 수 있어요.</p>
-   <div class="wcall-lib">${CALL_LAYOUTS.map(L=>`<button class="wcall-card" data-wgadd="${L.id}"><div class="wcall-prev" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,'light',129)}</div><div class="wcall-cap">${L.name}</div></button>`).join('')}</div>`;
+  /* 대기/호출 — 4가지 레이아웃 카드(썸네일+제목·설명, 메뉴 팔레트와 통일 · 1행 배치). 추가 후 테마 전환 */
+  body.innerHTML=`<p class="wg-intro">서비스에서 제공하는 4가지 레이아웃 중 원하는 스타일을 선택해 추가하세요. 추가 후 Light/Dark 테마를 바꿀 수 있어요.</p>
+   <div class="mtype-lib">${CALL_LAYOUTS.map(L=>`<button class="mtype-card" data-wgadd="${L.id}">
+     <div class="mtype-prev"><div class="wcall-thumb" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,'light',Math.round(60*L.ratio))}</div></div>
+     <div class="mtype-cap"><b>${L.name}</b><span>${L.desc}</span></div>
+    </button>`).join('')}</div>`;
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{const L=CALL_LAYOUTS.find(x=>x.id===b.dataset.wgadd);const w=Math.round(canvasW*0.31);addObject('widget',{kind:'call',layout:L.id,theme:'light',ratio:L.ratio,w,h:Math.round(w/L.ratio)});});
  }else{
   const DEFS=wgTab==='weather'?WEATHER_STYLES:NEWS_STYLES;

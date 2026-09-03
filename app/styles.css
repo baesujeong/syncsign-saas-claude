@@ -1047,12 +1047,8 @@ table.grid tr.checked td{background:var(--blue-50)}
 .wg-news.st-card{flex-direction:column;padding:12px 14px;gap:6px;background:#fff;border:1px solid var(--border-2)}
 .wg-news.st-card .tag{font-size:12px;font-weight:800;letter-spacing:.1em;color:#E5484D}
 .wg-news.st-card ul{margin:0;padding-left:16px;font-size:12px;line-height:1.7;color:var(--text)}
-/* 대기/호출 위젯 라이브러리 카드 */
-.wcall-lib{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.wcall-card{border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface);transition:border-color .12s,box-shadow .12s}
-.wcall-card:hover{border-color:var(--blue-200);box-shadow:var(--sh-sm)}
-.wcall-prev{width:100%;border-radius:6px;overflow:hidden;background:var(--sunken)}
-.wcall-cap{font-size:12px;font-weight:600;text-align:center;color:var(--text-2);margin-top:7px}
+/* 대기/호출 위젯 라이브러리 카드 — 메뉴 팔레트(.mtype-*)와 통일, 썸네일 프리뷰만 고정 높이로 맞춤 */
+.wcall-thumb{height:60px;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(20,28,40,.14)}
 /* 대기/호출 위젯 설정 패널 */
 .cw-hint{font-size:12px;color:var(--text-3);margin:8px 0 0}
 .cw-layouts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
