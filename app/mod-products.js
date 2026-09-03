@@ -29,14 +29,35 @@ products[8].imgs.push({e:'🥛',h:340});
 products[11].imgs.push({e:'🍮',h:44});
 /* 신규 가입 직후 환경(#tour): 등록된 상품 비움 (카테고리 구조는 유지) */
 if(window.EMPTY_MODE)products.length=0;
-let optionSets=[{id:'size',name:'사이즈',vals:['Tall +0','Grande +500','Venti +1,000']},{id:'temp',name:'온도',vals:['HOT','ICE']},{id:'shot',name:'샷 추가',vals:['+500']}];
-const SIZE_LABELS=[['Tall',0],['Grande',500],['Venti',1000]];
+/* 옵션 그룹 = {id,name,select:'single'|'multi',items:[{id,name,delta}]}
+   delta=가격 변동값(숫자,원) · select=선택 방식. 메뉴 위젯은 '가격옵션'으로 지정한 그룹의 항목 값을 가격으로 표시 */
+let optionSets=[
+ {id:'size',name:'사이즈',select:'single',items:[{id:'s1',name:'Tall',delta:0},{id:'s2',name:'Grande',delta:500},{id:'s3',name:'Venti',delta:1000}]},
+ {id:'temp',name:'온도',select:'single',items:[{id:'t1',name:'HOT',delta:0},{id:'t2',name:'ICE',delta:0}]},
+ {id:'shot',name:'샷 추가',select:'multi',items:[{id:'sh1',name:'샷 추가',delta:500}]},
+];
+const deltaLabel=d=>(d<0?'−':'+')+fmt(Math.abs(d))+'원';
 const CONTENT_NAME=()=>document.getElementById('content-name').value||'싱크사인 메인메뉴';
 
-/* 위젯 상태 (에디터) */
-let widget=null; // {mode,cat,items,excluded,layout,cols,show,soldout,sort}
-const defaultShow=()=>({img:true,desc:true,price:true,opt:false,discount:true});
+/* 위젯 상태 (에디터) — 메뉴 위젯 (기획서 기준): 스타일 타입 A~E + 스타일/옵션 설정
+   {type,items,cols,bg:{on,fill,border,width},radius,padX,padY,imgRatio,show:{desc,optName,i18n},priceOpt,i18nLangs,soldout,sort}
+   items는 상품 ID 참조 → 상품 관리에서 정보 수정/삭제 시 renderBoard()로 자동 반영 */
+let widget=null;
+/* 메뉴 스타일 타입 A~E — 스타일/옵션 설정으로 세부 변형. img=이미지 포함 여부(C·D) */
+const MENU_TYPES=[
+ {id:'A',name:'타입 A',desc:'메뉴명 · 설명 · 가격',img:false},
+ {id:'B',name:'타입 B',desc:'메뉴명 + 가격 한 줄',img:false},
+ {id:'C',name:'타입 C',desc:'이미지(상단) + 정보',img:true},
+ {id:'D',name:'타입 D',desc:'이미지(좌측) + 정보',img:true},
+ {id:'E',name:'타입 E',desc:'카테고리 리스트',img:false},
+];
+const menuType=t=>MENU_TYPES.find(x=>x.id===t)||MENU_TYPES[0];
+const IMG_RATIOS=['1:1','3:4','16:9','4:3','9:16'];
+const ratioCss=r=>String(r||'1:1').replace(':','/');
+/* 디폴트: 설명 활성화, 옵션명 비활성화, 다국어 비활성화 (전 타입 공통) */
+const defaultShow=()=>({desc:true,optName:false,i18n:false});
 let style={title:'SIGNATURE MENU',accent:'#F7C860',lang:false};
+let menuTab='items'; /* 메뉴 위젯 패널 탭: items | style | opt */
 
 /* 필터 상태 (상품 관리) */
 let flt={q:'',st:'all',cat:'all',sort:'new'};
@@ -171,7 +192,7 @@ function delCat(id){
  const doDelete=()=>{
   const delIds=new Set(inCat.map(p=>p.id));
   products=products.filter(p=>p.cat!==id);
-  if(widget){widget.items=widget.items.filter(i=>!delIds.has(i));if(widget.cat===id)widget.cat=null;}
+  menuObjs().forEach(mo=>mo.menu.items=mo.menu.items.filter(i=>!delIds.has(i)));
   const idx=CATS.findIndex(x=>x.id===id);if(idx>-1)CATS.splice(idx,1);
   if(flt.cat===id)flt.cat='all';
   renderCats();renderProducts();renderBoard();
@@ -224,7 +245,6 @@ const usedInBoards=p=>p?MENU_BOARDS.filter(b=>b.items.includes(p.id)):[];
 /* 옵션 세트 — p.opt는 적용된 세트 id 배열. 목록/라벨(예: '사이즈 3 · 온도 2')과 사이즈 옵션 여부 */
 const optSetsOf=p=>((p&&p.opt)||[]).map(id=>optionSets.find(o=>o.id===id)).filter(Boolean);
 const optLabel=p=>{const n=optSetsOf(p).length;return n?`옵션 ${n}개`:null;};
-const hasSize=p=>((p&&p.opt)||[]).includes('size');
 /* 사용 중인 템플릿 미리보기 모달 — 제목 + 미리보기 + 닫기/편집하기(부가정보 없음) */
 function openBoardPreview(board){
  const ov=openModal(`
@@ -282,7 +302,7 @@ function bindRows(){
    {label:'복사',icon:IC.copy,onClick:()=>{const cp={...p,imgs:p.imgs.map(i=>({...i})),id:'p'+(++seq),name:p.name+' (복사)',mod:'07.04'};products.unshift(cp);renderCats();renderProducts();toast('상품을 복사했어요.')}},
    'sep',
    {label:'삭제',icon:IC.trash,danger:true,onClick:()=>{
-    confirmDialog({title:`'${p.name}' 상품을 삭제할까요?`,desc:'삭제한 상품은 복구할 수 없어요. 이 상품을 사용 중인 메뉴 위젯에도 더 이상 상품 정보가 표시되지 않아요.',onConfirm:()=>{products=products.filter(x=>x.id!==p.id);if(widget)widget.items=widget.items.filter(i=>i!==p.id);renderCats();renderProducts();renderBoard();toast('상품을 삭제했어요.')}});
+    confirmDialog({title:`'${p.name}' 상품을 삭제할까요?`,desc:'삭제한 상품은 복구할 수 없어요. 이 상품을 사용 중인 메뉴 위젯에도 더 이상 상품 정보가 표시되지 않아요.',onConfirm:()=>{products=products.filter(x=>x.id!==p.id);menuObjs().forEach(mo=>mo.menu.items=mo.menu.items.filter(i=>i!==p.id));renderCats();renderProducts();renderBoard();toast('상품을 삭제했어요.')}});
    }},
   ]);
  });
@@ -319,7 +339,7 @@ $('#bulk-close').onclick=()=>{checked.clear();renderProducts()};
 $('#bulk-status').onclick=()=>{checked.forEach(id=>prodOf(id)&&(prodOf(id).status='soldout'));const n=checked.size;checked.clear();renderProducts();renderBoard();toast(`${n}개 상품을 품절 처리했어요. 메뉴판에 자동 반영돼요.`)};
 $('#bulk-del').onclick=()=>{
  const n=checked.size;
- confirmDialog({title:`상품 ${n}개를 삭제할까요?`,desc:'삭제한 상품은 복구할 수 없어요. 선택한 상품을 사용 중인 메뉴 위젯에도 더 이상 상품 정보가 표시되지 않아요.',onConfirm:()=>{products=products.filter(p=>!checked.has(p.id));if(widget)widget.items=widget.items.filter(i=>!checked.has(i));checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 삭제했어요.`)}});
+ confirmDialog({title:`상품 ${n}개를 삭제할까요?`,desc:'삭제한 상품은 복구할 수 없어요. 선택한 상품을 사용 중인 메뉴 위젯에도 더 이상 상품 정보가 표시되지 않아요.',onConfirm:()=>{products=products.filter(p=>!checked.has(p.id));menuObjs().forEach(mo=>mo.menu.items=mo.menu.items.filter(i=>!checked.has(i)));checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 삭제했어요.`)}});
 };
 $('#bulk-cat').onclick=e=>{
  popMenu(e.currentTarget,CATS.map(c=>({label:c.emoji+' '+c.name,onClick:()=>{checked.forEach(id=>prodOf(id)&&(prodOf(id).cat=c.id));const n=checked.size;checked.clear();renderCats();renderProducts();renderBoard();toast(`${n}개 상품을 '${c.name}'(으)로 이동했어요.`)}})));
@@ -359,7 +379,7 @@ function openDrawer(edit){
      <button class="acc-head" type="button" data-acc2>가격 옵션<span class="st" id="opt-st">${isEdit&&(edit.opt||[]).length?`옵션 세트 ${edit.opt.length}개 적용 중`:'사용 안 함'}</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
      <div class="acc-body"><div class="f-row"><label>옵션 세트 선택 <button type="button" class="used-link" id="go-optman" style="margin-left:auto">옵션 관리</button></label>
       <div class="optset-pick">${optionSets.map(o=>`
-       <label class="optset-row" style="cursor:pointer"><span class="checkbox ${isEdit&&(edit.opt||[]).includes(o.id)?'on':''}" data-optset="${o.id}">${IC.check}</span><b>${o.name}</b><span class="vals">${o.vals.map(v=>`<span class="val">${v}</span>`).join('')}</span></label>`).join('')}
+       <label class="optset-row" style="cursor:pointer"><span class="checkbox ${isEdit&&(edit.opt||[]).includes(o.id)?'on':''}" data-optset="${o.id}">${IC.check}</span><b>${o.name}</b><span class="vals">${o.items.map(it=>`<span class="val">${it.name} ${deltaLabel(it.delta)}</span>`).join('')}</span></label>`).join('')}
       </div></div></div>
     </div>
     <div class="acc ${isEdit&&edit.discount?'open':''}" id="acc-dc">
@@ -540,173 +560,174 @@ function openImport(){
 /* ═══════════ 옵션 관리 ═══════════ */
 function openOptMan(){
  openModal(`
-  <div class="modal-head"><div><h2>옵션 관리</h2><div class="sub">사이즈·온도처럼 여러 상품이 함께 쓰는 가격 옵션 세트예요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-head"><div><h2>옵션 관리</h2><div class="sub">사이즈·온도처럼 여러 상품이 함께 쓰는 옵션 그룹이에요. 항목마다 가격 변동값을 지정하면 메뉴판 가격이 자동 계산돼요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="modal-body" id="opt-list"></div>
-  <div class="modal-foot" style="border-top:1px solid var(--border);flex-direction:column;align-items:stretch;gap:0">
-   <div style="display:flex;align-items:center;gap:10px">
-    <input class="input input-sm" id="opt-nm" placeholder="옵션명 (예: 사이즈)" style="width:130px">
-    <input class="input input-sm" id="opt-vals" placeholder="항목을 쉼표로 구분 (예: Tall +0, Grande +500)" style="flex:1">
-    <button class="btn btn-sm btn-primary" id="opt-add">추가</button>
-   </div>
-   <div class="ferr" id="opt-add-err" style="display:none">옵션명과 항목을 입력해주세요.</div>
-  </div>
+  <div class="modal-foot" style="border-top:1px solid var(--border)"><span class="grow"></span><button class="btn btn-sm btn-primary" id="opt-addgrp"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>옵션 그룹 추가</button></div>
  `,{width:'560px',onMount:ov=>{
   const esc=s=>String(s||'').replace(/"/g,'&quot;');
-  let editId=null;
-  const draw=()=>{ov.querySelector('#opt-list').innerHTML=`<div class="optset-pick" style="padding-bottom:16px">${optionSets.map(o=>o.id===editId
-   ?`<div class="optset-row optset-edit">
-     <input class="input input-sm" data-oenm placeholder="옵션명" value="${esc(o.name)}" maxlength="20" style="width:110px">
-     <input class="input input-sm" data-oevals placeholder="항목을 쉼표로 구분 (예: Tall +0, Grande +500)" value="${esc(o.vals.join(', '))}" style="flex:1">
-     <button class="btn btn-sm btn-primary" data-osave="${o.id}">저장</button>
-     <button class="btn btn-sm" data-ocancel aria-label="취소">취소</button></div>`
-   :`<div class="optset-row"><b>${o.name}</b><span class="vals">${o.vals.map(v=>`<span class="val">${v}</span>`).join('')}</span>
-     <button class="icon-btn" data-oedit="${o.id}" aria-label="수정">${IC.edit}</button>
-     <button class="icon-btn" data-odel="${o.id}" aria-label="삭제">${IC.trash}</button></div>`).join('')||'<div class="empty"><b>등록된 옵션이 없어요</b></div>'}</div>`;
-   ov.querySelectorAll('[data-oedit]').forEach(b=>b.onclick=()=>{editId=b.dataset.oedit;draw();const i=ov.querySelector('[data-oenm]');if(i){i.focus();i.select();}});
-   ov.querySelectorAll('[data-odel]').forEach(b=>b.onclick=()=>{optionSets=optionSets.filter(o=>o.id!==b.dataset.odel);if(editId===b.dataset.odel)editId=null;draw();renderProducts();renderBoard();toast('옵션 세트를 삭제했어요.')});
-   ov.querySelectorAll('[data-ocancel]').forEach(b=>b.onclick=()=>{editId=null;draw();});
-   const saveEdit=id=>{const row=ov.querySelector('.optset-edit');const nm=row.querySelector('[data-oenm]').value.trim(),vals=row.querySelector('[data-oevals]').value.split(',').map(s=>s.trim()).filter(Boolean);
-    if(!nm||!vals.length){toast('옵션명과 항목을 입력해주세요.',{err:true});return}
-    const o=optionSets.find(x=>x.id===id);if(o){o.name=nm;o.vals=vals;}editId=null;draw();renderProducts();renderBoard();toast(`'${nm}' 옵션을 수정했어요.`);};
-   ov.querySelectorAll('[data-osave]').forEach(b=>b.onclick=()=>saveEdit(b.dataset.osave));
-   const er=ov.querySelector('.optset-edit');if(er)er.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveEdit(editId);}else if(e.key==='Escape'){e.stopPropagation();editId=null;draw();}}));
-  };draw();
-  const nmEl=ov.querySelector('#opt-nm'),valsEl=ov.querySelector('#opt-vals'),addErr=ov.querySelector('#opt-add-err');
-  /* 입력 시 인라인 에러 해제 — 값이 채워진 필드의 테두리를 풀고, 둘 다 채워지면 helper text 숨김 */
-  const clearAddErr=()=>{
-   if(nmEl.value.trim())nmEl.classList.remove('error');
-   if(valsEl.value.trim())valsEl.classList.remove('error');
-   if(nmEl.value.trim()&&valsEl.value.split(',').map(s=>s.trim()).filter(Boolean).length)addErr.style.display='none';
+  let editId=null;   /* 편집 중인 그룹 id 또는 '__new' */
+  let wName='',wItems=[],wSelect='single';   /* 편집 폼 작업 상태 */
+  const readInputs=()=>{const blk=ov.querySelector('.optgrp-edit');if(!blk)return;
+   wName=blk.querySelector('[data-gname]').value;
+   wItems=[...blk.querySelectorAll('[data-oi]')].map(r=>({name:r.querySelector('[data-iname]').value,delta:r.querySelector('[data-idelta]').value}));};
+  const startEdit=g=>{editId=g?g.id:'__new';wName=g?g.name:'';wSelect=g?(g.select||'single'):'single';wItems=g?g.items.map(i=>({name:i.name,delta:String(i.delta)})):[{name:'',delta:''}];draw();const i=ov.querySelector('.optgrp-edit [data-gname]');if(i){i.focus();i.select();}};
+  const editBlock=()=>`<div class="optgrp-edit">
+     <label class="oe-lbl">옵션 그룹명</label>
+     <input class="input input-sm" data-gname value="${esc(wName)}" maxlength="20" placeholder="예) 사이즈">
+     <label class="oe-lbl" style="margin-top:12px">선택 방식</label>
+     <div class="oe-sel">
+      <button type="button" class="${wSelect==='single'?'on':''}" data-sel="single">단일 선택</button>
+      <button type="button" class="${wSelect==='multi'?'on':''}" data-sel="multi">복수 선택</button>
+     </div>
+     <label class="oe-lbl" style="margin-top:12px">옵션 항목</label>
+     <div class="oe-items">${wItems.map((it,i)=>`<div class="oe-item" data-oi="${i}">
+        <input class="input input-sm" data-iname value="${esc(it.name)}" maxlength="24" placeholder="옵션명 (예: Tall)">
+        <div class="oe-price"><span class="pfx">+</span><input class="input input-sm num" data-idelta value="${esc(it.delta)}" inputmode="numeric" placeholder="0"><span class="sfx">원</span></div>
+        <button class="icon-btn oe-del" data-idel="${i}" aria-label="항목 삭제">${IC.trash}</button>
+      </div>`).join('')}</div>
+     <button class="btn btn-sm oe-additem" data-iadd><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>항목 추가</button>
+     <div class="ferr" data-gerr style="display:none"></div>
+     <div class="oe-actions"><button class="btn btn-sm" data-gcancel>취소</button><button class="btn btn-sm btn-primary" data-gsave>저장</button></div>
+    </div>`;
+  const draw=()=>{
+   ov.querySelector('#opt-list').innerHTML=`<div class="optset-pick" style="padding-bottom:8px">${
+    optionSets.map(o=>o.id===editId?editBlock()
+     :`<div class="optset-row"><b>${o.name}</b><span class="opt-sel-tag">${(o.select||'single')==='multi'?'복수 선택':'단일 선택'}</span><span class="vals">${o.items.map(it=>`<span class="val">${it.name} ${deltaLabel(it.delta)}</span>`).join('')}</span>
+        <button class="icon-btn" data-oedit="${o.id}" aria-label="수정">${IC.edit}</button>
+        <button class="icon-btn" data-odel="${o.id}" aria-label="삭제">${IC.trash}</button></div>`).join('')
+    }${editId==='__new'?editBlock():''}${(!optionSets.length&&editId!=='__new')?'<div class="empty"><b>등록된 옵션 그룹이 없어요</b></div>':''}</div>`;
+   ov.querySelectorAll('[data-oedit]').forEach(b=>b.onclick=()=>startEdit(optionSets.find(x=>x.id===b.dataset.oedit)));
+   ov.querySelectorAll('[data-odel]').forEach(b=>b.onclick=()=>{optionSets=optionSets.filter(o=>o.id!==b.dataset.odel);if(editId===b.dataset.odel)editId=null;draw();renderProducts();renderBoard();toast('옵션 그룹을 삭제했어요.')});
+   const ag=ov.querySelector('#opt-addgrp');if(ag)ag.disabled=!!editId;
+   wireEdit();
   };
-  nmEl.addEventListener('input',clearAddErr);valsEl.addEventListener('input',clearAddErr);
-  ov.querySelector('#opt-add').onclick=()=>{
-   const nm=nmEl.value.trim(),vals=valsEl.value.split(',').map(s=>s.trim()).filter(Boolean);
-   if(!nm||!vals.length){nmEl.classList.toggle('error',!nm);valsEl.classList.toggle('error',!vals.length);addErr.style.display='flex';(!nm?nmEl:valsEl).focus();return}
-   optionSets.push({id:'o'+(++seq),name:nm,vals});nmEl.value='';valsEl.value='';nmEl.classList.remove('error');valsEl.classList.remove('error');addErr.style.display='none';draw();toast(`'${nm}' 옵션을 추가했어요.`);
+  const wireEdit=()=>{
+   const blk=ov.querySelector('.optgrp-edit');if(!blk)return;
+   blk.querySelector('[data-iadd]').onclick=()=>{readInputs();wItems.push({name:'',delta:''});draw();const rows=ov.querySelectorAll('.optgrp-edit [data-iname]');if(rows.length)rows[rows.length-1].focus();};
+   blk.querySelectorAll('[data-idel]').forEach(b=>b.onclick=()=>{readInputs();wItems.splice(+b.dataset.idel,1);if(!wItems.length)wItems.push({name:'',delta:''});draw();});
+   blk.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{wSelect=b.dataset.sel;blk.querySelectorAll('[data-sel]').forEach(x=>x.classList.toggle('on',x===b));});
+   blk.querySelector('[data-gcancel]').onclick=()=>{editId=null;draw();};
+   blk.querySelector('[data-gsave]').onclick=saveGroup;
+   blk.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{i.classList.remove('error');blk.querySelector('[data-gerr]').style.display='none';}));
   };
+  const saveGroup=()=>{
+   readInputs();
+   const name=wName.trim();
+   const items=wItems.map(it=>({name:it.name.trim(),delta:parseInt(String(it.delta).replace(/[^0-9-]/g,''),10)||0})).filter(it=>it.name);
+   const err=ov.querySelector('.optgrp-edit [data-gerr]');
+   if(!name){err.textContent='옵션 그룹명을 입력해주세요.';err.style.display='flex';const g=ov.querySelector('.optgrp-edit [data-gname]');g.classList.add('error');g.focus();return}
+   if(!items.length){err.textContent='옵션 항목을 최소 1개 입력해주세요.';err.style.display='flex';return}
+   if(editId==='__new')optionSets.push({id:'og'+(++seq),name,select:wSelect,items:items.map(it=>({id:'oi'+(++seq),...it}))});
+   else{const g=optionSets.find(x=>x.id===editId);if(g){g.name=name;g.select=wSelect;g.items=items.map(it=>({id:'oi'+(++seq),...it}));}}
+   const nm=name;editId=null;draw();renderProducts();renderBoard();toast(`'${nm}' 옵션 그룹을 저장했어요.`);
+  };
+  draw();
+  ov.querySelector('#opt-addgrp').onclick=()=>{if(!editId)startEdit(null);};
  }});
 }
 $('#btn-optman').onclick=openOptMan;
 $('#onboard-close').onclick=()=>$('#onboard').remove();
 
 /* ═══════════ 화면 전환 ═══════════ */
-function gotoEditor(){document.getElementById('app').hidden=true;$('#screen-editor').hidden=false;renderEditor();if(!canvasConfigured){canvasConfigured=true;openCanvasSetupModal();}}
+/* 에디터 진입 — 기본 1920×1080 빈 캔버스 로드. 크기는 좌측 상단 '캔버스 설정'에서 변경 */
+function gotoEditor(){document.getElementById('app').hidden=true;$('#screen-editor').hidden=false;renderEditor();}
 function gotoAdmin(){$('#screen-editor').hidden=true;document.getElementById('app').hidden=false;window.__afterMenuBack&&window.__afterMenuBack();renderCats();renderProducts();}
 $$('[data-goto-editor]').forEach(b=>b.addEventListener('click',gotoEditor));
 $('#ed-back').onclick=gotoAdmin;
 
-/* ═══════════ 에디터 : 위젯 생성(메뉴) ═══════════ */
-const LAYOUTS=[
- {id:'list',name:'리스트',ic:'<i style="grid-column:1/4;height:5px"></i><i style="grid-column:1/4;height:5px"></i><i style="grid-column:1/4;height:5px"></i><i style="grid-column:1/4;height:5px"></i>',cols:false},
- {id:'cols2',name:'2단 리스트',ic:'<i style="height:5px"></i><i style="height:5px"></i><i style="height:5px"></i><i style="height:5px"></i><i style="height:5px"></i><i style="height:5px"></i>',cols:false,ic2:true},
- {id:'cards',name:'카드형',ic:'<i></i><i></i><i></i><i></i><i></i><i></i>',cols:[2,5]},
- {id:'media',name:'이미지 리스트',ic:'<i style="width:10px;height:10px"></i><i style="height:10px;grid-column:2/4"></i><i style="width:10px;height:10px"></i><i style="height:10px;grid-column:2/4"></i>',cols:[1,2]},
- {id:'board',name:'카테고리 보드',ic:'<i style="height:4px"></i><i style="height:4px"></i><i style="height:4px"></i><i style="height:14px"></i><i style="height:14px"></i><i style="height:14px"></i>',cols:[2,3]},
-];
-function widgetItemIds(){
- if(!widget)return[];
- if(widget.mode==='category'){
-  let arr=products.filter(p=>p.cat===widget.cat&&!widget.excluded.includes(p.id)).map(p=>p.id);
-  return sortIds(arr);
- }
- return sortIds(widget.items.filter(id=>prodOf(id)));
+/* ═══════════ 에디터 : 위젯 생성(메뉴) ═══════════
+   설정은 캔버스 오브젝트별 o.menu에 보관 → 한 템플릿에 메뉴 위젯 여러 개 배치 가능.
+   전역 widget은 '현재 편집 중인(선택된) 메뉴 오브젝트의 o.menu'를 가리킴 */
+const menuObjs=()=>objects.filter(o=>o.type==='widget'&&o.kind==='menu');
+function newMenuCfg(cfg){return{type:cfg.type||'A',items:cfg.items||[],cols:4,bg:{on:true,fill:'#FFFFFF',border:'#E5E7EB',width:1},radius:0,padX:20,padY:20,imgRatio:'1:1',show:defaultShow(),priceOpt:'',i18nLangs:['en'],i18nFields:{name:true,desc:true},soldout:'badge',sort:'manual'};}
+function widgetItemIds(w=widget){
+ if(!w)return[];
+ return sortIds(w.items.filter(id=>prodOf(id)),w);
 }
-function sortIds(arr){
- const s=widget.sort;
+function sortIds(arr,w=widget){
+ const s=w.sort;
  if(s==='name')return[...arr].sort((a,b)=>prodOf(a).name.localeCompare(prodOf(b).name,'ko'));
  if(s==='priceAsc')return[...arr].sort((a,b)=>prodOf(a).price-prodOf(b).price);
  if(s==='priceDesc')return[...arr].sort((a,b)=>prodOf(b).price-prodOf(a).price);
  return arr;
 }
-/* 메뉴 위젯은 캔버스 오브젝트 1개(kind:'menu')로 존재 — 기존 widget/style 전역과 그대로 연동해
-   기존 상품 연동 로직을 그대로 재사용하면서 위치·크기만 새 오브젝트 엔진에 편입 */
+/* 타입 선택 시 새 메뉴 위젯 오브젝트 생성(여러 개 가능). 겹치지 않게 캔버스에 격자(반폭)로 배치 */
 function createWidget(cfg){
- widget={mode:cfg.mode,cat:cfg.cat||null,items:cfg.items||[],excluded:[],layout:cfg.layout||'media',cols:2,show:defaultShow(),soldout:'badge',sort:'manual'};
- let mo=objects.find(o=>o.type==='widget'&&o.kind==='menu');
- if(!mo){mo={id:genId(),type:'widget',kind:'menu',x:24,y:24,w:Math.max(200,canvasW-48),h:Math.max(150,canvasH-48),z:nextZ()};objects.push(mo);}
- setSel(mo.id);
+ const n=menuObjs().length;
+ const w=Math.max(320,Math.round(canvasW*0.46)),h=Math.max(220,Math.round(canvasH*0.5));
+ const x=24+(n%2)*(w+24),y=24+Math.floor(n/2)*(h+24);
+ const mo={id:genId(),type:'widget',kind:'menu',x,y,w,h,z:nextZ(),menu:newMenuCfg(cfg)};
+ objects.push(mo);widget=mo.menu;setSel(mo.id);
  pushHistory();renderEditor();renderProducts();
 }
 
-/* ═══════════ 에디터 : 상품 선택 모달 ═══════════ */
-function openPicker({mode='manual',addTo=false}={}){
- let pick=new Set(addTo&&widget?widgetItemIds():[]);
- let pcat='all',pq='',saleOnly=false,linkCat=widget?.cat||'coffee';
+/* ═══════════ 에디터 : 상품 불러오기 모달 ═══════════
+   상품 관리 데이터를 다중 선택 → 메뉴 위젯에 상품 ID로 연결(참조). 검색·상태필터·카테고리 일괄선택 지원 */
+function openPicker(){
+ if(!widget)return;
+ let pick=new Set(widget.items.filter(id=>prodOf(id)));
+ let pcat='all',pq='',pst='all';
+ const STF=[['all','전체'],['sale','판매중'],['soldout','품절'],['discount','할인중']];
+ const listNow=()=>products.filter(p=>(pcat==='all'||p.cat===pcat)&&(pst==='all'||(pst==='discount'?p.discount:p.status===pst))&&(!pq||p.name.includes(pq)||(p.desc||'').includes(pq)));
  const ov=openModal(`
-  <div class="modal-head"><div><h2>메뉴판에 넣을 상품 선택</h2><div class="sub">상품 정보가 바뀌면 메뉴판에도 자동으로 반영돼요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
-  <div class="picker-mode"><div class="mode-cards">
-   <button class="mode-card ${mode==='manual'?'on':''}" data-mode="manual"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span><span><b>직접 선택</b><p>원하는 상품만 골라 메뉴판을 구성해요.</p></span></button>
-   <button class="mode-card ${mode==='category'?'on':''}" data-mode="category"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1a3 3 0 0 1 4.9 2.3V19a3 3 0 0 1-4.9 2.3M7 2.1A3 3 0 0 0 2.1 4.4V19A3 3 0 0 0 7 21.3"/><path d="M12 8v8m-4-4h8"/></svg></span><span><b>카테고리 연동 <span class="badge badge-blue" style="height:17px;font-size:12px">자동 업데이트</span></b><p>카테고리에 상품을 추가하면 메뉴판도 자동으로 늘어나요.</p></span></button>
-  </div></div>
+  <div class="modal-head"><div><h2>상품 불러오기</h2><div class="sub">상품 관리에 등록된 상품을 선택하면 메뉴판에 자동으로 채워져요. 이후 상품 정보가 바뀌면 메뉴판에도 그대로 반영돼요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
   <div class="picker-main" id="pk-main"></div>
   <div class="modal-foot" style="border-top:1px solid var(--border)">
    <span id="pk-count" style="font-size:13px;color:var(--text-2)"></span><span class="grow"></span>
    <button class="btn" data-close>취소</button><button class="btn btn-primary" id="pk-ok"></button>
   </div>
- `,{width:'880px'});
+ `,{width:'900px'});
  ov.querySelector('.modal').classList.add('picker');
  const main=ov.querySelector('#pk-main'),cnt=ov.querySelector('#pk-count'),ok=ov.querySelector('#pk-ok');
- function drawManual(){
+ function drawCats(){
+  main.querySelector('#pk-cats').innerHTML=[{id:'all',name:'전체 상품',emoji:'🍽️'},...CATS].map(c=>{
+   const n=c.id==='all'?products.length:products.filter(p=>p.cat===c.id).length;
+   return `<button class="cat-item ${pcat===c.id?'on':''}" data-pc="${c.id}">${c.emoji} ${c.name}<span class="cnt num">${n}</span></button>`;}).join('');
+  main.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pcat=b.dataset.pc;drawCats();drawGrid();});
+ }
+ function drawGrid(){
+  const arr=listNow();
+  const allOn=arr.length&&arr.every(p=>pick.has(p.id));
+  const allBtn=main.querySelector('#pk-all');if(allBtn)allBtn.textContent=allOn?'선택 해제':(pcat==='all'?'전체 선택':`'${catOf(pcat).name}' 전체 선택`);
+  main.querySelector('#pk-grid').innerHTML=arr.map(p=>{const sets=optSetsOf(p);
+   return `<div class="pick-card ${pick.has(p.id)?'on':''}" data-pick="${p.id}" role="checkbox" aria-checked="${pick.has(p.id)}" tabindex="0">
+    <span class="checkbox ${pick.has(p.id)?'on':''}">${IC.check}</span>
+    <span class="pk-th" style="${thumbStyle(p)}">${mimg(p).e}</span>
+    <div class="pk-info">
+     <div class="nm">${p.name}${p.status==='soldout'?'<span class="badge badge-red">품절</span>':p.discount?'<span class="badge badge-blue">할인</span>':''}</div>
+     ${p.desc?`<div class="ds">${p.desc}</div>`:''}
+     <div class="meta"><span class="cat">${catOf(p.cat)?.name||'미분류'}</span><span class="pr num">${money(p.discount||p.price,p.cur)}</span>${sets.length?`<span class="optb">옵션 ${sets.length}</span>`:''}</div>
+    </div>
+   </div>`;}).join('')||'<div class="empty" style="grid-column:1/-1"><b>조건에 맞는 상품이 없어요</b><span>검색어나 필터를 바꿔보세요.</span></div>';
+  main.querySelectorAll('[data-pick]').forEach(c=>c.onclick=()=>{const id=c.dataset.pick;pick.has(id)?pick.delete(id):pick.add(id);drawGrid();});
+  sync();
+ }
+ function draw(){
   main.innerHTML=`
    <div class="picker-cats" id="pk-cats"></div>
    <div class="picker-body">
     <div class="picker-tools">
-     <div class="search-wrap" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input input-sm" id="pk-q" placeholder="상품명 검색" value="${pq}"></div>
-     <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2);cursor:pointer"><span class="checkbox ${saleOnly?'on':''}" id="pk-sale">${IC.check}</span>판매중만</label>
-     <button class="btn btn-sm" id="pk-all">현재 목록 전체 선택</button>
+     <div class="search-wrap" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input input-sm" id="pk-q" placeholder="상품명·설명 검색" value="${pq}"></div>
+     <button class="btn btn-sm" id="pk-all"></button>
     </div>
+    <div class="picker-chips" id="pk-chips">${STF.map(([k,l])=>`<button class="chip ${pst===k?'on':''}" data-ps="${k}">${l}</button>`).join('')}</div>
     <div class="picker-grid" id="pk-grid"></div>
    </div>`;
-  const drawCats=()=>{
-   main.querySelector('#pk-cats').innerHTML=[{id:'all',name:'전체',emoji:'🍽️'},...CATS].map(c=>{
-    const n=c.id==='all'?products.length:products.filter(p=>p.cat===c.id).length;
-    return `<button class="cat-item ${pcat===c.id?'on':''}" data-pc="${c.id}">${c.emoji} ${c.name}<span class="cnt num">${n}</span></button>`}).join('');
-   main.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pcat=b.dataset.pc;drawCats();drawGrid()});
-  };
-  const listNow=()=>products.filter(p=>(pcat==='all'||p.cat===pcat)&&(!saleOnly||p.status==='sale')&&(!pq||p.name.includes(pq)));
-  const drawGrid=()=>{
-   const arr=listNow();
-   main.querySelector('#pk-grid').innerHTML=arr.map(p=>`
-    <div class="pick-card ${pick.has(p.id)?'on':''}" data-pick="${p.id}" role="checkbox" aria-checked="${pick.has(p.id)}" tabindex="0">
-     <span class="checkbox ${pick.has(p.id)?'on':''}">${IC.check}</span>
-     ${p.status==='soldout'?'<span class="badge badge-red">품절</span>':p.discount?'<span class="badge badge-blue">할인</span>':''}
-     <div class="img" style="${thumbStyle(p)}">${mimg(p).e}</div>
-     <div class="bd"><div class="nm">${p.name}</div><div class="pr num">${money(p.discount||p.price,p.cur)}</div></div>
-    </div>`).join('')||'<div class="empty" style="grid-column:1/-1"><b>조건에 맞는 상품이 없어요</b><span>상품 관리에서 먼저 등록해 주세요.</span></div>';
-   main.querySelectorAll('[data-pick]').forEach(c=>c.onclick=()=>{const id=c.dataset.pick;pick.has(id)?pick.delete(id):pick.add(id);drawGrid();sync()});
-   sync();
-  };
-  main.querySelector('#pk-q').addEventListener('input',e=>{pq=e.target.value.trim();drawGrid()});
-  main.querySelector('#pk-sale').onclick=e=>{saleOnly=!saleOnly;e.currentTarget.classList.toggle('on',saleOnly);drawGrid()};
-  main.querySelector('#pk-all').onclick=()=>{listNow().forEach(p=>pick.add(p.id));drawGrid()};
   drawCats();drawGrid();
+  main.querySelector('#pk-q').addEventListener('input',e=>{pq=e.target.value.trim();drawGrid();});
+  main.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{pst=b.dataset.ps;main.querySelectorAll('[data-ps]').forEach(x=>x.classList.toggle('on',x===b));drawGrid();});
+  main.querySelector('#pk-all').onclick=()=>{const arr=listNow();const allOn=arr.length&&arr.every(p=>pick.has(p.id));arr.forEach(p=>allOn?pick.delete(p.id):pick.add(p.id));drawGrid();};
  }
- function drawCategory(){
-  main.innerHTML=`<div class="cat-link-list" style="flex:1">
-   <div class="sync-note">${IC.info}<span>카테고리를 연동하면 <b>상품을 추가·품절 처리할 때 메뉴판이 자동 업데이트</b>돼요. 에디터를 따로 열 필요가 없어요.</span></div>
-   ${CATS.map(c=>{const n=products.filter(p=>p.cat===c.id).length;
-    return `<button class="cat-link-card ${linkCat===c.id?'on':''}" data-lc="${c.id}"><span class="ic">${c.emoji}</span><span style="text-align:left"><b>${c.name}</b><p>상품 ${n}개 · 판매중 ${products.filter(p=>p.cat===c.id&&p.status==='sale').length}개</p></span><span class="radio"></span></button>`}).join('')}
-  </div>`;
-  main.querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>{linkCat=b.dataset.lc;drawCategory();sync()});
-  sync();
- }
- function sync(){
-  if(mode==='manual'){cnt.innerHTML=`<b style="color:var(--blue)">${pick.size}개</b> 선택됨`;ok.textContent=addTo?'선택 상품 적용':'메뉴판 만들기';ok.disabled=!pick.size;}
-  else{const c=catOf(linkCat);cnt.innerHTML=`'<b>${c.name}</b>' 카테고리 · 상품 ${products.filter(p=>p.cat===linkCat).length}개`;ok.textContent=`'${c.name}' 연동하기`;ok.disabled=false;}
- }
- ov.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;ov.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));mode==='manual'?drawManual():drawCategory()});
+ function sync(){cnt.innerHTML=`선택한 상품 <b style="color:var(--blue)">${pick.size}개</b>`;ok.textContent='상품 불러오기';ok.disabled=!pick.size;}
  ok.onclick=()=>{
-  if(mode==='manual'){
-   if(addTo&&widget&&widget.mode==='manual'){widget.items=[...pick];}
-   else createWidget({mode:'manual',items:[...pick]});
-   toast(`상품 ${pick.size}개로 메뉴판을 구성했어요.`);
-  }else{
-   createWidget({mode:'category',cat:linkCat});
-   toast(`'${catOf(linkCat).name}' 카테고리를 연동했어요. 새 상품이 자동으로 추가돼요.`);
-  }
-  ov.remove();renderEditor();
+  /* 순서 보존: 기존 순서를 유지하고 새로 선택한 상품만 상품 관리 순서로 뒤에 이어붙임 */
+  const kept=widget.items.filter(id=>pick.has(id));
+  const added=products.filter(p=>pick.has(p.id)&&!kept.includes(p.id)).map(p=>p.id);
+  widget.items=[...kept,...added];
+  ov.remove();pushHistory();renderEditor();renderProducts();
+  toast(`상품 ${widget.items.length}개를 메뉴판에 불러왔어요.`);
  };
- mode==='manual'?drawManual():drawCategory();
+ draw();
 }
 
 /* ═══════════ 에디터 : 범용 캔버스 오브젝트 엔진 ═══════════
@@ -718,19 +739,12 @@ let canvasW=1920,canvasH=1080,canvasBg='#FFFFFF';
    배경 콘텐츠는 일반 오브젝트와 분리된 배경 레이어로 관리 → 오브젝트 편집에 영향 없음 */
 let bgColorOn=true,bgContent=null,bgOpacity=100;
 let bgQ='',bgType='all',bgFolder='all'; /* 배경 콘텐츠 브라우저: 검색어 · 타입필터 · 폴더필터 */
-let canvasConfigured=false; /* 최초 진입 시 캔버스 설정 모달 자동 표시 여부 */
 let objects=[],selId=null,selIds=new Set(),clipboard=[],objSeq=0,activeTool=null;
 let splitLayout=null;
 let edScale=1;
 let history=[],historyIdx=-1,restoringHistory=false;
 let wgTab='menu',gLibTab='lib',gLibQ='',gFolder='all',gType='all',freeQ='',freeProvider='pixabay',cropState=null;
 
-const CANVAS_PRESETS=[
- {id:'web169',name:'웹 16:9',w:1920,h:1080},
- {id:'v916',name:'세로 9:16',w:1080,h:1920},
- {id:'uhd169',name:'UHD 16:9',w:3840,h:2160},
- {id:'uhd916',name:'세로 UHD 9:16',w:2160,h:3840},
-];
 const SPLIT_PRESETS=[
  {id:'sp2h',name:'2분할 · 좌우',regions:[[0,0,.5,1],[.5,0,.5,1]]},
  {id:'sp2v',name:'2분할 · 상하',regions:[[0,0,1,.5],[0,.5,1,.5]]},
@@ -825,12 +839,13 @@ function resolveAsset(ref){
  return null;
 }
 
-/* ─ 실행취소 / 다시실행 (JSON 스냅샷 방식) ─ */
-function snapshot(){return JSON.stringify({objects,splitLayout,canvasW,canvasH,canvasBg,bgColorOn,bgContent,bgOpacity,widget,style})}
+/* ─ 실행취소 / 다시실행 (JSON 스냅샷 방식) ─ 메뉴 설정은 objects[].menu에 있으므로 widget은 스냅샷 제외 후 복원 시 재도출 */
+function snapshot(){return JSON.stringify({objects,splitLayout,canvasW,canvasH,canvasBg,bgColorOn,bgContent,bgOpacity,style})}
 function restoreSnapshot(s){
  const d=JSON.parse(s);
- objects=d.objects;splitLayout=d.splitLayout;canvasW=d.canvasW;canvasH=d.canvasH;canvasBg=d.canvasBg;widget=d.widget;style=d.style;
+ objects=d.objects;splitLayout=d.splitLayout;canvasW=d.canvasW;canvasH=d.canvasH;canvasBg=d.canvasBg;style=d.style;
  bgColorOn=d.bgColorOn!==false;bgContent=d.bgContent||null;bgOpacity=d.bgOpacity==null?100:d.bgOpacity;
+ widget=(menuObjs()[0]||{}).menu||null;
  setSel(null);restoringHistory=true;renderEditor();restoringHistory=false;updateUndoRedoBtns();
 }
 function pushHistory(){
@@ -868,7 +883,7 @@ function addObject(type,props){
 function deleteObject(id){objects=objects.filter(o=>o.id!==id);selIds.delete(id);if(selId===id)selId=[...selIds][0]||null;pushHistory();renderEditor();}
 function duplicateObject(id){
  const o=objects.find(x=>x.id===id);if(!o)return;
- const cp={...o,id:genId(),x:o.x+24,y:o.y+24,z:nextZ()};
+ const cp={...JSON.parse(JSON.stringify(o)),id:genId(),x:o.x+24,y:o.y+24,z:nextZ()}; /* 깊은 복사 — o.menu 등 중첩 객체 독립 복제 */
  objects.push(cp);setSel(cp.id);pushHistory();renderEditor();
 }
 function zOrder(id,dir){
@@ -993,6 +1008,15 @@ function renderStage(){
  const sorted=[...objects].sort((a,b)=>a.z-b.z);
  stage.innerHTML=sorted.map(o=>objectHtml(o)).join('')+'<div class="guide-layer" id="guide-layer"></div>';
  sorted.forEach(o=>attachObjectEvents(stage.querySelector(`[data-eo="${o.id}"]`),o));
+ /* 메뉴 위젯 빈 상태 CTA — 해당 위젯을 활성화(선택)한 뒤 상품 불러오기 모달 (드래그 방지 위해 mousedown 전파 차단) */
+ stage.querySelectorAll('[data-menu-cta]').forEach(b=>{b.addEventListener('mousedown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.stopPropagation();const o=objects.find(x=>x.id===b.dataset.menuCta);if(o){widget=o.menu;setSel(o.id);renderRightPanel();}openPicker();});});
+ /* 메뉴 카드(A~D) 높이 통일 — 가장 콘텐츠가 많은 상품 기준으로 전체 상품 동일 높이 */
+ stage.querySelectorAll('.mbx-a,.mbx-b,.mbx-c,.mbx-d').forEach(g=>{
+  const cards=[...g.children];if(cards.length<2)return;
+  cards.forEach(c=>c.style.minHeight='');
+  const max=Math.max(...cards.map(c=>c.offsetHeight));
+  cards.forEach(c=>c.style.minHeight=max+'px');
+ });
 }
 function objectHtml(o){
  const sel=selIds.has(o.id);
@@ -1007,7 +1031,7 @@ function objectHtml(o){
   /* crop = 소스 이미지의 노출 영역(0~1 비율). background-size/position으로 부분만 표시 (실제 이미지 URL도 동일 방식) */
   const cropCss=cropped?`background-size:${(100/c.w).toFixed(3)}% ${(100/c.h).toFixed(3)}%;background-position:${c.w<1?(c.x/(1-c.w)*100).toFixed(3):0}% ${c.h<1?(c.y/(1-c.h)*100).toFixed(3):0}%;background-repeat:no-repeat`:'';
   inner=a?`<div class="eo-graphic${cropped?' is-cropped':''}" style="background:${a.g};${cropCss}"><span class="e">${a.e}</span><span class="nm">${a.name}</span>${a.badge?`<span class="badge badge-violet eo-badge">${a.badge}</span>`:''}</div>`:`<div class="eo-graphic missing"><span class="e">⚠️</span><span class="nm">삭제된 자산</span></div>`;
- }else if(o.type==='widget')inner=o.kind==='menu'?menuInnerHtml():widgetInnerHtml(o);
+ }else if(o.type==='widget')inner=o.kind==='menu'?menuInnerHtml(o):widgetInnerHtml(o);
  const handles=(sel&&selIds.size===1)?['nw','n','ne','e','se','s','sw','w'].map(h=>`<span class="eo-h eo-h-${h}" data-h="${h}"></span>`).join('')+'<span class="eo-rot" data-rot aria-label="회전"></span>':'';
  /* 콘텐츠는 .eo-body(투명도 적용)로 감싸 핸들/선택 아웃라인은 불투명 유지 */
  return `<div class="eo eo-${o.type} ${sel?'sel':''}" data-eo="${o.id}" style="left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px;z-index:${o.z};transform:rotate(${o.rot||0}deg)"><div class="eo-body" style="opacity:${op}">${inner}</div>${handles}</div>`;
@@ -1044,46 +1068,57 @@ function widgetInnerHtml(o){
  }
  return'';
 }
-function menuInnerHtml(){
- if(!widget)return `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#8B94A5;font-size:13px">메뉴 위젯을 설정해주세요</div>`;
- const ids=widgetItemIds();
- const s=widget.show;
- const item=p=>{
-  const so=p.status==='soldout';
-  if(so&&widget.soldout==='hide')return'';
-  const name=`<span class="nm">${p.name}${so?'<span class="so-badge">SOLD OUT</span>':''}</span>`;
-  const desc=s.desc&&p.desc?`<span class="ds">${p.desc}</span>`:'';
-  const hasSz=s.opt&&s.price&&hasSize(p);
-  const base=s.discount&&p.discount?p.discount:p.price;
-  const dcHtml=s.discount&&p.discount?`<span class="b-orig num">${fmt(p.price)}</span>`:'';
-  const single=s.price?`<span class="pr">${dcHtml}<span class="num" style="color:${style.accent}">${fmt(base)}</span></span>`:'';
-  const chips=hasSz?`<span class="sz-chips">${SIZE_LABELS.map(([l,d])=>`<span class="sz-chip"><span class="l">${l}</span><span class="v num" style="color:${style.accent}">${fmt(base+d)}</span></span>`).join('')}</span>`:'';
-  const cols=s.price?`<span class="pr-cols">${hasSz?SIZE_LABELS.map(([l,d])=>`<span class="num" style="color:${style.accent}">${fmt(base+d)}</span>`).join(''):`<span></span><span></span><span class="num" style="color:${style.accent}">${dcHtml}${fmt(base)}</span>`}</span>`:'';
-  const th=s.img?`<span class="th" style="${boardThumb(p)}">${mimg(p).e}</span>`:'';
-  return {so,name,desc,hasSz,single,chips,cols,th};
- };
- let inner='';
- const hd=`<div class="hd"><span class="store">GREEDISH FRY</span><span class="ttl">${style.title}</span>${style.lang?'<span class="lang">KO · EN 자동 전환</span>':''}</div>`;
- const anySz=s.opt&&s.price&&ids.some(id=>{const p=prodOf(id);return hasSize(p)&&!(p.status==='soldout'&&widget.soldout==='hide')});
- if(widget.layout==='list'){
-  inner=`<div class="b-list">${anySz?`<div class="size-head">${SIZE_LABELS.map(l=>`<span>${l[0]}</span>`).join('')}</div>`:''}${ids.map(id=>{const p=prodOf(id);const o=item(p);if(o==='')return'';
-   return `<div class="it ${o.so?'soldout':''}">${o.th}<span class="tx">${o.name}${o.desc}</span>${anySz?o.cols:o.single}</div>`}).join('')}</div>`;
- }else if(widget.layout==='cols2'){
-  inner=`<div class="b-list b-cols2" style="display:block">${ids.map(id=>{const p=prodOf(id);const o=item(p);if(o==='')return'';
-   return `<div class="it ${o.so?'soldout':''}">${o.th}<span class="tx">${o.name}${o.desc}${o.chips}</span>${o.hasSz?'':o.single}</div>`}).join('')}</div>`;
- }else if(widget.layout==='cards'){
-  inner=`<div class="b-cards" style="grid-template-columns:repeat(${widget.cols},1fr)">${ids.map(id=>{const p=prodOf(id);const o=item(p);if(o==='')return'';
-   return `<div class="it ${o.so?'soldout':''}">${s.img?`<span class="im" style="${boardThumb(p)}">${mimg(p).e}</span>`:''}<span class="bd">${o.name}${o.desc}${o.chips}${o.hasSz?'':o.single}</span></div>`}).join('')}</div>`;
- }else if(widget.layout==='media'){
-  inner=`<div class="b-media" style="grid-template-columns:repeat(${Math.min(widget.cols,2)},1fr)">${ids.map(id=>{const p=prodOf(id);const o=item(p);if(o==='')return'';
-   return `<div class="it ${o.so?'soldout':''}">${o.th}<span class="tx">${o.name}${o.desc}${o.chips}</span>${o.hasSz?'':o.single}</div>`}).join('')}</div>`;
- }else{
-  const grpCats=widget.mode==='category'?[catOf(widget.cat)]:CATS.filter(c=>ids.some(id=>prodOf(id).cat===c.id));
-  inner=`<div class="b-board" style="grid-template-columns:repeat(${Math.min(widget.cols,3)},1fr)">${grpCats.map(c=>`
-   <div class="grp"><div class="gh">${c.name}</div>${ids.filter(id=>prodOf(id).cat===c.id).map(id=>{const p=prodOf(id);const o=item(p);if(o==='')return'';
-    return `<div class="it ${o.so?'soldout':''}"><span class="tx">${o.name}${s.desc&&p.desc?`<div class="ds">${p.desc}</div>`:''}${o.chips}</span>${o.hasSz?'':o.single}</div>`}).join('')}</div>`).join('')}</div>`;
+/* 메뉴 위젯 렌더 (기획서 기준) — 스타일 타입 A~E. 스타일(배경·모서리·간격·열수·이미지비율) + 옵션(설명·옵션명·가격옵션) 반영.
+   가격옵션 선택 시 항목 값이 가격으로(옵션명 on=라벨+가격), 미선택 시 단일가. 상품/옵션 데이터 ID 참조로 자동 반영 */
+function menuInnerHtml(o){
+ const w=o.menu;
+ if(!w)return `<div class="mw-hint">메뉴 위젯을 설정해주세요</div>`;
+ const s=w.show;const type=w.type||'A';const hasImg=menuType(type).img;
+ const ids=widgetItemIds(w);
+ if(!ids.length){
+  return `<div class="mb mw-empty"><div class="mw-empty-box">
+    <span class="mw-empty-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8M8 17h5"/></svg></span>
+    <b>타입 ${type} 메뉴판</b>
+    <span class="mw-empty-t">상품 관리에서 등록한 상품을 불러와 메뉴판을 채워보세요.</span>
+    <button class="mw-cta" data-menu-cta="${o.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>상품 불러오기</button>
+   </div></div>`;
  }
- return `<div class="board">${hd}<div class="items">${inner}</div></div>`;
+ const items=ids.map(prodOf).filter(p=>!(p.status==='soldout'&&w.soldout==='hide'));
+ const bg=w.bg||{on:true,fill:'#FFFFFF',border:'#E5E7EB',width:1};
+ const radius=w.radius||0;
+ const cardStyle=`background:${bg.on?bg.fill:'transparent'};${bg.on?`border:${bg.width}px solid ${bg.border};`:''}border-radius:${radius}px;padding:${w.padY??20}px ${w.padX??20}px`;
+ const cols=Math.min(Math.max(w.cols||4,1),6);
+ const effBase=p=>p.discount||p.price;
+ const pOpt=w.priceOpt?optionSets.find(x=>x.id===w.priceOpt):null;
+ const cells=p=>{if(!pOpt||!(p.opt||[]).includes(pOpt.id))return null;const base=effBase(p);return pOpt.items.map(it=>({l:it.name,v:base+it.delta}));};
+ const nm=p=>`<span class="mbx-nm">${p.name}${p.status==='soldout'?'<span class="mbx-so">SOLD OUT</span>':''}</span>`;
+ const ds=p=>s.desc&&p.desc?`<span class="mbx-ds">${p.desc}</span>`:'';
+ /* 가격 — 가격옵션 있으면 값별로(옵션명 on=라벨+가격, horiz면 우측 가로 나열·아니면 세로), 없으면 단일가 */
+ const price=(p,horiz)=>{const c=cells(p);
+  if(!c)return `<span class="mbx-pr">${money(effBase(p),p.cur)}</span>`;
+  if(s.optName)return `<span class="mbx-pr ${horiz?'mbx-pr-h':'mbx-pr-rows'}">${c.map(x=>`<span class="pr-row"><span class="l">${x.l}</span><span class="v num">${money(x.v,p.cur)}</span></span>`).join('')}</span>`;
+  return `<span class="mbx-pr mbx-pr-inline">${c.map(x=>`<span class="num">${money(x.v,p.cur)}</span>`).join('<span class="sep">/</span>')}</span>`;};
+ const img=p=>hasImg?`<span class="mbx-img" style="${boardThumb(p)};aspect-ratio:${ratioCss(w.imgRatio)};border-radius:${radius}px">${mimg(p).e}</span>`:'';
+ const so=p=>p.status==='soldout'?' is-so':'';
+ /* 너비: 위젯 전체 가로를 열 수로 균등 분배(minmax(0,1fr)) — 콘텐츠 길이와 무관하게 동일 폭 */
+ const grid=`grid-template-columns:repeat(${cols},minmax(0,1fr))`;
+ if(type==='A')
+  return `<div class="mbx mbx-a" style="${grid}">${items.map(p=>`<div class="mbx-it${so(p)}" style="${cardStyle}">${nm(p)}${ds(p)}${price(p)}</div>`).join('')}</div>`;
+ if(type==='B')
+  return `<div class="mbx mbx-b" style="${grid}">${items.map(p=>`<div class="mbx-it${so(p)}" style="${cardStyle}"><div class="mbx-top">${nm(p)}${price(p,true)}</div>${ds(p)}</div>`).join('')}</div>`;
+ if(type==='C')
+  return `<div class="mbx mbx-c" style="${grid}">${items.map(p=>`<div class="mbx-it${so(p)}" style="${cardStyle}">${img(p)}${nm(p)}${ds(p)}${price(p)}</div>`).join('')}</div>`;
+ if(type==='D')
+  return `<div class="mbx mbx-d" style="${grid}">${items.map(p=>`<div class="mbx-it row${so(p)}" style="${cardStyle}">${img(p)}<div class="mbx-bd">${nm(p)}${ds(p)}${price(p)}</div></div>`).join('')}</div>`;
+ /* E — 카테고리 리스트 (가격옵션 값이 우측 컬럼). 카테고리별 카드 */
+ const grpCats=CATS.filter(c=>items.some(p=>p.cat===c.id));
+ return `<div class="mbx mbx-e">${grpCats.map(c=>{
+  const colHd=s.optName&&pOpt?`<span class="cols">${pOpt.items.map(it=>`<span class="col">${it.name}</span>`).join('')}</span>`:'';
+  return `<div class="mbx-cat" style="${cardStyle}">
+   <div class="cat-hd"><span class="cat">${c.name}</span>${colHd}</div>
+   ${items.filter(p=>p.cat===c.id).map(p=>{const cc=cells(p);
+    return `<div class="cat-row${so(p)}"><div class="l">${nm(p)}${ds(p)}</div><div class="r">${cc?cc.map(x=>`<span class="col num">${money(x.v,p.cur)}</span>`).join(''):`<span class="col num">${money(effBase(p),p.cur)}</span>`}</div></div>`;}).join('')}
+  </div>`;}).join('')}</div>`;
 }
 
 /* ─ 오브젝트 인터랙션: 선택 · 드래그 · 리사이즈 · 우클릭 메뉴 · 텍스트 편집 ─ */
@@ -1290,13 +1325,11 @@ function pasteClipboard(){
  if(!clipboard.length)return;
  const pasted=[];
  clipboard.forEach(c=>{
-  if(c.type==='widget'&&c.kind==='menu'&&objects.some(o=>o.type==='widget'&&o.kind==='menu'))return; /* 메뉴 위젯은 1개만 */
   const cp=JSON.parse(JSON.stringify(c));
   cp.id=genId();cp.x+=16;cp.y+=16;cp.z=nextZ();
   objects.push(cp);pasted.push(cp);
  });
  clipboard.forEach(c=>{c.x+=16;c.y+=16;}); /* 연속 붙여넣기 시 계단식 배치 */
- if(!pasted.length){toast('메뉴 위젯은 화면에 1개만 배치할 수 있어요.',{err:true});return}
  selIds=new Set(pasted.map(p=>p.id));selId=pasted[pasted.length-1].id;
  pushHistory();renderEditor();
 }
@@ -1318,12 +1351,10 @@ function duplicateSelection(){
  const sel=selectedObjs();if(!sel.length)return;
  const cps=[];
  sel.forEach(o=>{
-  if(o.type==='widget'&&o.kind==='menu')return; /* 메뉴 위젯은 1개만 */
   const cp=JSON.parse(JSON.stringify(o));
   cp.id=genId();cp.x+=24;cp.y+=24;cp.z=nextZ();
   objects.push(cp);cps.push(cp);
  });
- if(!cps.length){toast('메뉴 위젯은 화면에 1개만 배치할 수 있어요.',{err:true});return}
  selIds=new Set(cps.map(c=>c.id));selId=cps[cps.length-1].id;
  pushHistory();renderEditor();
 }
@@ -1676,18 +1707,13 @@ function renderWidgetsLib(el){
 }
 function drawWgBody(body,hasMenu){
  if(wgTab==='menu'){
-  body.innerHTML=`<div class="wlib-card" id="wlib-menu">
-    <div class="prev"><div class="mini-board">
-     <div class="r"><i style="width:26px;height:26px;background:#39424F"></i><i style="width:52%;height:7px;background:#8A94A6"></i><i style="width:26px;height:7px;background:#C8A96A;margin-left:auto"></i></div>
-     <div class="r"><i style="width:26px;height:26px;background:#39424F"></i><i style="width:40%;height:7px;background:#8A94A6"></i><i style="width:26px;height:7px;background:#C8A96A;margin-left:auto"></i></div>
-     <div class="r"><i style="width:26px;height:26px;background:#39424F"></i><i style="width:46%;height:7px;background:#8A94A6"></i><i style="width:26px;height:7px;background:#C8A96A;margin-left:auto"></i></div>
-    </div></div>
-    <div class="cap"><b>메뉴판 위젯<span class="badge badge-blue">상품 자동 연동</span></b><p>${hasMenu?'이미 추가돼 있어요. 클릭하면 상품 구성을 다시 편집할 수 있어요.':'상품 관리의 상품을 불러와 메뉴판을 구성해요. 가격·품절 상태가 바뀌면 메뉴판에 자동 반영돼요.'}</p></div>
-   </div>
-   <div class="quick-cats"><div class="lbl">${IC.spark}카테고리로 바로 만들기</div><div class="chips" id="quick-cat-chips"></div></div>`;
-  body.querySelector('#wlib-menu').onclick=()=>openPicker();
-  body.querySelector('#quick-cat-chips').innerHTML=CATS.map(c=>`<button class="chip" data-qc="${c.id}">${c.emoji} ${c.name} <span class="cnt num">${products.filter(p=>p.cat===c.id).length}</span></button>`).join('');
-  body.querySelectorAll('[data-qc]').forEach(b=>b.onclick=e=>{e.stopPropagation();createWidget({mode:'category',cat:b.dataset.qc});toast(`'${catOf(b.dataset.qc).name}' 메뉴판을 만들었어요. 카테고리와 자동 연동돼요.`)});
+  /* 스타일 타입 선택 → 새 메뉴판 위젯 추가(여러 개 가능). 이후 상품 불러오기로 채움 */
+  body.innerHTML=`<p class="wg-intro">메뉴 스타일을 선택하고, 상품 정보를 불러오면 이름·이미지·가격·옵션이 자동 반영되며, 스타일·옵션 설정으로 디자인을 수정할 수 있어요.</p>
+   <div class="mtype-lib">${MENU_TYPES.map(T=>`<button class="mtype-card" data-mtype="${T.id}">
+     <div class="mtype-prev">${stylePv(T.id)}</div>
+     <div class="mtype-cap"><b>${T.name}</b><span>${T.desc}</span></div>
+    </button>`).join('')}</div>`;
+  body.querySelectorAll('[data-mtype]').forEach(b=>b.onclick=()=>{const t=b.dataset.mtype;createWidget({type:t});toast(`타입 ${t} 메뉴판을 추가했어요. 상품을 불러와 채워보세요.`);});
  }else if(wgTab==='call'){
   /* 대기/호출 — 4가지 레이아웃 카드(실제 번호 미리보기, 라이트 기준). 추가 후 테마 전환 */
   body.innerHTML=`<p style="font-size:13px;color:var(--text-2);margin:0 0 12px;line-height:1.6">서비스에서 제공하는 4가지 레이아웃 중 원하는 스타일을 선택해 추가하세요. 추가 후 Light/Dark 테마를 바꿀 수 있어요.</p>
@@ -1703,44 +1729,61 @@ function drawWgBody(body,hasMenu){
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>addObject('widget',{kind:wgTab,styleId:b.dataset.wgadd,region:'서울'}));
  }
 }
-/* 메뉴 위젯 속성(①~④) — 기존 drawSettings() 로직을 그대로 재사용하는 정적 마크업 */
-function menuSettingsHtml(){
- return `
-  <div class="ed-sec open" id="sec-products">
-   <button class="ed-sec-head" data-acc>① 상품 <span class="st" id="sec-prod-count" style="font-weight:500;color:var(--text-3);font-size:12px"></span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-   <div class="ed-sec-body">
-    <div id="cat-sync-note"></div>
-    <div id="widget-prod-list"></div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-     <button class="btn btn-sm" id="btn-add-items" style="flex:1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>상품 추가</button>
-     <select class="select select-sm" id="widget-sort" style="flex:1" aria-label="상품 정렬">
-      <option value="manual">직접 정렬</option><option value="name">이름순</option><option value="priceAsc">가격 낮은순</option><option value="priceDesc">가격 높은순</option>
-     </select>
-    </div>
-   </div>
-  </div>
-  <div class="ed-sec open">
-   <button class="ed-sec-head" data-acc>② 레이아웃<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-   <div class="ed-sec-body">
-    <div class="layout-grid" id="layout-grid"></div>
-    <div class="ctl-row" style="margin-top:14px">
-     <label>열 수<span class="hint" id="cols-hint"></span></label>
-     <div class="stepper"><button id="cols-minus" aria-label="열 줄이기"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg></button><b id="cols-val">2</b><button id="cols-plus" aria-label="열 늘리기"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div>
-    </div>
-   </div>
-  </div>
-  <div class="ed-sec open">
-   <button class="ed-sec-head" data-acc>③ 표시 항목<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-   <div class="ed-sec-body" id="show-toggles"></div>
-  </div>
-  <div class="ed-sec">
-   <button class="ed-sec-head" data-acc>④ 스타일<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-   <div class="ed-sec-body">
-    <div class="ctl-row"><label>위젯 제목</label><input class="input input-sm" id="style-title" style="width:150px" value="${style.title}"></div>
-    <div class="ctl-row"><label>강조 색상</label><div style="display:flex;gap:6px" id="accent-swatches"></div></div>
-    <div class="ctl-row"><label>다국어 롤링<span class="hint">KO → EN 순서로 전환돼요</span></label><span class="switch switch-sm" id="style-lang" role="switch" tabindex="0" aria-label="다국어 롤링"></span></div>
-   </div>
-  </div>`;
+/* 메뉴 스타일 카드 미니 프리뷰 (실제 배치 축소) */
+function stylePv(id){
+ const nm='<span class="nm">Menu Name</span>',ds='<span class="ds">Lorem ipsum dolor sit amet Lorem ipsum.</span>',pr='<span class="pr">10,000</span>',im='<span class="im"></span>';
+ if(id==='A')return `<div class="mn-pv a">${nm}${ds}${pr}</div>`;
+ if(id==='B')return `<div class="mn-pv b"><div class="row">${nm}${pr}</div>${ds}</div>`;
+ if(id==='C')return `<div class="mn-pv c">${im}<div class="tx">${nm}${pr}</div></div>`;
+ if(id==='D')return `<div class="mn-pv d">${im}<div class="col">${nm}${pr}</div></div>`;
+ return `<div class="mn-pv e"><span class="cat">Category</span><div class="er">${nm}${pr}</div><div class="er">${nm}${pr}</div><div class="er">${nm}${pr}</div></div>`;
+}
+/* 메뉴 위젯 전용 패널 — 위치·크기/레이어 없음. 헤더 + (빈:스타일카드+상품) / (채움:상품·스타일·옵션 탭) + 하단 상품 불러오기 */
+function renderMenuPanel(o){
+ widget=o.menu; /* 선택된 메뉴 오브젝트의 설정을 활성 위젯으로 */
+ const set=$('#panel-settings');const filled=widgetItemIds().length>0;
+ set.innerHTML=`
+  <div class="ed-panel-head"><h2>메뉴 위젯<span class="hd-actions">${filled?`<button class="icon-btn" id="mn-copy" aria-label="복사" title="복사">${IC.copy}</button>`:''}<button class="icon-btn" id="mn-del" aria-label="삭제" title="삭제">${IC.trash}</button></span></h2></div>
+  <div class="mn-panel" id="mn-panel"></div>`;
+ const cp=set.querySelector('#mn-copy');if(cp)cp.onclick=()=>duplicateObject(o.id);
+ set.querySelector('#mn-del').onclick=()=>{deleteObject(o.id);toast('메뉴 위젯을 삭제했어요');};
+ drawMenuPanel();
+}
+/* 항상 상품/옵션/스타일 탭 구성 (첨부 이미지 순서) */
+function drawMenuPanel(){
+ const panel=$('#mn-panel');if(!panel)return;
+ const ids=widgetItemIds();
+ const foot=`<div class="mn-foot"><button class="btn btn-primary" id="mn-load"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>상품 불러오기</button></div>`;
+ panel.innerHTML=`<div class="mn-tabs" id="mn-tabs"><button data-mtab="items">상품</button><button data-mtab="opt">옵션</button><button data-mtab="style">스타일</button></div>
+   <div class="mn-scroll" id="mn-tab-body"></div>${foot}`;
+ panel.querySelector('#mn-tabs').querySelectorAll('[data-mtab]').forEach(b=>{b.classList.toggle('on',menuTab===b.dataset.mtab);b.onclick=()=>{menuTab=b.dataset.mtab;drawMenuPanel();};});
+ const tb=panel.querySelector('#mn-tab-body');
+ if(menuTab==='style')drawStyleTab(tb);else if(menuTab==='opt')drawOptTab(tb,ids);else drawItemsTab(tb,ids);
+ panel.querySelector('#mn-load').onclick=()=>openPicker();
+}
+/* 상품 탭 — 빈 상태 or 안내 배너 + 상품 목록(드래그 순서·삭제) */
+function drawItemsTab(body,ids){
+ if(!ids.length){body.innerHTML=`<div class="mn-lbl">상품 <span class="c">0개</span></div>
+   <div class="mn-empty">아직 불러온 상품이 없어요.<br><b>상품 불러오기</b>로 상품을 선택하세요.</div>`;return;}
+ body.innerHTML=`<div class="mn-lbl">상품 <span class="c">${ids.length}개</span></div>
+  <div class="mn-info">${IC.info}<span>배치 순서는 아래 메뉴를 직접 드래그앤드롭으로 설정해주세요.</span></div>
+  <div id="widget-prod-list"></div>`;
+ const list=body.querySelector('#widget-prod-list');
+ list.innerHTML=ids.map(id=>{const p=prodOf(id);
+  return `<div class="pl-item" draggable="true" data-pl="${id}">
+   <span class="grip">${IC.grip}</span><span class="th" style="${thumbStyle(p)}">${mimg(p).e}</span>
+   <span class="tx"><span class="nm">${p.name}${p.status==='soldout'?'<span class="badge badge-red">품절</span>':''}${p.discount?'<span class="badge badge-blue">할인</span>':''}</span><span class="pr num">${money(p.discount||p.price,p.cur)}</span></span>
+   <button class="icon-btn rm" data-plrm="${id}" aria-label="${p.name} 빼기">${IC.x}</button></div>`}).join('');
+ list.querySelectorAll('[data-plrm]').forEach(b=>b.onclick=()=>{const id=b.dataset.plrm;widget.items=widget.items.filter(x=>x!==id);pushHistory();drawMenuPanel();renderBoard();
+  toast(`'${prodOf(id).name}'을 메뉴판에서 뺐어요.`,{action:'실행 취소',onAction:()=>{widget.items.push(id);pushHistory();drawMenuPanel();renderBoard()}});});
+ let dragId=null;
+ list.querySelectorAll('.pl-item').forEach(el=>{
+  el.addEventListener('dragstart',()=>{dragId=el.dataset.pl;el.classList.add('dragging')});
+  el.addEventListener('dragend',()=>{dragId=null;el.classList.remove('dragging');list.querySelectorAll('.dragover').forEach(x=>x.classList.remove('dragover'))});
+  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('dragover')});
+  el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
+  el.addEventListener('drop',e=>{e.preventDefault();if(!dragId||dragId===el.dataset.pl)return;const from=widget.items.indexOf(dragId),to=widget.items.indexOf(el.dataset.pl);widget.items.splice(from,1);widget.items.splice(to,0,dragId);pushHistory();drawMenuPanel();renderBoard();});
+ });
 }
 function renderPropsPanel(o){
  const set=$('#panel-settings');
@@ -1748,6 +1791,7 @@ function renderPropsPanel(o){
   if(_sel.length&&_sel.every(x=>x.type==='text')){renderTextPanel(o);return;} /* 텍스트만 → 텍스트 패널(단일·다중 Mixed) */
   if(_sel.length&&_sel.every(x=>x.type==='graphic')){renderGraphicPanel(o);return;} /* 그래픽만 → 그래픽 패널(단일·다중 Mixed) */
   if(_sel.length&&_sel.every(x=>x.type==='shape')){renderShapePanel(o);return;} /* 도형만 → 도형 패널(단일·다중 Mixed) */
+  if(o.type==='widget'&&o.kind==='menu'&&selIds.size===1){renderMenuPanel(o);return;} /* 메뉴 위젯 → 전용 패널(스타일/상품/옵션 탭 · 위치·크기·레이어 없음) */
   if(o.type==='widget'&&o.kind==='call'&&selIds.size===1){renderCallPanel(o);return;} /* 대기/호출 위젯 → 전용 패널(레이아웃·테마) */
   if(_sel.length>1){renderMixedPanel();return;} /* 그 외 다중(혼합 타입·위젯) → 공통 편집 패널(레이어) */
  }
@@ -2276,11 +2320,8 @@ function renderLayerList(el){
  el.querySelectorAll('[data-ldn]').forEach(b=>b.onclick=e=>{e.stopPropagation();zOrder(b.dataset.ldn,'down')});
 }
 function renderTypeProps(o,el){
- /* 텍스트·그래픽·도형 단일은 전용 패널에서 처리 — 여기서는 위젯만 */
- if(o.type==='widget'&&o.kind==='menu'){
-  el.innerHTML=menuSettingsHtml();
-  drawSettings();
- }else if(o.type==='widget'){
+ /* 메뉴 위젯은 renderMenuPanel 전용 패널에서 처리. 여기서는 그 외 위젯만 */
+ if(o.type==='widget'&&o.kind!=='menu'){
   const DEFS=o.kind==='weather'?WEATHER_STYLES:NEWS_STYLES; /* 대기/호출은 renderCallPanel에서 처리 */
   el.innerHTML=`<div class="ed-sec open"><button class="ed-sec-head" data-acc>스타일<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
    <div class="ed-sec-body"><div style="display:flex;flex-direction:column;gap:8px">
@@ -2300,39 +2341,41 @@ function renderTypeProps(o,el){
 }
 
 /* ═══════════ 에디터 : 캔버스 · 배경 설정 ═══════════ */
-function openCanvasSetupModal(){
- let w=canvasW,h=canvasH;
- const ov=openModal(`
-  <div class="modal-head"><div><h2>캔버스 설정</h2><div class="sub">화면 해상도를 선택하거나 직접 입력하세요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
-  <div class="modal-body">
-   <div class="layout-cards" style="grid-template-columns:repeat(4,1fr)">
-    ${CANVAS_PRESETS.map(p=>`<button class="layout-card cs-card ${w===p.w&&h===p.h?'on':''}" data-preset="${p.id}"><span class="cs-prev-box"><i style="aspect-ratio:${p.w}/${p.h};${p.h>p.w?'height:100%':'width:100%'}"></i></span><b>${p.name}</b><span class="cs-res num">${p.w} × ${p.h}</span></button>`).join('')}
-   </div>
-   <div class="ctl-row" style="margin-top:16px"><label>직접 입력</label>
-    <div style="display:flex;gap:8px;align-items:center">
-     <input type="number" class="input input-sm" id="cs-w" value="${w}" style="width:100px" aria-label="너비"><span>×</span><input type="number" class="input input-sm" id="cs-h" value="${h}" style="width:100px" aria-label="높이">
-    </div></div>
+/* 캔버스 설정 팝오버 — 상단 툴바 '캔버스 설정' 버튼 앵커. 가로/세로 직접 입력(선택 시 비율 고정) + 적용하기 */
+function openCanvasSetupPop(anchor){
+ if(openMenu&&openMenu.classList.contains('cs-pop')){closeMenus();return;} /* 토글 */
+ closeMenus();
+ let w=canvasW,h=canvasH,linked=false;const ratio=canvasW/canvasH;
+ const m=document.createElement('div');m.className='cs-pop';
+ m.innerHTML=`
+  <div class="cs-pop-title">캔버스 설정</div>
+  <div class="cs-pop-row">
+   <div class="cs-fld"><label>가로</label><input type="number" class="input" id="cs-w" value="${w}" aria-label="가로"></div>
+   <button class="cs-link" id="cs-link" aria-label="비율 고정" title="비율 고정"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+   <div class="cs-fld"><label>세로</label><input type="number" class="input" id="cs-h" value="${h}" aria-label="세로"></div>
   </div>
-  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="cs-ok">적용</button></div>`,{width:'520px'});
- ov.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
-  const p=CANVAS_PRESETS.find(x=>x.id===b.dataset.preset);
-  w=p.w;h=p.h;ov.querySelector('#cs-w').value=w;ov.querySelector('#cs-h').value=h;
-  ov.querySelectorAll('[data-preset]').forEach(x=>x.classList.toggle('on',x===b));
- });
- ov.querySelector('#cs-w').addEventListener('input',e=>{w=+e.target.value||w;ov.querySelectorAll('[data-preset]').forEach(x=>x.classList.remove('on'));});
- ov.querySelector('#cs-h').addEventListener('input',e=>{h=+e.target.value||h;ov.querySelectorAll('[data-preset]').forEach(x=>x.classList.remove('on'));});
- ov.querySelector('#cs-ok').onclick=()=>{
-  const nw=Math.max(200,Math.min(7680,+ov.querySelector('#cs-w').value||canvasW));
-  const nh=Math.max(200,Math.min(7680,+ov.querySelector('#cs-h').value||canvasH));
+  <button class="btn btn-primary cs-apply" id="cs-ok">적용하기</button>`;
+ document.body.appendChild(m);
+ const r=anchor.getBoundingClientRect();
+ m.style.top=(r.bottom+8)+'px';
+ m.style.left=Math.max(10,Math.min(r.left,innerWidth-m.offsetWidth-10))+'px';
+ const wi=m.querySelector('#cs-w'),hi=m.querySelector('#cs-h'),link=m.querySelector('#cs-link');
+ wi.addEventListener('input',e=>{w=+e.target.value||0;if(linked&&w){h=Math.round(w/ratio);hi.value=h;}});
+ hi.addEventListener('input',e=>{h=+e.target.value||0;if(linked&&h){w=Math.round(h*ratio);wi.value=w;}});
+ link.onclick=()=>{linked=!linked;link.classList.toggle('on',linked);};
+ m.querySelector('#cs-ok').onclick=()=>{
+  const nw=Math.max(200,Math.min(7680,+wi.value||canvasW));
+  const nh=Math.max(200,Math.min(7680,+hi.value||canvasH));
   const apply=()=>{
    const hadSplit=!!splitLayout;
    if(hadSplit)splitLayout=null; /* 캔버스 변경 시 분할 레이아웃은 초기화하고 자유 캔버스로 전환 */
-   canvasW=nw;canvasH=nh;ov.remove();pushHistory();renderEditor();
+   canvasW=nw;canvasH=nh;closeMenus();pushHistory();renderEditor();
    toast(hadSplit?`캔버스를 ${nw} × ${nh}(으)로 바꾸고 분할 레이아웃을 초기화했어요`:`캔버스를 ${nw} × ${nh}(으)로 설정했어요`);
   };
   if(splitLayout&&(nw!==canvasW||nh!==canvasH))confirmDialog({title:'캔버스 변경',desc:'캔버스를 변경하면 현재 분할 레이아웃이 초기화되고 자유 캔버스로 전환돼요.',confirmText:'변경',onConfirm:apply});
   else apply();
  };
+ openMenu=m;
 }
 /* 분할 편집 중 자유 캔버스 도구 클릭 → 확인 후 분할 해제(작업 내용 미저장) */
 function leaveSplitThen(next){
@@ -2342,6 +2385,8 @@ function leaveSplitThen(next){
 $('#ed-rail-bg').onclick=()=>leaveSplitThen(()=>{cropState=null;activeTool='bg';setSel(null);renderEditor();});
 $('#ed-undo').onclick=undo;
 $('#ed-redo').onclick=redo;
+$('#btn-canvas-setup').addEventListener('mousedown',e=>e.stopPropagation()); /* 전역 외부클릭 닫힘보다 먼저 — 버튼으로 토글 */
+$('#btn-canvas-setup').onclick=e=>openCanvasSetupPop(e.currentTarget);
 /* 그룹 : 선택된 2개 이상 객체를 하나의 그룹으로 묶거나(같은 그룹이면) 해제 */
 $('#ed-tool-group').onclick=()=>{
  const sel=selectedObjs();
@@ -2355,79 +2400,74 @@ $('#ed-tool-group').onclick=()=>{
 $$('.ed-rail button[data-tool]').forEach(b=>b.onclick=()=>{const go=()=>{cropState=null;activeTool=b.dataset.tool;setSel(null);renderEditor();};if(b.dataset.tool==='split'){go();return;}leaveSplitThen(go);});
 window.addEventListener('resize',()=>{const es=document.getElementById('screen-editor');if(es&&!es.hidden)fitEdCanvas();});
 
-/* ═══════════ 에디터 : 메뉴 위젯 상품 선택 모달 (기존 로직 유지) ═══════════ */
-function drawSettings(){
- const ids=widgetItemIds();
- $('#sec-prod-count').textContent=`${ids.length}개`;
- /* 연동 안내 */
- const note=$('#cat-sync-note');
- if(widget.mode==='category'){
-  const c=catOf(widget.cat);
-  note.innerHTML=`<div class="sync-note">${IC.spark}<span><b>'${c.name}' 카테고리 연동 중</b><br>상품을 추가하면 이 메뉴판에 자동으로 나타나요.<br><button class="used-link" id="to-manual" style="margin-top:4px">직접 선택으로 전환</button></span></div>`;
-  note.querySelector('#to-manual').onclick=()=>{widget.mode='manual';widget.items=ids;widget.excluded=[];drawSettings();renderBoard();toast('직접 선택 모드로 전환했어요.')};
- }else note.innerHTML='';
- /* 상품 목록 */
- const list=$('#widget-prod-list');
- list.innerHTML=ids.map(id=>{const p=prodOf(id);
-  return `<div class="pl-item" draggable="${widget.sort==='manual'&&widget.mode==='manual'}" data-pl="${id}">
-   <span class="grip">${IC.grip}</span><span class="th" style="${thumbStyle(p)}">${mimg(p).e}</span>
-   <span class="tx"><span class="nm">${p.name}${p.status==='soldout'?'<span class="badge badge-red">품절</span>':''}${p.discount?'<span class="badge badge-blue">할인</span>':''}</span><span class="pr num">${money(p.discount||p.price,p.cur)}</span></span>
-   <button class="icon-btn rm" data-plrm="${id}" aria-label="${p.name} 빼기">${IC.x}</button></div>`}).join('')
-  ||'<div style="font-size:13px;color:var(--text-3);text-align:center;padding:14px 0">표시할 상품이 없어요</div>';
- list.querySelectorAll('[data-plrm]').forEach(b=>b.onclick=()=>{
-  const id=b.dataset.plrm;
-  if(widget.mode==='category')widget.excluded.push(id);
-  else widget.items=widget.items.filter(x=>x!==id);
-  drawSettings();renderBoard();
-  toast(`'${prodOf(id).name}'을 메뉴판에서 뺐어요.`,{action:'실행 취소',onAction:()=>{widget.mode==='category'?widget.excluded=widget.excluded.filter(x=>x!==id):widget.items.push(id);drawSettings();renderBoard()}});
- });
- /* 드래그 정렬 */
- let dragId=null;
- list.querySelectorAll('.pl-item').forEach(el=>{
-  el.addEventListener('dragstart',()=>{dragId=el.dataset.pl;el.classList.add('dragging')});
-  el.addEventListener('dragend',()=>{dragId=null;el.classList.remove('dragging');list.querySelectorAll('.dragover').forEach(x=>x.classList.remove('dragover'))});
-  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('dragover')});
-  el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
-  el.addEventListener('drop',e=>{e.preventDefault();
-   if(!dragId||dragId===el.dataset.pl)return;
-   const from=widget.items.indexOf(dragId),to=widget.items.indexOf(el.dataset.pl);
-   widget.items.splice(from,1);widget.items.splice(to,0,dragId);
-   drawSettings();renderBoard();
-  });
- });
- /* 추가/정렬 */
- const addBtn=$('#btn-add-items');
- addBtn.style.display=widget.mode==='category'?'none':'';
- addBtn.onclick=()=>openPicker({addTo:true});
- const sortSel=$('#widget-sort');sortSel.value=widget.sort;
- sortSel.onchange=e=>{widget.sort=e.target.value;drawSettings();renderBoard()};
- sortSel.querySelector('[value="manual"]').disabled=widget.mode==='category';
- if(widget.mode==='category'&&widget.sort==='manual'){widget.sort='name';sortSel.value='name';}
- /* 레이아웃 */
- $('#layout-grid').innerHTML=LAYOUTS.map(l=>`<button class="layout-opt ${widget.layout===l.id?'on':''}" data-lo="${l.id}"><span class="lo-ic" style="grid-template-columns:repeat(${l.ic2?2:3},1fr)">${l.ic}</span><span>${l.name}</span></button>`).join('');
- $$('[data-lo]').forEach(b=>b.onclick=()=>{widget.layout=b.dataset.lo;const L=LAYOUTS.find(x=>x.id===b.dataset.lo);if(L.cols)widget.cols=Math.min(Math.max(widget.cols,L.cols[0]),L.cols[1]);drawSettings();renderBoard()});
- const L=LAYOUTS.find(x=>x.id===widget.layout);
- $('#cols-val').textContent=widget.cols;
- $('#cols-hint').textContent=L.cols?'':'이 레이아웃은 열이 고정돼요';
- $('#cols-minus').disabled=!L.cols||widget.cols<=L.cols[0];
- $('#cols-plus').disabled=!L.cols||widget.cols>=L.cols[1];
- $('#cols-minus').onclick=()=>{widget.cols--;drawSettings();renderBoard()};
- $('#cols-plus').onclick=()=>{widget.cols++;drawSettings();renderBoard()};
- /* 표시 항목 */
- const T=[['img','상품 이미지',''],['desc','설명',''],['price','가격',''],['opt','사이즈별 가격','리스트형은 사이즈 가격표, 그 외는 가격 칩으로 표시'],['discount','할인 표시','정가 취소선 + 할인가 강조']];
- $('#show-toggles').innerHTML=T.map(([k,lbl,hint])=>`
-  <div class="ctl-row"><label>${lbl}${hint?`<span class="hint">${hint}</span>`:''}</label><span class="switch switch-sm ${widget.show[k]?'on':''}" data-show="${k}" role="switch" tabindex="0" aria-label="${lbl}"></span></div>`).join('')
-  +`<div class="ctl-row"><label>품절 상품<span class="hint">품절 표시로 두면 신뢰를 지킬 수 있어요</span></label>
-   <select class="select select-sm" id="soldout-sel" style="width:110px"><option value="badge" ${widget.soldout==='badge'?'selected':''}>품절 표시</option><option value="hide" ${widget.soldout==='hide'?'selected':''}>숨김</option></select></div>`;
- $$('[data-show]').forEach(s=>s.onclick=()=>{widget.show[s.dataset.show]=!widget.show[s.dataset.show];drawSettings();renderBoard()});
- $('#soldout-sel').onchange=e=>{widget.soldout=e.target.value;renderBoard()};
- /* 스타일 */
- $('#style-title').oninput=e=>{style.title=e.target.value;renderBoard()};
- const SW=['#F7C860','#8AE0B0','#F2978B','#9DBEFF','#F3EFE6'];
- $('#accent-swatches').innerHTML=SW.map(c=>`<button data-sw="${c}" aria-label="강조 색상 ${c}" style="width:24px;height:24px;border-radius:50%;background:${c};border:2px solid ${style.accent===c?'var(--blue)':'transparent'};outline:1px solid var(--border-2)"></button>`).join('');
- $$('[data-sw]').forEach(b=>b.onclick=()=>{style.accent=b.dataset.sw;pushHistory();drawSettings();renderStage()});
- const langSw=$('#style-lang');langSw.classList.toggle('on',style.lang);
- langSw.onclick=()=>{style.lang=!style.lang;pushHistory();drawSettings();renderStage()};
+/* 스타일 탭 (첨부 이미지) — 메뉴 스타일 카드 + 레이아웃 / 속성 / 모서리 / 간격 (섹션별 divider) */
+function drawStyleTab(body){
+ const bg=widget.bg,hasImg=menuType(widget.type).img;const stepSvg=d=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="${d}"/></svg>`;
+ body.innerHTML=`
+  <div class="mn-lbl" style="margin-top:2px">메뉴 스타일</div>
+  <div class="mn-styles" id="st-styles">${MENU_TYPES.map(T=>`<button class="mn-style ${widget.type===T.id?'on':''}" data-mtype="${T.id}"><div class="mn-style-pv">${stylePv(T.id)}</div><b>${T.name}</b></button>`).join('')}</div>
+  <div class="mn-divider"></div>
+  ${widget.type!=='E'?`<div class="mn-styhd">레이아웃</div>
+   <div class="mn-row"><label>한줄 표시</label><div class="stepper"><button data-cols="-1" aria-label="줄임">${stepSvg('M5 12h14')}</button><b>${widget.cols||4}</b><button data-cols="1" aria-label="늘림">${stepSvg('M12 5v14M5 12h14')}</button></div></div>
+   ${hasImg?`<div class="mn-row"><label>이미지 비율</label><select class="select select-sm" id="st-ratio" style="width:96px">${IMG_RATIOS.map(r=>`<option ${widget.imgRatio===r?'selected':''}>${r}</option>`).join('')}</select></div>`:''}
+   <div class="mn-divider"></div>`:''}
+  <div class="mn-styhd">속성</div>
+  <div class="mn-row"><label>배경색</label><span class="switch switch-sm ${bg.on?'on':''}" id="st-bgon" role="switch" tabindex="0"></span></div>
+  ${bg.on?`
+   <div class="bg-color-row st-clr"><span class="bg-color-lbl">채우기</span><button class="bg-swatch-btn" id="st-fill-btn"><span class="bg-hex"># ${bg.fill.replace('#','').toUpperCase()}</span><span class="bg-swatch" style="background:${bg.fill}"></span></button></div>
+   <div class="bg-color-row st-clr"><span class="bg-color-lbl">테두리</span><button class="bg-swatch-btn" id="st-border-btn"><span class="bg-hex"># ${bg.border.replace('#','').toUpperCase()}</span><span class="bg-swatch" style="background:${bg.border}"></span></button></div>
+   <div class="tx-slider-head"><span>굵기</span><input class="slider-val" id="st-bw-val" value="${bg.width}" inputmode="numeric" aria-label="굵기 값"></div>
+   <input type="range" min="0" max="8" value="${bg.width}" id="st-bw" class="ui-slider" aria-label="테두리 굵기">`:''}
+  <div class="mn-divider"></div>
+  <div class="mn-styhd">모서리</div>
+  <div class="mn-row"><label>둥글기</label><input type="number" class="input input-sm" id="st-radius" value="${widget.radius||0}" min="0" max="40" style="width:64px"></div>
+  <div class="mn-divider"></div>
+  <div class="mn-styhd">간격</div>
+  <div class="mn-row"><label>좌우</label><input type="number" class="input input-sm" id="st-px" value="${widget.padX??20}" min="0" max="80" style="width:64px"></div>
+  <div class="mn-row"><label>상하</label><input type="number" class="input input-sm" id="st-py" value="${widget.padY??20}" min="0" max="80" style="width:64px"></div>`;
+ const up=()=>pushHistory();
+ /* 메뉴 스타일 타입 전환 */
+ body.querySelectorAll('[data-mtype]').forEach(b=>b.onclick=()=>{widget.type=b.dataset.mtype;pushHistory();drawMenuPanel();renderBoard();});
+ body.querySelectorAll('[data-cols]').forEach(b=>b.onclick=()=>{widget.cols=Math.min(6,Math.max(1,(widget.cols||4)+(+b.dataset.cols)));pushHistory();drawMenuPanel();renderBoard();});
+ const rt=body.querySelector('#st-ratio');if(rt)rt.onchange=e=>{widget.imgRatio=e.target.value;renderBoard();up();};
+ body.querySelector('#st-bgon').onclick=()=>{widget.bg.on=!widget.bg.on;pushHistory();drawMenuPanel();renderBoard();};
+ /* 색상 — 기존 에디터 색상 스와치 + HSV 팝오버(글자색과 동일 컴포넌트) */
+ const clrBtn=(id,key)=>{const b=body.querySelector(id);if(!b)return;b.onclick=e=>openColorPop(e.currentTarget,{value:widget.bg[key],onInput:hex=>{widget.bg[key]=hex;renderBoard();const sw=b.querySelector('.bg-swatch');sw.style.background=hex;b.querySelector('.bg-hex').textContent='# '+hex.replace('#','').toUpperCase();},onCommit:up});};
+ clrBtn('#st-fill-btn','fill');clrBtn('#st-border-btn','border');
+ /* 굵기 슬라이더 — 기존 에디터 .ui-slider + slider-val(자간/행간과 동일 컴포넌트) */
+ const bwSl=body.querySelector('#st-bw'),bwVal=body.querySelector('#st-bw-val');
+ if(bwSl){paintSlider(bwSl);
+  const apply=commit=>{let v=Math.max(0,Math.min(8,+bwSl.value));widget.bg.width=v;bwVal.value=v;paintSlider(bwSl);renderBoard();if(commit)pushHistory();};
+  bwSl.addEventListener('input',()=>apply(false));bwSl.addEventListener('change',()=>pushHistory());
+  bwVal.addEventListener('input',()=>{let v=parseInt(bwVal.value,10);if(isNaN(v))return;v=Math.max(0,Math.min(8,v));bwSl.value=v;apply(false);});
+  bwVal.addEventListener('change',()=>{let v=parseInt(bwVal.value,10);if(isNaN(v)){bwVal.value=widget.bg.width;return;}v=Math.max(0,Math.min(8,v));bwVal.value=v;bwSl.value=v;apply(true);});}
+ body.querySelector('#st-radius').onchange=e=>{widget.radius=Math.max(0,+e.target.value||0);renderBoard();up();};
+ body.querySelector('#st-px').onchange=e=>{widget.padX=Math.max(0,+e.target.value||0);renderBoard();up();};
+ body.querySelector('#st-py').onchange=e=>{widget.padY=Math.max(0,+e.target.value||0);renderBoard();up();};
+}
+/* 옵션 탭 (기획서 이미지) — 설명·옵션명·가격옵션·품절표시·다국어(언어·적용필드) */
+function drawOptTab(body,ids){
+ const s=widget.show;
+ const applied=[];ids.forEach(id=>(prodOf(id).opt||[]).forEach(gid=>{if(!applied.includes(gid))applied.push(gid);}));
+ const optGroups=applied.map(gid=>optionSets.find(o=>o.id===gid)).filter(Boolean);
+ if(widget.priceOpt&&!optGroups.some(g=>g.id===widget.priceOpt))widget.priceOpt='';
+ const F=widget.i18nFields||{name:true,desc:true};const LF={en:'🇺🇸',zh:'🇨🇳',ja:'🇯🇵'};
+ body.innerHTML=`
+  <div class="mn-optrow"><div class="ml"><b>설명</b><span>상품 설명 노출</span></div><span class="switch switch-sm ${s.desc?'on':''}" data-o="desc" role="switch" tabindex="0"></span></div>
+  <div class="mn-optrow"><div class="ml"><b>옵션명</b><span>가격 옵션명 표시</span></div><span class="switch switch-sm ${s.optName?'on':''}" data-o="optName" role="switch" tabindex="0"></span></div>
+  <div class="mn-optrow"><div class="ml"><b>가격 옵션</b><span>가격으로 표시할 옵션</span></div><select class="select select-sm" id="opt-price" style="width:120px"><option value="">없음</option>${optGroups.map(g=>`<option value="${g.id}" ${widget.priceOpt===g.id?'selected':''}>${g.name}</option>`).join('')}</select></div>
+  <div class="mn-optrow"><div class="ml"><b>품절 표시</b><span>품절 상품에 사용 권장</span></div><span class="switch switch-sm ${widget.soldout==='badge'?'on':''}" id="opt-soldout" role="switch" tabindex="0"></span></div>
+  <div class="mn-divider"></div>
+  <div class="mn-optrow"><div class="ml"><b>다국어 <span class="info-ic" title="선택된 언어가 자동으로 롤링됩니다.">${IC.info}</span></b></div><span class="switch switch-sm ${s.i18n?'on':''}" data-o="i18n" role="switch" tabindex="0"></span></div>
+  ${s.i18n?`
+   <div class="mn-optrow"><label>언어</label><div class="i18n-flags" id="opt-langs">${I18N_LANGS.map(l=>`<button class="flag ${(widget.i18nLangs||[]).includes(l.k)?'on':''}" data-lang="${l.k}">${LF[l.k]||l.chip}</button>`).join('')}</div></div>
+   <div class="mn-optrow"><label>적용 필드</label><div class="i18n-fields"><label class="cbx"><span class="checkbox ${F.name?'on':''}" data-fld="name">${IC.check}</span>상품명</label><label class="cbx"><span class="checkbox ${F.desc?'on':''}" data-fld="desc">${IC.check}</span>설명</label></div></div>`:''}`;
+ const up=()=>pushHistory();
+ body.querySelectorAll('[data-o]').forEach(sw=>sw.onclick=()=>{widget.show[sw.dataset.o]=!widget.show[sw.dataset.o];pushHistory();drawMenuPanel();renderBoard();});
+ body.querySelector('#opt-price').onchange=e=>{widget.priceOpt=e.target.value;renderBoard();up();};
+ body.querySelector('#opt-soldout').onclick=e=>{widget.soldout=widget.soldout==='badge'?'hide':'badge';e.currentTarget.classList.toggle('on',widget.soldout==='badge');renderBoard();up();};
+ const lw=body.querySelector('#opt-langs');if(lw)lw.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{const k=b.dataset.lang;const a=widget.i18nLangs||[];widget.i18nLangs=a.includes(k)?a.filter(x=>x!==k):[...a,k];drawMenuPanel();up();});
+ body.querySelectorAll('[data-fld]').forEach(c=>c.onclick=()=>{const k=c.dataset.fld;widget.i18nFields=widget.i18nFields||{name:true,desc:true};widget.i18nFields[k]=!widget.i18nFields[k];drawMenuPanel();up();});
 }
 
 /* ═══════════ 저장 / 프리뷰 / 송출 ═══════════ */
