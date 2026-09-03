@@ -2166,11 +2166,6 @@ function renderCallPanel(o){
    </div>
    <div class="bg-divider"></div>
    <div class="tx-sec">
-    <div class="tx-sec-lbl">레이아웃</div>
-    <div class="cw-layouts">${CALL_LAYOUTS.map(L=>`<button class="cw-layout ${layout===L.id?'on':''}" data-cwlayout="${L.id}" aria-label="${L.name}" title="${L.name}"><div class="cw-mini" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,theme,61)}</div></button>`).join('')}</div>
-   </div>
-   <div class="bg-divider"></div>
-   <div class="tx-sec">
     <div class="cw-theme-head"><span class="tx-sec-lbl" style="margin:0">테마 스타일</span><span class="cw-theme-lbl ${theme==='light'?'on':''}">Light</span><button class="bg-toggle ${theme==='light'?'on':''}" id="cw-theme" role="switch" aria-checked="${theme==='light'}" aria-label="Light 테마"><i></i></button></div>
     <div class="cw-preview"><div class="cw-preview-fit" style="aspect-ratio:${ratio}">${callWidgetHtml(layout,theme,Math.round(126*ratio))}</div></div>
    </div>
@@ -2182,8 +2177,6 @@ function renderCallPanel(o){
  const wIn=set.querySelector('#cw-w'),hIn=set.querySelector('#cw-h');
  wIn.addEventListener('change',()=>{let v=parseFloat(wIn.value);if(isNaN(v))v=o.w;v=Math.max(40,v);o.w=Math.round(v);o.h=Math.round(v/ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
  hIn.addEventListener('change',()=>{let v=parseFloat(hIn.value);if(isNaN(v))v=o.h;v=Math.max(40,v);o.h=Math.round(v);o.w=Math.round(v*ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
- /* 레이아웃 변경 — 비율 갱신, 폭 유지하고 높이 재계산 */
- set.querySelectorAll('[data-cwlayout]').forEach(b=>b.onclick=()=>{const L=CALL_LAYOUTS.find(x=>x.id===b.dataset.cwlayout);o.layout=L.id;o.ratio=L.ratio;o.h=Math.round(o.w/L.ratio);pushHistory();renderStage();renderCallPanel(o);});
  /* 테마 전환(Light ↔ Dark) — 캔버스 즉시 반영 */
  set.querySelector('#cw-theme').onclick=()=>{o.theme=theme==='light'?'dark':'light';pushHistory();renderStage();renderCallPanel(o);};
 }
