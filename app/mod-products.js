@@ -29,12 +29,12 @@ products[8].imgs.push({e:'🥛',h:340});
 products[11].imgs.push({e:'🍮',h:44});
 /* 신규 가입 직후 환경(#tour): 등록된 상품 비움 (카테고리 구조는 유지) */
 if(window.EMPTY_MODE)products.length=0;
-/* 옵션 그룹 = {id,name,select:'single'|'multi',items:[{id,name,delta}]}
-   delta=가격 변동값(숫자,원) · select=선택 방식. 메뉴 위젯은 '가격옵션'으로 지정한 그룹의 항목 값을 가격으로 표시 */
+/* 옵션 그룹 = {id,name,items:[{id,name,delta}]}
+   delta=가격 변동값(숫자,원). 메뉴 위젯은 '가격옵션'으로 지정한 그룹의 항목 값을 가격으로 표시 */
 let optionSets=[
- {id:'size',name:'사이즈',select:'single',items:[{id:'s1',name:'Tall',delta:0},{id:'s2',name:'Grande',delta:500},{id:'s3',name:'Venti',delta:1000}]},
- {id:'temp',name:'온도',select:'single',items:[{id:'t1',name:'HOT',delta:0},{id:'t2',name:'ICE',delta:0}]},
- {id:'shot',name:'샷 추가',select:'multi',items:[{id:'sh1',name:'샷 추가',delta:500}]},
+ {id:'size',name:'사이즈',items:[{id:'s1',name:'Tall',delta:0},{id:'s2',name:'Grande',delta:500},{id:'s3',name:'Venti',delta:1000}]},
+ {id:'temp',name:'온도',items:[{id:'t1',name:'HOT',delta:0},{id:'t2',name:'ICE',delta:0}]},
+ {id:'shot',name:'샷 추가',items:[{id:'sh1',name:'샷 추가',delta:500}]},
 ];
 const deltaLabel=d=>(d<0?'−':'+')+fmt(Math.abs(d))+'원';
 const CONTENT_NAME=()=>document.getElementById('content-name').value||'싱크사인 메인메뉴';
@@ -566,19 +566,14 @@ function openOptMan(){
  `,{width:'560px',onMount:ov=>{
   const esc=s=>String(s||'').replace(/"/g,'&quot;');
   let editId=null;   /* 편집 중인 그룹 id 또는 '__new' */
-  let wName='',wItems=[],wSelect='single';   /* 편집 폼 작업 상태 */
+  let wName='',wItems=[];   /* 편집 폼 작업 상태 */
   const readInputs=()=>{const blk=ov.querySelector('.optgrp-edit');if(!blk)return;
    wName=blk.querySelector('[data-gname]').value;
    wItems=[...blk.querySelectorAll('[data-oi]')].map(r=>({name:r.querySelector('[data-iname]').value,delta:r.querySelector('[data-idelta]').value}));};
-  const startEdit=g=>{editId=g?g.id:'__new';wName=g?g.name:'';wSelect=g?(g.select||'single'):'single';wItems=g?g.items.map(i=>({name:i.name,delta:String(i.delta)})):[{name:'',delta:''}];draw();const i=ov.querySelector('.optgrp-edit [data-gname]');if(i){i.focus();i.select();}};
+  const startEdit=g=>{editId=g?g.id:'__new';wName=g?g.name:'';wItems=g?g.items.map(i=>({name:i.name,delta:String(i.delta)})):[{name:'',delta:''}];draw();const i=ov.querySelector('.optgrp-edit [data-gname]');if(i){i.focus();i.select();}};
   const editBlock=()=>`<div class="optgrp-edit">
      <label class="oe-lbl">옵션 그룹명</label>
      <input class="input input-sm" data-gname value="${esc(wName)}" maxlength="20" placeholder="예) 사이즈">
-     <label class="oe-lbl" style="margin-top:12px">선택 방식</label>
-     <div class="oe-sel">
-      <button type="button" class="${wSelect==='single'?'on':''}" data-sel="single">단일 선택</button>
-      <button type="button" class="${wSelect==='multi'?'on':''}" data-sel="multi">복수 선택</button>
-     </div>
      <label class="oe-lbl" style="margin-top:12px">옵션 항목</label>
      <div class="oe-items">${wItems.map((it,i)=>`<div class="oe-item" data-oi="${i}">
         <input class="input input-sm" data-iname value="${esc(it.name)}" maxlength="24" placeholder="옵션명 (예: Tall)">
@@ -592,7 +587,7 @@ function openOptMan(){
   const draw=()=>{
    ov.querySelector('#opt-list').innerHTML=`<div class="optset-pick" style="padding-bottom:8px">${
     optionSets.map(o=>o.id===editId?editBlock()
-     :`<div class="optset-row"><b>${o.name}</b><span class="opt-sel-tag">${(o.select||'single')==='multi'?'복수 선택':'단일 선택'}</span><span class="vals">${o.items.map(it=>`<span class="val">${it.name} ${deltaLabel(it.delta)}</span>`).join('')}</span>
+     :`<div class="optset-row"><b>${o.name}</b><span class="vals">${o.items.map(it=>`<span class="val">${it.name} ${deltaLabel(it.delta)}</span>`).join('')}</span>
         <button class="icon-btn" data-oedit="${o.id}" aria-label="수정">${IC.edit}</button>
         <button class="icon-btn" data-odel="${o.id}" aria-label="삭제">${IC.trash}</button></div>`).join('')
     }${editId==='__new'?editBlock():''}${(!optionSets.length&&editId!=='__new')?'<div class="empty"><b>등록된 옵션 그룹이 없어요</b></div>':''}</div>`;
@@ -605,7 +600,6 @@ function openOptMan(){
    const blk=ov.querySelector('.optgrp-edit');if(!blk)return;
    blk.querySelector('[data-iadd]').onclick=()=>{readInputs();wItems.push({name:'',delta:''});draw();const rows=ov.querySelectorAll('.optgrp-edit [data-iname]');if(rows.length)rows[rows.length-1].focus();};
    blk.querySelectorAll('[data-idel]').forEach(b=>b.onclick=()=>{readInputs();wItems.splice(+b.dataset.idel,1);if(!wItems.length)wItems.push({name:'',delta:''});draw();});
-   blk.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{wSelect=b.dataset.sel;blk.querySelectorAll('[data-sel]').forEach(x=>x.classList.toggle('on',x===b));});
    blk.querySelector('[data-gcancel]').onclick=()=>{editId=null;draw();};
    blk.querySelector('[data-gsave]').onclick=saveGroup;
    blk.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{i.classList.remove('error');blk.querySelector('[data-gerr]').style.display='none';}));
@@ -617,8 +611,8 @@ function openOptMan(){
    const err=ov.querySelector('.optgrp-edit [data-gerr]');
    if(!name){err.textContent='옵션 그룹명을 입력해주세요.';err.style.display='flex';const g=ov.querySelector('.optgrp-edit [data-gname]');g.classList.add('error');g.focus();return}
    if(!items.length){err.textContent='옵션 항목을 최소 1개 입력해주세요.';err.style.display='flex';return}
-   if(editId==='__new')optionSets.push({id:'og'+(++seq),name,select:wSelect,items:items.map(it=>({id:'oi'+(++seq),...it}))});
-   else{const g=optionSets.find(x=>x.id===editId);if(g){g.name=name;g.select=wSelect;g.items=items.map(it=>({id:'oi'+(++seq),...it}));}}
+   if(editId==='__new')optionSets.push({id:'og'+(++seq),name,items:items.map(it=>({id:'oi'+(++seq),...it}))});
+   else{const g=optionSets.find(x=>x.id===editId);if(g){g.name=name;g.items=items.map(it=>({id:'oi'+(++seq),...it}));}}
    const nm=name;editId=null;draw();renderProducts();renderBoard();toast(`'${nm}' 옵션 그룹을 저장했어요.`);
   };
   draw();
