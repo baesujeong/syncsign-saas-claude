@@ -2182,12 +2182,12 @@ renderLogin(false);
   <div class="ed-top">
     <button class="back" id="ed-back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>편집 끝내기</button>
     <span class="divider-v"></span>
-    <button class="tool" id="btn-canvas-setup"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>캔버스 설정</button>
+    <button class="canvas-res-pill" id="btn-canvas-setup" aria-label="캔버스 설정" title="캔버스 설정"><span id="canvas-res-txt">1920×1080 px</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
     <button class="icon-btn" id="ed-undo" aria-label="실행 취소"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
     <button class="icon-btn" id="ed-redo" aria-label="다시 실행" style="color:var(--text-3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
     <div class="ed-name"><input id="content-name" value="" placeholder="템플릿 이름을 입력해주세요" aria-label="템플릿 이름"></div>
     <button class="tool" id="btn-preview"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>프리뷰</button>
-    <button class="tool" id="ed-tool-group"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="13" height="13" rx="2"/><rect x="8" y="8" width="13" height="13" rx="2"/></svg>그룹</button>
+    <button class="tool" id="ed-tool-group"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="13" height="13" rx="2"/><rect x="8" y="8" width="13" height="13" rx="2"/></svg><span id="grp-btn-txt">그룹</span></button>
     <span class="divider-v"></span>
     <button class="btn btn-sm btn-primary" id="btn-save-content" style="font-weight:700;width:72px">저장</button>
   </div>

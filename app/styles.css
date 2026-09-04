@@ -859,6 +859,10 @@ table.grid tr.checked td{background:var(--blue-50)}
 .ed-top .back:hover{background:var(--sunken)}
 .ed-top .tool{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--r-md);font-weight:600;font-size:14px;color:var(--text-2)}
 .ed-top .tool:hover{background:var(--sunken);color:var(--text)}
+/* 캔버스 해상도 pill — 상단 툴바(캔버스 설정 버튼 대체), 클릭 시 캔버스 설정 팝오버 */
+.canvas-res-pill{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--r-md);background:var(--sunken);color:var(--text-2);font-weight:600;font-size:14px}
+.canvas-res-pill:hover{background:var(--border);color:var(--text)}
+.canvas-res-pill svg{color:var(--text-3)}
 .ed-name{flex:1;display:flex;justify-content:center}
 .ed-name input{border:1px solid transparent;border-radius:var(--r-md);height:36px;width:280px;text-align:center;font-weight:600;background:transparent}
 .ed-name input:hover{border-color:var(--border-2)}
@@ -920,6 +924,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .eo-rot{position:absolute;top:-30px;left:calc(50% - 7px);width:14px;height:14px;border-radius:50%;background:#fff;border:1.5px solid #4D8DFF;cursor:grab;z-index:6}
 .eo-rot::after{content:'';position:absolute;left:calc(50% - .75px);top:13px;width:1.5px;height:13px;background:#4D8DFF}
 .eo-rot:active{cursor:grabbing}
+/* 그룹 선택 : 그룹 전체 박스(핸들 포함) + 개별 멤버 보더(핸들 없음, 보조 스타일) */
+.eo-groupbox{position:absolute;box-sizing:border-box;outline:2px solid #4D8DFF;outline-offset:1px;z-index:1000;cursor:move}
+.eo.sel.grp-member{outline:1.5px solid rgba(77,141,255,.6);outline-offset:1px;cursor:move}
 .eo-text{display:flex;align-items:flex-start;overflow:hidden;word-break:break-word;line-height:1.3;cursor:text}
 .eo-graphic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;overflow:hidden;border-radius:6px;color:#fff}
 .eo-graphic .e{font-size:32px}

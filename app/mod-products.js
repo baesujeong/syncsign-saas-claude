@@ -905,6 +905,7 @@ function fitEdCanvas(){
  canvas.style.width=(canvasW*edScale)+'px';canvas.style.height=(canvasH*edScale)+'px';
  stage.style.width=canvasW+'px';stage.style.height=canvasH+'px';stage.style.transform=`scale(${edScale})`;
  const tag=$('#canvas-res-tag');if(tag)tag.textContent=`${canvasW} × ${canvasH}`;
+ const pill=$('#canvas-res-txt');if(pill)pill.textContent=`${canvasW}×${canvasH} px`;
  renderBgLayer();
 }
 /* 배경 레이어 렌더 — 하단: 배경색(base) / 상단: 배경 콘텐츠(cover, 투명도).
@@ -1003,8 +1004,16 @@ function renderStage(){
   return;
  }
  const sorted=[...objects].sort((a,b)=>a.z-b.z);
- stage.innerHTML=sorted.map(o=>objectHtml(o)).join('')+'<div class="guide-layer" id="guide-layer"></div>';
+ /* 그룹 선택 시 전체를 감싸는 그룹 박스(보더+핸들) — 개별 멤버는 보더만 표시(objectHtml의 grp-member) */
+ const ggid=curGroupGid();let groupBoxHtml='';
+ if(ggid){
+  const b=groupBounds(selectedObjs());
+  const gh=['nw','n','ne','e','se','s','sw','w'].map(h=>`<span class="eo-h eo-h-${h}" data-h="${h}"></span>`).join('')+'<span class="eo-rot" data-rot aria-label="회전"></span>';
+  groupBoxHtml=`<div class="eo-groupbox" id="eo-groupbox" style="left:${b.minX}px;top:${b.minY}px;width:${b.maxX-b.minX}px;height:${b.maxY-b.minY}px">${gh}</div>`;
+ }
+ stage.innerHTML=sorted.map(o=>objectHtml(o)).join('')+groupBoxHtml+'<div class="guide-layer" id="guide-layer"></div>';
  sorted.forEach(o=>attachObjectEvents(stage.querySelector(`[data-eo="${o.id}"]`),o));
+ if(ggid)attachGroupBoxEvents(stage.querySelector('#eo-groupbox'));
  /* 메뉴 위젯 빈 상태 CTA — 해당 위젯을 활성화(선택)한 뒤 상품 불러오기 모달 (드래그 방지 위해 mousedown 전파 차단) */
  stage.querySelectorAll('[data-menu-cta]').forEach(b=>{b.addEventListener('mousedown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.stopPropagation();const o=objects.find(x=>x.id===b.dataset.menuCta);if(o){widget=o.menu;setSel(o.id);renderRightPanel();}openPicker();});});
  /* 메뉴 카드(A~D) 높이 통일 — 가장 콘텐츠가 많은 상품 기준으로 전체 상품 동일 높이 */
@@ -1015,8 +1024,33 @@ function renderStage(){
   cards.forEach(c=>c.style.minHeight=max+'px');
  });
 }
+/* 현재 선택이 '그룹 전체'인지 판정 — 2개 이상이 모두 같은 gid이면 그 gid 반환, 아니면 null */
+function curGroupGid(){
+ if(selIds.size<2)return null;
+ const s=selectedObjs();const g=s[0]&&s[0].gid;
+ return (g&&s.every(o=>o.gid===g))?g:null;
+}
+/* 회전을 고려한 객체의 축정렬 경계상자(AABB) */
+function objAABB(o){
+ const cx=o.x+o.w/2,cy=o.y+o.h/2,r=(o.rot||0)*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
+ const pts=[[-o.w/2,-o.h/2],[o.w/2,-o.h/2],[o.w/2,o.h/2],[-o.w/2,o.h/2]].map(([dx,dy])=>[cx+dx*cos-dy*sin,cy+dx*sin+dy*cos]);
+ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+ return {minX:Math.min(...xs),minY:Math.min(...ys),maxX:Math.max(...xs),maxY:Math.max(...ys)};
+}
+/* 여러 객체를 감싸는 그룹 경계상자 */
+function groupBounds(list){
+ const bs=list.map(objAABB);
+ return {minX:Math.min(...bs.map(b=>b.minX)),minY:Math.min(...bs.map(b=>b.minY)),maxX:Math.max(...bs.map(b=>b.maxX)),maxY:Math.max(...bs.map(b=>b.maxY))};
+}
+/* 드래그/리사이즈/회전 중 그룹 박스 요소를 실시간 갱신 */
+function updateGroupBoxEl(){
+ const el=document.getElementById('eo-groupbox');if(!el)return;
+ const b=groupBounds(selectedObjs());
+ el.style.left=b.minX+'px';el.style.top=b.minY+'px';el.style.width=(b.maxX-b.minX)+'px';el.style.height=(b.maxY-b.minY)+'px';
+}
 function objectHtml(o){
  const sel=selIds.has(o.id);
+ const grpMember=sel&&curGroupGid()===o.gid&&!!o.gid; /* 그룹 선택 상태의 개별 멤버 — 보더만(핸들 없음) */
  const op=(o.opacity==null?100:o.opacity)/100; /* 투명도 — 모든 객체 타입 공통 */
  let inner='';
  if(o.type==='text')inner=`<div class="eo-text" style="${textStyleCss(o)}">${escText(o.text)}</div>`;
@@ -1031,7 +1065,7 @@ function objectHtml(o){
  }else if(o.type==='widget')inner=o.kind==='menu'?menuInnerHtml(o):widgetInnerHtml(o);
  const handles=(sel&&selIds.size===1)?['nw','n','ne','e','se','s','sw','w'].map(h=>`<span class="eo-h eo-h-${h}" data-h="${h}"></span>`).join('')+'<span class="eo-rot" data-rot aria-label="회전"></span>':'';
  /* 콘텐츠는 .eo-body(투명도 적용)로 감싸 핸들/선택 아웃라인은 불투명 유지 */
- return `<div class="eo eo-${o.type} ${sel?'sel':''}" data-eo="${o.id}" style="left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px;z-index:${o.z};transform:rotate(${o.rot||0}deg)"><div class="eo-body" style="opacity:${op}">${inner}</div>${handles}</div>`;
+ return `<div class="eo eo-${o.type} ${sel?'sel':''}${grpMember?' grp-member':''}" data-eo="${o.id}" style="left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px;z-index:${o.z};transform:rotate(${o.rot||0}deg)"><div class="eo-body" style="opacity:${op}">${inner}</div>${handles}</div>`;
 }
 function shapeSvg(o){
  const {shape,fill,stroke}=o;
@@ -1180,6 +1214,74 @@ function startRotateObject(e,o){
  const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);pushHistory();renderRightPanel();};
  document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
 }
+/* ── 그룹 박스 상호작용 ── 이동(그룹 단위)·리사이즈(비례 스케일)·회전(중심 기준), 더블클릭 시 그룹 진입(개별 편집) ── */
+function attachGroupBoxEvents(box){
+ if(!box)return;
+ box.addEventListener('mousedown',e=>{
+  if(e.target.closest('.eo-h')||e.target.closest('.eo-rot'))return;
+  e.stopPropagation();
+  const first=selectedObjs()[0];if(first)startDragObject(e,first); /* 박스 드래그 = 그룹 전체 이동(기존 동작 유지) */
+ });
+ box.querySelectorAll('.eo-h').forEach(h=>h.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();startGroupResize(e,h.dataset.h);}));
+ const rh=box.querySelector('.eo-rot');
+ if(rh)rh.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();startGroupRotate(e);});
+ box.addEventListener('dblclick',e=>{ /* 그룹 진입 — 포인터 아래 개별 객체 선택 → 개별 패널 */
+  e.stopPropagation();
+  const p=canvasPointFromEvent(e);
+  const ms=selectedObjs().sort((a,b)=>b.z-a.z);
+  const hit=ms.find(o=>p.x>=o.x&&p.x<=o.x+o.w&&p.y>=o.y&&p.y<=o.y+o.h)||ms[0];
+  if(hit){setSel(hit.id);renderStage();renderRightPanel();}
+ });
+}
+function startGroupResize(e,handle){
+ const start=canvasPointFromEvent(e);
+ const members=selectedObjs();
+ const b0=groupBounds(members);const bw=b0.maxX-b0.minX,bh=b0.maxY-b0.minY;
+ const anchorX=handle.includes('w')?b0.maxX:b0.minX; /* 반대편 모서리 고정 */
+ const anchorY=handle.includes('n')?b0.maxY:b0.minY;
+ const origs=members.map(o=>({o,x:o.x,y:o.y,w:o.w,h:o.h,size:o.size}));
+ const move=ev=>{
+  const p=canvasPointFromEvent(ev);const dx=p.x-start.x,dy=p.y-start.y;
+  let nbw=bw,nbh=bh;
+  if(handle.includes('e'))nbw=Math.max(20,bw+dx);
+  if(handle.includes('w'))nbw=Math.max(20,bw-dx);
+  if(handle.includes('s'))nbh=Math.max(20,bh+dy);
+  if(handle.includes('n'))nbh=Math.max(20,bh-dy);
+  const sx=(handle.includes('e')||handle.includes('w'))?nbw/bw:1;
+  const sy=(handle.includes('n')||handle.includes('s'))?nbh/bh:1;
+  origs.forEach(t=>{
+   t.o.x=anchorX+(t.x-anchorX)*sx;t.o.y=anchorY+(t.y-anchorY)*sy;
+   t.o.w=Math.max(4,t.w*sx);t.o.h=Math.max(4,t.h*sy);
+   if(t.o.type==='text'&&t.size)t.o.size=Math.max(8,Math.round(t.size*Math.min(sx,sy)));
+   const el=document.querySelector(`[data-eo="${t.o.id}"]`);
+   if(el){el.style.left=t.o.x+'px';el.style.top=t.o.y+'px';el.style.width=t.o.w+'px';el.style.height=t.o.h+'px';const inner=el.querySelector('.eo-text');if(inner&&t.o.type==='text')inner.style.fontSize=t.o.size+'px';}
+  });
+  updateGroupBoxEl();
+ };
+ const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);pushHistory();renderStage();renderRightPanel();};
+ document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
+}
+function startGroupRotate(e){
+ const members=selectedObjs();
+ const b0=groupBounds(members);const cx=(b0.minX+b0.maxX)/2,cy=(b0.minY+b0.maxY)/2;
+ const p0=canvasPointFromEvent(e);const startAng=Math.atan2(p0.y-cy,p0.x-cx)*180/Math.PI;
+ const origs=members.map(o=>({o,cx:o.x+o.w/2,cy:o.y+o.h/2,rot:o.rot||0}));
+ const move=ev=>{
+  const p=canvasPointFromEvent(ev);
+  let delta=Math.atan2(p.y-cy,p.x-cx)*180/Math.PI-startAng;
+  if(ev.shiftKey)delta=Math.round(delta/15)*15;
+  const rad=delta*Math.PI/180,cos=Math.cos(rad),sin=Math.sin(rad);
+  origs.forEach(t=>{
+   const dx=t.cx-cx,dy=t.cy-cy;const nx=cx+dx*cos-dy*sin,ny=cy+dx*sin+dy*cos;
+   t.o.x=nx-t.o.w/2;t.o.y=ny-t.o.h/2;t.o.rot=((Math.round(t.rot+delta)%360)+360)%360;
+   const el=document.querySelector(`[data-eo="${t.o.id}"]`);
+   if(el){el.style.left=t.o.x+'px';el.style.top=t.o.y+'px';el.style.transform=`rotate(${t.o.rot}deg)`;}
+  });
+  updateGroupBoxEl();
+ };
+ const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);pushHistory();renderStage();renderRightPanel();};
+ document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
+}
 function enterTextEdit(o,el){
  const inner=el.querySelector('.eo-text');if(!inner)return;
  el.setAttribute('data-editing','1');
@@ -1261,6 +1363,7 @@ function startDragObject(e,o){
   renderGuideLines(snapped.lines);
   updateXYWHInputsLive(o);
   paintCoord();
+  updateGroupBoxEl(); /* 그룹 이동 시 박스도 함께 이동 */
  };
  const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);renderGuideLines([]);if(coord)coord.remove();pushHistory();renderRightPanel();};
  document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
@@ -1379,7 +1482,14 @@ function openRegionPicker(i){
 }
 
 /* ═══════════ 에디터 : 좌측 라이브러리 패널(도구별) / 우측 속성 패널 ═══════════ */
+/* 상단 그룹 버튼 라벨 — 선택 객체가 모두 같은 그룹이면 '그룹해제', 아니면 '그룹' */
+function updateGroupBtn(){
+ const t=$('#grp-btn-txt');if(!t)return;
+ const sel=selectedObjs();const g=sel.length&&sel[0].gid;
+ t.textContent=(sel.length&&g&&sel.every(o=>o.gid===g))?'그룹해제':'그룹';
+}
 function renderRightPanel(){
+ updateGroupBtn();
  const aside=$('#ed-panel'),lib=$('#panel-lib'),set=$('#panel-settings');
  if(cropState){aside.hidden=false;lib.hidden=true;set.hidden=false;renderCropPanel(set);fitEdCanvas();return;} /* 크롭 모드 패널 */
  const o=activeObj();
@@ -2380,15 +2490,18 @@ $('#ed-undo').onclick=undo;
 $('#ed-redo').onclick=redo;
 $('#btn-canvas-setup').addEventListener('mousedown',e=>e.stopPropagation()); /* 전역 외부클릭 닫힘보다 먼저 — 버튼으로 토글 */
 $('#btn-canvas-setup').onclick=e=>openCanvasSetupPop(e.currentTarget);
-/* 그룹 : 선택된 2개 이상 객체를 하나의 그룹으로 묶거나(같은 그룹이면) 해제 */
+/* 그룹 : 선택 객체가 모두 같은 그룹이면 해제(그룹 전체), 아니면 2개 이상을 하나의 그룹으로 묶기 */
 $('#ed-tool-group').onclick=()=>{
  const sel=selectedObjs();
+ const gid=sel.length&&sel[0].gid;
+ const grouped=sel.length&&gid&&sel.every(o=>o.gid===gid);
+ if(grouped){ /* 그룹해제 — 같은 gid 객체 전체의 그룹 정보 제거 */
+  objects.filter(o=>o.gid===gid).forEach(o=>delete o.gid);toast('그룹을 해제했어요.');
+  pushHistory();renderStage();renderRightPanel();return;
+ }
  if(sel.length<2){toast('그룹으로 묶을 객체를 2개 이상 선택해주세요.',{err:true});return;}
- const gid=sel[0].gid;
- const already=gid&&sel.every(o=>o.gid===gid)&&objects.filter(o=>o.gid===gid).length===sel.length;
- if(already){sel.forEach(o=>delete o.gid);toast('그룹을 해제했어요.');}
- else{const g='g'+(++objSeq);sel.forEach(o=>o.gid=g);toast('그룹으로 묶었어요.');}
- pushHistory();renderEditor();
+ const g='g'+(++objSeq);sel.forEach(o=>o.gid=g);selectRespectingGroup(sel[0]);toast('그룹으로 묶었어요.');
+ pushHistory();renderStage();renderRightPanel();
 };
 $$('.ed-rail button[data-tool]').forEach(b=>b.onclick=()=>{const go=()=>{cropState=null;activeTool=b.dataset.tool;setSel(null);renderEditor();};if(b.dataset.tool==='split'){go();return;}leaveSplitThen(go);});
 window.addEventListener('resize',()=>{const es=document.getElementById('screen-editor');if(es&&!es.hidden)fitEdCanvas();});
