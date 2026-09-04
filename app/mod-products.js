@@ -740,7 +740,7 @@ let objects=[],selId=null,selIds=new Set(),clipboard=[],objSeq=0,activeTool=null
 let splitLayout=null;
 let edScale=1;
 let history=[],historyIdx=-1,restoringHistory=false;
-let wgTab='menu',gLibTab='lib',gLibQ='',gFolder='all',gType='all',freeQ='',freeProvider='pixabay',cropState=null;
+let wgTab='menu',gLibTab='lib',gLibQ='',gFolder='all',gType='all',freeQ='',cropState=null;
 
 const SPLIT_PRESETS=[
  {id:'sp2h',name:'2분할 · 좌우',regions:[[0,0,.5,1],[.5,0,.5,1]]},
@@ -1608,10 +1608,11 @@ function renderBgPanel(el){
   const items=bgFilteredItems();
   const durBadge=c=>c.type==='video'?`<span class="dur num">${typeof durFmt==='function'?durFmt(c.dur):c.dur}</span>`:'';
   /* 카드 UI는 재생목록 라이브러리 카드(.ple-src)와 통일 */
-  grid.innerHTML=`<button class="bg-upload" id="bg-upload"><span class="im"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>업로드</span></button>`
+  /* 결과가 없으면(검색/필터) 업로드 버튼은 숨기고 안내 문구만 표시 */
+  grid.innerHTML=(items.length?`<button class="bg-upload" id="bg-upload"><span class="im"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>업로드</span></button>`:'')
    +items.map(c=>`<button class="ple-src bg-src" data-bgref="L:${c.id}"><div class="im" style="background:${c.g}">${c.e}${durBadge(c)}</div><div class="nm">${c.name}</div></button>`).join('')
    +(items.length?'':`<div class="bg-empty">조건에 맞는 콘텐츠가 없어요</div>`);
-  grid.querySelector('#bg-upload').onclick=bgUpload;
+  const up=grid.querySelector('#bg-upload');if(up)up.onclick=bgUpload;
   grid.querySelectorAll('[data-bgref]').forEach(card=>card.onclick=()=>{bgContent=card.dataset.bgref;bgOpacity=100;pushHistory();renderEditor();});
  }
 }
@@ -1692,22 +1693,22 @@ function rgbToHsv(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.m
 function hsvToRgb(h,s,v){s/=100;v/=100;const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;let r,g,b;if(h<60){r=c;g=x;b=0;}else if(h<120){r=x;g=c;b=0;}else if(h<180){r=0;g=c;b=x;}else if(h<240){r=0;g=x;b=c;}else if(h<300){r=x;g=0;b=c;}else{r=c;g=0;b=x;}return{r:(r+m)*255,g:(g+m)*255,b:(b+m)*255};}
 function hexToHsv(hex){const {r,g,b}=hexToRgb(hex);return rgbToHsv(r,g,b);}
 function hsvToHex(h,s,v){const {r,g,b}=hsvToRgb(h,s,v);return rgbToHex(r,g,b);}
-/* 무료 이미지 — 프로토타입 mock. TODO(API): Pixabay/Pexels/공유마당 등 무료 이미지 API 연동(프로바이더별 검색·페이지네이션). 구조는 프로바이더 추가/변경이 쉽도록 분리 */
-const FREE_PROVIDERS=[{id:'pixabay',name:'Pixabay'},{id:'pexels',name:'Pexels'},{id:'gongu',name:'공유마당'}];
+/* 무료 이미지 — 프로토타입 mock. TODO(API): Pixabay·Pexels 무료 이미지 API 연동(검색·페이지네이션·출처/키워드 메타). provider·author·keywords·url은 실제 응답 필드로 대체 */
 const FREE_IMAGES=[
- {id:'fi1',name:'coffee latte',g:'linear-gradient(135deg,#6F4E37,#C9A27E)'},
- {id:'fi2',name:'city night',g:'linear-gradient(135deg,#1E293B,#334155)'},
- {id:'fi3',name:'green leaves',g:'linear-gradient(135deg,#166534,#4ADE80)'},
- {id:'fi4',name:'sunset beach',g:'linear-gradient(135deg,#F97316,#FDE68A)'},
- {id:'fi5',name:'blue ocean',g:'linear-gradient(135deg,#0EA5E9,#0369A1)'},
- {id:'fi6',name:'dessert plate',g:'linear-gradient(135deg,#DB2777,#FBCFE8)'},
- {id:'fi7',name:'wood table',g:'linear-gradient(135deg,#92400E,#D6A56A)'},
- {id:'fi8',name:'minimal gray',g:'linear-gradient(135deg,#9CA3AF,#E5E7EB)'},
- {id:'fi9',name:'purple gradient',g:'linear-gradient(135deg,#6D28D9,#C4B5FD)'},
- {id:'fi10',name:'fresh salad',g:'linear-gradient(135deg,#15803D,#BEF264)'},
- {id:'fi11',name:'warm bakery',g:'linear-gradient(135deg,#B45309,#FCD34D)'},
- {id:'fi12',name:'night sky',g:'linear-gradient(135deg,#0F172A,#4338CA)'},
-];
+ {id:'fi1',name:'coffee latte',g:'linear-gradient(135deg,#6F4E37,#C9A27E)',provider:'pixabay',author:'Pexels',keywords:['커피','라떼','카페','음료','원두','아침','바리스타','따뜻한','컵','우유','디저트'],url:'https://pixabay.com'},
+ {id:'fi2',name:'city night',g:'linear-gradient(135deg,#1E293B,#334155)',provider:'pexels',author:'Aleksandar Pasaric',keywords:['도시','야경','밤','빌딩','네온','거리','불빛','스카이라인','다운타운','조명'],url:'https://pexels.com'},
+ {id:'fi3',name:'green leaves',g:'linear-gradient(135deg,#166534,#4ADE80)',provider:'pixabay',author:'Larisa-K',keywords:['잎','식물','자연','초록','숲','싱그러운','정원','열대','생명','환경'],url:'https://pixabay.com'},
+ {id:'fi4',name:'sunset beach',g:'linear-gradient(135deg,#F97316,#FDE68A)',provider:'pexels',author:'Sebastian Voortman',keywords:['노을','해변','일몰','바다','하늘','여름','휴양','파도','수평선','황혼'],url:'https://pexels.com'},
+ {id:'fi5',name:'blue ocean',g:'linear-gradient(135deg,#0EA5E9,#0369A1)',provider:'pixabay',author:'ELG21',keywords:['절벽','섬','바다','자연','수평선','마법의','구름','하늘','풍경','해안','여행'],url:'https://pixabay.com'},
+ {id:'fi6',name:'dessert plate',g:'linear-gradient(135deg,#DB2777,#FBCFE8)',provider:'pexels',author:'Ella Olsson',keywords:['디저트','케이크','베이커리','달콤한','간식','카페','접시','과일','플레이팅','파티'],url:'https://pexels.com'},
+ {id:'fi7',name:'wood table',g:'linear-gradient(135deg,#92400E,#D6A56A)',provider:'pixabay',author:'Free-Photos',keywords:['원목','테이블','질감','인테리어','배경','자연','따뜻한','카페','빈티지','바닥'],url:'https://pixabay.com'},
+ {id:'fi8',name:'minimal gray',g:'linear-gradient(135deg,#9CA3AF,#E5E7EB)',provider:'pexels',author:'Scott Webb',keywords:['미니멀','회색','배경','벽','단색','심플','모던','질감','콘크리트','무채색'],url:'https://pexels.com'},
+ {id:'fi9',name:'purple gradient',g:'linear-gradient(135deg,#6D28D9,#C4B5FD)',provider:'pixabay',author:'Gerd Altmann',keywords:['보라','그라디언트','배경','추상','컬러','네온','감성','몽환','빛','디자인'],url:'https://pixabay.com'},
+ {id:'fi10',name:'fresh salad',g:'linear-gradient(135deg,#15803D,#BEF264)',provider:'pexels',author:'Lisa Fotios',keywords:['샐러드','채소','신선한','건강','식단','다이어트','야채','그릇','유기농','비건'],url:'https://pexels.com'},
+ {id:'fi11',name:'warm bakery',g:'linear-gradient(135deg,#B45309,#FCD34D)',provider:'pixabay',author:'congerdesign',keywords:['빵','베이커리','제빵','고소한','아침','크루아상','따뜻한','밀','간식','오븐'],url:'https://pixabay.com'},
+ {id:'fi12',name:'night sky',g:'linear-gradient(135deg,#0F172A,#4338CA)',provider:'pexels',author:'Neale LaSalle',keywords:['밤하늘','별','은하수','우주','야경','고요한','자연','별빛','풍경','천체'],url:'https://pexels.com'},
+].sort(()=>Math.random()-0.5); /* 프로토타입: Pixabay·Pexels 혼합 랜덤 노출(API 연동 시 응답 순서로 대체) */
+const providerLabel=p=>({pixabay:'PIXABAY',pexels:'PEXELS'})[p]||String(p||'').toUpperCase();
 /* 무료 이미지를 자산 라이브러리에 등록하고 id 반환 (TODO(API): 실제 다운로드/캐싱 후 자산화) */
 function registerFreeAsset(x){
  const id='free'+(++objSeq);
@@ -1762,29 +1763,50 @@ function renderGraphicLib(el){
   }
  }
 
- /* 무료 이미지 탭 — 프로바이더별 무료 이미지(API 예정) */
+ /* 무료 이미지 탭 — Pixabay·Pexels 혼합 랜덤 노출(API 예정). 호버 시 '더보기'로 출처·키워드 확인 */
  function drawFree(){
   body.innerHTML=`
-   <div class="search-wrap" style="margin-bottom:10px">${IC.search}<input class="input input-sm" id="free-q" placeholder="무료 이미지 검색" value="${freeQ}"></div>
-   <div class="bg-chips">${FREE_PROVIDERS.map(p=>`<button class="${freeProvider===p.id?'on':''}" data-fprov="${p.id}">${p.name}</button>`).join('')}</div>
-   <p style="font-size:12px;color:var(--text-3);margin:2px 0 12px;line-height:1.5">${(FREE_PROVIDERS.find(p=>p.id===freeProvider)||{}).name} 무료 이미지예요. 클릭하면 캔버스에 추가돼요.</p>
+   <div class="search-wrap" style="margin-bottom:12px">${IC.search}<input class="input input-sm" id="free-q" placeholder="무료 이미지 검색" value="${freeQ}"></div>
    <div class="bg-grid" id="free-grid"></div>`;
   body.querySelector('#free-q').addEventListener('input',e=>{freeQ=e.target.value.trim();drawFreeGrid();});
-  body.querySelectorAll('[data-fprov]').forEach(b=>b.onclick=()=>{freeProvider=b.dataset.fprov;drawFree();});
   drawFreeGrid();
   function drawFreeGrid(){
    const grid=body.querySelector('#free-grid');if(!grid)return;
    const q=freeQ.toLowerCase();
-   const items=FREE_IMAGES.filter(x=>!q||x.name.toLowerCase().includes(q));
-   grid.innerHTML=items.map(x=>`<button class="ple-src bg-src" data-fimg="${x.id}" draggable="true"><div class="im" style="background:${x.g}">🖼️</div><div class="nm">${x.name}</div></button>`).join('')
+   const items=FREE_IMAGES.filter(x=>!q||x.name.toLowerCase().includes(q)||(x.keywords||[]).some(k=>k.toLowerCase().includes(q)));
+   grid.innerHTML=items.map(x=>`<div class="ple-src bg-src free-card" data-fimg="${x.id}" draggable="true"><div class="im" style="background:${x.g}">🖼️<button class="free-more" data-fmore="${x.id}" aria-label="출처·키워드 더보기"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div><div class="nm">${x.name}</div></div>`).join('')
     ||`<div class="bg-empty">검색 결과가 없어요</div>`;
    grid.querySelectorAll('[data-fimg]').forEach(card=>{
     const x=FREE_IMAGES.find(i=>i.id===card.dataset.fimg);
-    card.onclick=()=>{addObject('graphic',{ref:'L:'+registerFreeAsset(x)});toast('무료 이미지를 추가했어요');};
+    card.onclick=e=>{if(e.target.closest('.free-more'))return;addObject('graphic',{ref:'L:'+registerFreeAsset(x)});toast('무료 이미지를 추가했어요');};
     card.addEventListener('dragstart',e=>e.dataTransfer.setData('text/gref','L:'+registerFreeAsset(x)));
    });
+   grid.querySelectorAll('[data-fmore]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();openFreeInfo(btn,FREE_IMAGES.find(i=>i.id===btn.dataset.fmore));});
   }
  }
+}
+/* 무료 이미지 출처·키워드 팝오버 (첨부 이미지) — 출처(제공처의 저자) + 키워드(더보기로 전체) + 무료 사용 */
+function openFreeInfo(anchor,x){
+ if(!x)return;
+ closeMenus();
+ let expanded=false;
+ const m=document.createElement('div');m.className='free-pop';
+ const render=()=>{
+  const kws=x.keywords||[];const shown=expanded?kws:kws.slice(0,8);const trunc=!expanded&&kws.length>8;
+  m.innerHTML=`
+   <div class="fp-src">${providerLabel(x.provider)}의 ${x.author}</div>
+   <div class="fp-div"></div>
+   <div class="fp-kw-lbl">키워드</div>
+   <div class="fp-kw">${shown.join(', ')}${trunc?', …':''}</div>
+   ${kws.length>8?`<button class="fp-more">${expanded?'접기':'더보기'}</button>`:''}`;
+  const more=m.querySelector('.fp-more');if(more)more.onclick=()=>{expanded=!expanded;render();};
+ };
+ render();
+ document.body.appendChild(m);
+ const r=anchor.getBoundingClientRect();
+ m.style.top=Math.min(r.bottom+6,innerHeight-m.offsetHeight-10)+'px';
+ m.style.left=Math.max(10,Math.min(r.right-m.offsetWidth,innerWidth-m.offsetWidth-10))+'px';
+ openMenu=m;
 }
 function renderSplitLib(el){
  el.innerHTML=`<div class="ed-panel-head sp-head"><h2>분할</h2></div>
