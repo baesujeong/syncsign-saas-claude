@@ -1118,7 +1118,11 @@ function menuInnerHtml(o){
  const bg=w.bg||{on:true,fill:'#FFFFFF',border:'#E5E7EB',width:1};
  const radius=w.radius||0;
  const cardStyle=`background:${bg.on?bg.fill:'transparent'};${bg.on?`border:${bg.width}px solid ${bg.border};`:''}border-radius:${radius}px;padding:${w.padY??20}px ${w.padX??20}px`;
- const cols=Math.min(Math.max(w.cols||4,1),6);
+ /* 반응형 열 수 — 위젯 가용 폭 ÷ 타입별 최소 카드 폭으로 열 수 결정. 사용자 '한줄 표시'는 상한, 좁으면 자동 감소·다음 행 reflow(텍스트를 줄이지 않고 열을 줄임) */
+ const MIN_CARD={A:240,B:300,C:210,D:290}[type]||240;
+ const GAP=16;
+ const fitCols=Math.max(1,Math.floor(((o.w||MIN_CARD)+GAP)/(MIN_CARD+GAP)));
+ const cols=Math.max(1,Math.min(Math.max(w.cols||4,1),6,fitCols,items.length));
  const effBase=p=>p.discount||p.price;
  const pOpt=w.priceOpt?optionSets.find(x=>x.id===w.priceOpt):null;
  const cells=p=>{if(!pOpt||!(p.opt||[]).includes(pOpt.id))return null;const base=effBase(p);return pOpt.items.map(it=>({l:it.name,v:base+it.delta}));};
