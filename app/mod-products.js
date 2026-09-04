@@ -574,14 +574,15 @@ function openOptMan(){
   const editBlock=()=>`<div class="optgrp-edit">
      <label class="oe-lbl">옵션 그룹명</label>
      <input class="input input-sm" data-gname value="${esc(wName)}" maxlength="20" placeholder="예) 사이즈">
+     <div class="ferr" data-gname-err style="display:none"></div>
      <label class="oe-lbl" style="margin-top:12px">옵션 항목</label>
      <div class="oe-items">${wItems.map((it,i)=>`<div class="oe-item" data-oi="${i}">
         <input class="input input-sm" data-iname value="${esc(it.name)}" maxlength="24" placeholder="옵션명 (예: Tall)">
         <div class="oe-price"><span class="pfx">+</span><input class="input input-sm num" data-idelta value="${esc(it.delta)}" inputmode="numeric" placeholder="0"><span class="sfx">원</span></div>
         <button class="icon-btn oe-del" data-idel="${i}" aria-label="항목 삭제">${IC.trash}</button>
       </div>`).join('')}</div>
+     <div class="ferr" data-items-err style="display:none"></div>
      <button class="btn btn-sm oe-additem" data-iadd><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>항목 추가</button>
-     <div class="ferr" data-gerr style="display:none"></div>
      <div class="oe-actions"><button class="btn btn-sm" data-gcancel>취소</button><button class="btn btn-sm btn-primary" data-gsave>저장</button></div>
     </div>`;
   const draw=()=>{
@@ -602,15 +603,17 @@ function openOptMan(){
    blk.querySelectorAll('[data-idel]').forEach(b=>b.onclick=()=>{readInputs();wItems.splice(+b.dataset.idel,1);if(!wItems.length)wItems.push({name:'',delta:''});draw();});
    blk.querySelector('[data-gcancel]').onclick=()=>{editId=null;draw();};
    blk.querySelector('[data-gsave]').onclick=saveGroup;
-   blk.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{i.classList.remove('error');blk.querySelector('[data-gerr]').style.display='none';}));
+   blk.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{i.classList.remove('error');blk.querySelector('[data-gname-err]').style.display='none';blk.querySelector('[data-items-err]').style.display='none';}));
   };
   const saveGroup=()=>{
    readInputs();
+   const blk=ov.querySelector('.optgrp-edit');
+   const gErr=blk.querySelector('[data-gname-err]'),iErr=blk.querySelector('[data-items-err]');
+   gErr.style.display='none';iErr.style.display='none';blk.querySelectorAll('.input.error').forEach(x=>x.classList.remove('error'));
    const name=wName.trim();
+   if(!name){gErr.textContent='옵션 그룹명을 입력해주세요.';gErr.style.display='flex';const g=blk.querySelector('[data-gname]');g.classList.add('error');g.focus();return}
    const items=wItems.map(it=>({name:it.name.trim(),delta:parseInt(String(it.delta).replace(/[^0-9-]/g,''),10)||0})).filter(it=>it.name);
-   const err=ov.querySelector('.optgrp-edit [data-gerr]');
-   if(!name){err.textContent='옵션 그룹명을 입력해주세요.';err.style.display='flex';const g=ov.querySelector('.optgrp-edit [data-gname]');g.classList.add('error');g.focus();return}
-   if(!items.length){err.textContent='옵션 항목을 최소 1개 입력해주세요.';err.style.display='flex';return}
+   if(!items.length){iErr.textContent='옵션명을 입력해주세요.';iErr.style.display='flex';const fn=blk.querySelector('[data-iname]');if(fn){fn.classList.add('error');fn.focus();}return}
    if(editId==='__new')optionSets.push({id:'og'+(++seq),name,items:items.map(it=>({id:'oi'+(++seq),...it}))});
    else{const g=optionSets.find(x=>x.id===editId);if(g){g.name=name;g.items=items.map(it=>({id:'oi'+(++seq),...it}));}}
    const nm=name;editId=null;draw();renderProducts();renderBoard();toast(`'${nm}' 옵션 그룹을 저장했어요.`);
