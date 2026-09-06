@@ -1747,10 +1747,11 @@ function renderGraphicLib(el){
    const grid=body.querySelector('#gph-grid');if(!grid)return;
    const items=gItems();
    const durBadge=c=>c.type==='video'?`<span class="dur num">${typeof durFmt==='function'?durFmt(c.dur):c.dur}</span>`:'';
-   grid.innerHTML=`<button class="bg-upload" id="gph-upload"><span class="im">${upIcon}업로드</span></button>`
+   /* 결과가 없으면(검색/필터) 업로드 버튼은 숨기고 안내 문구만 표시 */
+   grid.innerHTML=(items.length?`<button class="bg-upload" id="gph-upload"><span class="im">${upIcon}업로드</span></button>`:'')
     +items.map(c=>`<button class="ple-src bg-src" data-gref="L:${c.id}" draggable="true"><div class="im" style="background:${c.g}">${c.e}${durBadge(c)}</div><div class="nm">${c.name}</div></button>`).join('')
     +(items.length?'':`<div class="bg-empty">조건에 맞는 콘텐츠가 없어요</div>`);
-   grid.querySelector('#gph-upload').onclick=()=>{
+   const gup=grid.querySelector('#gph-upload');if(gup)gup.onclick=()=>{
     /* TODO(API): 실제 파일 업로드 → 자산 라이브러리 추가. 프로토타입은 샘플 이미지로 대체 */
     const id='cu'+(++objSeq);
     LIB.unshift({id,name:'업로드 이미지.png',type:'image',folder:gFolder!=='all'?gFolder:'lf1',tags:[],size:'2.0MB',dur:0,g:'linear-gradient(135deg,#22D3EE,#6366F1)',e:'🖼️',used:{pl:0,tp:0},date:'—'});
