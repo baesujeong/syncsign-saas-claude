@@ -1202,12 +1202,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .color-pop .cp-eye{display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:var(--r-md);width:34px;height:34px;flex:none;color:var(--text-2)}
 .color-pop .cp-presets{display:flex;gap:8px}
 .color-pop .cp-presets button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border-2)}
-.wlib-card{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:all .15s;margin-bottom:14px}
-.wlib-card:hover{border-color:var(--blue);box-shadow:var(--sh-md)}
-.wlib-card .prev{height:118px;background:#1B212B;display:flex;align-items:center;justify-content:center;padding:14px}
-.wlib-card .cap{padding:12px 14px}
-.wlib-card .cap b{font-size:14px;display:flex;align-items:center;gap:8px}
-.wlib-card .cap p{margin:4px 0 0;font-size:12px;color:var(--text-2);line-height:1.55}
+/* 날씨·뉴스 팔레트 썸네일 — 위젯 프리뷰를 .mtype-prev 박스에 맞춰 축소 표시 */
+.wg-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wg-thumb .wg-thumb-in{width:176px;height:99px;flex:none;display:flex;transform:scale(.5);transform-origin:center}
 .ed-sec{border-bottom:1px solid var(--border);padding:14px 0}
 .ed-sec:first-child{padding-top:0}
 .ed-sec-head{display:flex;align-items:center;gap:8px;width:100%;font-size:14px;font-weight:700;text-align:left;padding:2px 0}
@@ -1266,6 +1263,20 @@ table.grid tr.checked td{background:var(--blue-50)}
 .mtype-card{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);cursor:pointer;text-align:left;transition:border-color .12s,box-shadow .12s}
 .mtype-card:hover{border-color:var(--border-2);box-shadow:var(--sh-sm)}
 .mtype-card.on{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-100)}
+/* 날씨 위젯 위치 설정 — 매장 주소 사용 / 직접 설정 (라디오) */
+.wg-loc{display:flex;flex-direction:column;gap:2px}
+.wg-loc-opt{display:flex;align-items:flex-start;gap:9px;padding:8px 2px;text-align:left;width:100%}
+.wg-loc-opt .rdo{flex:none;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border-2);margin-top:2px;position:relative;transition:border-color .12s}
+.wg-loc-opt .rdo.on{border-color:var(--blue)}
+.wg-loc-opt .rdo.on::after{content:'';position:absolute;left:3px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.wg-loc-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.wg-loc-body b{font-size:14px;font-weight:600;color:var(--text)}
+.wg-loc-sub{font-size:13px;color:var(--text-2)}
+.wg-loc-warn{font-size:12px;color:var(--text-3);line-height:1.55}
+.wg-loc-fields{margin:2px 0 4px 25px}
+.wg-loc-fields .wg-fld+.wg-fld{margin-top:10px}
+.wg-loc-fields .wg-fld label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:5px}
+.wg-loc-fields .wg-fld select{width:100%}
 .mtype-prev{width:100px;height:68px;flex:none;border-radius:8px;background:#E7EAEF;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .mtype-cap b{display:block;font-size:13px;font-weight:700}
 .mtype-cap span{font-size:12px;color:var(--text-3)}
