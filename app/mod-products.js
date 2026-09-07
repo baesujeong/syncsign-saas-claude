@@ -779,16 +779,28 @@ const WEATHER_REGIONS={
  '베트남':['호치민','하노이','다낭'],
  '영국':['런던','맨체스터'],
 };
-/* 매장 주소 — 매장 관리에 등록된 현재 매장의 국가·지역. TODO(API): 매장 관리 데이터와 연동. null이면 미등록(직접 설정 유도) */
-let STORE_ADDR={country:'대한민국',region:'서울특별시'};
-/* 날씨 위젯의 실제 조회 위치 — locMode(store/manual)에 따라 매장 주소 또는 직접 설정값 반환. locMode 없으면(팔레트 프리뷰) 전달된 region 사용 */
+/* 매장 목록 — 매장 관리에 등록된 매장(주소=국가·지역). TODO(API): 매장 관리 데이터와 연동. 빈 배열이면 미등록(직접 설정 유도) */
+let WX_STORES=[
+ {id:'st1',name:'강남 본점',country:'대한민국',region:'서울특별시'},
+ {id:'st2',name:'부산 서면점',country:'대한민국',region:'부산광역시'},
+ {id:'st3',name:'제주 중문점',country:'대한민국',region:'제주특별자치도'},
+ {id:'st4',name:'도쿄 시부야점',country:'일본',region:'도쿄'},
+];
+const wxStore=id=>WX_STORES.find(s=>s.id===id)||WX_STORES[0]||null;
+/* 날씨 위젯의 실제 조회 위치 — locMode(store/manual)에 따라 선택 매장 주소 또는 직접 설정값 반환. locMode 없으면(팔레트 프리뷰) 전달된 region 사용 */
 function weatherLoc(o){
  if(!o.locMode)return {country:o.country,region:o.region};
- if(o.locMode==='store'&&STORE_ADDR)return {country:STORE_ADDR.country,region:STORE_ADDR.region};
+ if(o.locMode==='store'){const s=wxStore(o.storeId);if(s)return {country:s.country,region:s.region};}
  return {country:o.country||'대한민국',region:o.region||'서울특별시'};
 }
-const WEATHER_STYLES=[{id:'card',name:'카드형',desc:'아이콘 + 기온 + 지역'},{id:'compact',name:'컴팩트 바',desc:'한 줄 요약 바'},{id:'mono',name:'큰 숫자형',desc:'기온 크게 강조'}];
-const NEWS_STYLES=[{id:'ticker',name:'티커형',desc:'한 줄 헤드라인'},{id:'card',name:'카드형',desc:'헤드라인 목록'}];
+const WEATHER_STYLES=[
+ {id:'a',name:'타입 A',desc:'상세 정보(풍속·풍향·강수·미세먼지)',w:380,h:400},
+ {id:'b',name:'타입 B',desc:'기온 + 아이콘',w:380,h:180},
+];
+const NEWS_STYLES=[
+ {id:'ticker',name:'티커형',desc:'흰색 배경 + 로고·헤드라인',w:720,h:104},
+ {id:'card',name:'카드형',desc:'로고 + 세로 헤드라인',w:360,h:320,tw:300,th:128}, /* 캔버스=세로 카드, 썸네일(tw·th)=로고 배너 */
+];
 /* 글꼴 = 패밀리 + 굵기 조합(시안: "Pretendard Bold"처럼 굵기를 글꼴 목록에서 선택) */
 const FONT_OPTIONS=[
  {label:'Pretendard',family:'Pretendard',weight:400},
@@ -1097,14 +1109,34 @@ function shapeOutlineSvg(shape){
 function widgetInnerHtml(o){
  if(o.kind==='call')return callWidgetHtml(o.layout||'pickup',o.theme||'light',o.w);
  if(o.kind==='weather'){
+  const u=((o.w||340)/100).toFixed(3);
   const region=weatherLoc(o).region;
-  if(o.styleId==='compact')return `<div class="wg wg-weather st-compact"><span class="e">☀️</span><span class="num">24°</span><span class="region">${region}</span></div>`;
-  if(o.styleId==='mono')return `<div class="wg wg-weather st-mono"><span class="num">24°</span><span class="region">${region} · 맑음</span></div>`;
-  return `<div class="wg wg-weather st-card"><span class="e">☀️</span><span class="region">${region}</span><span class="num">24°</span><span class="cond">맑음</span></div>`;
+  if(o.styleId==='b'){ /* 타입 B — 기온 + 아이콘 + 지역 (카드) */
+   const sun=`<svg class="wb-ico" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="8.5" fill="#FFC629"/><g stroke="#FFC629" stroke-width="3.4" stroke-linecap="round"><path d="M20 3.2v4.4"/><path d="M20 32.4v4.4"/><path d="M6.6 6.6l3.1 3.1"/><path d="M30.3 30.3l3.1 3.1"/><path d="M3.2 20h4.4"/><path d="M32.4 20h4.4"/><path d="M6.6 33.4l3.1-3.1"/><path d="M30.3 9.7l3.1-3.1"/></g></svg>`;
+   return `<div class="wg wg-wb" style="--u:${u}px"><div class="wb-top"><span class="wb-temp">28°</span>${sun}</div><span class="wb-region">${region}</span></div>`;
+  }
+  /* 타입 A — 상세 정보 */
+  const cloud=`<svg class="wa-ico" viewBox="0 0 48 48" fill="none" stroke="#1A1A1A" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 28a6.5 6.5 0 0 1-.8-12.95A9 9 0 0 1 32 15.5a6 6 0 0 1 1.6 11.8"/><g stroke-width="2.6"><path d="M18 32v7"/><path d="M15 33.6l6 3.8"/><path d="M21 33.6l-6 3.8"/><path d="M29 34v6"/><path d="M26.5 35.5l5 3"/><path d="M31.5 35.5l-5 3"/></g></svg>`;
+  const row=(kr,en,val,unit)=>`<div class="wa-row"><div class="wa-lbl"><b>${kr}</b><span>${en}</span></div><div class="wa-val"><b>${val}</b>${unit?`<small>${unit}</small>`:''}</div></div>`;
+  return `<div class="wg wg-wa" style="--u:${u}px">
+    <div class="wa-head"><div class="wa-cur">${cloud}<span class="wa-temp">5.5<sup>℃</sup></span></div><div class="wa-meta"><span class="wa-time">4:06<small>PM</small></span><span class="wa-loc">${region}</span></div></div>
+    <div class="wa-hr"></div>
+    ${row('풍속','WIND SPEED','2.8','m/s')}
+    ${row('풍향','WIND DIRECTION','서북서','')}
+    ${row('강수량','PRECIPITATION','0','mm')}
+    <div class="wa-row"><div class="wa-lbl"><b>미세먼지</b><span>FINE DUST</span><div class="wa-legend"><span class="lg1">좋음 0~30</span><span class="lg2">보통 31~80</span><span class="lg3">나쁨 81~150</span><span class="lg4">매우나쁨 151~</span></div></div><div class="wa-val"><b>45</b></div></div>
+   </div>`;
  }
  if(o.kind==='news'){
-  if(o.styleId==='ticker')return `<div class="wg wg-news st-ticker"><span class="tag">NEWS</span><span class="headline">오늘의 주요 소식이 이 자리에 표시돼요 · 실제 연동 시 실시간 헤드라인으로 교체돼요</span></div>`;
-  return `<div class="wg wg-news st-card"><span class="tag">NEWS</span><ul><li>오늘의 주요 소식 헤드라인 1</li><li>오늘의 주요 소식 헤드라인 2</li><li>오늘의 주요 소식 헤드라인 3</li></ul></div>`;
+  const u=((o.w||340)/100).toFixed(3);
+  const logo=`<span class="yl"><svg class="yl-ico" viewBox="0 0 44 40" fill="none"><g transform="rotate(-18 22 20)"><ellipse cx="22" cy="20" rx="18" ry="13.5" fill="#1560C4"/><path d="M14 20a8 8 0 1 1 8 8" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round"/><circle cx="22" cy="20" r="3.4" fill="#0E3E8C"/></g></svg><b>연합뉴스</b></span>`;
+  const head='극심한 경제난 공포에 떠는 한인들…"물가상승률 190% 예상"';
+  if(o.styleId==='card'){
+   /* 썸네일(o.preview)=연한 파랑 로고 배너 / 캔버스=흰색 세로 카드(로고 + 세로 헤드라인) */
+   if(o.preview)return `<div class="wg wg-ncard" style="--u:${u}px">${logo}</div>`;
+   return `<div class="wg wg-nv" style="--u:${u}px">${logo}<div class="nv-head">${head}</div></div>`;
+  }
+  return `<div class="wg wg-nticker" style="--u:${u}px">${logo}<span class="nn-head">${head}</span></div>`;
  }
  return'';
 }
@@ -1165,20 +1197,7 @@ function menuInnerHtml(o){
   </div>`;}).join('')}</div>`;
 }
 
-/* ─ 오브젝트 인터랙션: 선택 · 드래그 · 리사이즈 · 우클릭 메뉴 · 텍스트 편집 ─ */
-function popMenuAtPoint(x,y,items){
- closeMenus();
- const m=document.createElement('div');m.className='menu-pop';
- items.forEach(it=>{
-  if(it==='sep'){m.insertAdjacentHTML('beforeend','<div class="sep"></div>');return}
-  const b=document.createElement('button');if(it.danger)b.className='danger';
-  b.innerHTML=(it.icon||'')+it.label;b.onclick=()=>{closeMenus();it.onClick()};m.appendChild(b);
- });
- document.body.appendChild(m);
- m.style.top=Math.min(y,innerHeight-m.offsetHeight-10)+'px';
- m.style.left=Math.min(x,innerWidth-m.offsetWidth-10)+'px';
- openMenu=m;
-}
+/* ─ 오브젝트 인터랙션: 선택 · 드래그 · 리사이즈 · 텍스트 편집 (우클릭 컨텍스트 메뉴 없음) ─ */
 function attachObjectEvents(el,o){
  if(!el)return;
  el.addEventListener('mousedown',e=>{
@@ -1193,18 +1212,7 @@ function attachObjectEvents(el,o){
   else if(selId!==o.id){selId=o.id;renderRightPanel();}
   startDragObject(e,o);
  });
- el.addEventListener('contextmenu',e=>{
-  e.preventDefault();e.stopPropagation();
-  if(!selIds.has(o.id))selectObject(o.id);
-  const multi=selIds.size>1;
-  popMenuAtPoint(e.clientX,e.clientY,[
-   {label:multi?`${selIds.size}개 복사`:'복사',icon:IC.copy,onClick:copySelection},
-   {label:multi?`${selIds.size}개 복사`:'복사',icon:IC.copy,onClick:duplicateSelection},
-   ...(multi?[]:[{label:'맨 앞으로',onClick:()=>zOrder(o.id,'front')},{label:'맨 뒤로',onClick:()=>zOrder(o.id,'back')}]),
-   'sep',
-   {label:multi?`${selIds.size}개 삭제`:'삭제',icon:IC.trash,danger:true,onClick:deleteSelected},
-  ]);
- });
+ el.addEventListener('contextmenu',e=>e.preventDefault()); /* 객체 우클릭 컨텍스트 메뉴 미노출 */
  if(o.type==='text')el.addEventListener('dblclick',e=>{e.stopPropagation();enterTextEdit(o,el);});
  if(o.type==='graphic')el.addEventListener('dblclick',e=>{e.stopPropagation();enterCropMode(o);});
  el.querySelectorAll('.eo-h').forEach(h=>h.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();startResizeObject(e,o,h.dataset.h);}));
@@ -1828,14 +1836,19 @@ function renderSplitLib(el){
      <b>${p.name}</b></button>`).join('')}
    </div>
   </div>`;
- const clr=el.querySelector('#split-clear');if(clr)clr.onclick=()=>{splitLayout=null;pushHistory();renderEditor();};
+ const clr=el.querySelector('#split-clear');if(clr)clr.onclick=()=>{
+  const doClear=()=>{splitLayout=null;pushHistory();renderEditor();};
+  const hasWork=splitLayout&&splitLayout.regions.some(r=>r.assetRef); /* 영역에 지정된 콘텐츠가 있으면 확인 얼럿 */
+  if(hasWork)confirmDialog({title:'자유 캔버스로 돌아갈까요?',desc:'이대로 돌아가면 작업한 내용은 저장되지 않아요.',confirmText:'돌아가기',danger:true,onConfirm:doClear});
+  else doClear();
+ };
  el.querySelectorAll('[data-split]').forEach(b=>b.onclick=()=>{
   const apply=()=>{
    const p=SPLIT_PRESETS.find(x=>x.id===b.dataset.split);
    splitLayout={id:p.id,regions:p.regions.map(([x,y,w,h])=>({x:x*canvasW,y:y*canvasH,w:w*canvasW,h:h*canvasH,assetRef:null,muted:false,fit:'fill'}))};
    objects=[];setSel(null);pushHistory();renderEditor();
   };
-  if(objects.length)confirmDialog({title:'분할 레이아웃 적용',desc:'현재 캔버스의 객체가 모두 지워지고 분할 레이아웃으로 바뀌어요.',confirmText:'적용',danger:false,onConfirm:apply});
+  if(objects.length)confirmDialog({title:'분할 템플릿을 적용할까요?',desc:'분할 템플릿을 사용하면 현재 작업중인 내용이 모두 사라져요.',confirmText:'적용',danger:false,onConfirm:apply});
   else apply();
  });
 }
@@ -1870,14 +1883,16 @@ function drawWgBody(body,hasMenu){
   const DEFS=wgTab==='weather'?WEATHER_STYLES:NEWS_STYLES;
   const intro=wgTab==='weather'?'선택한 지역의 날씨 정보를 보여주는 위젯이에요.':'실시간 뉴스 헤드라인을 보여주는 위젯이에요.';
   body.innerHTML=`<p class="wg-intro">${intro}</p>
-   <div class="mtype-lib">${DEFS.map(d=>`<button class="mtype-card" data-wgadd="${d.id}">
-     <div class="mtype-prev"><div class="wg-thumb"><div class="wg-thumb-in">${widgetInnerHtml({kind:wgTab,styleId:d.id,region:'서울'})}</div></div></div>
+   <div class="mtype-lib">${DEFS.map(d=>{const W=d.tw||d.w||340,H=d.th||d.h||180,sc=Math.min(88/W,56/H).toFixed(3);
+     return `<button class="mtype-card" data-wgadd="${d.id}">
+     <div class="mtype-prev"><div class="wg-thumb"><div class="wg-thumb-in" style="width:${W}px;height:${H}px;transform:scale(${sc})">${widgetInnerHtml({kind:wgTab,styleId:d.id,region:'서울',w:W,preview:true})}</div></div></div>
      <div class="mtype-cap"><b>${d.name}</b><span>${d.desc}</span></div>
-    </button>`).join('')}</div>`;
+    </button>`;}).join('')}</div>`;
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{
+   const def=DEFS.find(d=>d.id===b.dataset.wgadd)||{};
    const props=wgTab==='weather'
-    ?{kind:'weather',styleId:b.dataset.wgadd,locMode:'store',country:'대한민국',region:'서울특별시'} /* 기본: 매장 주소 사용 */
-    :{kind:wgTab,styleId:b.dataset.wgadd,region:'서울특별시'};
+    ?{kind:'weather',styleId:b.dataset.wgadd,locMode:'store',storeId:(WX_STORES[0]||{}).id,country:'대한민국',region:'서울특별시',w:def.w,h:def.h} /* 기본: 매장 주소 사용(첫 매장) */
+    :{kind:'news',styleId:b.dataset.wgadd,w:def.w,h:def.h};
    addObject('widget',props);
   });
  }
@@ -2323,7 +2338,7 @@ function renderCallPanel(o){
    </div>
    <div class="bg-divider"></div>
    <div class="tx-sec">
-    <div class="cw-theme-head"><span class="tx-sec-lbl" style="margin:0">테마 스타일</span><span class="cw-theme-lbl ${theme==='light'?'on':''}">Light</span><button class="bg-toggle ${theme==='light'?'on':''}" id="cw-theme" role="switch" aria-checked="${theme==='light'}" aria-label="Light 테마"><i></i></button></div>
+    <div class="cw-theme-head"><span class="tx-sec-lbl" style="margin:0">테마 스타일</span><span class="cw-theme-lbl ${theme==='dark'?'dark':'light'}">${theme==='dark'?'Dark':'Light'}</span><button class="cw-theme-toggle ${theme==='dark'?'on':''}" id="cw-theme" role="switch" aria-checked="${theme==='dark'}" aria-label="${theme==='dark'?'Dark':'Light'} 테마"><i></i></button></div>
     <div class="cw-preview"><div class="cw-preview-fit" style="aspect-ratio:${ratio}">${callWidgetHtml(layout,theme,Math.round(126*ratio))}</div></div>
    </div>
   </div>`;
@@ -2502,16 +2517,21 @@ function renderWnPanel(o){
  hIn.addEventListener('change',()=>{let v=parseFloat(hIn.value);if(isNaN(v))v=o.h;v=Math.max(40,v);o.h=Math.round(v);o.w=Math.round(v*ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
  if(o.kind==='weather')bindWeatherLoc(o,set);
 }
-/* 날씨 위젯 위치 섹션 마크업 (tx-sec) */
+/* 날씨 위젯 위치 섹션 마크업 (tx-sec) — 매장 주소 사용(매장 선택+주소) / 직접 설정(국가·지역) */
 function weatherLocSec(o){
  const manual=o.locMode==='manual';
  const countries=Object.keys(WEATHER_REGIONS);
  const regions=WEATHER_REGIONS[o.country]||WEATHER_REGIONS['대한민국'];
- const storeInfo=STORE_ADDR
-  ?`<span class="wg-loc-sub">${STORE_ADDR.country} · ${STORE_ADDR.region}</span>`
-  :`<span class="wg-loc-warn">등록된 매장 주소가 없어 날씨 정보를 불러올 수 없어요.<br>'직접 설정'을 선택해 위치를 입력해주세요.</span>`;
+ const store=wxStore(o.storeId);
+ const storeFields=WX_STORES.length
+  ?`<div class="wg-loc-fields">
+     <div class="wg-fld"><label>매장</label><select class="select select-sm" id="wg-store">${WX_STORES.map(s=>`<option value="${s.id}" ${store&&store.id===s.id?'selected':''}>${s.name}</option>`).join('')}</select></div>
+     ${store?`<div class="wg-loc-addr">${store.country} · ${store.region}</div>`:''}
+    </div>`
+  :`<div class="wg-loc-fields"><div class="wg-loc-warn">등록된 매장 주소가 없어 날씨 정보를 불러올 수 없어요.<br>'직접 설정'을 선택해 위치를 입력해주세요.</div></div>`;
  return `<div class="tx-sec"><div class="tx-sec-lbl">위치</div><div class="wg-loc">
-   <button type="button" class="wg-loc-opt" data-locmode="store"><span class="rdo ${!manual?'on':''}"></span><span class="wg-loc-body"><b>매장 주소 사용</b>${storeInfo}</span></button>
+   <button type="button" class="wg-loc-opt" data-locmode="store"><span class="rdo ${!manual?'on':''}"></span><span class="wg-loc-body"><b>매장 주소 사용</b></span></button>
+   ${!manual?storeFields:''}
    <button type="button" class="wg-loc-opt" data-locmode="manual"><span class="rdo ${manual?'on':''}"></span><span class="wg-loc-body"><b>직접 설정</b></span></button>
    ${manual?`<div class="wg-loc-fields">
     <div class="wg-fld"><label>국가</label><select class="select select-sm" id="wg-country">${countries.map(c=>`<option ${o.country===c?'selected':''}>${c}</option>`).join('')}</select></div>
@@ -2519,14 +2539,17 @@ function weatherLocSec(o){
    </div>`:''}
   </div></div>`;
 }
-/* 날씨 위젯 위치 컨트롤 바인딩 — 방식 전환(직접 설정값 보관·복원) + 국가/지역 변경 */
+/* 날씨 위젯 위치 컨트롤 바인딩 — 방식 전환(직접 설정값 보관·복원) + 매장/국가/지역 변경 */
 function bindWeatherLoc(o,el){
  el.querySelectorAll('[data-locmode]').forEach(b=>b.onclick=()=>{
   const m=b.dataset.locmode;if((o.locMode||'store')===m)return;
   o.locMode=m;
+  if(m==='store'&&!o.storeId)o.storeId=(WX_STORES[0]||{}).id;
   if(m==='manual'){o.country=o.country||'대한민국';o.region=o.region||(WEATHER_REGIONS[o.country||'대한민국']||[])[0];} /* 직접 설정 복원(보관된 값 유지) */
   pushHistory();renderStage();renderWnPanel(o);
  });
+ const st=el.querySelector('#wg-store');
+ if(st)st.onchange=e=>{o.storeId=e.target.value;pushHistory();renderStage();renderWnPanel(o)}; /* 매장 변경 → 주소 텍스트·미리보기 갱신 */
  const cy=el.querySelector('#wg-country');
  if(cy)cy.onchange=e=>{o.country=e.target.value;o.region=(WEATHER_REGIONS[o.country]||[])[0]||'';pushHistory();renderStage();renderWnPanel(o)};
  const rg=el.querySelector('#wg-region');if(rg)rg.onchange=e=>{o.region=e.target.value;pushHistory();renderStage()};
@@ -2572,7 +2595,7 @@ function openCanvasSetupPop(anchor){
 /* 분할 편집 중 자유 캔버스 도구 클릭 → 확인 후 분할 해제(작업 내용 미저장) */
 function leaveSplitThen(next){
  if(!splitLayout){next();return;}
- confirmDialog({title:'자유 캔버스로 돌아갈까요?',desc:'이대로 돌아가면 작업한 내용은 저장되지 않습니다.',confirmText:'돌아가기',danger:true,onConfirm:()=>{splitLayout=null;pushHistory();next();}});
+ confirmDialog({title:'자유 캔버스로 돌아갈까요?',desc:'이대로 돌아가면 작업한 내용은 저장되지 않아요.',confirmText:'돌아가기',danger:true,onConfirm:()=>{splitLayout=null;pushHistory();next();}});
 }
 $('#ed-rail-bg').onclick=()=>leaveSplitThen(()=>{cropState=null;activeTool='bg';setSel(null);renderEditor();});
 $('#ed-undo').onclick=undo;

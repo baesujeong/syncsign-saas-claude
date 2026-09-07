@@ -1049,30 +1049,65 @@ table.grid tr.checked td{background:var(--blue-50)}
 .thm-light .cp-cell.hi,.thm-light .cp-big{color:#E5484D}
 .thm-light .cl-ticket .cp-big{background:#F2F3F5}
 .thm-light .cp-sub{color:#111827}
-.wg-weather.st-card{flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(160deg,#2563EB,#1D4ED8);color:#fff}
-.wg-weather.st-card .e{font-size:26px}
-.wg-weather.st-card .region{font-size:12px;opacity:.85}
-.wg-weather.st-card .num{font-size:26px;font-weight:800}
-.wg-weather.st-card .cond{font-size:12px;opacity:.8}
-.wg-weather.st-compact{align-items:center;gap:8px;padding:0 12px;background:#171C24;color:#fff}
-.wg-weather.st-compact .num{font-size:18px;font-weight:800}
-.wg-weather.st-compact .region{font-size:12px;color:#8B94A5;margin-left:auto}
-.wg-weather.st-mono{flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1px solid var(--border-2)}
-.wg-weather.st-mono .num{font-size:34px;font-weight:800}
-.wg-weather.st-mono .region{font-size:12px;color:var(--text-3)}
-.wg-news.st-ticker{align-items:center;gap:10px;padding:0 14px;background:#171C24;color:#fff}
-.wg-news.st-ticker .tag{font-size:12px;font-weight:800;letter-spacing:.1em;color:#E5484D;flex:none}
-.wg-news.st-ticker .headline{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wg-news.st-card{flex-direction:column;padding:12px 14px;gap:6px;background:#fff;border:1px solid var(--border-2)}
-.wg-news.st-card .tag{font-size:12px;font-weight:800;letter-spacing:.1em;color:#E5484D}
-.wg-news.st-card ul{margin:0;padding-left:16px;font-size:12px;line-height:1.7;color:var(--text)}
+/* 날씨 타입 B — 기온 + 아이콘 + 지역 (--u = 위젯폭/100 로 스케일) */
+.wg-wb{flex-direction:column;justify-content:center;gap:calc(var(--u)*2);background:#7B9FE8;color:#fff;padding:calc(var(--u)*7) calc(var(--u)*9)}
+.wg-wb .wb-top{display:flex;align-items:center;justify-content:space-between;width:100%}
+.wg-wb .wb-temp{font-size:calc(var(--u)*17);font-weight:300;line-height:1;letter-spacing:-.01em}
+.wg-wb .wb-ico{width:calc(var(--u)*16);height:calc(var(--u)*16);flex:none}
+.wg-wb .wb-region{font-size:calc(var(--u)*7.5);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;width:100%}
+/* 날씨 타입 A — 상세 정보 */
+.wg-wa{flex-direction:column;background:#fff;color:#1A1A1A;padding:calc(var(--u)*6) calc(var(--u)*7);font-weight:700}
+.wg-wa .wa-head{display:flex;align-items:flex-start;justify-content:space-between}
+.wg-wa .wa-cur{display:flex;align-items:center;gap:calc(var(--u)*2.5)}
+.wg-wa .wa-ico{width:calc(var(--u)*14);height:calc(var(--u)*14);flex:none}
+.wg-wa .wa-temp{font-size:calc(var(--u)*15);font-weight:800;line-height:1}
+.wg-wa .wa-temp sup{font-size:.42em;font-weight:700}
+.wg-wa .wa-meta{display:flex;flex-direction:column;align-items:flex-end;gap:calc(var(--u)*1.4)}
+.wg-wa .wa-time{font-size:calc(var(--u)*10);font-weight:800;white-space:nowrap}
+.wg-wa .wa-time small{font-size:.5em;font-weight:700;margin-left:.25em}
+.wg-wa .wa-loc{font-size:calc(var(--u)*5);color:#333;font-weight:600;white-space:nowrap}
+.wg-wa .wa-hr{height:calc(var(--u)*.8);background:#1A1A1A;margin-top:calc(var(--u)*4)}
+.wg-wa .wa-row{display:flex;align-items:flex-start;justify-content:space-between;gap:calc(var(--u)*3);padding:calc(var(--u)*4) 0;border-bottom:1px solid #E7E7E7}
+.wg-wa .wa-row:last-child{border-bottom:none}
+.wg-wa .wa-lbl b{display:block;font-size:calc(var(--u)*8);font-weight:800;line-height:1.1}
+.wg-wa .wa-lbl>span{display:block;font-size:calc(var(--u)*4);font-weight:700;margin-top:calc(var(--u)*.6)}
+.wg-wa .wa-val{display:flex;align-items:baseline;gap:.25em;font-size:calc(var(--u)*11);font-weight:800;white-space:nowrap}
+.wg-wa .wa-val small{font-size:.5em;font-weight:700}
+.wg-wa .wa-legend{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2.4);margin-top:calc(var(--u)*2);font-size:calc(var(--u)*3.6);font-weight:700}
+.wg-wa .wa-legend .lg1{color:#5B8DEF}.wg-wa .wa-legend .lg2{color:#4CAF50}.wg-wa .wa-legend .lg3{color:#E0C341}.wg-wa .wa-legend .lg4{color:#E29AC0}
+/* 뉴스 위젯 — 연합뉴스 로고(좌) + 헤드라인(우). 티커형=흰색 / 카드형=연한 파랑 */
+.wg-nticker,.wg-ncard{align-items:center;gap:calc(var(--u)*4)}
+.wg-nticker{background:#fff;padding:0 calc(var(--u)*5)}
+.wg-ncard{background:#fff;padding:0 calc(var(--u)*6);justify-content:center} /* 썸네일 전용 — 로고만 가운데 */
+.wg-nticker .yl,.wg-ncard .yl{display:flex;align-items:center;gap:calc(var(--u)*1.6);flex:none}
+.wg-nticker .yl-ico,.wg-ncard .yl-ico{flex:none}
+.wg-nticker .yl-ico{width:calc(var(--u)*7.5);height:calc(var(--u)*6.8)}
+.wg-ncard .yl-ico{width:calc(var(--u)*14);height:calc(var(--u)*12.6)}
+.wg-nticker .yl b{font-size:calc(var(--u)*6.5)}
+.wg-ncard .yl b{font-size:calc(var(--u)*13)}
+.wg-ncard .yl{gap:calc(var(--u)*2.4)}
+.yl b{color:#0E3E8C;font-weight:800;letter-spacing:-.02em}
+.nn-head{font-size:calc(var(--u)*6);font-weight:700;color:#1A1A1A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.wg-ncard .nn-head{font-size:calc(var(--u)*6.5)}
+/* 뉴스 카드형 캔버스 렌더 — 흰색 세로 카드(로고 + 세로 헤드라인, 하단 페이드) */
+.wg-nv{flex-direction:column;background:#fff;padding:calc(var(--u)*6);gap:calc(var(--u)*5);overflow:hidden}
+.wg-nv .yl{display:flex;align-items:center;gap:calc(var(--u)*2);flex:none}
+.wg-nv .yl-ico{width:calc(var(--u)*9);height:calc(var(--u)*8.1);flex:none}
+.wg-nv .yl b{font-size:calc(var(--u)*8);color:#0E3E8C;font-weight:800;letter-spacing:-.02em}
+.wg-nv .nv-head{font-size:calc(var(--u)*12);font-weight:800;color:#1A1A1A;line-height:1.35;word-break:keep-all;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
 /* 대기/호출 위젯 라이브러리 카드 — 메뉴 팔레트(.mtype-*)와 통일, 썸네일 프리뷰만 고정 높이로 맞춤 */
 .wcall-thumb{height:60px;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(20,28,40,.14)}
 /* 대기/호출 위젯 설정 패널 */
 .cw-hint{font-size:12px;color:var(--text-3);margin:8px 0 0}
-.cw-theme-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.cw-theme-lbl{margin-left:auto;font-size:13px;font-weight:600;color:var(--text-3)}
-.cw-theme-lbl.on{color:var(--blue)}
+.cw-theme-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cw-theme-lbl{margin-left:auto;font-size:14px;font-weight:700}
+.cw-theme-lbl.light{color:#E7A93A}
+.cw-theme-lbl.dark{color:#1A1A1A}
+/* 테마 토글 — Light: 앰버 트랙·노브 좌측 / Dark: 검정 트랙·노브 우측 */
+.cw-theme-toggle{width:44px;height:24px;border-radius:999px;background:#E7A93A;position:relative;flex:none;transition:background .15s}
+.cw-theme-toggle i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.cw-theme-toggle.on{background:#1A1A1A}
+.cw-theme-toggle.on i{left:23px}
 .cw-preview{background:#8A8F96;border-radius:8px;height:150px;display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden}
 .cw-preview-fit{height:100%;overflow:hidden;border-radius:6px}
 /* 속성 패널 : X/Y/W/H, 레이어 목록 */
@@ -1204,7 +1239,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 .color-pop .cp-presets button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border-2)}
 /* 날씨·뉴스 팔레트 썸네일 — 위젯 프리뷰를 .mtype-prev 박스에 맞춰 축소 표시 */
 .wg-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.wg-thumb .wg-thumb-in{width:176px;height:99px;flex:none;display:flex;transform:scale(.5);transform-origin:center}
+.wg-thumb .wg-thumb-in{flex:none;display:flex;transform-origin:center}
 .ed-sec{border-bottom:1px solid var(--border);padding:14px 0}
 .ed-sec:first-child{padding-top:0}
 .ed-sec-head{display:flex;align-items:center;gap:8px;width:100%;font-size:14px;font-weight:700;text-align:left;padding:2px 0}
@@ -1265,15 +1300,15 @@ table.grid tr.checked td{background:var(--blue-50)}
 .mtype-card.on{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-100)}
 /* 날씨 위젯 위치 설정 — 매장 주소 사용 / 직접 설정 (라디오) */
 .wg-loc{display:flex;flex-direction:column;gap:2px}
-.wg-loc-opt{display:flex;align-items:flex-start;gap:9px;padding:8px 2px;text-align:left;width:100%}
-.wg-loc-opt .rdo{flex:none;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border-2);margin-top:2px;position:relative;transition:border-color .12s}
+.wg-loc-opt{display:flex;align-items:center;gap:9px;padding:8px 2px;text-align:left;width:100%}
+.wg-loc-opt .rdo{flex:none;box-sizing:border-box;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border-2);display:flex;align-items:center;justify-content:center;transition:border-color .12s}
 .wg-loc-opt .rdo.on{border-color:var(--blue)}
-.wg-loc-opt .rdo.on::after{content:'';position:absolute;left:3px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.wg-loc-opt .rdo.on::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--blue)}
 .wg-loc-body{display:flex;flex-direction:column;gap:3px;min-width:0}
 .wg-loc-body b{font-size:14px;font-weight:600;color:var(--text)}
-.wg-loc-sub{font-size:13px;color:var(--text-2)}
 .wg-loc-warn{font-size:12px;color:var(--text-3);line-height:1.55}
 .wg-loc-fields{margin:2px 0 4px 25px}
+.wg-loc-fields .wg-loc-addr{font-size:13px;color:var(--text-2);margin-top:8px}
 .wg-loc-fields .wg-fld+.wg-fld{margin-top:10px}
 .wg-loc-fields .wg-fld label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:5px}
 .wg-loc-fields .wg-fld select{width:100%}
