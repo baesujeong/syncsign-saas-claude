@@ -161,7 +161,6 @@ WALLS.forEach(w=>{if(!w.tiles){w.gw=w.cols;w.gh=w.rows;w.tiles=w.cells.map((id,i
 WALLS[0].cm={[WALLS[0].cells[0]]:'T:t1',[WALLS[0].cells[1]]:'L:c2',[WALLS[0].cells[2]]:'L:c1',[WALLS[0].cells[3]]:'L:c12'};
 /* 타일별 표시 콘텐츠: w.cm(화면별 지정)이 있으면 해당 화면의 자산, 없으면 월 공통 콘텐츠 */
 const wallTileContent=(w,t)=>(w.cm&&t.p&&w.cm[t.p]&&contentOf(w.cm[t.p]))||contentOf(w.content);
-const wallContentLabel=w=>{const n=w.cm?Object.values(w.cm).filter(Boolean).length:0;return n?`화면별 콘텐츠 ${n}개`:contentOf(w.content).name;};
 let GROUPS=[
  {id:'g1',name:'프랜차이즈 A',ids:['강남GT타워점','성수연무장점','여의도IFC점','명동중앙점','신촌점'].map(storeByName).filter(Boolean).flatMap(s=>panelsOf(s.id).map(p=>p.id))},
  /* g2는 성수연무장점(그룹A 소속 매장) 화면을 공유 — 매장·그룹A·그룹B 3중 중복 화면으로 개별 ID 기준 선택 테스트용 */
@@ -480,21 +479,31 @@ function renderList(){
  }else{
   $('#pgrid').hidden=true;$('#ptable-wrap').hidden=false;
   $('#ptbody').innerHTML=slice.map(p=>{
-   if(p.wall&&!flt.wall){const w=WALLS.find(w=>w.id===p.wall);const c=contentOf(w.content);
-    return `<tr data-wall="${w.id}"><td></td>
-    <td><span class="tstatus" style="color:var(--violet)">${IC.wall}비디오월</span></td>
-    <td><span class="mini-thumb" style="background:${c.g}"></span></td>
-    <td class="fav-cell"></td>
+   if(p.wall&&!flt.wall){const w=WALLS.find(w=>w.id===p.wall);
+    /* 비디오월도 일반 화면과 동일한 정보 표시(상태·미리보기·현재콘텐츠·일정·업데이트) — 대표 화면(p) 기준. 화면명 옆 레이아웃 배지만 유지 */
+    const allOn=w.cells.length>0&&w.cells.every(id=>checked.has(id));
+    const wst=!p.stb?['셋탑 미연결','var(--amber)']:p.status==='on'?(p.unsch?['미편성','var(--amber)']:['온라인','var(--green)']):['오프라인','var(--text-3)'];
+    return `<tr class="${allOn?'checked':''}" data-wall="${w.id}">
+    <td><span class="checkbox ${allOn?'on':''}" data-wallcheck="${w.id}" role="checkbox" aria-checked="${allOn}" aria-label="${w.name} 선택">${IC.check}</span></td>
+    <td><span class="tstatus" style="color:${wst[1]}"><span class="dot ${!p.stb||p.status!=='on'?'off':'on'}"></span>${wst[0]}</span></td>
+    <td><span class="mini-thumb" style="background:${thumbBg(p)}"></span></td>
+    <td class="fav-cell"><button class="fav-col ${p.fav?'on':''}" data-fav="${p.id}" aria-label="즐겨찾기" aria-pressed="${p.fav?'true':'false'}">${IC.likeStar}</button></td>
     <td><b>${w.name}</b> <span class="badge badge-violet">${(w.gw||w.cols)}×${(w.gh||w.rows)}</span></td>
-    <td>${storeHtml(w.store)}</td><td>${wallContentLabel(w)}</td><td class="num">화면 ${w.cells.length}개</td><td>—</td>
+    <td>${storeHtml(w.store)}</td>
+    <td>${p.unsch||p.status==='off'?'<span style="color:var(--text-3)">—</span>':contentOf(p.content).name}</td>
+    <td>${wallSchedN(w)>0?`<span class="num">${wallSchedN(w)}건</span>`:'<span class="badge badge-amber">미편성</span>'}</td>
+    <td class="num" style="color:var(--text-3)">${ago(p.lastMin)}</td>
     <td><button class="icon-btn" data-wallmenu="${w.id}">${IC.dots}</button></td></tr>`}
    const st=!p.stb?['셋탑 미연결','var(--amber)']:p.status==='on'?(p.unsch?['미편성','var(--amber)']:['온라인','var(--green)']):['오프라인','var(--text-3)'];
+   /* 비디오월 구성 화면(레일에서 비디오월 선택 시)도 화면명 옆에 레이아웃 배지 노출 */
+   const wb=p.wall?WALLS.find(x=>x.id===p.wall):null;
+   const wbadge=wb?` <span class="badge badge-violet">${(wb.gw||wb.cols)}×${(wb.gh||wb.rows)}</span>`:'';
    return `<tr class="${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
     <td><span class="checkbox ${checked.has(p.id)?'on':''}" data-check="${p.id}" role="checkbox" aria-checked="${checked.has(p.id)}" aria-label="${p.name} 선택">${IC.check}</span></td>
     <td><span class="tstatus" style="color:${st[1]}"><span class="dot ${!p.stb||p.status!=='on'?'off':'on'}"></span>${st[0]}</span></td>
     <td><span class="mini-thumb" style="background:${thumbBg(p)}"></span></td>
     <td class="fav-cell"><button class="fav-col ${p.fav?'on':''}" data-fav="${p.id}" aria-label="즐겨찾기" aria-pressed="${p.fav?'true':'false'}">${IC.likeStar}</button></td>
-    <td><b>${p.name}</b></td>
+    <td><b>${p.name}</b>${wbadge}</td>
     <td>${storeHtml(p.store)}</td>
     <td>${p.unsch||p.status==='off'?'<span style="color:var(--text-3)">—</span>':contentOf(p.content).name}</td>
     <td>${p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="num">${p.schedN}건</span>`}</td>
@@ -2185,7 +2194,7 @@ function openWallWizard(existing,opts={}){
      <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">화면별 콘텐츠</b><span style="font-size:12px;color:var(--text-3)">${an} / ${placed.length} 지정</span><span class="spacer"></span><button class="btn btn-sm" id="w3-fill" ${placed.length?'':'disabled'}>전체 같은 콘텐츠</button></div>
      <div class="content-scroll" style="padding:10px;display:flex;flex-direction:column;gap:2px">
       ${placed.map(t=>{const p=panelOf(t.p);const ref=cm[t.p];const a=ref?contentOf(ref):null;
-       return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'var(--sunken)'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'}</b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요.</span></div>'}
+       return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb" style="background:${a?a.g:'#F5F5F5'};flex:none">${a?a.e:''}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'}</b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요.</span></div>'}
       <p style="font-size:12px;color:var(--text-3);margin:8px 4px 0;line-height:1.5">화면마다 서로 다른 콘텐츠를 지정할 수 있어요. 지정하지 않은 화면은 검은 화면으로 대기해요.</p>
      </div>
     </div>
