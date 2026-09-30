@@ -1167,6 +1167,7 @@ function drawStores(){
   const s=STORES.find(x=>x.id===b.dataset.sm);
   popMenu(b,[
    {label:'매장 상세',icon:IC.monitor,onClick:()=>openStoreDrawer(s)},
+   {label:'매장 정보 수정',icon:IC.edit,onClick:()=>openStoreModal(s)},
    {label:'번호호출 설정',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>',onClick:()=>openStoreDrawer(s,'call')},
    'sep',
    {label:'매장 삭제',icon:IC.trash,danger:true,onClick:()=>deleteStores([s])},
@@ -1214,24 +1215,43 @@ function deleteStores(list){
   onConfirm:()=>{window.__unassignStores&&window.__unassignStores(list);finish();}
  });
 }
-function openStoreModal(){
+/* 매장 등록/수정 공용 모달 — store 인자가 있으면 수정 모드(타이틀·버튼·저장 동작만 분기, 폼은 동일).
+   수정 진입점: 매장 목록 더보기(⋯) → '매장 정보 수정' */
+function openStoreModal(store){
+ const edit=!!store;
+ /* 저장 시 region은 국내=시/도, 해외=국가명으로 버킷팅되므로, 수정 모드 프리필도 같은 규칙을 역으로 복원한다 */
+ const isKR=edit?KR_REGIONS.includes(store.region):true;
+ const initCountry=edit?(isKR?'대한민국':store.region):'대한민국';
+ const initRegion=edit?(isKR?store.region:''):'서울';
+ const primaryMgr=edit?(store.mgrs[0]||''):'';
  openModal(`
-  <div class="modal-head"><div><h2>매장 등록</h2></div><button class="icon-btn" data-close>${IC.x}</button></div>
+  <div class="modal-head"><div><h2>${edit?'매장 수정':'매장 등록'}</h2></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body">
-   <div class="f-row"><label>매장 이름 <span class="req">*</span></label><input class="input" id="st-nm" placeholder="예) 성수연무장점"></div>
-   ${locFieldsHtml('st')}
-   <div class="f-row"><label>상세 주소</label><input class="input" id="st-ad" placeholder="예) 강남대로 396, 2층"></div>
-   <div class="f-row"><label>담당자 <span style="font-weight:500;color:var(--text-3)">선택</span></label><select class="select" id="st-mg"><option value="">나중에 지정</option>${USERS.filter(u=>u.status==='active').map(u=>`<option value="${u.id}">${u.name} (${ROLE_META[u.role][0]})</option>`).join('')}</select></div>
+   <div class="f-row"><label>매장 이름 <span class="req">*</span></label><input class="input" id="st-nm" placeholder="예) 성수연무장점" value="${edit?store.name:''}"></div>
+   ${locFieldsHtml('st',initCountry,initRegion)}
+   <div class="f-row"><label>상세 주소</label><input class="input" id="st-ad" placeholder="예) 강남대로 396, 2층" value="${edit?(store.addr||''):''}"></div>
+   <div class="f-row"><label>담당자 <span style="font-weight:500;color:var(--text-3)">선택</span></label><select class="select" id="st-mg"><option value="">나중에 지정</option>${USERS.filter(u=>u.status==='active').map(u=>`<option value="${u.id}" ${u.id===primaryMgr?'selected':''}>${u.name} (${ROLE_META[u.role][0]})</option>`).join('')}</select></div>
   </div>
-  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="st-ok">등록</button></div>`,
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="st-ok">${edit?'저장':'등록'}</button></div>`,
  {width:'440px',onMount:ov=>{
-  ov.querySelector('#st-nm').focus();
+  const nmEl=ov.querySelector('#st-nm');nmEl.focus();nmEl.select();
   bindLocFields(ov,'st');
   ov.querySelector('#st-ok').onclick=()=>{
-   const nm=ov.querySelector('#st-nm').value.trim();
-   if(!nm){ov.querySelector('#st-nm').classList.add('error');return}
+   const nm=nmEl.value.trim();
+   if(!nm){nmEl.classList.add('error');return}
    const mg=ov.querySelector('#st-mg').value;
    const loc=readLocFields(ov,'st',ov.querySelector('#st-ad').value.trim());
+   if(edit){
+    /* TODO(API): 매장 수정 PUT/PATCH → 응답으로 로컬 STORES 반영.
+       담당자 셀렉트는 등록 모달과 동일하게 대표 1명만 다루고, 추가 담당자는 상세 Drawer에서 관리하므로 여기선 유지한다. */
+    store.name=nm;store.region=loc.region;store.addr=loc.addr;
+    const others=store.mgrs.slice(1);
+    store.mgrs=mg?[mg,...others.filter(id=>id!==mg)]:others;
+    window.__syncStore&&window.__syncStore(store);
+    ov.remove();drawStores();
+    toast(`'${nm}' 매장 정보를 수정했어요.`);
+    return;
+   }
    /* TODO(API): 매장 등록 POST → 응답으로 로컬 STORES 반영. __syncStore로 화면/편성/대시보드 데이터에 동기화 */
    STORES.unshift({id:'s'+Date.now(),name:nm,region:loc.region,addr:loc.addr,mgrs:mg?[mg]:[],panels:{on:0,total:0,last:'—'},call:{on:false,method:null}});
    window.__syncStore&&window.__syncStore(STORES[0]);
