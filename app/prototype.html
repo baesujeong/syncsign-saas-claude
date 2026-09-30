@@ -1339,13 +1339,18 @@ function openCallRequestModal(s,m,onDone){
   <div class="modal-head"><div><h2>${label} 연동 신청</h2><div class="sub">${label} 연동은 저희 개발팀이 구축해 드리는 기능이에요. 신청하면 영업일 3일 내 담당자가 연락드려요.</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body">
    <div class="f-row"><label>대상 매장</label><div style="font-size:15px;font-weight:700;color:var(--text)">${s.name}</div></div>
-   <div class="f-row"><label>사용 중인 ${label} <span class="req">*</span></label><select class="select" id="cr-sys"><option>포스뱅크</option><option>OK포스</option><option>토스프론트</option><option>기타 (직접 입력)</option></select></div>
+   <div class="f-row"><label>사용 중인 ${label} <span class="req">*</span></label><select class="select" id="cr-sys"><option>포스뱅크</option><option>OK포스</option><option>토스프론트</option><option value="__etc">기타 (직접 입력)</option></select><input class="input" id="cr-etc" placeholder="사용 중인 ${label}를 입력해주세요" style="display:none;margin-top:8px"></div>
    <div class="f-row"><label>담당자 연락처 <span class="req">*</span></label><input class="input" id="cr-tel" placeholder="010-0000-0000"></div>
    <div class="f-row"><label>요청 사항</label><textarea class="input" rows="3" placeholder="운영 시간, 지점 수 등 참고할 내용을 알려주세요"></textarea></div>
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="cr-ok">연동 신청</button></div>`,
  {width:'440px',onMount:ov=>{
+  /* '기타 (직접 입력)' 선택 시 셀렉트 아래에 직접 입력 인풋을 노출한다 */
+  const sysSel=ov.querySelector('#cr-sys'),etcInp=ov.querySelector('#cr-etc');
+  sysSel.onchange=()=>{const isEtc=sysSel.value==='__etc';etcInp.style.display=isEtc?'':'none';if(isEtc)etcInp.focus();else etcInp.classList.remove('error')};
+  etcInp.oninput=()=>etcInp.classList.remove('error');
   ov.querySelector('#cr-ok').onclick=()=>{
+   if(sysSel.value==='__etc'&&!etcInp.value.trim()){etcInp.classList.add('error');etcInp.focus();return}
    const tel=ov.querySelector('#cr-tel');
    if(!tel.value.trim()){tel.classList.add('error');return}
    ov.remove();onDone&&onDone();
