@@ -442,7 +442,7 @@ function wallCardHtml(w,rep){
   </div></div>`;
 }
 /* 화면이 하나도 없을 때 — 매장이 없어도 '미지정'으로 바로 등록할 수 있으므로 매장 등록을 선행 조건으로 안내하지 않는다 */
-const noPanelEmptyHtml=()=>`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>셋탑박스 화면의 6자리 연결 코드로 첫 화면을 연결해보세요.${STORES.length?'':'<br>매장이 아직 없다면 <b>미지정</b>으로 등록하고 나중에 지정해도 괜찮아요.'}</span><button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 연결하기</button></div>`;
+const noPanelEmptyHtml=()=>`<div class="empty"><b>아직 등록된 화면이 없어요</b><span>매장이 아직 없다면 미지정으로 등록하고 나중에 지정해도 괜찮아요.</span><button class="btn btn-primary btn-sm" onclick="document.getElementById('btn-add-panel').click()">＋ 첫 화면 등록하기</button></div>`;
 function renderList(){
  /* 비디오월 안을 보는 중(flt.wall)이면 접지 않고 구성 화면을 개별 카드로 노출 */
  const arr=sorted(flt.wall?baseFiltered():collapseWalls(baseFiltered()));
