@@ -1130,7 +1130,7 @@ function renderStoresPage(root){
   </tr></thead><tbody id="s-tbody"></tbody></table></div></div>`;
  attachSearchUX(root.querySelector('#s-q'),q=>{sFlt.q=q;drawStores()});
  root.querySelector('#s-region').onchange=e=>{sFlt.region=e.target.value;drawStores()};
- root.querySelector('#btn-add-store').onclick=openStoreModal;
+ root.querySelector('#btn-add-store').onclick=()=>openStoreModal();
  root.querySelector('#s-all').onclick=()=>{const arr=storesFiltered();const all=arr.every(s=>sChecked.has(s.id));arr.forEach(s=>all?sChecked.delete(s.id):sChecked.add(s.id));drawStores()};
  drawStores();
 }
@@ -1218,7 +1218,9 @@ function deleteStores(list){
 /* 매장 등록/수정 공용 모달 — store 인자가 있으면 수정 모드(타이틀·버튼·저장 동작만 분기, 폼은 동일).
    수정 진입점: 매장 목록 더보기(⋯) → '매장 정보 수정' */
 function openStoreModal(store){
- const edit=!!store;
+ /* store가 실제 매장 객체(id 보유)일 때만 수정 모드. 이벤트 핸들러로 잘못 넘어온 Event 등은 등록 모드로 처리 */
+ const edit=!!(store&&store.id);
+ if(!edit)store=null;
  /* 저장 시 region은 국내=시/도, 해외=국가명으로 버킷팅되므로, 수정 모드 프리필도 같은 규칙을 역으로 복원한다 */
  const isKR=edit?KR_REGIONS.includes(store.region):true;
  const initCountry=edit?(isKR?'대한민국':store.region):'대한민국';
