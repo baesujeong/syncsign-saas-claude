@@ -1225,37 +1225,64 @@ function openStoreModal(store){
  const isKR=edit?KR_REGIONS.includes(store.region):true;
  const initCountry=edit?(isKR?'대한민국':store.region):'대한민국';
  const initRegion=edit?(isKR?store.region:''):'서울';
- const primaryMgr=edit?(store.mgrs[0]||''):'';
+ /* 담당자는 다중 지정 가능. 로컬 사본(selMgrs)으로 편집하고 저장 시 store.mgrs에 반영한다. */
+ const selMgrs=edit?[...store.mgrs]:[];
  openModal(`
   <div class="modal-head"><div><h2>${edit?'매장 수정':'매장 등록'}</h2></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body">
    <div class="f-row"><label>매장 이름 <span class="req">*</span></label><input class="input" id="st-nm" placeholder="예) 성수연무장점" value="${edit?store.name:''}"></div>
    ${locFieldsHtml('st',initCountry,initRegion)}
    <div class="f-row"><label>상세 주소</label><input class="input" id="st-ad" placeholder="예) 강남대로 396, 2층" value="${edit?(store.addr||''):''}"></div>
-   <div class="f-row"><label>담당자 <span style="font-weight:500;color:var(--text-3)">선택</span></label><select class="select" id="st-mg"><option value="">나중에 지정</option>${USERS.filter(u=>u.status==='active').map(u=>`<option value="${u.id}" ${u.id===primaryMgr?'selected':''}>${u.name} (${ROLE_META[u.role][0]})</option>`).join('')}</select></div>
+   <div class="f-row"><label>담당자 <span style="font-weight:500;color:var(--text-3)">선택</span></label>
+    <div class="mgr-field" id="st-mg" role="group" aria-label="담당자 선택"></div>
+    <p class="fhelp">여러 명을 담당자로 지정할 수 있어요. 담당자는 이 매장의 화면·콘텐츠만 관리할 수 있어요.</p></div>
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="st-ok">${edit?'저장':'등록'}</button></div>`,
  {width:'440px',onMount:ov=>{
   const nmEl=ov.querySelector('#st-nm');nmEl.focus();nmEl.select();
   bindLocFields(ov,'st');
+  /* 담당자 다중 선택 필드 렌더 — 선택된 담당자는 칩으로, [담당자 추가]로 남은 사용자 중에서 고른다.
+     popMenu가 선택 후 닫히므로, 한 명 지정 → 다시 추가 버튼을 눌러 이어서 지정하는 흐름. */
+  const mgEl=ov.querySelector('#st-mg');
+  /* 남은(지정 가능) 사용자 메뉴를 anchor 아래로 연다 */
+  const openMgrMenu=anchor=>{
+   const remaining=USERS.filter(u=>u.status==='active'&&!selMgrs.includes(u.id));
+   if(!remaining.length)return;
+   popMenu(anchor,remaining.map(u=>({icon:`<span class="cav" style="width:20px;height:20px;border-radius:50%;background:${u.c};color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${u.name[0]}</span>`,label:`${u.name} · ${ROLE_META[u.role][0]}`,onClick:()=>{selMgrs.push(u.id);renderMgr();}})));
+  };
+  const renderMgr=()=>{
+   const empty=selMgrs.length===0;
+   mgEl.classList.toggle('is-empty',empty);
+   mgEl.tabIndex=empty?0:-1; /* 미지정 상태에서만 필드 자체가 포커스 대상(셀렉트처럼) */
+   if(empty){mgEl.innerHTML='<span class="ph">담당자를 선택하세요</span>';return;}
+   const allSel=USERS.filter(u=>u.status==='active'&&!selMgrs.includes(u.id)).length===0;
+   mgEl.innerHTML=`
+    ${selMgrs.map(id=>{const u=userOf(id);if(!u)return'';return `<span class="chip on"><span class="cav" style="background:${u.c}">${u.name[0]}</span>${u.name}<button type="button" class="rm" data-mgrm="${id}" aria-label="${u.name} 제거">${IC.xs}</button></span>`;}).join('')}
+    <button type="button" class="chip add" id="st-mgadd" ${allSel?'disabled':''}>${allSel?'모두 지정됨':`${IC.plus}담당자 추가`}</button>`;
+   mgEl.querySelectorAll('[data-mgrm]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();selMgrs.splice(selMgrs.indexOf(b.dataset.mgrm),1);renderMgr();});
+   const addBtn=mgEl.querySelector('#st-mgadd');
+   if(!addBtn.disabled)addBtn.onclick=ev=>{ev.stopPropagation();openMgrMenu(addBtn);};
+  };
+  /* 필드(또는 추가 버튼) 클릭 → 메뉴. 칩/제거 버튼은 각자 처리하므로 제외. */
+  mgEl.addEventListener('click',e=>{if(e.target.closest('.chip'))return;openMgrMenu(mgEl);});
+  mgEl.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target===mgEl){e.preventDefault();openMgrMenu(mgEl);}});
+  renderMgr();
   ov.querySelector('#st-ok').onclick=()=>{
    const nm=nmEl.value.trim();
    if(!nm){nmEl.classList.add('error');return}
-   const mg=ov.querySelector('#st-mg').value;
    const loc=readLocFields(ov,'st',ov.querySelector('#st-ad').value.trim());
    if(edit){
     /* TODO(API): 매장 수정 PUT/PATCH → 응답으로 로컬 STORES 반영.
-       담당자 셀렉트는 등록 모달과 동일하게 대표 1명만 다루고, 추가 담당자는 상세 Drawer에서 관리하므로 여기선 유지한다. */
+       담당자(mgrs)는 모달에서 다중 지정하며, selMgrs 선택 순서를 그대로 저장한다(선두가 대표). */
     store.name=nm;store.region=loc.region;store.addr=loc.addr;
-    const others=store.mgrs.slice(1);
-    store.mgrs=mg?[mg,...others.filter(id=>id!==mg)]:others;
+    store.mgrs=[...selMgrs];
     window.__syncStore&&window.__syncStore(store);
     ov.remove();drawStores();
     toast(`'${nm}' 매장 정보를 수정했어요.`);
     return;
    }
    /* TODO(API): 매장 등록 POST → 응답으로 로컬 STORES 반영. __syncStore로 화면/편성/대시보드 데이터에 동기화 */
-   STORES.unshift({id:'s'+Date.now(),name:nm,region:loc.region,addr:loc.addr,mgrs:mg?[mg]:[],panels:{on:0,total:0,last:'—'},call:{on:false,method:null}});
+   STORES.unshift({id:'s'+Date.now(),name:nm,region:loc.region,addr:loc.addr,mgrs:[...selMgrs],panels:{on:0,total:0,last:'—'},call:{on:false,method:null}});
    window.__syncStore&&window.__syncStore(STORES[0]);
    obDone.store=true;renderObBanner();
    ov.remove();drawStores();

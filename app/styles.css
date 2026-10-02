@@ -2597,6 +2597,22 @@ table.grid tr.checked td{background:var(--blue-50)}
 /* 드래그 좌표 배지 */
 .eo-coord{position:absolute;background:#2A2F3A;color:#fff;font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:60;font-variant-numeric:tabular-nums;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 
+/* 담당자 다중 선택 필드(매장 등록/수정 모달) — 칩 토큰 입력 패턴 */
+.mgr-field{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:40px;padding:5px 7px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);transition:border-color .15s,box-shadow .15s;cursor:pointer}
+.mgr-field:hover{border-color:var(--blue-200)}
+.mgr-field:focus{outline:none}
+.mgr-field:focus,.mgr-field:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+/* 담당자 미지정 — 셀렉트 필드처럼 한 줄 + 드롭다운 화살표로 보여준다 */
+.mgr-field.is-empty{flex-wrap:nowrap;height:40px;padding:0 32px 0 12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235C6577' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.mgr-field.is-empty .ph{padding-left:0}
+.mgr-field .ph{color:var(--text-3);font-size:13px;padding-left:5px;cursor:pointer}
+.mgr-field .chip{height:28px;padding:0 8px 0 7px;font-size:13px;cursor:default}
+.mgr-field .chip.add{padding:0 11px;border-style:dashed;cursor:pointer}
+.mgr-field .chip.add:disabled{opacity:.5;cursor:default;border-color:var(--border-2);color:var(--text-3)}
+.mgr-field .chip .cav{width:18px;height:18px;border-radius:50%;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.mgr-field .chip .rm{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;margin-left:1px;color:inherit;opacity:.65;transition:opacity .12s,background .12s}
+.mgr-field .chip .rm:hover{opacity:1;background:var(--blue-100)}
+
 /* 이미지 크롭 모드 */
 .crop-src{position:absolute;border-radius:2px}
 .crop-dim{position:absolute;left:0;top:0;background:rgba(120,124,132,.82)}
