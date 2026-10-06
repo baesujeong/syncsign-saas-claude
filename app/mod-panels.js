@@ -2058,7 +2058,7 @@ function openWallWizard(existing,opts={}){
    <button class="back" id="vwb-back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>비디오월</button>
    <span class="divider-v"></span>
    <h1 style="margin:0;font-size:16px;font-weight:700">${schedOnly?`비디오월 일정 수정 — ${existing.name}`:existing?'비디오월 편집':'비디오월 만들기'}</h1>
-   <button class="vwb-guide" id="vwb-guide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 14c0-2 2-2.2 2-4a2 2 0 0 0-4-.3" stroke-linecap="round" stroke-linejoin="round"/></svg>비디오월이란?</button>
+   <button class="vwb-guide" id="vwb-guide"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 14c0-2 2-2.2 2-4a2 2 0 0 0-4-.3" stroke-linecap="round" stroke-linejoin="round"/></svg>비디오월이란?</button>
    ${schedOnly?'':`<div class="wiz-steps" style="padding:0">${[['1','시작점 선택'],['2','캔버스 배치'],['3','콘텐츠 · 일정']].map(([n,l])=>`<span class="wiz-step" data-ws="${n}"><span class="n">${n}</span>${l}</span>`).join('')}</div>`}
    <span class="grow"></span>
    <button class="btn" id="wz-prev">이전</button>
@@ -2387,7 +2387,7 @@ function renderWallsPage(root){
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.walls.t')}</h1><span class="desc">${t('page.walls.d')}</span>
    <div class="actions">
-    <button class="vwb-guide" id="vw-guide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 14c0-2 2-2.2 2-4a2 2 0 0 0-4-.3" stroke-linecap="round" stroke-linejoin="round"/></svg>비디오월이란?</button>
+    <button class="vwb-guide" id="vw-guide"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 14c0-2 2-2.2 2-4a2 2 0 0 0-4-.3" stroke-linecap="round" stroke-linejoin="round"/></svg>비디오월이란?</button>
     <button class="btn btn-primary" id="vw-new"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>비디오월 만들기</button></div></header>
   ${WALLS.length?`
   <div class="rail-layout" style="padding-top:12px">
