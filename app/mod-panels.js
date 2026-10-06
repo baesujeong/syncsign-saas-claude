@@ -2079,7 +2079,7 @@ function openWallWizard(existing,opts={}){
   ov.querySelector('#wz-next').textContent=step===2?'다음 : 콘텐츠 · 일정':(step===3?'비디오월 저장':(existing?'저장':'비디오월 만들기'));
   if(step===1){
    body.innerHTML=`<div style="max-width:1040px;margin:0 auto;width:100%">
-    <div class="scp-sec" style="padding-left:2px;padding-top:12px">추천 시작점 — 골라도 다음 단계에서 얼마든지 바꿀 수 있어요</div>
+    <div class="sync-note" style="margin:12px 0 14px">${IC.info}<span>매장마다 설치 환경이 달라도 괜찮아요. 캔버스에서 <b>칸 추가·삭제·이동</b>이 자유롭고, 최대 ${GMAX}×${GMAX}까지 구성할 수 있어요.</span></div>
     <div class="layout-cards">${WALL_PRESETS.map(pr=>`
       <button class="layout-card" data-preset="${pr.id}"><span class="lc-prev"><span class="lc-grid" style="aspect-ratio:${pr.gw*16}/${pr.gh*9};grid-template-columns:repeat(${pr.gw},1fr);grid-template-rows:repeat(${pr.gh},1fr)">${presetTiles(pr).map(t=>`<i style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h}"></i>`).join('')}</span></span><b>${pr.name}</b></button>`).join('')}
      <button class="layout-card" data-preset="blank"><span class="lc-prev lc-blank"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><b>빈 캔버스</b></button>
@@ -2087,7 +2087,7 @@ function openWallWizard(existing,opts={}){
     ${MY_WALL_LAYOUTS.length?`<div class="scp-sec" style="padding-left:2px;margin-top:16px">내 레이아웃 — 저장해 둔 배치 재사용</div>
     <div class="layout-cards">${MY_WALL_LAYOUTS.map(L=>`
       <button class="layout-card" data-mylayout="${L.id}" style="position:relative"><span class="lc-prev"><span class="lc-grid" style="aspect-ratio:${L.gw*16}/${L.gh*9};grid-template-columns:repeat(${L.gw},1fr);grid-template-rows:repeat(${L.gh},1fr)">${L.tiles.map(([x,y,w,h])=>`<i style="grid-column:${x+1}/span ${w};grid-row:${y+1}/span ${h}"></i>`).join('')}</span></span><b>${L.name}</b><span>${L.tiles.length}칸 · ${L.gw}×${L.gh}</span><span class="lnk" data-mydel="${L.id}" style="position:absolute;right:10px;top:8px;font-size:12px">삭제</span></button>`).join('')}</div>`:''}
-    <div class="sync-note" style="margin-top:16px">${IC.info}<span>매장마다 설치 환경이 달라도 괜찮아요. 캔버스에서 <b>칸 추가·삭제·이동</b>이 자유롭고, 최대 ${GMAX}×${GMAX}까지 구성할 수 있어요.</span></div></div>`;
+    </div>`;
    body.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.preset;
     if(id==='blank'){gw=3;gh=2;tiles=[];}
