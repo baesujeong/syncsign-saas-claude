@@ -1857,11 +1857,13 @@ table.grid tr.checked td{background:var(--blue-50)}
 .layout-card.on{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
 .layout-card b{font-size:14px;font-weight:700}
 .layout-card span{font-size:12px;color:var(--text-3)}
-.lc-prev{width:100%;aspect-ratio:16/10;background:var(--sunken);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.lc-grid{display:grid;gap:6px;width:76%;margin:auto}
-.lc-prev i{background:#1B2230;border-radius:5px;min-width:0;min-height:0}
+/* 레이아웃 미리보기: .lc-prev는 16/10 '영역'(투명), 그 안에서 회색 박스(.lc-grid)가 타일 그리드를 감싼다.
+   (background는 mod-products의 .lc-prev가 인라인으로 지정하므로 여기선 비움 — border-radius는 공용으로 유지) */
+.lc-prev{width:100%;aspect-ratio:16/10;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.lc-grid{display:grid;gap:4px;width:100%;box-sizing:border-box;background:#E5E7EB;border-radius:12px;padding:8px}
+.lc-prev i{background:#353D4A;border-radius:3px;min-width:0;min-height:0}
 .layout-card.on .lc-prev i{background:var(--blue)}
-.lc-blank{color:var(--text-3)}
+.lc-blank{color:var(--text-3);background:var(--sunken)}
 .wall-build{display:flex;gap:16px;padding-top:16px;min-height:0}
 .wb-pool{width:250px;flex:none;display:flex;flex-direction:column;gap:8px}
 .wb-pool .pool-list{border:1px solid var(--border);border-radius:var(--r-md);overflow-y:auto;max-height:320px}

@@ -2003,11 +2003,13 @@ document.getElementById('rail-add-group').onclick=()=>openGroupModal([...checked
    유닛 그리드 캔버스 방식: 화면 1대 = 타일 1개(위치 x,y + 크기 w×h, 단위칸 스팬).
    프리셋은 '시작점'일 뿐이며, 캔버스에서 칸 추가·삭제·이동이 자유로움.
    레이아웃만 따로 저장해 다른 매장·비디오월에 재사용 가능 */
+/* ar: 미리보기 회색 박스(.lc-grid)의 가로:세로 비율 — 시안(레이아웃 카드 SVG) 기준.
+   박스가 타일 그리드를 감싸므로 행이 적은 레이아웃(1×2·1×4)은 낮고, 2행 이상(2×2·3×3)은 16/10 영역을 꽉 채운다. */
 const WALL_PRESETS=[
- {id:'p12',name:'1×2 스탠다드',gw:2,gh:1,tiles:'grid'},
- {id:'p14',name:'1×4 가로 배너',gw:4,gh:1,tiles:'grid'},
- {id:'p22',name:'2×2 스탠다드',gw:2,gh:2,tiles:'grid'},
- {id:'p33',name:'3×3 대형 월',gw:3,gh:3,tiles:'grid'},
+ {id:'p12',name:'1×2 스탠다드',gw:2,gh:1,tiles:'grid',ar:'235/78'},
+ {id:'p14',name:'1×4 가로 배너',gw:4,gh:1,tiles:'grid',ar:'237/52'},
+ {id:'p22',name:'2×2 스탠다드',gw:2,gh:2,tiles:'grid',ar:'16/10'},
+ {id:'p33',name:'3×3 대형 월',gw:3,gh:3,tiles:'grid',ar:'16/10'},
 ];
 const presetTiles=pr=>pr.tiles==='grid'
  ?Array.from({length:pr.gw*pr.gh},(_,i)=>({p:null,x:i%pr.gw,y:Math.floor(i/pr.gw),w:1,h:1}))
@@ -2081,7 +2083,7 @@ function openWallWizard(existing,opts={}){
    body.innerHTML=`<div style="max-width:1040px;margin:0 auto;width:100%">
     <div class="sync-note" style="margin:12px 0 14px">${IC.info}<span>매장마다 설치 환경이 달라도 괜찮아요. 캔버스에서 <b>칸 추가·삭제·이동</b>이 자유롭고, 최대 ${GMAX}×${GMAX}까지 구성할 수 있어요.</span></div>
     <div class="layout-cards">${WALL_PRESETS.map(pr=>`
-      <button class="layout-card" data-preset="${pr.id}"><span class="lc-prev"><span class="lc-grid" style="aspect-ratio:${pr.gw*16}/${pr.gh*9};grid-template-columns:repeat(${pr.gw},1fr);grid-template-rows:repeat(${pr.gh},1fr)">${presetTiles(pr).map(t=>`<i style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h}"></i>`).join('')}</span></span><b>${pr.name}</b></button>`).join('')}
+      <button class="layout-card" data-preset="${pr.id}"><span class="lc-prev"><span class="lc-grid" style="aspect-ratio:${pr.ar};grid-template-columns:repeat(${pr.gw},1fr);grid-template-rows:repeat(${pr.gh},1fr)">${presetTiles(pr).map(t=>`<i style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h}"></i>`).join('')}</span></span><b>${pr.name}</b></button>`).join('')}
      <button class="layout-card" data-preset="blank"><span class="lc-prev lc-blank"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><b>빈 캔버스</b></button>
     </div>
     ${MY_WALL_LAYOUTS.length?`<div class="scp-sec" style="padding-left:2px;margin-top:16px">내 레이아웃 — 저장해 둔 배치 재사용</div>
