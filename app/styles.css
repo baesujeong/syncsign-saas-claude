@@ -1861,7 +1861,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 .lc-grid{display:grid;gap:6px;width:76%;margin:auto}
 .lc-prev i{background:#1B2230;border-radius:5px;min-width:0;min-height:0}
 .layout-card.on .lc-prev i{background:var(--blue)}
-.lc-blank{font-size:24px;color:var(--text-3)}
+.lc-blank{color:var(--text-3)}
 .wall-build{display:flex;gap:16px;padding-top:16px;min-height:0}
 .wb-pool{width:250px;flex:none;display:flex;flex-direction:column;gap:8px}
 .wb-pool .pool-list{border:1px solid var(--border);border-radius:var(--r-md);overflow-y:auto;max-height:320px}

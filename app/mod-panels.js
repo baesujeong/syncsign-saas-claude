@@ -2082,7 +2082,7 @@ function openWallWizard(existing,opts={}){
     <div class="scp-sec" style="padding-left:2px;padding-top:12px">추천 시작점 — 골라도 다음 단계에서 얼마든지 바꿀 수 있어요</div>
     <div class="layout-cards">${WALL_PRESETS.map(pr=>`
       <button class="layout-card" data-preset="${pr.id}"><span class="lc-prev"><span class="lc-grid" style="aspect-ratio:${pr.gw*16}/${pr.gh*9};grid-template-columns:repeat(${pr.gw},1fr);grid-template-rows:repeat(${pr.gh},1fr)">${presetTiles(pr).map(t=>`<i style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h}"></i>`).join('')}</span></span><b>${pr.name}</b></button>`).join('')}
-     <button class="layout-card" data-preset="blank"><span class="lc-prev lc-blank">＋</span><b>빈 캔버스</b></button>
+     <button class="layout-card" data-preset="blank"><span class="lc-prev lc-blank"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><b>빈 캔버스</b></button>
     </div>
     ${MY_WALL_LAYOUTS.length?`<div class="scp-sec" style="padding-left:2px;margin-top:16px">내 레이아웃 — 저장해 둔 배치 재사용</div>
     <div class="layout-cards">${MY_WALL_LAYOUTS.map(L=>`
