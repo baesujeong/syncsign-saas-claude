@@ -271,7 +271,7 @@ table.grid th{white-space:nowrap}
 .ptable-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:auto}
 table.grid{width:100%;border-collapse:collapse;min-width:900px}
 table.grid th{position:sticky;top:0;background:var(--sunken);z-index:2;text-align:left;font-size:12px;font-weight:600;color:var(--text-2);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
-table.grid td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}table.grid td>b{font-size:14px}
+table.grid td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:14px}table.grid td>b{font-size:14px}
 table.grid tr:hover td{background:var(--sunken)}
 table.grid tr.checked td{background:var(--blue-50)}
 .view-toggle{display:inline-flex;border:1px solid var(--border-2);border-radius:var(--r-sm);overflow:hidden}
@@ -393,7 +393,7 @@ body.perm-ro .ro-ok{display:inline-flex!important;opacity:1!important;pointer-ev
    (편성 캘린더의 시간 슬롯·등록된 일정 블록 — 뷰어도 일정 내용은 봐야 한다) */
 body.perm-ro #cal-grid .slot,
 body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important}
-.perm-table{width:100%;border-collapse:collapse;font-size:13px}
+.perm-table{width:100%;border-collapse:collapse;font-size:14px}
 .perm-table th{text-align:center;font-size:12px;font-weight:700;color:var(--text-3);padding:8px 4px;border-bottom:1px solid var(--border)}
 .perm-table th:first-child{text-align:left}
 .perm-table td{padding:8px 4px;border-bottom:1px solid var(--border);text-align:center}
@@ -746,20 +746,20 @@ svg{display:block;flex:none}
 .table-wrap{flex:1;overflow:auto}
 table.grid{width:100%;border-collapse:collapse;min-width:920px}
 table.grid th{position:sticky;top:0;background:var(--sunken);z-index:2;text-align:left;font-size:12px;font-weight:600;color:var(--text-2);padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
-table.grid td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}table.grid td>b{font-size:14px}
+table.grid td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:14px}table.grid td>b{font-size:14px}
 table.grid tr:hover td{background:var(--sunken)}
 table.grid tr.checked td{background:var(--blue-50)}
 .p-thumb{position:relative;width:44px;height:44px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;border:1px solid rgba(0,0,0,.05)}
 .p-thumb .imgn{position:absolute;right:-5px;bottom:-5px;background:#242B38;color:#fff;font-size:12px;font-weight:700;border-radius:99px;padding:1px 4px;border:1.5px solid #fff}
 .p-cell{display:flex;align-items:center;gap:12px;min-width:220px}
 .p-cell .nm{font-weight:600;font-size:14px}
-.p-cell .ds{font-size:13px;color:var(--text-3);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-cell .ds{font-size:14px;color:var(--text-3);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .price-cell b{font-weight:700}
 .price-cell .orig{text-decoration:line-through;color:var(--text-3);font-size:12px;margin-right:4px;font-weight:400}
 .price-cell .dc{color:var(--red);font-size:12px;font-weight:700;margin-left:4px}
 .status-cell{display:flex;align-items:center;gap:8px}
-.status-cell .lbl{font-size:13px;font-weight:600;color:var(--text-2);width:38px}
-.used-link{font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%}
+.status-cell .lbl{font-size:14px;font-weight:600;color:var(--text-2);width:38px}
+.used-link{font-size:14px;color:var(--blue);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%}
 /* 사용 중인 메뉴판 셀 — 링크처럼 강조하지 않고 기본 텍스트 톤 */
 .used-link.used-board{color:var(--text-2);font-weight:500}
 .used-link.used-board svg{color:var(--text-3)}
@@ -859,7 +859,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 .dropzone b{color:var(--text);font-size:14px}
 .imp-result{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
 .imp-result .head{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--green-bg);color:var(--green);font-weight:700;font-size:14px}
-.imp-result table{width:100%;border-collapse:collapse;font-size:13px}
+.imp-result table{width:100%;border-collapse:collapse;font-size:14px}
 .imp-result th{background:var(--sunken);text-align:left;padding:8px 14px;color:var(--text-2);font-weight:600;font-size:12px;border-bottom:1px solid var(--border)}
 .imp-result td{padding:8px 14px;border-bottom:1px solid var(--border)}
 .imp-result tr:last-child td{border-bottom:0}
@@ -1682,7 +1682,7 @@ svg{display:block;flex:none}
 .ptable-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:auto}
 table.grid{width:100%;border-collapse:collapse}
 table.grid th{position:sticky;top:0;background:var(--sunken);z-index:2;text-align:left;font-size:12px;font-weight:600;color:var(--text-2);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
-table.grid td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}table.grid td>b{font-size:14px}
+table.grid td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:14px}table.grid td>b{font-size:14px}
 table.grid tr:hover td{background:var(--sunken)}
 table.grid tr.checked td{background:var(--blue-50)}
 /* 화면 관리 모듈 테이블만 넓은 고정폭 + 셀 줄바꿈 금지(열이 많고 데이터가 김) — 다른 페이지(사용자·매장) 테이블은 자연 줄바꿈 */

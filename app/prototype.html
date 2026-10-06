@@ -989,8 +989,8 @@ function drawUsers(){
    <td><span class="checkbox ${uChecked.has(u.id)?'on':''}" data-uc="${u.id}">${IC.check}</span></td>
    <td><div class="u-cell"><span class="avatar" style="background:${u.c}">${u.name[0]}</span><div><div class="nm">${u.name}${u.id==='u1'?' <span class="badge badge-gray" style="height:17px;font-size:12px">나</span>':''}</div><div class="em">${u.email}</div></div></div></td>
    <td><span class="role-pill ${ROLE_META[u.role][1]}">${ROLE_META[u.role][0]}</span></td>
-   <td style="font-size:13px">${u.scope}</td><td>${st}</td>
-   <td style="font-size:13px;color:var(--text-3)">${u.last}</td>
+   <td style="font-size:14px">${u.scope}</td><td>${st}</td>
+   <td style="font-size:14px;color:var(--text-3)">${u.last}</td>
    <td><button class="icon-btn" data-um="${u.id}">${IC.dots}</button></td></tr>`;
  }).join('')||`<tr><td colspan="7">${uFlt.q?searchEmptyHtml(uFlt.q):`<div class="empty"><b>조건에 맞는 사용자가 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  {const _q=document.getElementById('u-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
@@ -1151,10 +1151,10 @@ function drawStores(){
   return `<tr data-srow="${s.id}" style="cursor:pointer">
    <td><span class="checkbox ${sChecked.has(s.id)?'on':''}" data-schk="${s.id}" role="checkbox" aria-label="${s.name} 선택">${IC.check}</span></td>
    <td><b>${s.name}</b><div style="font-size:12px;color:var(--text-3)">${s.region}${s.addr?' · '+s.addr:''}</div></td>
-   <td>${s.mgrs.length?`<span class="mgr-chips">${s.mgrs.slice(0,3).map(id=>{const u=userOf(id);return u?`<span class="avatar" style="background:${u.c}" title="${u.name}">${u.name[0]}</span>`:''}).join('')}${s.mgrs.length>3?`<span class="more">+${s.mgrs.length-3}</span>`:''}</span>`:'<span style="color:var(--text-3);font-size:13px">미지정</span>'}</td>
-   <td><span style="display:inline-flex;align-items:center;gap:8px;font-size:13px"><span class="dot ${bad?'err':'on'}"></span><b class="num">${s.panels.on}</b><span style="color:var(--text-3)">/ ${s.panels.total} 온라인</span></span></td>
+   <td>${s.mgrs.length?`<span class="mgr-chips">${s.mgrs.slice(0,3).map(id=>{const u=userOf(id);return u?`<span class="avatar" style="background:${u.c}" title="${u.name}">${u.name[0]}</span>`:''}).join('')}${s.mgrs.length>3?`<span class="more">+${s.mgrs.length-3}</span>`:''}</span>`:'<span style="color:var(--text-3);font-size:14px">미지정</span>'}</td>
+   <td><span style="display:inline-flex;align-items:center;gap:8px;font-size:14px"><span class="dot ${bad?'err':'on'}"></span><b class="num">${s.panels.on}</b><span style="color:var(--text-3)">/ ${s.panels.total} 온라인</span></span></td>
    <td>${callBadge(s)}</td>
-   <td style="font-size:13px;color:var(--text-3)">${s.panels.last}</td>
+   <td style="font-size:14px;color:var(--text-3)">${s.panels.last}</td>
    <td><button class="icon-btn" data-sm="${s.id}">${IC.dots}</button></td></tr>`;
  }).join('')||`<tr><td colspan="7">${STORES.length===0?`<div class="empty"><b>아직 등록된 매장이 없어요</b><span>첫 번째 매장을 등록하고 지역·담당자를 정리해보세요.</span><button class="btn btn-primary btn-sm" onclick="openStoreModal()">${IC.plus}첫 매장 등록하기</button></div>`:sFlt.q?searchEmptyHtml(sFlt.q):`<div class="empty"><b>조건에 맞는 매장이 없어요</b><button class="btn btn-tonal btn-sm" onclick="openStoreModal()">첫 매장 등록하기</button></div>`}</td></tr>`;
  {const _q=document.getElementById('s-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
@@ -1532,7 +1532,7 @@ function drawTplList(grid,arr){
   <td><span class="checkbox ${tChecked.has(t.id)?'on':''}" data-tc="${t.id}" role="checkbox" aria-label="${t.name} 선택">${IC.check}</span></td>
   <td><div style="display:flex;align-items:center;gap:12px"><span style="width:58px;height:33px;border-radius:5px;background:${t.g};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex:none">${t.e}</span><b style="font-size:14px">${t.name}</b></div></td>
   <td><span class="badge badge-gray">${tplSize(t)}</span></td>
-  <td class="num" style="font-size:13px;color:var(--text-3)">2026.${t.mod}</td>
+  <td class="num" style="font-size:14px;color:var(--text-3)">2026.${t.mod}</td>
   <td class="fav-cell"><button class="fav-col ${t.fav?'on':''}" data-tfav="${t.id}" aria-label="${t.name} 즐겨찾기" aria-pressed="${t.fav?'true':'false'}">${IC.likeStar}</button></td>
   <td><button class="icon-btn" data-tm="${t.id}" aria-label="더보기">${IC.dots}</button></td></tr>`).join('')}
  </tbody></table></div>`;
@@ -1716,8 +1716,8 @@ function drawLib(){
    <th style="width:38px"><span class="checkbox ${selectable.length&&selectable.every(c=>lChecked.has(c.id))?'on':''}" id="l-all" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span></th><th>콘텐츠</th><th>유형</th><th>크기</th><th>태그</th><th>업로드</th><th style="width:40px"></th></tr></thead><tbody>
    ${arr.map(c=>`<tr class="${lChecked.has(c.id)?'checked':''}" data-lib="${c.id}">
     <td><span class="checkbox ${lChecked.has(c.id)?'on':''}" data-lc="${c.id}" role="checkbox" aria-label="${c.name} 선택">${IC.check}</span></td>
-    <td><div style="display:flex;align-items:center;gap:10px"><span style="width:52px;height:30px;border-radius:5px;background:${c.g};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none"></span><b style="font-size:13px">${c.name}</b>${c.error?'<span class="badge badge-red">실패</span>':''}</div></td>
-    <td>${typeBadge(c)}</td><td class="num" style="font-size:13px">${c.size}</td>
+    <td><div style="display:flex;align-items:center;gap:10px"><span style="width:52px;height:30px;border-radius:5px;background:${c.g};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none"></span><b style="font-size:14px">${c.name}</b>${c.error?'<span class="badge badge-red">실패</span>':''}</div></td>
+    <td>${typeBadge(c)}</td><td class="num" style="font-size:14px">${c.size}</td>
     <td>${c.tags.map(t=>`<span class="badge badge-gray" style="margin-right:4px">${t}</span>`).join('')||'—'}</td>
     <td class="num" style="font-size:12px;color:var(--text-3)">${c.date}</td>
     <td><button class="icon-btn" data-lm="${c.id}" aria-label="더보기">${IC.dots}</button></td></tr>`).join('')}
@@ -1991,11 +1991,11 @@ function drawPlArea(){
    <td><div style="display:flex;align-items:center;gap:12px">
     <span class="pl-cover-sm"${c0?` style="background:${c0.g}"`:''}>${c0?c0.e:''}</span>
     <b style="font-size:14px">${pl.name}</b></div></td>
-   <td style="font-size:13px;color:var(--text-2)">${pl.folder?(fPath(PL_FOLDERS,pl.folder)||'—'):'—'}</td>
-   <td class="num" style="font-size:13px">${pl.items.length}개</td>
-   <td class="num" style="font-size:13px">${durFmt(plDur(pl))}</td>
+   <td style="font-size:14px;color:var(--text-2)">${pl.folder?(fPath(PL_FOLDERS,pl.folder)||'—'):'—'}</td>
+   <td class="num" style="font-size:14px">${pl.items.length}개</td>
+   <td class="num" style="font-size:14px">${durFmt(plDur(pl))}</td>
    <td>${pl.repeat?'<span class="badge badge-blue">반복</span>':'<span class="badge badge-gray">1회</span>'}</td>
-   <td class="num" style="font-size:13px;color:var(--text-3)">2026.${pl.mod}</td>
+   <td class="num" style="font-size:14px;color:var(--text-3)">2026.${pl.mod}</td>
    <td><button class="icon-btn" data-plm="${pl.id}" aria-label="더보기">${IC.dots}</button></td></tr>`;}).join('')}
   </tbody></table></div>`:emptyHtml;
  }
@@ -2678,7 +2678,7 @@ function renderMyPage(root){
    </div>
    <div class="set-card"><h3>결제 내역</h3>
     <div class="ptable-wrap" style="border:0"><table class="grid" style="min-width:0"><thead><tr><th>결제일</th><th>내용</th><th style="text-align:right">금액</th><th>상태</th><th></th></tr></thead><tbody>
-    ${PAYMENTS.map(([d,t,a])=>`<tr><td class="num" style="font-size:13px">${d}</td><td style="font-size:13px">${t}</td><td class="num" style="text-align:right;font-weight:700">${a}</td><td><span class="badge badge-green">결제 완료</span></td><td><button class="icon-btn" data-receipt aria-label="영수증"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg></button></td></tr>`).join('')}
+    ${PAYMENTS.map(([d,t,a])=>`<tr><td class="num" style="font-size:14px">${d}</td><td style="font-size:14px">${t}</td><td class="num" style="text-align:right;font-weight:700">${a}</td><td><span class="badge badge-green">결제 완료</span></td><td><button class="icon-btn" data-receipt aria-label="영수증"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg></button></td></tr>`).join('')}
     </tbody></table></div>
    </div>
    <div class="set-card danger-zone"><h3 style="color:var(--red)">구독 해지</h3>
@@ -2841,9 +2841,9 @@ function renderSupportPage(root){
    <th>상태</th><th>유형</th><th>제목</th><th>등록일</th><th style="width:40px"></th></tr></thead><tbody>
    ${TICKETS.map(t=>`<tr data-tk="${t.id}" style="cursor:pointer">
     <td><span class="badge ${TK_ST[t.status][1]}">${TK_ST[t.status][0]}</span></td>
-    <td style="font-size:13px;color:var(--text-2)">${t.type}</td>
+    <td style="font-size:14px;color:var(--text-2)">${t.type}</td>
     <td><b style="font-size:14px">${t.title}</b>${t.files.length?` <span style="font-size:12px;color:var(--text-3)">📎${t.files.length}</span>`:''}</td>
-    <td class="num" style="font-size:13px;color:var(--text-3)">2026.${t.date}</td>
+    <td class="num" style="font-size:14px;color:var(--text-3)">2026.${t.date}</td>
     <td><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></td></tr>`).join('')}
   </tbody></table></div>`;
   body.querySelectorAll('[data-tk]').forEach(tr=>tr.onclick=()=>openTicketDrawer(TICKETS.find(t=>t.id===tr.dataset.tk)));
