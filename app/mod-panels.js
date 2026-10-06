@@ -282,9 +282,9 @@ const thumbHtml=(p,big,fav='',forceWall)=>{
  if(p.wall&&!forceWall)return '';
  /* 좌상단 오버레이: 상태 뱃지 + (카드 뷰) 즐겨찾기 버튼이 4px 간격으로 나란히 */
  const tl=live=>(live||fav)?`<div class="tl">${live||''}${fav}</div>`:'';
- if(!p.stb)return tl('')+`<div class="offmsg">${STB_IC(big?26:20)}셋탑 미연결 · 연결하면 송출을 시작해요</div>`;
+ if(!p.stb)return tl('')+`<div class="offmsg">${stbOffIcon.replace('<svg ',`<svg width="${big?26:20}" height="${big?26:20}" `)}셋탑 미연결 · 연결하면 송출을 시작해요</div>`;
  if(p.status==='off')return tl('')+`<div class="offmsg"><svg width="${big?26:20}" height="${big?26:20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 1l22 22M9 9a5 5 0 0 0-1.5 3.5M5.5 5.6A9 9 0 0 0 3 12.4m13.4 3.1A5 5 0 0 0 15 9M18.5 18.4A9 9 0 0 0 21 11.6"/></svg>신호 없음 · ${ago(p.lastMin)}</div>`;
- if(p.unsch)return tl('')+`<div class="offmsg">${IC.cal}편성된 콘텐츠 없음</div>`;
+ if(p.unsch)return tl('')+`<div class="offmsg">${calXIcon.replace('<svg ',`<svg width="${big?26:20}" height="${big?26:20}" `)}편성된 일정 없음</div>`;
  const c=contentOf(p.content);
  return `<span class="cname">${c.name}</span>
   ${tl(`<span class="live"><span class="dot on"></span>연결됨</span>`)}`;
@@ -463,7 +463,7 @@ function renderList(){
      <div class="body">
       <div class="nm">${p.name}</div>
       <div class="sub">${storeHtml(p.store)} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
-      <div class="badges"><div class="badge-row"><span class="badge badge-gray">비디오월 ${(w.gw||w.cols)}×${(w.gh||w.rows)}</span>${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
+      <div class="badges"><div class="badge-row"><span class="badge badge-gray">비디오월 ${(w.gw||w.cols)}×${(w.gh||w.rows)}</span>${!p.stb?`<span class="badge badge-amber">셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
      </div></div>`;
    }
    return `<div class="pcard ${checked.has(p.id)?'checked':''}" data-panel="${p.id}">
@@ -473,7 +473,7 @@ function renderList(){
     <div class="body">
      <div class="nm">${p.name}</div>
      <div class="sub">${storeHtml(p.store)} · ${!p.stb?'셋탑 연결 대기':ago(p.lastMin)}</div>
-     <div class="badges"><div class="badge-row">${!p.stb?`<span class="badge badge-amber">${STB_IC(11)}셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
+     <div class="badges"><div class="badge-row">${!p.stb?`<span class="badge badge-amber">셋탑 미연결</span>`:p.unsch?'<span class="badge badge-amber">미편성</span>':`<span class="badge badge-gray">일정 ${p.schedN}건</span>`}</div><button class="icon-btn card-more" data-pmenu="${p.id}" aria-label="화면 관리">${IC.dots}</button></div>
     </div></div>`;
   }).join('')||`<div style="grid-column:1/-1">${PANELS.length===0?noPanelEmptyHtml():flt.q?searchEmptyHtml(flt.q):`<div class="empty"><b>조건에 맞는 화면이 없어요</b><span>필터를 바꿔보세요.</span></div>`}</div>`;
  }else{

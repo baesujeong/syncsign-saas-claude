@@ -2961,7 +2961,7 @@ function renderDashboard(root){
  const myPanels=(window.__panelList?window.__panelList(5):[]);
  const liveOn=myPanels.filter(p=>p.stb&&p.status==='on').length,liveOff=myPanels.filter(p=>!p.stb||p.status==='off').length;
  const cardLive=`<div class="dash-card"><h3>화면 실시간 상태 <span style="font-size:12px;color:var(--text-2);font-weight:600">온라인 <b style="color:var(--green)">${liveOn}</b> · 오프라인 <b>${liveOff}</b></span><span class="lnk" data-att-all>화면 관리에서 모두 보기</span></h3>
-   ${myPanels.length?myPanels.map(p=>`<div class="dash-row" data-att-all><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${p.name} <span style="font-weight:500;color:var(--text-3)">· ${p.store}</span></b><span>${p.stb?(p.status==='off'?'신호 없음 · '+p.ago:p.content?'송출 중 · '+p.content:'편성된 콘텐츠 없음'):'셋탑 미연결 — 연결하면 송출을 시작해요'}</span></span>
+   ${myPanels.length?myPanels.map(p=>`<div class="dash-row" data-att-all><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${p.name} <span style="font-weight:500;color:var(--text-3)">· ${p.store}</span></b><span>${p.stb?(p.status==='off'?'신호 없음 · '+p.ago:p.content?'송출 중 · '+p.content:'편성된 일정 없음'):'셋탑 미연결 — 연결하면 송출을 시작해요'}</span></span>
     <span class="badge ${!p.stb?'badge-amber':p.status==='on'?'badge-green':'badge-gray'}">${!p.stb?'셋탑 미연결':p.status==='on'?'온라인':'오프라인'}</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>아직 연결된 화면이 없어요</b><span>화면 관리에서 연결 코드로 등록해보세요.</span></div>'}
   </div>`;
  /* 프랜차이즈·기업: 지금 확인이 필요한 패널 */
