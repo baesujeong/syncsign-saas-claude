@@ -1653,7 +1653,7 @@ function renderProgCal(){
  for(let d=0;d<7;d++){
   const bhtml=blocks.filter(b=>b.day===d).map(b=>{const c=contentOf(b.content);
    return `<div class="cal-block ${b.type==='urgent'?'urgent':''} ${pcalSelGid===b.gid?'sel':''}" data-block="${b.id}" style="top:${(b.s-7)*44+1}px;height:${(b.e-b.s)*44-3}px;background:${calBg(b)}">${c?c.name:'콘텐츠 미지정'}<span class="t num">${hLabel(b.s)} – ${hLabel(b.e)}</span></div>`;}).join('');
-  cols+=`<div class="cal-col" data-day="${d}">${hours.map(h=>`<div class="slot" data-slot="${h}"></div>`).join('')}${bhtml}${d===TODAY?`<div class="now-line" style="left:0;top:${(14.5-7)*44}px"></div>`:''}</div>`;
+  cols+=`<div class="cal-col" data-day="${d}">${hours.map(h=>`<div class="slot" data-slot="${h}"></div>`).join('')}${bhtml}</div>`;
  }
  gridEl.innerHTML=`<div>${hours.map(h=>`<div class="hour num">${hLabel(h)}</div>`).join('')}</div>`+cols;
  gridEl.querySelectorAll('.slot').forEach(sl=>sl.onclick=()=>{const day=+sl.closest('.cal-col').dataset.day,h=+sl.dataset.slot;openBlockSide({days:[day],s:h,e:Math.min(h+2,23),content:null,type:'normal'});});

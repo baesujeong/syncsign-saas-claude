@@ -1811,8 +1811,6 @@ table.grid tr.checked td{background:var(--blue-50)}
 .cal-block:hover{filter:brightness(1.08)}
 .cal-block.urgent::before{content:"긴급";position:absolute;right:5px;top:4px;font-size:12px;background:rgba(53,61,74,.12);padding:1px 4px;border-radius:4px}
 .cal-block.wall::before{content:"비디오월";position:absolute;right:5px;top:4px;font-size:12px;background:rgba(53,61,74,.12);padding:1px 4px;border-radius:4px}
-.now-line{position:absolute;left:56px;right:0;height:2px;background:var(--red);z-index:5;pointer-events:none}
-.now-line::before{content:"";position:absolute;left:-5px;top:-3.5px;width:9px;height:9px;border-radius:50%;background:var(--red)}
 /* 일정 등록 사이드 */
 .sc-side{width:340px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex:none;min-height:0}
 .sc-side-head{padding:16px 20px 12px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
