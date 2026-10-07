@@ -1492,7 +1492,7 @@ function openTargetDrawer(prog){
   const rows=ids.map(id=>{const p=panelOf(id);return {id,name:p?p.name:'화면',store:p?p.store:null,status:p?p.status:'off'};})
    .sort((a,b)=>{const sa=storeName(a.store),sb=storeName(b.store);return sa===sb?a.name.localeCompare(b.name,'ko'):sa.localeCompare(sb,'ko');});
   const scs=prog.scopes||[], MAXCHIP=2, CAP=400, showSearch=true;
-  const chipHtml=scs.length?scs.slice(0,MAXCHIP).map(sc=>{const range=sc.type!=='panel';return `<span class="chip on tgt-scope-chip">${range?IC.folder:''}${scopeLabel(sc)}${range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}개`:''}</span>`}).join('')
+  const chipHtml=scs.length?scs.slice(0,MAXCHIP).map(sc=>{const range=sc.type!=='panel';return `<span class="chip on tgt-scope-chip">${scopeLabel(sc)}${range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}개`:''}</span>`}).join('')
     +(scs.length>MAXCHIP?`<span class="chip tgt-scope-more">+ ${fmt(scs.length-MAXCHIP)}개 대상</span>`:'')
    :`<span class="tgt-scope-none">송출 대상 없음</span>`;
   wrap.innerHTML=`<div class="drawer tgt-drawer" role="dialog" aria-modal="true">
@@ -1610,7 +1610,7 @@ function renderProgTargets(){
   el.innerHTML=`<span class="sc-tg-label">송출 대상</span><button class="btn btn-sm sc-tg-pick" id="prog-pick">${IC.monitor}화면 선택하기</button><span class="sc-tg-hint">${IC.info}이 편성표의 <b>모든 일정</b>이 선택한 화면에 함께 적용돼요.</span>`;
  }else{
   const chipsHtml=scs.map(sc=>{const range=sc.type!=='panel';const cnt=range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}개`:'';
-   return `<span class="chip on sc-tg-chip">${range?IC.folder:''}<span class="sc-tg-chip-tx">${scopeLabel(sc)}${cnt}</span><button class="x" data-prm="${scopeKey(sc)}" aria-label="대상에서 제외">${IC.xs}</button></span>`}).join('');
+   return `<span class="chip on sc-tg-chip"><span class="sc-tg-chip-tx">${scopeLabel(sc)}${cnt}</span><button class="x" data-prm="${scopeKey(sc)}" aria-label="대상에서 제외">${IC.xs}</button></span>`}).join('');
   el.innerHTML=`<span class="sc-tg-label">송출 대상 <b class="num">${fmt(uniq)}개 화면</b></span>
    <div class="sc-tg-scroller" id="tg-wrap">
     <button class="scope-chip-nav prev" id="tg-prev" tabindex="-1" aria-label="이전 대상 보기">${CHEV_L}</button>
@@ -1875,7 +1875,7 @@ function openScopePicker(state){
   function drawFoot(){
    const scopes=selToScopes(); foot._scopes=scopes;
    chipScroll.innerHTML=scopes.length?scopes.map(sc=>{const range=sc.type!=='panel';const cnt=range&&sc.type!=='all'?` · ${fmt(scopeCount(sc))}`:'';
-    return `<span class="chip on chip-range scope-chip">${range?IC.folder:''}<span class="scope-chip-tx">${scopeLabel(sc)}${cnt}</span><button class="x" data-rmchip="${scopeKey(sc)}" aria-label="제외">${IC.xs}</button></span>`}).join('')
+    return `<span class="chip on chip-range scope-chip"><span class="scope-chip-tx">${scopeLabel(sc)}${cnt}</span><button class="x" data-rmchip="${scopeKey(sc)}" aria-label="제외">${IC.xs}</button></span>`}).join('')
     :`<span class="scope-foot-empty">아직 선택한 대상이 없어요</span>`;
    totalEl.innerHTML=`총 <b class="num">${fmt(selSet.size)}</b> 개 화면`;
    dupEl.hidden=true;
