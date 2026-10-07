@@ -455,7 +455,7 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .tpl-card .fav,.pcard .fav{position:absolute;right:9px;top:9px;z-index:3;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s}
 .tpl-card:hover .fav,.pcard:hover .fav{opacity:1}
 .tpl-card .fav.on,.pcard .fav.on{opacity:1;color:#D9A93E}
-.tpl-card .body{padding:10px 12px 12px}
+.tpl-card .body{padding:10px 12px 12px;border-top:1px solid var(--border)}
 .tpl-card .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tpl-card .sub{font-size:12px;color:var(--text-3);margin-top:2px;display:flex;align-items:center;gap:6px}
 .tpl-card .body .badge{height:18px;font-size:12px;padding:0 6px}
@@ -493,7 +493,7 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .lib-card .check{position:absolute;left:9px;top:8px;z-index:3;opacity:0;background:rgba(255,255,255,.94);border-radius:5px}
 .lib-card:hover .check,.lib-card .check.on{opacity:1}
 .lib-card:hover .type{opacity:0}
-.lib-card .body{padding:8px 12px 10px}
+.lib-card .body{padding:8px 12px 10px;border-top:1px solid var(--border)}
 .lib-card .nm{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lib-card .sub{font-size:12px;color:var(--text-3);margin-top:1px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .lib-card.err-card{border-color:#F6C7C9}
@@ -525,7 +525,7 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .pl-cover .e{font-size:34px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
 .pl-cover.empty{background:var(--sunken);color:var(--text-3);font-size:12px;font-weight:600}
 .pl-cover-sm{width:46px;aspect-ratio:16/9;flex:none;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:#fff;overflow:hidden;background:var(--sunken)}
-.pl-card .body{padding:12px 14px 12px}
+.pl-card .body{padding:12px 14px 12px;border-top:1px solid var(--border)}
 .pl-card .nm{font-weight:700;font-size:14px}
 .pl-card .sub{font-size:12px;color:var(--text-3);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 #screen-pledit{display:flex;flex-direction:column;height:100vh;background:var(--bg)}
@@ -1655,7 +1655,7 @@ svg{display:block;flex:none}
 .pcard:hover .check,.pcard .check.on{opacity:1}
 /* 선택(체크) 상태는 파란 배경 + 흰 체크 — .pcard .check 흰 배경이 .checkbox.on 을 덮지 않도록 명시 */
 .pcard .check.on{background:var(--blue);border-color:var(--blue);color:#fff}
-.pcard .body{padding:10px 12px 12px}
+.pcard .body{padding:10px 12px 12px;border-top:1px solid var(--border)}
 .pcard .nm{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
 .pcard .nm .dot{flex:none}
 .pcard .sub{font-size:12px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
