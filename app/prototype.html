@@ -169,6 +169,51 @@ function toast(msg,{action,onAction,err}={}){
  if(action){const b=document.createElement('button');b.textContent=action;b.onclick=()=>{onAction&&onAction();t.remove()};t.appendChild(b);}
  $('#toasts').appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320)},3400);
 }
+/* ═══════════ 로딩 UX 공통 컴포넌트 (LoadUX) ═══════════
+   기존 .skel 시머를 재사용하는 얇은 헬퍼. 두 스크립트(prototype.html·mod-panels.js) 모두 window로 공유.
+   · 프로토타입은 데이터가 동기(인메모리)라 지연을 setTimeout으로 시뮬레이션한다.
+     TODO(API): 실제 연동 시 load()의 setTimeout → fetch().then(render), btn()의 setTimeout → 요청 Promise 완료로 대체.
+   · 임계값 게이트: 예상 지연이 min(기본 300ms) 미만이면 스켈레톤을 노출하지 않는다. */
+window.LoadUX={
+ PAGE_MS:1200, BTN_MS:900, MIN_MS:300,
+ /* 카드 스켈레톤 n개 (래퍼 없음 — 호출부에서 .lib-grid/.tpl-grid로 감싸거나 그리드 컨테이너에 직접 주입) */
+ skelCards(n=8,ratio='16/10'){
+  return Array(n).fill(`<div><div class="skel" style="aspect-ratio:${ratio}"></div><div class="skel skel-line" style="width:72%;margin-top:8px"></div></div>`).join('');
+ },
+ /* 테이블 Row 스켈레톤 (사용자/매장/편성표 등 table.grid). widths=컬럼별 바 너비% */
+ skelRows(rows=6,widths=[64,44,38,52,36]){
+  return Array.from({length:rows},()=>`<tr class="skel-tr">${widths.map(w=>`<td>${w?`<span class="skel skel-line" style="display:block;width:${w}%"></span>`:''}</td>`).join('')}</tr>`).join('');
+ },
+ /* 카드형 리스트 스켈레톤 (대시보드·내 정보·문의 등 inline 렌더 페이지용) */
+ skelCardCol(cards=2,rowsPer=4){
+  return `<div style="display:grid;gap:16px">${Array(cards).fill(`<div class="dash-card"><div class="skel skel-line" style="width:140px;height:16px;margin-bottom:14px"></div>${Array(rowsPer).fill('<div style="display:flex;align-items:center;gap:10px;padding:9px 0"><span class="skel" style="width:28px;height:28px;border-radius:7px;flex:none"></span><span style="flex:1"><span class="skel skel-line" style="display:block;width:55%"></span><span class="skel skel-line" style="display:block;width:35%;margin-top:6px"></span></span></div>').join('')}</div>`).join('')}</div>`;
+ },
+ /* 페이지 최초 진입 스켈레톤 게이트 — inline 렌더 페이지에서 1회 노출 후 재렌더. true면 호출부는 return. */
+ pageGate(root,key,skelHtml,rerender){
+  if(!root||window['__pg_'+key])return false;
+  window['__pg_'+key]=true;
+  root.innerHTML=`<header class="page-head"><div class="skel skel-line" style="width:180px;height:24px"></div></header><div class="content-scroll" style="padding-top:12px">${skelHtml}</div>`;
+  setTimeout(()=>{if(root.isConnected)rerender&&rerender();},this.PAGE_MS);
+  return true;
+ },
+ /* 섹션 로딩: container에 스켈레톤을 깔고 지연 후 render() 실행. 임계값 미만이면 즉시 render. */
+ load(container,skeletonHtml,render,{delay=this.PAGE_MS,min=this.MIN_MS}={}){
+  if(!container){render&&render();return;}
+  if(delay<min){render&&render();return;}
+  container.innerHTML=skeletonHtml;
+  setTimeout(()=>{if(!container.isConnected)return;render&&render();
+   container.classList.add('skel-fade');setTimeout(()=>container.classList.remove('skel-fade'),200);},delay);
+ },
+ /* 버튼 로딩: 폭 고정 + 스피너 + 중복 클릭 차단 + 완료 후 복구. action은 지연 후 1회 실행. */
+ btn(el,action,{delay=this.BTN_MS}={}){
+  if(!el||el.dataset.loading)return;
+  el.style.minWidth=el.offsetWidth+'px';el.dataset.loading='1';
+  const html=el.innerHTML,wasDisabled=el.disabled;el.disabled=true;
+  el.innerHTML=`<span class="spinner${el.classList.contains('btn-primary')||el.classList.contains('btn-danger')?' inv':''}"></span>`;
+  setTimeout(()=>{try{action&&action();}finally{
+   el.innerHTML=html;el.disabled=wasDisabled;el.style.minWidth='';delete el.dataset.loading;}},delay);
+ }
+};
 let openMenu=null;
 function closeMenus(){if(openMenu){openMenu.remove();openMenu=null}}
 document.addEventListener('mousedown',e=>{if(openMenu&&!openMenu.contains(e.target))closeMenus()});
@@ -267,7 +312,7 @@ function openModal(html,{width='480px',onMount}={}){
 function confirmDialog({title,desc,confirmText=t('common.confirm'),danger=false,onConfirm}){
  openModal(`<div class="modal-head"><div><h2>${title}</h2><div class="sub">${desc}</div></div></div>
  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>${t('common.cancel')}</button><button class="btn ${danger?'btn-danger':'btn-primary'}" id="cf-ok">${confirmText}</button></div>`,
- {width:'420px',onMount:ov=>ov.querySelector('#cf-ok').onclick=()=>{ov.remove();onConfirm()}});
+ {width:'420px',onMount:ov=>ov.querySelector('#cf-ok').onclick=function(){const cx=ov.querySelector('[data-close]');if(cx)cx.disabled=true;const go=()=>{ov.remove();onConfirm&&onConfirm()};window.LoadUX?window.LoadUX.btn(this,go):go();}});
 }
 function openDrawer(html,{onMount}={}){
  const wrap=document.createElement('div');wrap.className='drawer-wrap';
@@ -928,8 +973,8 @@ function showPage(id){
  $$('#lnb-nav [data-nav]').forEach(a=>a.classList.toggle('on',a.dataset.nav===id));
  const root=$('#page-root');
  if(typeof stashLegacy==='function')stashLegacy();
- if(id==='products'){mountLegacy('products');return}
- if(id==='panels'){mountLegacy('panels');return}
+ if(id==='products'){mountLegacy('products');window.__productsEnter&&window.__productsEnter();return}
+ if(id==='panels'){mountLegacy('panels');window.__panelsEnter&&window.__panelsEnter();return}
  if(id==='walls'){root.innerHTML='';window.__renderWallsPage&&window.__renderWallsPage(root);return}
  if(id==='schedule'){root.innerHTML='';window.__renderSchedulePage&&window.__renderSchedulePage(root);return}
  if(id==='dash')renderDashboard(root);
@@ -972,7 +1017,8 @@ function renderUsersPage(root){
  root.querySelector('#btn-roles').onclick=openRolesDrawer;
  root.querySelector('#btn-invite').onclick=openInviteModal;
  root.querySelector('#u-all').onclick=()=>{const arr=usersFiltered();const all=arr.every(u=>uChecked.has(u.id));arr.forEach(u=>all?uChecked.delete(u.id):uChecked.add(u.id));drawUsers()};
- drawUsers();
+ /* 최초 진입만 Row 스켈레톤(검색·필터 재그리기는 즉시) */
+ window.LoadUX.load($('#u-tbody'),window.LoadUX.skelRows(6,[0,58,42,48,40,52,0]),drawUsers);
 }
 const usersFiltered=()=>USERS.filter(u=>
  (uFlt.role==='all'||u.role===uFlt.role)&&(uFlt.status==='all'||u.status===uFlt.status)&&
@@ -1132,7 +1178,8 @@ function renderStoresPage(root){
  root.querySelector('#s-region').onchange=e=>{sFlt.region=e.target.value;drawStores()};
  root.querySelector('#btn-add-store').onclick=()=>openStoreModal();
  root.querySelector('#s-all').onclick=()=>{const arr=storesFiltered();const all=arr.every(s=>sChecked.has(s.id));arr.forEach(s=>all?sChecked.delete(s.id):sChecked.add(s.id));drawStores()};
- drawStores();
+ /* 최초 진입만 Row 스켈레톤(검색·필터 재그리기는 즉시) */
+ window.LoadUX.load($('#s-tbody'),window.LoadUX.skelRows(6,[0,56,40,34,44,48,0]),drawStores);
 }
 const callBadge=s=>{
  if(!s.call.on)return '<span class="badge badge-gray">미사용</span>';
@@ -1452,7 +1499,13 @@ function drawMyTpls(){
  };
  {const sa=body.querySelector('#t-selall');sa.closest('.sel-all').addEventListener('click',e=>{if(!e.target.closest('#t-selall'))sa.click()});sa.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sa.click()}});}
  body.querySelector('#tf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{MY_FOLDERS.push({id:'tf'+(tSeq++),name:nm,parent:null});drawTplFolders();toast(`'${nm}' 폴더를 만들었어요.`)}});
- drawTplFolders();drawTplGrid();
+ drawTplFolders();
+ /* 최초/뷰 전환 스켈레톤(그리드=카드 / 리스트=테이블). 검색·폴더·정렬 재그리기는 drawTplGrid 직접 호출로 즉시 */
+ {const tg=$('#t-grid');
+  if(tg&&window.LoadUX){
+   if(tView==='list'){tg.className='';window.LoadUX.load(tg,`<div class="ptable-wrap"><table class="grid"><tbody>${window.LoadUX.skelRows(6,[0,48,30,34,24,0])}</tbody></table></div>`,drawTplGrid);}
+   else{tg.className='tpl-grid';window.LoadUX.load(tg,window.LoadUX.skelCards(8,'16/9'),drawTplGrid);}
+  }else drawTplGrid();}
 }
 function drawTplFolders(){
  const el=$('#tf-list');if(!el)return;
@@ -1586,9 +1639,8 @@ function drawGallery(){
  };
  attachSearchUX(body.querySelector('#g-q'),q=>{gQ=q;paint()});
  const _gs=body.querySelector('#g-sort');_gs.value=gSort;_gs.onchange=e=>{gSort=e.target.value;paint()};
- /* 로딩 스켈레톤 → 콘텐츠 */
- grid.innerHTML=Array(8).fill('<div><div class="skel" style="aspect-ratio:16/9"></div><div class="skel" style="height:14px;margin-top:8px;width:70%"></div></div>').join('');
- setTimeout(paint,420);
+ /* 로딩 스켈레톤 → 콘텐츠 (LoadUX 공통) */
+ window.LoadUX.load(grid,window.LoadUX.skelCards(8,'16/9'),paint);
 }
 /* 갤러리 템플릿 편집하기 — 내 템플릿으로 사본을 만들고 바로 에디터로 진입 */
 function editGalTpl(g){
@@ -1662,18 +1714,20 @@ function renderLibraryPage(root){
   onManage:openLibTagManager});
  root.querySelector('#lf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{LIB_FOLDERS.push({id:'lf'+(cSeq++),name:nm,parent:null});drawLibFolders();toast(`'${nm}' 폴더를 만들었어요.`)}});
  drawLibFolders();
- /* 폴더 전환 시 스켈레톤 */
- const sc=$('#l-scroll');
- sc.innerHTML=`<div class="lib-grid">${Array(8).fill('<div><div class="skel" style="aspect-ratio:16/10"></div><div class="skel" style="height:13px;margin-top:8px;width:75%"></div></div>').join('')}</div>`;
- setTimeout(drawLib,320);
+ /* 최초 진입 스켈레톤 → 콘텐츠 (현재 뷰에 맞춰 그리드=카드 / 리스트=테이블) */
+ window.LoadUX.load($('#l-scroll'),libSkelHtml(8),drawLib);
 }
+/* 콘텐츠 목록 스켈레톤 HTML — lView에 따라 카드 그리드 또는 테이블 Row */
+function libSkelHtml(n){return lView==='list'
+ ?`<div class="ptable-wrap"><table class="grid"><tbody>${window.LoadUX.skelRows(Math.min(n,6),[0,44,30,26,40,28,0])}</tbody></table></div>`
+ :`<div class="lib-grid">${window.LoadUX.skelCards(n,'16/10')}</div>`;}
 function drawLibFolders(){
  const el=$('#lf-list');if(!el)return;
  const countOf=fid=>{const ids=fDescIds(LIB_FOLDERS,fid);return LIB.filter(c=>ids.includes(c.folder)).length};
  el.innerHTML=`<div class="fr-item ${lFolder==='all'?'on':''}" data-lf-all role="button" tabindex="0">${IC.folder}<span class="fr-nm">전체 콘텐츠</span><span class="cnt num">${LIB.length}</span></div>`
   +railFolderHtml(LIB_FOLDERS,lFolder,countOf);
  const select=id=>{lFolder=id;drawLibFolders();
-  const sc=$('#l-scroll');if(sc){sc.innerHTML=`<div class="lib-grid">${Array(6).fill('<div><div class="skel" style="aspect-ratio:16/10"></div><div class="skel" style="height:13px;margin-top:8px;width:75%"></div></div>').join('')}</div>`;setTimeout(drawLib,280);}
+  const sc=$('#l-scroll');if(sc)window.LoadUX.load(sc,libSkelHtml(6),drawLib);
  };
  el.querySelector('[data-lf-all]').addEventListener('click',()=>select('all'));
  bindFolderRail(el,{fs:LIB_FOLDERS,makeId:()=>'lf'+(cSeq++),
@@ -1948,7 +2002,11 @@ function renderPlaylistsPage(root){
  root.querySelector('#plv-grid').onclick=()=>{plView='grid';renderPlaylistsPage(root)};
  root.querySelector('#plv-list').onclick=()=>{plView='list';renderPlaylistsPage(root)};
  root.querySelector('#pf-add').onclick=()=>folderNameModal({title:'새 폴더',onSave:nm=>{PL_FOLDERS.push({id:'pf'+(pfSeq++),name:nm,parent:null});drawPlFolders();toast(`'${nm}' 폴더를 만들었어요.`)}});
- drawPlFolders();drawPlArea();
+ drawPlFolders();
+ /* 최초 진입/뷰 전환 스켈레톤(현재 뷰에 맞춰 그리드=카드 / 리스트=테이블). 폴더·검색 재그리기는 즉시 */
+ window.LoadUX.load($('#pl-area'),plView==='list'
+  ?`<div class="ptable-wrap"><table class="grid"><tbody>${window.LoadUX.skelRows(6,[0,46,28,26,34,22,30,0])}</tbody></table></div>`
+  :`<div class="tpl-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${window.LoadUX.skelCards(6,'16/10')}</div>`,drawPlArea);
 }
 function drawPlFolders(){
  const el=$('#pf-list');if(!el)return;
@@ -2655,6 +2713,7 @@ let SUB={plan:'pro',nextBill:'2026.08.01',card:'신한카드 **** 4821',cancelle
 const PLANS={basic:['Basic','₩29,000',['화면 10대','스토리지 20GB','기본 위젯','이메일 지원']],pro:['Pro','₩99,000',['화면 50대','스토리지 100GB','모든 위젯 + 번호호출','비디오월','우선 지원']],ent:['Enterprise','별도 문의',['화면 무제한','전용 인프라 · SLA','POS·KDS 연동 구축','전담 매니저']]};
 const PAYMENTS=[['2026.07.01','Pro 월 구독','₩99,000'],['2026.06.01','Pro 월 구독','₩99,000'],['2026.05.01','Pro 월 구독','₩99,000'],['2026.04.14','Basic → Pro 업그레이드 (일할 정산)','₩54,300'],['2026.04.01','Basic 월 구독','₩29,000']];
 function renderMyPage(root){
+ if(window.LoadUX&&window.LoadUX.pageGate(root,'mypage',window.LoadUX.skelCardCol(2,4),()=>renderMyPage(root)))return;
  const [pnm,ppr]=PLANS[SUB.plan];
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.mypage.t')}</h1><span class="desc">${t(isOwnerSession()?'page.mypage.d':'page.mypage.dMember')}</span></header>
@@ -2789,6 +2848,8 @@ let TICKETS=[
  {id:'tk1',type:'기능 개선 제안',title:'재생목록에도 폴더 기능이 있으면 좋겠어요',body:'재생목록이 30개가 넘어가니 찾기가 어렵습니다. 콘텐츠처럼 폴더로 관리하고 싶어요.',date:'07.01',status:'answered',files:[],answer:{by:'싱크사인 CS 이수진',date:'07.05 09:10',body:'좋은 제안 감사해요! 이번 업데이트에 재생목록 폴더 기능이 반영됐어요. 재생목록 관리 좌측에서 폴더를 만들어 사용해 보세요. (최대 3단계)'}},
 ];
 function renderSupportPage(root){
+ /* 문의 내역(데이터) 탭을 처음 볼 때만 스켈레톤 — 기본 '문의 등록'은 폼이라 즉시 */
+ if(supTab==='list'&&window.LoadUX&&window.LoadUX.pageGate(root,'support',window.LoadUX.skelCardCol(1,6),()=>renderSupportPage(root)))return;
  root.innerHTML=`
   <header class="page-head"><h1>${t('page.support.t')}</h1><span class="desc">${t('page.support.d')}</span>
    <div class="seg" style="margin-left:10px"><button class="${supTab==='new'?'on':''}" data-sp="new">문의 등록</button><button class="${supTab==='list'?'on':''}" data-sp="list">문의 내역 <span class="badge badge-blue" style="height:17px;font-size:12px">${TICKETS.length}</span></button></div>
@@ -2939,6 +3000,7 @@ function renderEmptyDashboard(root,ps){
    · DASH_SCHED = 오늘 배포/편성 현황(위 [MOCK DATA]) · plan = 구독 플랜 수치(하드코딩)
    TODO(API): 위 4개 데이터 소스를 실제 조회(GET)로 대체. 사용자 유형(session.userType)은 데모 토글. */
 function renderDashboard(root){
+ if(window.LoadUX&&window.LoadUX.pageGate(root,'dash',window.LoadUX.skelCardCol(2,4),()=>renderDashboard(root)))return;
  const ps=window.__panelStats?window.__panelStats():{stores:502,panels:3247,on:3102,off:87,err:34,unsch:24,walls:1,attention:[],recent:[]};
  /* 사용성 테스트(빈 환경): 대시보드는 항상 진입 가능하며, 데이터가 채워질 때까지 온보딩 Empty State를 보여줌 */
  if(window.EMPTY_MODE){renderEmptyDashboard(root,ps);return;}

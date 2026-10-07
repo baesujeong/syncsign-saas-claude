@@ -260,6 +260,16 @@ function priceHtml(p){
 /* 메뉴판(위젯) 미리보기 갱신 — 에디터 스테이지가 있을 때만 재렌더(상품 관리 목록에선 no-op).
    상품·카테고리 변경 시 여러 곳에서 호출되지만 정의가 없어 콘솔 에러가 나던 것을 안전 처리 */
 function renderBoard(){const s=document.getElementById('ed-stage');if(s&&typeof renderStage==='function')renderStage();}
+/* 상품 관리 섹션 스켈레톤 — 화면 관리와 동일한 legacy mount 구조라 showPage→mountLegacy('products') 직후 1회 노출.
+   헤더·카테고리·툴바는 그대로, 테이블(#prod-tbody) Row만 스켈레톤 후 실제 목록으로 교체.
+   TODO(API): 실제 상품 목록 조회(GET) 완료 콜백에서 renderProducts()로 교체(지연 시뮬레이션 제거). */
+window.__productsEnter=()=>{
+ if(window.__productsSeen||!window.LoadUX)return;
+ window.__productsSeen=true;
+ const tb=$('#prod-tbody');if(!tb)return;
+ tb.innerHTML=window.LoadUX.skelRows(6,[0,52,36,26,30,40,34,28,0]);
+ setTimeout(()=>{try{renderProducts();}catch(e){}},window.LoadUX.PAGE_MS);
+};
 function renderProducts(){
  const arr=filtered();
  const tb=$('#prod-tbody');

@@ -275,7 +275,7 @@ function openModal(html,{width='480px',cls='',onMount}={}){
 function confirmDialog({title,desc,confirmText=t('common.confirm'),danger=false,onConfirm}){
  openModal(`<div class="modal-head"><div><h2>${title}</h2><div class="sub">${desc}</div></div></div>
  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn ${danger?'btn-danger':'btn-primary'}" id="cf-ok">${confirmText}</button></div>`,
- {width:'420px',onMount:ov=>ov.querySelector('#cf-ok').onclick=()=>{ov.remove();onConfirm()}});
+ {width:'420px',onMount:ov=>ov.querySelector('#cf-ok').onclick=function(){const cx=ov.querySelector('[data-close]');if(cx)cx.disabled=true;const go=()=>{ov.remove();onConfirm&&onConfirm()};window.LoadUX?window.LoadUX.btn(this,go):go();}});
 }
 const STB_IC=w=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0V7ZM12 16v5"/></svg>`;
 const thumbHtml=(p,big,fav='',forceWall)=>{
@@ -590,8 +590,8 @@ $('#bulk-tag').onclick=e=>tagPickerMenu(e.currentTarget,{tags:TAGS,selected:()=>
 /* 툴바 */
 attachSearchUX($('#panel-search'),q=>{flt.q=q;page=1;renderList();renderScope();});
 $('#panel-sort').onchange=e=>{flt.sort=e.target.value;page=1;renderList()};
-$('#view-grid').onclick=()=>{view='grid';$('#view-grid').classList.add('on');$('#view-table').classList.remove('on');page=1;renderList()};
-$('#view-table').onclick=()=>{view='table';$('#view-table').classList.add('on');$('#view-grid').classList.remove('on');page=1;renderList()};
+$('#view-grid').onclick=()=>{view='grid';$('#view-grid').classList.add('on');$('#view-table').classList.remove('on');page=1;panelsRenderView()};
+$('#view-table').onclick=()=>{view='table';$('#view-table').classList.add('on');$('#view-grid').classList.remove('on');page=1;panelsRenderView()};
 $('#tag-filter-btn').onclick=e=>tagPickerMenu(e.currentTarget,{tags:TAGS,selected:flt.tags,keepOpen:true,
  onToggle:t=>{flt.tags.includes(t)?flt.tags=flt.tags.filter(x=>x!==t):flt.tags.push(t);const c=$('#tag-filter-cnt');if(c)c.textContent=flt.tags.length?flt.tags.length+'개':'전체';page=1;renderList();},
  onCreate:t=>{if(!TAGS.includes(t))TAGS.push(t);toast(`'${t}' 태그를 만들었어요. 화면에 붙이면 이 필터로 찾을 수 있어요.`);},
@@ -1404,7 +1404,7 @@ function renderSchedulePage(root){
      <div style="display:flex;gap:6px;flex-wrap:wrap" id="prog-filters"></div>
      <label class="sel-all"><span class="checkbox" id="prog-all" role="checkbox" aria-label="전체 선택" tabindex="0">${IC.check}</span>전체 선택</label>
      <div class="spacer"></div>
-     <select class="select select-sm" id="prog-sort" style="width:132px" aria-label="정렬"><option value="recent">최근 등록순</option><option value="name">이름순</option><option value="items">일정 수순</option></select>
+     <select class="select select-sm" id="prog-sort" style="width:132px" aria-label="정렬"><option value="recent">최근 등록순</option><option value="name">이름순</option><option value="upcoming">다가오는 일정 순</option></select>
     </div>
     <div class="bulk-bar" id="prog-bulk" hidden></div>
     <div class="content-scroll"><div id="prog-listwrap"></div></div>
@@ -1419,7 +1419,9 @@ function renderSchedulePage(root){
  _pa.addEventListener('click',e=>{e.stopPropagation();selAll();});
  _pa.closest('.sel-all').addEventListener('click',e=>{if(!e.target.closest('#prog-all'))selAll();});
  _pa.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selAll();}});
- drawProgFilters();drawProgList();
+ drawProgFilters();
+ /* 최초 진입만 리스트 스켈레톤(검색·필터·정렬 재그리기는 즉시) */
+ window.LoadUX.load(document.getElementById('prog-listwrap'),`<div class="ptable-wrap"><table class="grid"><tbody>${window.LoadUX.skelRows(6,[0,46,30,22,36,26,0])}</tbody></table></div>`,drawProgList);
 }
 function drawSelAll(){const el=document.getElementById('prog-all');if(!el)return;const arr=filteredPrograms();el.classList.toggle('on',arr.length>0&&arr.every(p=>progChecked.has(p.id)));}
 function drawProgFilters(){
@@ -1434,7 +1436,18 @@ function progSearchHit(p){if(!progQ.trim())return true;const q=progQ.trim().toLo
 function filteredPrograms(){
  let arr=PROGRAMS.filter(p=>(progFilter==='all'||progStatus(p).k===progFilter)&&progSearchHit(p));
  if(progSort==='name')arr=arr.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
- else if(progSort==='items')arr=arr.slice().sort((a,b)=>progItemCount(b)-progItemCount(a));
+ else if(progSort==='upcoming'){
+  /* 다가오는 일정 순 — 현재(PROG_NOW) 이후 송출 시작일시가 가장 가까운 편성부터 오름차순.
+     기준 시작일시 = 가장 이른 블록의 시작일(sd) + 그 날의 시작 시각(s). 이미 시작/종료된 편성은 뒤로(최근 시작 먼저), 일정 없음은 맨 뒤. */
+  const now=PROG_NOW+'T00';
+  const startKey=p=>{const pr=progPeriod(p);if(!pr||!pr.sd)return null;
+   const hrs=(p.blocks||[]).filter(b=>b.sd===pr.sd).map(b=>b.s??0);
+   return pr.sd+'T'+String(hrs.length?Math.min(...hrs):0).padStart(2,'0');};
+  arr=arr.slice().sort((a,b)=>{const ka=startKey(a),kb=startKey(b);
+   if(!ka&&!kb)return 0; if(!ka)return 1; if(!kb)return -1;
+   const fa=ka>=now,fb=kb>=now; if(fa!==fb)return fa?-1:1;
+   return fa?(ka<kb?-1:ka>kb?1:0):(ka<kb?1:ka>kb?-1:0);});
+ }
  return arr;
 }
 function drawProgList(){
@@ -1457,7 +1470,23 @@ const progTgtCell=p=>{const s=progScopeSummary(p);return s?`<button class="prog-
    + [송출 대상 변경](스코프 피커). 화면 정보 Drawer와 동일 컴포넌트 재사용. */
 function openTargetDrawer(prog){
  const wrap=document.createElement('div');wrap.className='drawer-wrap';
- let q='';
+ let q='',timer=null;
+ /* 로딩 스켈레톤 — 실제 앱에서 송출 대상(적용 화면) 데이터 조회에 1~2초가 걸리는 구간을 미니멀 시머로 안내.
+    프로토타입은 데이터가 즉시 준비되므로 setTimeout으로 지연을 시뮬레이션한다. TODO(API): 실제 조회 완료 콜백에서 build() 호출로 대체. */
+ const LOAD_MS=1200;
+ const skelRows=n=>Array.from({length:n},(_,i)=>`<div class="tgt-row"><span class="skel tgt-skel-dot"></span><span class="skel tgt-skel-nm" style="max-width:${[68,52,60,46,64,56][i%6]}%"></span><span class="skel tgt-skel-store"></span></div>`).join('');
+ const renderLoading=()=>{
+  wrap.innerHTML=`<div class="drawer tgt-drawer" role="dialog" aria-modal="true" aria-busy="true">
+    <div class="drawer-head"><div><h2>${prog.name||'편성표'}</h2></div><button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button></div>
+    <div class="tgt-top">
+     <div class="tgt-count"><span class="skel tgt-skel-count"></span></div>
+     <div class="tgt-scope-chips"><span class="skel tgt-skel-chip" style="width:84px"></span><span class="skel tgt-skel-chip" style="width:62px"></span></div>
+    </div>
+    <div class="drawer-body"><div class="tgt-list">${skelRows(6)}</div></div>
+    <div class="drawer-foot"><button class="btn btn-primary" style="flex:1" disabled>${IC.monitor}송출 대상 변경</button></div>
+   </div>`;
+  wrap.querySelector('[data-close]').onclick=()=>{clearTimeout(timer);wrap.remove();};
+ };
  const build=()=>{
   const ids=progUnique(prog);
   const rows=ids.map(id=>{const p=panelOf(id);return {id,name:p?p.name:'화면',store:p?p.store:null,status:p?p.status:'off'};})
@@ -1490,9 +1519,10 @@ function openTargetDrawer(prog){
   const qi=wrap.querySelector('#tgt-q'); if(qi)qi.oninput=()=>{q=qi.value;renderList();};
   wrap.querySelector('#tgt-change').onclick=()=>openScopePicker({scopes:prog.scopes,onChange:()=>{q='';build();if(typeof drawProgList==='function')drawProgList();}});
  };
- build();
+ renderLoading();
  document.body.appendChild(wrap);
- wrap.addEventListener('mousedown',e=>{if(e.target===wrap)wrap.remove();});
+ wrap.addEventListener('mousedown',e=>{if(e.target===wrap){clearTimeout(timer);wrap.remove();}});
+ timer=setTimeout(()=>{if(!wrap.isConnected)return;build();},LOAD_MS);
 }
 function progTableHtml(arr){
  return `<div class="ptable-wrap"><table class="grid prog-table"><thead><tr>
@@ -2322,6 +2352,24 @@ document.getElementById('btn-make-wall').onclick=()=>openWallWizard();
 
 /* ═══════════ 초기화 ═══════════ */
 function renderAll(){renderStats();renderRail();renderScope();renderList();}
+/* 화면 관리 섹션 스켈레톤 — legacy mount라 리스트가 모듈 init(숨김)에서 이미 렌더되므로, 네비게이션/뷰 전환 시점에
+   리스트 영역만 스켈레톤으로 덮고 지연 후 실제 목록으로 교체한다(헤더·스마트뷰·레일은 그대로).
+   그리드/테이블 각 뷰를 세션 내 '처음 보는' 순간 1회씩 노출(이미 본 뷰는 즉시=캐시).
+   TODO(API): 실제 화면 목록 조회(GET) 완료 콜백에서 renderList()로 교체(지연 시뮬레이션 제거). */
+const __panelViewsSeen=new Set();
+function panelsSkelShow(){
+ const g=$('#pgrid'),tb=$('#ptable-wrap');if(!g&&!tb)return;
+ if(view==='grid'&&g){g.hidden=false;if(tb)tb.hidden=true;g.innerHTML=window.LoadUX.skelCards(8,'16/9');}
+ else if(tb){tb.hidden=false;if(g)g.hidden=true;tb.innerHTML=`<table class="grid"><tbody>${window.LoadUX.skelRows(6,[0,18,0,44,34,40,28,46,0])}</tbody></table>`;}
+ setTimeout(()=>{try{renderList();}catch(e){}},window.LoadUX.PAGE_MS);
+}
+/* 뷰 전환 렌더: 그 뷰를 아직 안 봤으면 스켈레톤, 봤으면 즉시 */
+function panelsRenderView(){
+ if(window.LoadUX&&!__panelViewsSeen.has(view)){__panelViewsSeen.add(view);panelsSkelShow();}
+ else renderList();
+}
+/* 네비게이션 진입(showPage→mountLegacy 직후): 현재 뷰가 처음이면 스켈레톤, 아니면 그대로(캐시 DOM 유지) */
+window.__panelsEnter=()=>{if(window.LoadUX&&!__panelViewsSeen.has(view)){__panelViewsSeen.add(view);panelsSkelShow();}};
 renderAll();
 /* 대시보드 드릴다운용 API */
 window.__setPanelFilter=kind=>{
@@ -2350,6 +2398,7 @@ function wallCellsHtml(w,renderTile,gap){
 
 /* ═══════════ 비디오월 관리 페이지 — 표준 관리 레이아웃(상품 관리 기준) ═══════════ */
 let wallsView='grid',wallsQ='',wallsSt='all',wallsSort='name',wallsChecked=new Set();
+const __wallsViewsSeen=new Set(); /* 비디오월 섹션 스켈레톤: 그리드/리스트 각 뷰를 세션 내 처음 보는 순간 1회 노출 */
 const wallsFiltered=()=>{
  const arr=WALLS.filter(w=>
   (wallsSt==='all'||wallStatus(w).k===wallsSt)&&
@@ -2446,6 +2495,17 @@ function renderWallsPage(root){
    wallMoreMenu(b,WALLS.find(x=>x.id===b.getAttribute('data-vw-menu')));
   });
  };
+ /* 섹션 스켈레톤 — 해당 뷰를 세션 내 처음 보는 경우 1회(툴바·헤더는 위에서 이미 바인딩됨). 지연 후 전체 재렌더.
+    TODO(API): 실제 비디오월 목록 조회(GET) 완료 콜백에서 renderWallsPage(root)로 교체(지연 시뮬레이션 제거). */
+ if(window.LoadUX&&!__wallsViewsSeen.has(wallsView)){
+  const host=root.querySelector(wallsView==='grid'?'#vw-grid':'#vw-list');
+  if(host){
+   __wallsViewsSeen.add(wallsView);
+   host.innerHTML=wallsView==='grid'?window.LoadUX.skelCards(6,'16/10'):`<div class="ptable-wrap"><table class="grid"><tbody>${window.LoadUX.skelRows(5,[0,40,34,26,34,28,24,0])}</tbody></table>`;
+   setTimeout(()=>{if(document.contains(host))renderWallsPage(root);},window.LoadUX.PAGE_MS);
+   return;
+  }
+ }
  const grid=root.querySelector('#vw-grid');
  if(grid){
   grid.innerHTML=arr.map(w=>{

@@ -1,7 +1,7 @@
 /* syncsign 디자인 시스템 계승 — 라이트 테마 고정(제품 어드민 재현) */
 :root{
   color-scheme: light;
-  --blue:#2563EB; --blue-hover:#1D4ED8; --blue-50:#EFF4FF; --blue-100:#DBE7FF; --blue-200:#BFD3FF;
+  --blue:#3B66F1; --blue-hover:#2E54D4; --blue-50:#EFF4FF; --blue-100:#DBE7FF; --blue-200:#BFD3FF;
   --bg:#F4F6F9; --surface:#FFFFFF; --sunken:#F8F9FB;
   --border:#E6E9F0; --border-2:#D8DDE6;
   --text:#1A2130; --text-2:#5C6577; --text-3:#9AA3B2;
@@ -171,6 +171,14 @@ textarea.input{height:auto;padding:10px 12px;resize:vertical}
 .se-actions .btn{margin-top:0}
 .skel{background:linear-gradient(90deg,var(--sunken) 25%,#EFF2F6 50%,var(--sunken) 75%);background-size:200% 100%;animation:shimmer 1.1s infinite;border-radius:var(--r-md)}
 @keyframes shimmer{to{background-position:-200% 0}}
+/* ── 로딩 UX 공통 (LoadUX) — 기존 .skel 재사용, Primary=var(--blue) #3B66F1 ── */
+.skel-line{height:12px;border-radius:5px}                                  /* 텍스트 한 줄 스켈레톤 */
+.skel-tr td{padding:11px 12px;border-bottom:1px solid var(--border)}       /* 테이블 Row 스켈레톤 셀 */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--blue-100);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;box-sizing:border-box}
+.spinner.inv{border-color:rgba(255,255,255,.45);border-top-color:#fff}      /* btn-primary 등 어두운 배경 위 */
+@keyframes skelFade{from{opacity:0}to{opacity:1}}
+.skel-fade{animation:skelFade .16s ease-out}                               /* 스켈레톤→콘텐츠 전환(150~200ms) */
 
 /* ─── 인증 화면 ─── */
 #screen-auth{display:flex;height:100vh}
@@ -592,7 +600,7 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 /* syncsign 디자인 시스템 계승 — 라이트 테마 고정(제품 어드민 재현) */
 :root{
   color-scheme: light;
-  --blue:#2563EB; --blue-hover:#1D4ED8; --blue-50:#EFF4FF; --blue-100:#DBE7FF; --blue-200:#BFD3FF;
+  --blue:#3B66F1; --blue-hover:#2E54D4; --blue-50:#EFF4FF; --blue-100:#DBE7FF; --blue-200:#BFD3FF;
   --bg:#F4F6F9; --surface:#FFFFFF; --sunken:#F8F9FB;
   --border:#E6E9F0; --border-2:#D8DDE6;
   --text:#1A2130; --text-2:#5C6577; --text-3:#9AA3B2;
@@ -1423,7 +1431,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 /* syncsign 디자인 시스템 계승 — 라이트 테마 고정(제품 어드민 재현) */
 :root{
   color-scheme: light;
-  --blue:#2563EB; --blue-hover:#1D4ED8; --blue-50:#EFF4FF; --blue-100:#DBE7FF; --blue-200:#BFD3FF;
+  --blue:#3B66F1; --blue-hover:#2E54D4; --blue-50:#EFF4FF; --blue-100:#DBE7FF; --blue-200:#BFD3FF;
   --bg:#F4F6F9; --surface:#FFFFFF; --sunken:#F8F9FB;
   --border:#E6E9F0; --border-2:#D8DDE6;
   --text:#1A2130; --text-2:#5C6577; --text-3:#9AA3B2;
@@ -2402,6 +2410,12 @@ table.grid tr.checked td{background:var(--blue-50)}
 .tgt-nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tgt-store{font-size:12.5px;color:var(--text-3);flex:none}
 .tgt-more{font-size:12px;color:var(--text-3);padding:14px 2px 4px;text-align:center;word-break:keep-all}
+/* 송출 대상 Drawer 로딩 스켈레톤 — 적용 화면 데이터 조회(1~2초)를 미니멀 시머(.skel 재사용)로 표현 */
+.tgt-skel-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.tgt-skel-nm{flex:1;height:12px}
+.tgt-skel-store{width:56px;height:11px;flex:none}
+.tgt-skel-count{display:inline-block;width:104px;height:15px;vertical-align:middle}
+.tgt-skel-chip{height:28px;border-radius:99px}
 .prog-bulk-n{font-size:13px;color:var(--text-2)}
 .prog-bulk-n b{color:var(--blue);font-weight:800}
 .prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
