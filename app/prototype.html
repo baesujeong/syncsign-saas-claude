@@ -1798,7 +1798,6 @@ function bindLib(){
   if(c.error){popMenu(b,[{label:'삭제',icon:IC.trash,danger:true,onClick:()=>{LIB=LIB.filter(x=>x!==c);drawLibFolders();drawLib();toast('삭제했어요.')}}]);return;}
   popMenu(b,[
    {label:'미리보기',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',onClick:()=>openLibPreview(c)},
-   {label:'재생목록에 추가',icon:IC.plus,onClick:()=>addToPlaylistMenu(b,[c.id])},
    {label:'폴더 이동',icon:IC.folder,onClick:()=>folderMoveModal({fs:LIB_FOLDERS,current:c.folder,onMove:fid=>{c.folder=fid;drawLibFolders();drawLib();toast(`'${c.name}'을 '${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요.`)}})},
    {label:'태그 편집',icon:IC.edit,onClick:()=>tagPickerMenu(b,{tags:LIB_TAGS,selected:c.tags,keepOpen:true,
      onToggle:t=>{c.tags.includes(t)?c.tags=c.tags.filter(x=>x!==t):c.tags.push(t);drawLib();},
@@ -1819,23 +1818,15 @@ function drawLibBulk(){
  bulk.hidden=!lChecked.size;
  if(!lChecked.size)return;
  bulk.innerHTML=`<b>${lChecked.size}개</b> 선택됨
-  <button class="btn" id="lb-pl">재생목록에 추가</button><button class="btn" id="lb-mv">폴더 이동</button><button class="btn" id="lb-tag">태그</button><button class="btn danger-t" id="lb-del">삭제</button>
+  <button class="btn" id="lb-mv">폴더 이동</button><button class="btn" id="lb-tag">태그</button><button class="btn danger-t" id="lb-del">삭제</button>
   <button class="close icon-btn" id="lb-x" aria-label="선택 해제">${IC.x}</button>`;
  bulk.querySelector('#lb-x').onclick=()=>{lChecked.clear();drawLib()};
- bulk.querySelector('#lb-pl').onclick=e=>addToPlaylistMenu(e.currentTarget,[...lChecked]);
  bulk.querySelector('#lb-mv').onclick=()=>folderMoveModal({fs:LIB_FOLDERS,count:lChecked.size,onMove:fid=>{lChecked.forEach(id=>{const c=libOf(id);if(c)c.folder=fid});lChecked.clear();drawLibFolders();drawLib();toast(`'${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요.`)}});
  bulk.querySelector('#lb-tag').onclick=e=>tagPickerMenu(e.currentTarget,{tags:LIB_TAGS,selected:()=>false,keepOpen:true,
   onToggle:t=>{lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`선택한 콘텐츠에 '${t}' 태그를 추가했어요.`);},
   onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`'${t}' 태그를 만들어 추가했어요.`);},
   onManage:openLibTagManager});
  bulk.querySelector('#lb-del').onclick=()=>confirmDialog({title:`콘텐츠 ${lChecked.size}개를 삭제할까요?`,desc:'삭제한 콘텐츠는 복구할 수 없어요. 사용 중인 콘텐츠가 포함되어 있으면 해당 화면이 비어 보일 수 있어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(c=>!lChecked.has(c.id));lChecked.clear();drawLibFolders();drawLib();toast('삭제했어요.')}});
-}
-function addToPlaylistMenu(anchor,ids){
- popMenu(anchor,[{title:'재생목록 선택'},...PLAYLISTS.map(pl=>({label:pl.name,onClick:()=>{
-  ids.forEach(id=>{const c=libOf(id);pl.items.push({c:id,d:c.type==='video'?c.dur:10});c.used.pl++});
-  lChecked.clear();drawLib();
-  toast(`${ids.length}개 콘텐츠를 '${pl.name}'에 추가했어요.`,{action:'열기',onAction:()=>openPlaylistEditor(pl.id)});
- }})),'sep',{label:'＋ 새 재생목록 만들기',onClick:()=>{openPlaylistEditor(null,ids)}}]);
 }
 function openLibPreview(c){
  openModal(`
@@ -1849,9 +1840,8 @@ function openLibPreview(c){
    <dl class="kv" style="margin-top:14px"><dt>사용 위치</dt><dd>${c.used.pl?`재생목록 ${c.used.pl}곳`:''}${c.used.pl&&c.used.tp?' · ':''}${c.used.tp?`템플릿 ${c.used.tp}곳`:''}${!c.used.pl&&!c.used.tp?'아직 사용되지 않음':''}</dd>
    <dt>태그</dt><dd class="tag-field" id="pv-tags"></dd></dl>
   </div>
-  <div class="modal-foot"><button class="btn" id="pv-pl">재생목록에 추가</button><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" data-close>에디터에서 사용</button></div>`,
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" data-close>에디터에서 사용</button></div>`,
  {width:'640px',onMount:ov=>{
-   ov.querySelector('#pv-pl').onclick=e=>addToPlaylistMenu(e.currentTarget,[c.id]);
    const tf=ov.querySelector('#pv-tags');
    const drawTf=()=>{tf.innerHTML=c.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join('')+`<button class="chip chip-add" id="pv-tag-add">${IC.plus}태그</button>`;
     tf.querySelector('#pv-tag-add').onclick=e=>tagPickerMenu(e.currentTarget,{tags:LIB_TAGS,selected:c.tags,keepOpen:true,
