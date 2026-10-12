@@ -1518,9 +1518,12 @@ function drawTplFolders(){
  bindFolderRail(el,{fs:MY_FOLDERS,makeId:()=>'tf'+(tSeq++),
   onSelect:id=>{tFolder=id;drawTplFolders();drawTplGrid()},
   onChanged:()=>{drawTplFolders();drawTplGrid()},
-  onDeleted:id=>{if(tFolder===id)tFolder='all';drawTplFolders();drawTplGrid()},
-  itemsIn:fid=>MY_TPLS.filter(t=>t.folder===fid).length,
-  rehome:(fid,pid)=>MY_TPLS.forEach(t=>{if(t.folder===fid)t.folder=pid}),
+  /* 폴더 삭제 후 선택 폴더가 (자신이든 삭제된 하위 폴더든) 사라졌으면 전체로 복귀 */
+  onDeleted:()=>{if(tFolder!=='all'&&tFolder!=='fav'&&!MY_FOLDERS.some(f=>f.id===tFolder))tFolder='all';drawTplFolders();drawTplGrid()},
+  /* 템플릿은 폴더 삭제 시 하위 폴더·템플릿까지 함께 삭제(cascade) — 상위로 이동시키지 않음 */
+  cascade:true,itemLabel:'템플릿',
+  itemsInTree:fid=>{const ids=fDescIds(MY_FOLDERS,fid);return MY_TPLS.filter(t=>ids.includes(t.folder)).length},
+  deleteTree:fid=>{const ids=fDescIds(MY_FOLDERS,fid);MY_TPLS=MY_TPLS.filter(t=>!ids.includes(t.folder))},
  });
 }
 function drawTplGrid(){
@@ -1733,9 +1736,12 @@ function drawLibFolders(){
  bindFolderRail(el,{fs:LIB_FOLDERS,makeId:()=>'lf'+(cSeq++),
   onSelect:select,
   onChanged:()=>{drawLibFolders();drawLib()},
-  onDeleted:id=>{if(lFolder===id)select('all');else{drawLibFolders();drawLib()}},
-  itemsIn:fid=>LIB.filter(c=>c.folder===fid).length,
-  rehome:(fid,pid)=>LIB.forEach(c=>{if(c.folder===fid)c.folder=pid}),
+  /* 폴더 삭제 후 선택 폴더가 (자신이든 삭제된 하위 폴더든) 사라졌으면 전체로 복귀 */
+  onDeleted:()=>{if(lFolder!=='all'&&!LIB_FOLDERS.some(f=>f.id===lFolder))select('all');else{drawLibFolders();drawLib()}},
+  /* 콘텐츠는 폴더 삭제 시 하위 폴더·콘텐츠까지 함께 삭제(cascade) — 상위로 이동시키지 않음 */
+  cascade:true,itemLabel:'콘텐츠',
+  itemsInTree:fid=>{const ids=fDescIds(LIB_FOLDERS,fid);return LIB.filter(c=>ids.includes(c.folder)).length},
+  deleteTree:fid=>{const ids=fDescIds(LIB_FOLDERS,fid);LIB=LIB.filter(c=>!ids.includes(c.folder))},
   dropKey:'text/lib',
   onDropItem:(id,fid)=>{const c=libOf(id);if(c){c.folder=fid;drawLibFolders();drawLib();toast(`'${c.name}'을 '${fPath(LIB_FOLDERS,fid)}'(으)로 이동했어요.`)}},
  });
@@ -2007,9 +2013,12 @@ function drawPlFolders(){
  bindFolderRail(el,{fs:PL_FOLDERS,makeId:()=>'pf'+(pfSeq++),
   onSelect:id=>{plFolder=id;drawPlFolders();drawPlArea()},
   onChanged:()=>{drawPlFolders();drawPlArea()},
-  onDeleted:id=>{if(plFolder===id)plFolder='all';drawPlFolders();drawPlArea()},
-  itemsIn:fid=>PLAYLISTS.filter(p=>p.folder===fid).length,
-  rehome:(fid,pid)=>PLAYLISTS.forEach(p=>{if(p.folder===fid)p.folder=pid}),
+  /* 폴더 삭제 후 선택 폴더가 (자신이든 삭제된 하위 폴더든) 사라졌으면 전체로 복귀 */
+  onDeleted:()=>{if(plFolder!=='all'&&!PL_FOLDERS.some(f=>f.id===plFolder))plFolder='all';drawPlFolders();drawPlArea()},
+  /* 재생목록은 폴더 삭제 시 하위 폴더·재생목록까지 함께 삭제(cascade) — 상위로 이동시키지 않음 */
+  cascade:true,itemLabel:'재생목록',
+  itemsInTree:fid=>{const ids=fDescIds(PL_FOLDERS,fid);return PLAYLISTS.filter(p=>ids.includes(p.folder)).length},
+  deleteTree:fid=>{const ids=fDescIds(PL_FOLDERS,fid);PLAYLISTS=PLAYLISTS.filter(p=>!ids.includes(p.folder))},
  });
 }
 function drawPlArea(){
@@ -2630,6 +2639,20 @@ function openFolderMenu(anchor,cfg,f){
   })});
  }
  items.push('sep',{label:'폴더 삭제',icon:IC.trash,danger:true,onClick:()=>{
+  const lbl=cfg.itemLabel||'항목';
+  if(cfg.cascade){
+   /* cascade 삭제: 폴더 + 하위 폴더 + 그 안의 모든 항목을 함께 삭제한다 */
+   const subF=fDescIds(fs,f.id).length-1,n=cfg.itemsInTree?cfg.itemsInTree(f.id):0;
+   const parts=[subF&&`하위 폴더 ${subF}개`,n&&`${lbl} ${n}개`].filter(Boolean).join('와 ');
+   confirmDialog({title:`'${f.name}' 폴더를 삭제할까요?`,desc:`삭제한 폴더는 복구할 수 없어요.${parts?` 이 폴더에 들어 있는 ${parts}도 함께 삭제돼요.`:''}`,confirmText:'삭제',danger:true,onConfirm:()=>{
+    const ids=fDescIds(fs,f.id);
+    cfg.deleteTree&&cfg.deleteTree(f.id);
+    for(let i=fs.length-1;i>=0;i--)if(ids.includes(fs[i].id))fs.splice(i,1);
+    cfg.onDeleted?cfg.onDeleted(f.id):cfg.onChanged();
+    toast('폴더를 삭제했어요.');
+   }});
+   return;
+  }
   const kids=fKids(fs,f.id).length,n=cfg.itemsIn?cfg.itemsIn(f.id):0;
   confirmDialog({title:`'${f.name}' 폴더를 삭제할까요?`,desc:`삭제한 폴더는 복구할 수 없어요. ${kids?`하위 폴더 ${kids}개는 한 단계 위로 이동하고, `:''}폴더 안 항목 ${n}개는 ${f.parent?'상위 폴더':'폴더 없음(전체)'}(으)로 이동하며, 항목 자체는 삭제되지 않아요.`,confirmText:'삭제',danger:true,onConfirm:()=>{
    fKids(fs,f.id).forEach(k=>k.parent=f.parent||null);
