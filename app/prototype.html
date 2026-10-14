@@ -1416,7 +1416,7 @@ function openCallRequestModal(s,m,onDone){
   <div class="modal-body">
    <div class="f-row"><label>대상 매장</label><div style="font-size:15px;font-weight:700;color:var(--text)">${s.name}</div></div>
    <div class="f-row"><label>사용 중인 ${label} <span class="req">*</span></label><select class="select" id="cr-sys"><option>포스뱅크</option><option>OK포스</option><option>토스프론트</option><option value="__etc">기타 (직접 입력)</option></select><input class="input" id="cr-etc" placeholder="사용 중인 ${label}를 입력해주세요" style="display:none;margin-top:8px"></div>
-   ${label==='KDS'?`<div class="f-row"><label>KDS 매장 ID <span class="req">*</span></label><input class="input" id="cr-storeid" placeholder="KDS에 등록된 매장 ID를 입력해주세요"></div>`:''}
+   ${label==='KDS'?`<div class="f-row"><label>KDS 매장 ID <span class="req">*</span></label><input class="input" id="cr-storeid" placeholder="pos_shop_id를 입력해주세요"></div>`:''}
    <div class="f-row"><label>담당자 연락처 <span class="req">*</span></label><input class="input" id="cr-tel" placeholder="010-0000-0000"></div>
    <div class="f-row"><label>요청 사항</label><textarea class="input" rows="3" placeholder="운영 시간, 지점 수 등 참고할 내용을 알려주세요"></textarea></div>
   </div>
