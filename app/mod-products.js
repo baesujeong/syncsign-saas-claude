@@ -766,10 +766,18 @@ const CALL_LAYOUTS=[
  {id:'feature',name:'대기 번호', desc:'최근 호출 번호 강조',      ratio:600/900},
  {id:'ticket', name:'번호표',    desc:'현재 번호 + 대기 목록',    ratio:600/720},
 ];
+/* 대기/호출 — 브랜드 고정 테마: 디자인이 완성되어 제공되는 테마. Light/Dark 선택 없이 이미지 그대로 사용.
+   썸네일·캔버스 렌더 모두 등록된 이미지를 그대로 표시한다. (img/ratio는 uploads의 실제 파일에 맞춤) */
+const CALL_FIXED=[
+ {id:'brand-01', name:'번호판 테마', desc:'브랜드 제공 · 제조완료번호', img:'../uploads/call-theme-01.png', ratio:1920/1080},
+];
+const callFixed=id=>CALL_FIXED.find(f=>f.id===id)||null;
 /* 마크업 — 렌더 폭(w px)을 받아 --u(=w/100)로 텍스트·여백을 스케일. 캔버스=객체 폭, 미리보기=고정 패널 기준 폭 */
 function callWidgetHtml(layout,theme,w){
- const t=theme==='dark'?'thm-dark':'thm-light';
  const u=` style="--u:${((+w||300)/100).toFixed(3)}px"`;
+ const fx=callFixed(layout);
+ if(fx)return `<div class="wg-call2 cl-fixed"${u}><img src="${fx.img}" alt="${fx.name}" draggable="false"></div>`;
+ const t=theme==='dark'?'thm-dark':'thm-light';
  const cell=(n,hi)=>`<div class="cp-cell${hi?' hi':''}${n===''?' empty':''}">${n}</div>`;
  if(layout==='grid')
   return `<div class="wg-call2 cl-grid ${t}"${u}><div class="cp-grid">${cell(131,1)}${cell(130)}${cell(129)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}</div></div>`;
@@ -1881,13 +1889,22 @@ function drawWgBody(body,hasMenu){
     </button>`).join('')}</div>`;
   body.querySelectorAll('[data-mtype]').forEach(b=>b.onclick=()=>{const t=b.dataset.mtype;createWidget({type:t});toast(`타입 ${t} 메뉴판을 추가했어요. 상품을 불러와 채워보세요.`);});
  }else if(wgTab==='call'){
-  /* 대기/호출 — 4가지 레이아웃 카드(썸네일+제목·설명, 메뉴 팔레트와 통일 · 1행 배치). 추가 후 테마 전환 */
-  body.innerHTML=`<p class="wg-intro">서비스에서 제공하는 4가지 레이아웃 중 원하는 스타일을 선택해 추가하세요. 추가 후 Light/Dark 테마를 바꿀 수 있어요.</p>
-   <div class="mtype-lib">${CALL_LAYOUTS.map(L=>`<button class="mtype-card" data-wgadd="${L.id}">
+  /* 대기/호출 — ①기본 레이아웃(Light/Dark 전환) ②브랜드 고정 테마(완성형, 테마 선택 없음) 두 그룹 */
+  const layoutCards=CALL_LAYOUTS.map(L=>`<button class="mtype-card" data-wgadd="${L.id}">
      <div class="mtype-prev"><div class="wcall-thumb" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,'light',Math.round(60*L.ratio))}</div></div>
      <div class="mtype-cap"><b>${L.name}</b><span>${L.desc}</span></div>
-    </button>`).join('')}</div>`;
+    </button>`).join('');
+  const fixedCards=CALL_FIXED.map(F=>`<button class="mtype-card" data-wgfixed="${F.id}">
+     <div class="mtype-prev"><div class="wcall-thumb" style="aspect-ratio:${F.ratio};height:auto;width:100%"><img class="wcall-thumb-img" src="${F.img}" alt="${F.name}" draggable="false"></div></div>
+     <div class="mtype-cap"><b>${F.name}</b><span>${F.desc}</span></div>
+    </button>`).join('');
+  body.innerHTML=`<p class="wg-intro">기본 레이아웃은 추가 후 Light/Dark 테마를 바꿀 수 있어요. 브랜드 고정 테마는 완성형이라 테마 선택 없이 그대로 사용돼요.</p>
+   <div class="wg-grp-lbl">기본 레이아웃</div>
+   <div class="mtype-lib">${layoutCards}</div>
+   <div class="wg-grp-lbl" style="margin-top:16px">브랜드 고정 테마</div>
+   <div class="mtype-lib">${fixedCards}</div>`;
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{const L=CALL_LAYOUTS.find(x=>x.id===b.dataset.wgadd);const w=Math.round(canvasW*0.31);addObject('widget',{kind:'call',layout:L.id,theme:'light',ratio:L.ratio,w,h:Math.round(w/L.ratio)});});
+  body.querySelectorAll('[data-wgfixed]').forEach(b=>b.onclick=()=>{const F=callFixed(b.dataset.wgfixed);const w=Math.round(canvasW*0.5);addObject('widget',{kind:'call',layout:F.id,fixed:true,ratio:F.ratio,w,h:Math.round(w/F.ratio)});});
  }else{
   /* 날씨·뉴스 — 대기/호출·메뉴 팔레트와 통일(썸네일 좌측 + 제목·설명 우측, 1행 배치) */
   const DEFS=wgTab==='weather'?WEATHER_STYLES:NEWS_STYLES;
@@ -2327,6 +2344,7 @@ function renderShapePanel(o){
 /* ═══════════ 에디터 : 대기/호출 위젯 전용 패널(시안) — 레이아웃×테마 선택, 비율 고정 ═══════════ */
 function renderCallPanel(o){
  const set=$('#panel-settings');
+ const isFixed=!!o.fixed; /* 브랜드 고정 테마 → 테마 스타일(Light/Dark) 선택 없음 */
  const layout=o.layout||'pickup',theme=o.theme||'light';
  const ratio=o.ratio||(CALL_LAYOUTS.find(L=>L.id===layout)||{}).ratio||(o.w/o.h);
  const linkIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>';
@@ -2348,8 +2366,12 @@ function renderCallPanel(o){
    </div>
    <div class="bg-divider"></div>
    <div class="tx-sec">
-    <div class="cw-theme-head"><span class="tx-sec-lbl" style="margin:0">테마 스타일</span><span class="cw-theme-lbl ${theme==='dark'?'dark':'light'}">${theme==='dark'?'Dark':'Light'}</span><button class="cw-theme-toggle ${theme==='dark'?'on':''}" id="cw-theme" role="switch" aria-checked="${theme==='dark'}" aria-label="${theme==='dark'?'Dark':'Light'} 테마"><i></i></button></div>
-    <div class="cw-preview"><div class="cw-preview-fit" style="aspect-ratio:${ratio}">${callWidgetHtml(layout,theme,Math.round(126*ratio))}</div></div>
+    ${isFixed
+      ?`<div class="tx-sec-lbl">테마</div>
+        <div class="cw-preview"><div class="cw-preview-fit" style="aspect-ratio:${ratio}">${callWidgetHtml(layout,null,Math.round(126*ratio))}</div></div>
+        <p class="cw-hint">브랜드에서 제공하는 완성형 테마예요. 색상·스타일은 변경할 수 없어요.</p>`
+      :`<div class="cw-theme-head"><span class="tx-sec-lbl" style="margin:0">테마 스타일</span><span class="cw-theme-lbl ${theme==='dark'?'dark':'light'}">${theme==='dark'?'Dark':'Light'}</span><button class="cw-theme-toggle ${theme==='dark'?'on':''}" id="cw-theme" role="switch" aria-checked="${theme==='dark'}" aria-label="${theme==='dark'?'Dark':'Light'} 테마"><i></i></button></div>
+        <div class="cw-preview"><div class="cw-preview-fit" style="aspect-ratio:${ratio}">${callWidgetHtml(layout,theme,Math.round(126*ratio))}</div></div>`}
    </div>
   </div>`;
  set.querySelector('#cw-copy').onclick=()=>duplicateSelection();
@@ -2359,8 +2381,9 @@ function renderCallPanel(o){
  const wIn=set.querySelector('#cw-w'),hIn=set.querySelector('#cw-h');
  wIn.addEventListener('change',()=>{let v=parseFloat(wIn.value);if(isNaN(v))v=o.w;v=Math.max(40,v);o.w=Math.round(v);o.h=Math.round(v/ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
  hIn.addEventListener('change',()=>{let v=parseFloat(hIn.value);if(isNaN(v))v=o.h;v=Math.max(40,v);o.h=Math.round(v);o.w=Math.round(v*ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
- /* 테마 전환(Light ↔ Dark) — 캔버스 즉시 반영 */
- set.querySelector('#cw-theme').onclick=()=>{o.theme=theme==='light'?'dark':'light';pushHistory();renderStage();renderCallPanel(o);};
+ /* 테마 전환(Light ↔ Dark) — 기본 레이아웃만. 고정 테마는 토글이 없어 바인딩 생략 */
+ const themeBtn=set.querySelector('#cw-theme');
+ if(themeBtn)themeBtn.onclick=()=>{o.theme=theme==='light'?'dark':'light';pushHistory();renderStage();renderCallPanel(o);};
 }
 /* ═══════════ 에디터 : 혼합 다중 선택 공통 편집 패널(레이어, 시안) ═══════════
    서로 다른 타입 2개 이상(또는 위젯 다중) → 전체 공통 기능만: 정렬·순서·투명도·복제·삭제 */
