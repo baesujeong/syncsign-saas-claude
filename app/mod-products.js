@@ -687,9 +687,9 @@ function openPicker(){
  ov.querySelector('.modal').classList.add('picker');
  const main=ov.querySelector('#pk-main'),cnt=ov.querySelector('#pk-count'),ok=ov.querySelector('#pk-ok');
  function drawCats(){
-  main.querySelector('#pk-cats').innerHTML=[{id:'all',name:'전체 상품',emoji:'🍽️'},...CATS].map(c=>{
+  main.querySelector('#pk-cats').innerHTML=[{id:'all',name:'전체 상품'},...CATS].map(c=>{
    const n=c.id==='all'?products.length:products.filter(p=>p.cat===c.id).length;
-   return `<button class="cat-item ${pcat===c.id?'on':''}" data-pc="${c.id}">${c.emoji} ${c.name}<span class="cnt num">${n}</span></button>`;}).join('');
+   return `<button class="cat-item ${pcat===c.id?'on':''}" data-pc="${c.id}">${c.name}<span class="cnt num">${n}</span></button>`;}).join('');
   main.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pcat=b.dataset.pc;drawCats();drawGrid();});
  }
  function drawGrid(){
