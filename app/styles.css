@@ -421,6 +421,9 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .call-method{border:1.5px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:10px;cursor:pointer;transition:all .13s;display:flex;gap:12px;align-items:flex-start}
 .call-method:hover{border-color:var(--border-2)}
 .call-method.on{border-color:var(--blue);background:var(--blue-50)}
+/* 준비중(선택 불가) — POS 연동 등. 비활성 상태로 흐리게 표시하고 호버 반응 없음 */
+.call-method.is-soon{opacity:.55;cursor:not-allowed;background:var(--sunken)}
+.call-method.is-soon:hover{border-color:var(--border)}
 .call-method .ic{width:44px;height:44px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
 .call-method.on .ic{background:var(--surface)}
 .call-method b{font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -428,6 +431,9 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .call-method .radio{margin-left:auto;flex:none;margin-top:4px;width:20px;height:20px}
 .call-url{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 12px;margin-top:10px;font-size:13px}
 .call-url code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--blue);font-weight:600;flex:1}
+/* 구축형(KDS·POS) 연동 상태 줄 — 선택된 카드 설명 아래. '연동 신청 완료'(처리중)·'연동 완료'(완료) 공용 */
+.call-method .call-status{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:14px;font-weight:600;color:var(--blue)}
+.call-method .call-status svg{width:14px;height:14px;flex:none}
 .call-flow{display:flex;align-items:stretch;gap:8px;margin-top:12px}
 .call-flow .cf{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:12px;color:var(--text-2);text-align:center;line-height:1.5}
 .call-flow .cf b{display:block;color:var(--text);font-size:12px}
