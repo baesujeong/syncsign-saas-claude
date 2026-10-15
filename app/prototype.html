@@ -1184,7 +1184,8 @@ function renderStoresPage(root){
 const callBadge=s=>{
  if(!s.call.on)return '<span class="badge badge-gray">미사용</span>';
  if(s.call.requested)return `<span class="badge badge-amber">${s.call.method==='pos'?'POS':'KDS'} 연동 처리 중</span>`;
- return {manual:'<span class="badge badge-green">수동 입력 사용 중</span>',pos:'<span class="badge badge-violet">POS 연동 사용 중</span>',kds:'<span class="badge badge-violet">KDS 연동 사용 중</span>'}[s.call.method];
+ /* '사용 중'은 수동/KDS/POS 구분 없이 초록색으로 통일 (처리 중=앰버, 미사용=그레이) */
+ return {manual:'<span class="badge badge-green">수동 입력 사용 중</span>',pos:'<span class="badge badge-green">POS 연동 사용 중</span>',kds:'<span class="badge badge-green">KDS 연동 사용 중</span>'}[s.call.method];
 };
 function drawStores(){
  const chips=$('#s-call-chips');if(!chips)return;
