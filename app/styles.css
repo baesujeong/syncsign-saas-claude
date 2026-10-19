@@ -1996,7 +1996,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .scp-row .icon-btn{width:24px;height:24px;display:none}
 .scp-row:hover .icon-btn{display:inline-flex}
 /* 편성 콘텐츠 선택기(모달)·선택된 자산 표시에서 재사용하는 썸네일 — .tl-item 밖에서도 동일 크기 유지 */
-.scp-row .cthumb{width:44px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex:none}
+.scp-row .cthumb{width:48px;height:27px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex:none}
+/* 콘텐츠 미선택 썸네일 — 16:9 이미지 placeholder (.ph: 전역 .empty 상태 컴포넌트와 충돌 피함. 아이콘 색은 contents.svg 자체 #D3D3D3) */
+.scp-row .cthumb.ph{background:#F5F5F5;border:1px solid #F0F0F0}
 .scp-row .btn{flex:none}
 /* ═══ 대시보드 ═══ */
 .dash-wrap{display:flex;flex-direction:column;gap:14px}
