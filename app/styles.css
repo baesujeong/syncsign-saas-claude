@@ -392,6 +392,11 @@ body.perm-ro [data-lrm],
 body.perm-ro .stb-sec,
 body.perm-ro .danger-sec,
 body.perm-ro [data-ptag-edit],
+body.perm-ro #prog-broadcast,
+body.perm-ro #prog-pick,
+body.perm-ro [data-prm],
+body.perm-ro #sc-del,
+body.perm-ro #sc-side-foot,
 body.perm-ro .ro-foot{display:none!important}
 /* 읽기 전용에서도 보이고 눌려야 하는 것 — 닫기/미리보기 종료/명시적 허용 */
 body.perm-ro [data-close],
@@ -399,8 +404,10 @@ body.perm-ro #perm-exit,
 body.perm-ro .ro-ok{display:inline-flex!important;opacity:1!important;pointer-events:auto!important;cursor:pointer!important}
 /* 정보·구조 표시 요소는 숨기면 조회 자체가 불가능해지므로 클릭만 막는다.
    (편성 캘린더의 시간 슬롯·등록된 일정 블록 — 뷰어도 일정 내용은 봐야 한다) */
-body.perm-ro #cal-grid .slot,
-body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important}
+/* 뷰어: 빈 슬롯 클릭(새 일정 추가)만 차단하고, 일정 블럭 클릭(정보 조회)은 허용 */
+body.perm-ro #cal-grid .slot{pointer-events:none!important;cursor:default!important}
+/* 뷰어: 편성표명은 편집 불가 — 호버/포커스 입력 테두리 없이 제목처럼만 표시 */
+body.perm-ro .sc-top .name-input{pointer-events:none;cursor:default}
 .perm-table{width:100%;border-collapse:collapse;font-size:14px}
 .perm-table th{text-align:center;font-size:12px;font-weight:700;color:var(--text-3);padding:8px 4px;border-bottom:1px solid var(--border)}
 .perm-table th:first-child{text-align:left}

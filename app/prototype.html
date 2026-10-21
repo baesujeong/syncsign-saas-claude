@@ -531,7 +531,7 @@ const RO_BLOCK=['.btn-primary','.btn-tonal','.btn-danger','.btn-danger-t','.dang
  '[data-tfav]','[data-fmenu]','[data-catedit]','[data-catdel]','[data-check]','[data-status]','[data-del]',
  '[data-fav]','[data-vw-edit]','[data-vw-menu]','[data-vw-sched]','[data-vwc]',
  '.sel-all','#btn-add-url','#btn-upload','#btn-invite','#btn-add-store','#btn-new-tpl','#btn-new-pl','[data-lc]','[data-retry]','[data-lrm]','.stb-sec','.danger-sec','[data-ptag-edit]','.ro-foot',
- '#cal-grid .slot','[data-block]'].join(',');
+ '#cal-grid .slot'].join(',');  /* 일정 블럭([data-block])은 뷰어도 클릭해 정보 조회 — 캡처 가드에서 제외(빈 슬롯만 차단) */
 const RO_ALLOW='[data-close],#perm-exit,.ro-ok';
 /* CSS pointer-events 만으로는 키보드(Enter/Space)·프로그램적 클릭을 막을 수 없어
    캡처 단계에서 한 번 더 차단하고 이유를 알려준다. */
@@ -996,7 +996,7 @@ function renderUsersPage(root){
   <header class="page-head"><h1>${t('page.users.t')}</h1><span class="desc">${t('page.users.d')}</span>
    <div class="actions">
     <button class="btn" id="btn-roles">역할 및 권한</button>
-    <button class="btn btn-primary" id="btn-invite" ${canEdit('users')?'':'disabled'}>${IC.plus}사용자 초대</button>
+    ${canEdit('users')?`<button class="btn btn-primary" id="btn-invite">${IC.plus}사용자 초대</button>`:''}
    </div></header>
   <div class="toolbar">
    <div class="search-wrap">${IC.search}<input class="input input-sm" id="u-q" placeholder="${t('ph.users')}" value="${uFlt.q}"></div>
@@ -1008,15 +1008,15 @@ function renderUsersPage(root){
   </div>
   <div class="bulk-bar" id="u-bulk" hidden></div>
   <div class="content-scroll"><div class="ptable-wrap"><table class="grid"><thead><tr>
-   <th style="width:38px"><span class="checkbox" id="u-all">${IC.check}</span></th>
+   ${canEdit('users')?`<th style="width:38px"><span class="checkbox" id="u-all">${IC.check}</span></th>`:`<th style="width:38px"></th>`}
    <th>사용자</th><th>역할</th><th>담당 범위</th><th>상태</th><th>마지막 접속</th><th style="width:40px"></th>
   </tr></thead><tbody id="u-tbody"></tbody></table></div></div>`;
  attachSearchUX(root.querySelector('#u-q'),q=>{uFlt.q=q;drawUsers()});
  root.querySelector('#u-status').value=uFlt.status;
  root.querySelector('#u-status').onchange=e=>{uFlt.status=e.target.value;drawUsers()};
  root.querySelector('#btn-roles').onclick=openRolesDrawer;
- root.querySelector('#btn-invite').onclick=openInviteModal;
- root.querySelector('#u-all').onclick=()=>{const arr=usersFiltered();const all=arr.every(u=>uChecked.has(u.id));arr.forEach(u=>all?uChecked.delete(u.id):uChecked.add(u.id));drawUsers()};
+ root.querySelector('#btn-invite')?.addEventListener('click',openInviteModal);
+ root.querySelector('#u-all')?.addEventListener('click',()=>{const arr=usersFiltered();const all=arr.every(u=>uChecked.has(u.id));arr.forEach(u=>all?uChecked.delete(u.id):uChecked.add(u.id));drawUsers()});
  /* 최초 진입만 Row 스켈레톤(검색·필터 재그리기는 즉시) */
  window.LoadUX.load($('#u-tbody'),window.LoadUX.skelRows(6,[0,58,42,48,40,52,0]),drawUsers);
 }
@@ -1025,6 +1025,7 @@ const usersFiltered=()=>USERS.filter(u=>
  (!uFlt.q||u.name.includes(uFlt.q)||u.email.includes(uFlt.q)));
 function drawUsers(){
  const chips=$('#u-role-chips');if(!chips)return;
+ const ro=!canEdit('users'); /* 뷰어: 선택 체크박스·행 더보기(⋯) 메뉴 비노출 — 목록 조회만 */
  chips.innerHTML=[['all','전체',USERS.length],...Object.keys(ROLE_META).map(r=>[r,ROLE_META[r][0],USERS.filter(u=>u.role===r).length])]
   .map(([k,l,n])=>`<button class="chip ${uFlt.role===k?'on':''}" data-ur="${k}">${l}<span class="cnt num">${n}</span></button>`).join('');
  chips.querySelectorAll('[data-ur]').forEach(b=>b.onclick=()=>{uFlt.role=b.dataset.ur;drawUsers()});
@@ -1032,12 +1033,12 @@ function drawUsers(){
  $('#u-tbody').innerHTML=arr.map(u=>{
   const st=u.status==='active'?'<span class="badge badge-green">활성</span>':u.status==='invited'?'<span class="badge badge-amber">초대 대기</span>':'<span class="badge badge-gray">비활성</span>';
   return `<tr class="${uChecked.has(u.id)?'checked':''}">
-   <td><span class="checkbox ${uChecked.has(u.id)?'on':''}" data-uc="${u.id}">${IC.check}</span></td>
+   ${ro?'<td></td>':`<td><span class="checkbox ${uChecked.has(u.id)?'on':''}" data-uc="${u.id}">${IC.check}</span></td>`}
    <td><div class="u-cell"><span class="avatar" style="background:${u.c}">${u.name[0]}</span><div><div class="nm">${u.name}${u.id==='u1'?' <span class="badge badge-gray" style="height:17px;font-size:12px">나</span>':''}</div><div class="em">${u.email}</div></div></div></td>
    <td><span class="role-pill ${ROLE_META[u.role][1]}">${ROLE_META[u.role][0]}</span></td>
    <td style="font-size:14px">${u.scope}</td><td>${st}</td>
    <td style="font-size:14px;color:var(--text-3)">${u.last}</td>
-   <td><button class="icon-btn" data-um="${u.id}">${IC.dots}</button></td></tr>`;
+   ${ro?'<td></td>':`<td><button class="icon-btn" data-um="${u.id}">${IC.dots}</button></td>`}</tr>`;
  }).join('')||`<tr><td colspan="7">${uFlt.q?searchEmptyHtml(uFlt.q):`<div class="empty"><b>조건에 맞는 사용자가 없어요</b><span>필터를 바꿔보세요.</span></div>`}</td></tr>`;
  {const _q=document.getElementById('u-q');if(_q&&_q.__suxCount)_q.__suxCount(arr.length);
   const _r=document.querySelector('#u-tbody [data-se-reset]');if(_r)_r.onclick=()=>{uFlt.q='';if(_q)_q.value='';drawUsers();_q&&_q.focus();};}
@@ -1121,10 +1122,11 @@ function openUserEdit(u){
 }
 function openRolesDrawer(){
  let cur='admin';
+ const ro=!canEdit('users'); /* 뷰어: 권한 매트릭스 조회 전용 — 라디오 편집·저장·미리보기 비노출(라디오 클릭은 즉시 ROLE_PERMS 변경이라 반드시 차단) */
  openDrawer(`
   <div class="drawer-head"><div><h2>역할 및 권한</h2><span class="sub">페이지 단위로 보기·편집 권한을 설정해요.</span></div><button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
   <div class="drawer-body" id="rd-body"></div>
-  <div class="drawer-foot"><button class="btn" id="rd-preview" style="flex:1">이 역할로 화면 미리보기</button><button class="btn btn-primary" id="rd-save" style="flex:1">저장</button></div>`,
+  <div class="drawer-foot">${ro?`<span style="flex:1"></span><button class="btn" data-close>닫기</button>`:`<button class="btn" id="rd-preview" style="flex:1">이 역할로 화면 미리보기</button><button class="btn btn-primary" id="rd-save" style="flex:1">저장</button>`}</div>`,
  {onMount:wrap=>{
   const draw=()=>{
    wrap.querySelector('#rd-body').innerHTML=`
@@ -1132,7 +1134,7 @@ function openRolesDrawer(){
     <div class="sync-note">${IC.info}<span><b>${ROLE_META[cur][0]}</b> 역할의 기본 권한이에요. 바꾸면 이 역할의 모든 사용자에게 적용돼요.</span></div>
     <table class="perm-table"><thead><tr><th>페이지</th>${PERM_LV.map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>
     ${PERM_PAGES.map(([pid,pname])=>`<tr><td>${pname}${pid==='users'?'<span class="sub">최고관리자 계정은 변경·삭제할 수 없어요.</span>':''}</td>
-     ${PERM_LV.map((l,lv)=>`<td><span class="radio ${ROLE_PERMS[cur][pid]===lv?'on':''}" data-perm="${pid}:${lv}" role="radio" tabindex="0"></span></td>`).join('')}</tr>`).join('')}
+     ${PERM_LV.map((l,lv)=>`<td><span class="radio ${ROLE_PERMS[cur][pid]===lv?'on':''}"${ro?'':` data-perm="${pid}:${lv}" role="radio" tabindex="0"`}></span></td>`).join('')}</tr>`).join('')}
     </tbody></table>`;
    wrap.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>{cur=b.dataset.rt;draw()});
    wrap.querySelectorAll('[data-perm]').forEach(r=>r.onclick=()=>{
@@ -1141,8 +1143,8 @@ function openRolesDrawer(){
    });
   };
   draw();
-  wrap.querySelector('#rd-save').onclick=()=>{wrap.remove();toast(`'${ROLE_META[cur][0]}' 권한을 저장했어요. ${USERS.filter(u=>u.role===cur).length}명에게 적용됐어요.`)};
-  wrap.querySelector('#rd-preview').onclick=()=>{previewRole=cur;wrap.remove();if(!canSee(curPage))curPage='library';renderShell();showPage(curPage);toast(`${ROLE_META[cur][0]} 권한으로 화면을 미리보는 중이에요.`)};
+  const _rs=wrap.querySelector('#rd-save');if(_rs)_rs.onclick=()=>{wrap.remove();toast(`'${ROLE_META[cur][0]}' 권한을 저장했어요. ${USERS.filter(u=>u.role===cur).length}명에게 적용됐어요.`)};
+  const _rp=wrap.querySelector('#rd-preview');if(_rp)_rp.onclick=()=>{previewRole=cur;wrap.remove();if(!canSee(curPage))curPage='library';renderShell();showPage(curPage);toast(`${ROLE_META[cur][0]} 권한으로 화면을 미리보는 중이에요.`)};
  }});
 }
 
