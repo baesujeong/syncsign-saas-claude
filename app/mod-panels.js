@@ -396,7 +396,7 @@ function renderRail(){
  /* 그룹 — 비디오월과 동일하게 hover 시 ⋯(더보기) 노출: 이름 수정·삭제 */
  $('#group-list').innerHTML=GROUPS.map(g=>`<div class="rail-item rail-group ${flt.group===g.id?'on':''}">
     <button class="rail-wall-hit" data-group="${g.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" stroke-linecap="round"/></svg><span class="rail-wall-nm">${g.name}</span></button>
-    <span class="rail-wall-right"><span class="cnt num">${g.ids.length}</span><button class="icon-btn rail-more" data-groupmenu="${g.id}" aria-label="그룹 관리">${IC.dots}</button></span></div>`).join('')
+    <span class="rail-wall-right"><span class="cnt num">${g.ids.length}</span>${canEdit('panels')?`<button class="icon-btn rail-more" data-groupmenu="${g.id}" aria-label="그룹 관리">${IC.dots}</button>`:''}</span></div>`).join('')
   +WALLS.map(w=>`<div class="rail-item rail-wall ${flt.wall===w.id?'on':''}">
     <button class="rail-wall-hit" data-wallnav="${w.id}">${IC.wall}<span class="rail-wall-nm">${w.name}</span></button>
     <span class="rail-wall-right"><span class="cnt num">${w.cells.length}</span><button class="icon-btn rail-more" data-wallnavmenu="${w.id}" aria-label="비디오월 관리">${IC.dots}</button></span></div>`).join('');
@@ -1185,14 +1185,16 @@ function wallMoreMenu(anchor,w,opts={}){
 /* 비디오월 자체 관리 메뉴 — 레일 ⋯ · 비디오월 카드 ⋯ 공용. 개별 화면 관리(panelManageMenu)와 분리.
    레이아웃·구성 변경은 여기(비디오월 단위)에서만, 개별 화면 관리 메뉴에는 넣지 않는다. */
 function wallManageMenu(anchor,w){
- popMenu(anchor,[
-  {label:'비디오월 정보',icon:IC.wall,onClick:()=>openWallDrawer(w)},
+ /* 뷰어(편집 권한 없음)는 '비디오월 정보'만 노출 — 조회만 가능. 편집 항목(이름·레이아웃·일정·해제)은 제외 */
+ const items=[{label:'비디오월 정보',icon:IC.wall,onClick:()=>openWallDrawer(w)}];
+ if(canEdit('panels'))items.push(
   {label:'비디오월 이름 수정',icon:IC.edit,onClick:()=>renameWall(w)},
   {label:'레이아웃 편집',icon:IC.monitor,onClick:()=>openWallWizard(w)},
   {label:'일정 편집',icon:IC.cal,onClick:()=>openWallWizard(w,{schedOnly:true})},
   'sep',
   {label:'비디오월 해제',icon:IC.x,danger:true,onClick:()=>disbandWall(w)},
- ],{cls:'mp-manage'});
+ );
+ popMenu(anchor,items,{cls:'mp-manage'});
 }
 function renameWall(w){
  openModal(`
@@ -2371,7 +2373,12 @@ function panelsRenderView(){
  else renderList();
 }
 /* 네비게이션 진입(showPage→mountLegacy 직후): 현재 뷰가 처음이면 스켈레톤, 아니면 그대로(캐시 DOM 유지) */
-window.__panelsEnter=()=>{if(window.LoadUX&&!__panelViewsSeen.has(view)){__panelViewsSeen.add(view);panelsSkelShow();}};
+window.__panelsEnter=()=>{
+ /* 권한(previewRole) 변경이 좌측 레일의 편집 진입점(그룹·비디오월 ⋯)에 반영되도록 진입 시마다 레일만 갱신.
+    메인 목록 DOM은 기존처럼 캐시 유지. */
+ renderRail();
+ if(window.LoadUX&&!__panelViewsSeen.has(view)){__panelViewsSeen.add(view);panelsSkelShow();}
+};
 renderAll();
 /* 대시보드 드릴다운용 API */
 window.__setPanelFilter=kind=>{

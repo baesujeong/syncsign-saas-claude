@@ -363,16 +363,17 @@ $('#prod-sort').onchange=e=>{flt.sort=e.target.value;renderProducts()};
 const EMOJIS=['☕','🥤','🍵','🧋','🍓','🍰','🥐','🍪','🍫','🍦','🍮','🥪'];
 function openDrawer(edit){
  const isEdit=!!edit;
+ const ro=!canEdit('products'); /* 뷰어: 상품 정보 확인만 — 입력·이미지 업로드·저장 비활성 */
  const wrap=document.createElement('div');wrap.className='drawer-wrap';
  wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true">
-  <div class="drawer-head"><h2>${isEdit?'상품 수정':'상품 등록'}</h2>
-   ${isEdit&&usedIn(edit)?`<span class="badge badge-blue">'${usedIn(edit)}' 사용 중 — 저장하면 메뉴판에 바로 반영</span>`:''}
+  <div class="drawer-head"><h2>${ro?'상품 정보':(isEdit?'상품 수정':'상품 등록')}</h2>
+   ${!ro&&isEdit&&usedIn(edit)?`<span class="badge badge-blue">'${usedIn(edit)}' 사용 중 — 저장하면 메뉴판에 바로 반영</span>`:''}
    <button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button></div>
   <div class="drawer-body">
    <div class="form-sec"><h3>기본 정보</h3>
     <div class="f-row"><label>상품 이미지 <span style="font-weight:500;color:var(--text-3);margin-left:2px">최대 5장 · JPG·PNG 10MB</span></label>
      <div class="img-list" id="img-list"></div>
-     <p style="font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.6">타일을 클릭하면 <b style="color:var(--text-2);font-weight:600">대표 이미지</b>로 지정되고, 드래그하면 순서를 바꿀 수 있어요. 몇 번째에 있든 대표로 지정한 이미지가 상품 목록과 메뉴판에 표시돼요.</p></div>
+     ${ro?'':`<p style="font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.6">타일을 클릭하면 <b style="color:var(--text-2);font-weight:600">대표 이미지</b>로 지정되고, 드래그하면 순서를 바꿀 수 있어요. 몇 번째에 있든 대표로 지정한 이미지가 상품 목록과 메뉴판에 표시돼요.</p>`}</div>
     <div class="f-row"><label>상품 이름 <span class="req">*</span></label><input class="input" id="f-name" placeholder="예) 아메리카노" value="${isEdit?edit.name:''}" maxlength="40"><div class="ferr" id="f-name-err" style="display:none">상품 이름을 입력해주세요.</div></div>
     <div class="f-grid">
      <div class="f-row"><label>카테고리 <span class="req">*</span></label><select class="select" id="f-cat">${CATS.map(c=>`<option value="${c.id}" ${isEdit&&edit.cat===c.id?'selected':''}>${c.name}</option>`).join('')}<option value="__new">＋ 새 카테고리 만들기</option></select></div>
@@ -407,8 +408,8 @@ function openDrawer(edit){
    </div>
   </div>
   <div class="drawer-foot">
-   <button class="btn" data-close>취소</button>
-   <button class="btn btn-primary" id="f-save" style="flex:1">${isEdit?'저장':'등록'}</button>
+   ${ro?`<span style="flex:1"></span><button class="btn" data-close>닫기</button>`:`<button class="btn" data-close>취소</button>
+   <button class="btn btn-primary" id="f-save" style="flex:1">${isEdit?'저장':'등록'}</button>`}
   </div></div>`;
  document.body.appendChild(wrap);
  wrap.addEventListener('mousedown',e=>{if(e.target===wrap)wrap.remove()});
@@ -421,8 +422,9 @@ function openDrawer(edit){
  const ilist=wrap.querySelector('#img-list');
  let dragImgIdx=null;
  const drawImgs=()=>{
-  ilist.innerHTML=imgs.map((im,i)=>`<button type="button" draggable="true" class="img-tile ${i===mainIdx?'is-main':''}" data-imi="${i}" aria-label="${i===mainIdx?'대표 이미지':'대표 이미지로 지정'}" style="background:linear-gradient(135deg,hsl(${im.h} 75% 93%),hsl(${im.h} 65% 84%))">${im.e}${i===mainIdx?'<span class="main-tag">대표</span>':''}<span class="del" data-imdel role="button" aria-label="이미지 삭제"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></button>`).join('')
-   +(imgs.length<5?`<button type="button" class="img-tile add" id="img-add"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>업로드</button>`:'');
+  ilist.innerHTML=imgs.map((im,i)=>`<button type="button" draggable="${ro?'false':'true'}" class="img-tile ${i===mainIdx?'is-main':''}" data-imi="${i}" aria-label="${i===mainIdx?'대표 이미지':'대표 이미지로 지정'}" style="background:linear-gradient(135deg,hsl(${im.h} 75% 93%),hsl(${im.h} 65% 84%))">${im.e}${i===mainIdx?'<span class="main-tag">대표</span>':''}${ro?'':`<span class="del" data-imdel role="button" aria-label="이미지 삭제"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>`}</button>`).join('')
+   +(!ro&&imgs.length<5?`<button type="button" class="img-tile add" id="img-add"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>업로드</button>`:'');
+  if(ro)return; /* 읽기 전용: 대표 지정·삭제·드래그·업로드 핸들러 미연결 */
   ilist.querySelectorAll('[data-imi]').forEach(t=>{
    const i=+t.dataset.imi;
    t.onclick=e=>{
@@ -522,7 +524,14 @@ function openDrawer(edit){
   renderCats();renderProducts();renderBoard();
   wrap.remove();
  };
- wrap.querySelector('#f-save').onclick=()=>save();
+ if(ro){
+  /* 뷰어 읽기 전용: 모든 입력 비활성화 + 편집 전용 보조 컨트롤 차단(옵션 세트 토글·옵션 관리·언어 칩) */
+  wrap.querySelectorAll('.drawer-body input,.drawer-body select,.drawer-body textarea').forEach(el=>{el.disabled=true;});
+  wrap.querySelector('#go-optman')?.remove();
+  wrap.querySelectorAll('[data-optset]').forEach(c=>{c.style.pointerEvents='none';const row=c.closest('.optset-row');if(row)row.style.cursor='default';});
+  wrap.querySelectorAll('[data-lang]').forEach(ch=>{ch.disabled=true;});
+ }
+ const _sv=wrap.querySelector('#f-save');if(_sv)_sv.onclick=()=>save();
 }
 $('#btn-add-product').onclick=()=>openDrawer();
 $('#btn-add-more').onclick=e=>popMenu(e.currentTarget,[
