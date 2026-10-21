@@ -119,13 +119,13 @@
         <div style="display:flex;gap:6px" id="ple-lib-chips"></div>
       </div>
       <div class="ple-lib-list" id="ple-lib-list"></div>
-      <div style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);word-break:keep-all">콘텐츠를 오른쪽 목록으로 끌어다 놓거나 ＋ 버튼으로 추가하세요</div>
+      <div id="ple-lib-hint" style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);word-break:keep-all">콘텐츠를 오른쪽 목록으로 끌어다 놓거나 ＋ 버튼으로 추가하세요</div>
     </aside>
     <div class="ple-main">
       <div class="ple-list-head">
         <span class="t">재생 순서</span><span class="total" id="ple-count"></span>
         <span class="spacer" style="flex:1"></span>
-        <span style="font-size:12px;color:var(--text-3)">드래그로 순서 변경 · 시간칩으로 빠른 설정</span>
+        <span id="ple-hint" style="font-size:12px;color:var(--text-3)">드래그로 순서 변경 · 시간칩으로 빠른 설정</span>
       </div>
       <div class="ple-list" id="ple-list"></div>
     </div>
@@ -1556,6 +1556,8 @@ function drawTplGrid(){
  grid.querySelectorAll('[data-tfav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=MY_TPLS.find(x=>x.id===b.dataset.tfav);t.fav=!t.fav;drawTplFolders();drawTplGrid()});
  grid.querySelectorAll('[data-tpl]').forEach(el=>el.addEventListener('click',e=>{
   if(e.target.closest('[data-tc],[data-tfav],[data-tm]'))return;
+  /* 뷰어: 에디터 진입 대신 템플릿 미리보기 모달 */
+  if(!canEdit('templates')){openTplPreview(MY_TPLS.find(x=>x.id===el.dataset.tpl));return}
   openMenuEditorInline();
  }));
  grid.querySelectorAll('[data-tm]').forEach(b=>b.onclick=e=>{e.stopPropagation();tplMenu(b,MY_TPLS.find(x=>x.id===b.dataset.tm))});
@@ -1604,7 +1606,7 @@ function drawTplList(grid,arr){
  grid.querySelector('#t-all').onclick=()=>{const all=arr.every(t=>tChecked.has(t.id));arr.forEach(t=>all?tChecked.delete(t.id):tChecked.add(t.id));drawTplGrid()};
  grid.querySelectorAll('[data-tc]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.tc;tChecked.has(id)?tChecked.delete(id):tChecked.add(id);drawTplGrid()});
  grid.querySelectorAll('[data-tfav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=MY_TPLS.find(x=>x.id===b.dataset.tfav);t.fav=!t.fav;drawTplFolders();drawTplGrid()});
- grid.querySelectorAll('[data-tpl]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-tc],[data-tfav],[data-tm]'))return;openMenuEditorInline()}));
+ grid.querySelectorAll('[data-tpl]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-tc],[data-tfav],[data-tm]'))return;if(!canEdit('templates')){openTplPreview(MY_TPLS.find(x=>x.id===el.dataset.tpl));return}openMenuEditorInline()}));
  grid.querySelectorAll('[data-tm]').forEach(b=>b.onclick=e=>{e.stopPropagation();tplMenu(b,MY_TPLS.find(x=>x.id===b.dataset.tm))});
  drawTplBulk();
 }
@@ -1633,13 +1635,14 @@ function drawGallery(){
  const grid=body.querySelector('#g-grid');
  /* 검색·정렬은 셸 재렌더 없이 그리드만 다시 그림 */
  const paint=()=>{
+  const ro=!canEdit('templates'); /* 뷰어: 카드 호버 시 즐겨찾기(★) 버튼 제외 */
   let arr=GALLERY.filter(g=>(gUse==='all'||g.use===gUse)&&(gPlace==='all'||g.place===gPlace)&&(gRatio==='all'||g.ratio===gRatio)&&(!gQ||(g.name+' '+g.use+' '+g.place).toLowerCase().includes(gQ.toLowerCase())));
   arr=gSort==='name'?[...arr].sort((a,b)=>a.name.localeCompare(b.name,'ko')):[...arr].sort((a,b)=>b.uses-a.uses);
   grid.innerHTML=arr.map(g=>`
    <div class="tpl-card" data-gt="${g.id}">
     <div class="tpl-thumb-wrap">
      ${tplThumb({...g,tt:g.use})}
-     <button class="fav ${g.fav?'on':''}" data-gfav="${g.id}">${g.fav?IC.star:IC.starO}</button>
+     ${ro?'':`<button class="fav ${g.fav?'on':''}" data-gfav="${g.id}">${g.fav?IC.star:IC.starO}</button>`}
      <div class="hover-actions"><button class="btn btn-sm" data-gpv="${g.id}">미리보기</button><button class="btn btn-sm btn-primary" data-gedit="${g.id}">편집하기</button></div>
     </div>
     <div class="body"><div class="nm">${g.name}</div><div class="sub"><span class="badge badge-gray">${tplSize(g)}</span>${g.use} · ${g.place}<span style="margin-left:auto" class="num">${fmt(g.uses)}회 사용</span></div></div>
@@ -1660,20 +1663,36 @@ function editGalTpl(g){
  openMenuEditorInline();
 }
 function openGalPreview(g){
+ const ro=!canEdit('templates'); /* 뷰어: 미리보기 내 즐겨찾기 등 쓰기 버튼 제외 */
  openModal(`
   <div class="modal-head"><div><h2>${g.name}</h2><div class="sub">${g.use} · ${g.place} · ${tplSize(g)} · ${fmt(g.uses)}회 사용됨</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body" style="padding-bottom:8px">
    <div style="${g.ratio==='9:16'?'display:flex;justify-content:center;background:#EDF0F4;border-radius:12px;padding:14px':''}">
     <div class="gp-thumb" style="background:${g.g};${g.ratio==='9:16'?'height:440px;aspect-ratio:9/16':'aspect-ratio:16/9'}">
-     <button class="gp-fav ${g.fav?'on':''}" id="gp-fav" aria-label="즐겨찾기">${g.fav?IC.star:IC.starO}</button>
+     ${ro?'':`<button class="gp-fav ${g.fav?'on':''}" id="gp-fav" aria-label="즐겨찾기">${g.fav?IC.star:IC.starO}</button>`}
     </div>
    </div>
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" id="gp-edit">편집하기</button></div>`,
  {width:'640px',onMount:ov=>{
-  ov.querySelector('#gp-fav').onclick=()=>{g.fav=!g.fav;const mb=ov.querySelector('#gp-fav');mb.classList.toggle('on',g.fav);mb.innerHTML=g.fav?IC.star:IC.starO;const gc=document.querySelector(`[data-gfav="${g.id}"]`);if(gc){gc.classList.toggle('on',g.fav);gc.innerHTML=g.fav?IC.star:IC.starO;}};
+  const _gf=ov.querySelector('#gp-fav');if(_gf)_gf.onclick=()=>{g.fav=!g.fav;const mb=ov.querySelector('#gp-fav');mb.classList.toggle('on',g.fav);mb.innerHTML=g.fav?IC.star:IC.starO;const gc=document.querySelector(`[data-gfav="${g.id}"]`);if(gc){gc.classList.toggle('on',g.fav);gc.innerHTML=g.fav?IC.star:IC.starO;}};
   ov.querySelector('#gp-edit').onclick=()=>{ov.remove();editGalTpl(g)};
  }});
+}
+/* 내 템플릿 미리보기(뷰어 전용) — 갤러리 미리보기(openGalPreview)와 동일한 모달 형태를 재사용하되,
+   저장된 템플릿 필드(use·place·uses·ratio 없음)에 맞춰 부제를 구성하고 편집/즐겨찾기 등 쓰기 액션은 제외한다.
+   뷰어는 카드 클릭 시 에디터 대신 이 미리보기로 진입한다. */
+function openTplPreview(t){
+ if(!t)return;
+ openModal(`
+  <div class="modal-head"><div><h2>${t.name}</h2><div class="sub">${tplSize(t)} · 수정 ${t.mod}${t.by?` · ${t.by}`:''}</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
+  <div class="modal-body" style="padding-bottom:8px">
+   <div style="${t.ratio==='9:16'?'display:flex;justify-content:center;background:#EDF0F4;border-radius:12px;padding:14px':''}">
+    <div class="gp-thumb" style="background:${t.g};${t.ratio==='9:16'?'height:440px;aspect-ratio:9/16':'aspect-ratio:16/9'}"></div>
+   </div>
+  </div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button></div>`,
+ {width:'640px'});
 }
 
 /* ═══════════ 콘텐츠 라이브러리 ═══════════ */
@@ -1855,11 +1874,14 @@ function openLibPreview(c){
    <dl class="kv" style="margin-top:14px"><dt>사용 위치</dt><dd>${c.used.pl?`재생목록 ${c.used.pl}곳`:''}${c.used.pl&&c.used.tp?' · ':''}${c.used.tp?`템플릿 ${c.used.tp}곳`:''}${!c.used.pl&&!c.used.tp?'아직 사용되지 않음':''}</dd>
    <dt>태그</dt><dd class="tag-field" id="pv-tags"></dd></dl>
   </div>
-  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button><button class="btn btn-primary" data-close>에디터에서 사용</button></div>`,
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button>${canEdit('library')?`<button class="btn btn-primary" data-close>에디터에서 사용</button>`:''}</div>`,
  {width:'640px',onMount:ov=>{
    const tf=ov.querySelector('#pv-tags');
-   const drawTf=()=>{tf.innerHTML=c.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join('')+`<button class="chip chip-add" id="pv-tag-add">${IC.plus}태그</button>`;
-    tf.querySelector('#pv-tag-add').onclick=e=>tagPickerMenu(e.currentTarget,{tags:LIB_TAGS,selected:c.tags,keepOpen:true,
+   /* 뷰어(라이브러리 편집 권한 없음)는 태그를 읽기 전용 배지로만 보여준다 — 추가/삭제 진입점(+태그) 미노출 */
+   const roTags=!canEdit('library');
+   const drawTf=()=>{tf.innerHTML=c.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join('')+(roTags?(c.tags.length?'':`<span class="sub">태그 없음</span>`):`<button class="chip chip-add" id="pv-tag-add" data-ptag-edit>${IC.plus}태그</button>`);
+    const add=tf.querySelector('#pv-tag-add');
+    if(add)add.onclick=e=>tagPickerMenu(e.currentTarget,{tags:LIB_TAGS,selected:c.tags,keepOpen:true,
      onToggle:t=>{c.tags.includes(t)?c.tags=c.tags.filter(x=>x!==t):c.tags.push(t);drawTf();drawLib();},
      onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);if(!c.tags.includes(t))c.tags.push(t);drawTf();drawLib();},
      onManage:openLibTagManager});};
@@ -2034,7 +2056,7 @@ function drawPlArea(){
  const area=$('#pl-area');if(!area)return;
  const arr=plFiltered();
  const sa=$('#pl-selall');if(sa)sa.classList.toggle('on',!!arr.length&&arr.every(pl=>plChecked.has(pl.id)));
- const emptyHtml=plQ?`<div style="grid-column:1/-1">${searchEmptyHtml(plQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${plFolder==='all'?'아직 재생목록이 없어요':'이 폴더는 비어 있어요'}</b><span>재생목록을 만들면 ${plFolder==='all'?'여기에 표시돼요':'현재 폴더에 담겨요'}</span><button class="btn btn-primary btn-sm" id="pl-empty-new">재생목록 만들기</button></div>`;
+ const emptyHtml=plQ?`<div style="grid-column:1/-1">${searchEmptyHtml(plQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${plFolder==='all'?'아직 재생목록이 없어요':'이 폴더는 비어 있어요'}</b><span>재생목록을 만들면 ${plFolder==='all'?'여기에 표시돼요':'현재 폴더에 담겨요'}</span>${canEdit('playlists')?`<button class="btn btn-primary btn-sm" id="pl-empty-new">재생목록 만들기</button>`:''}</div>`;
  if(plView==='grid'){
   area.innerHTML=`<div class="tpl-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
    ${arr.map(pl=>{const c0=pl.items.length?libOf(pl.items[0].c):null;return `
@@ -2045,7 +2067,7 @@ function drawPlArea(){
       <div class="sub"><span class="num">${pl.items.length}개 콘텐츠</span>·<span class="num">${durFmt(plDur(pl))}</span>·${pl.repeat?'반복':'1회'}
       <button class="icon-btn" data-plm="${pl.id}" style="margin-left:auto;width:26px;height:26px" aria-label="더보기">${IC.dots}</button></div></div>
     </div>`;}).join('')||emptyHtml}
-    ${arr.length?`<button class="pl-card" id="pl-new-card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;color:var(--text-3);font-weight:600">${IC.plus}새 재생목록</button>`:''}
+    ${arr.length&&canEdit('playlists')?`<button class="pl-card" id="pl-new-card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;color:var(--text-3);font-weight:600">${IC.plus}새 재생목록</button>`:''}
    </div>`;
  }else{
   area.innerHTML=arr.length?`<div class="ptable-wrap"><table class="grid"><thead><tr>
@@ -2135,18 +2157,23 @@ function drawPleLib(){
  $('#ple-lib-chips').innerHTML=[['all','전체'],['image','이미지'],['video','동영상'],['url','URL']].map(([k,l])=>`<button class="chip ${pleType===k?'on':''}" data-pt="${k}" style="height:26px;font-size:12px;padding:0 10px">${l}</button>`).join('');
  $$('#ple-lib-chips [data-pt]').forEach(b=>b.onclick=()=>{pleType=b.dataset.pt;drawPleLib()});
  const arr=LIB.filter(c=>!c.error&&(pleType==='all'||c.type===pleType)&&(!pleQ||c.name.toLowerCase().includes(pleQ.toLowerCase())));
+ /* 뷰어는 추가 경로(드래그·더블클릭·＋버튼)를 모두 비노출/미연결 — 재생 순서 읽기 전용과 일관 */
+ const ro=!canEdit('playlists');
+ const _lh=$('#ple-lib-hint');if(_lh)_lh.hidden=ro;
  $('#ple-lib-list').innerHTML=arr.map(c=>`
-  <div class="ple-src" draggable="true" data-src="${c.id}" style="position:relative">
+  <div class="ple-src" draggable="${ro?'false':'true'}" data-src="${c.id}" style="position:relative">
    <div class="im" style="background:${c.g}">${c.e}${c.type==='video'?`<span class="dur num">${durFmt(c.dur)}</span>`:''}</div>
    <div class="nm">${c.name}</div>
-   <button class="add" data-srcadd="${c.id}" aria-label="목록에 추가">${IC.plus}</button>
+   ${ro?'':`<button class="add" data-srcadd="${c.id}" aria-label="목록에 추가">${IC.plus}</button>`}
   </div>`).join('')||'<div class="empty" style="grid-column:1/-1;padding:30px 10px"><b>콘텐츠가 없어요</b><span>즉시 업로드로 추가해보세요.</span></div>';
- $$('#ple-lib-list [data-src]').forEach(el=>{
-  el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plsrc',el.dataset.src);el.classList.add('dragging')});
-  el.addEventListener('dragend',()=>el.classList.remove('dragging'));
-  el.addEventListener('dblclick',()=>addPleItem(el.dataset.src));
- });
- $$('#ple-lib-list [data-srcadd]').forEach(b=>b.onclick=e=>{e.stopPropagation();addPleItem(b.dataset.srcadd)});
+ if(!ro){
+  $$('#ple-lib-list [data-src]').forEach(el=>{
+   el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plsrc',el.dataset.src);el.classList.add('dragging')});
+   el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+   el.addEventListener('dblclick',()=>addPleItem(el.dataset.src));
+  });
+  $$('#ple-lib-list [data-srcadd]').forEach(b=>b.onclick=e=>{e.stopPropagation();addPleItem(b.dataset.srcadd)});
+ }
 }
 function addPleItem(cid,at){
  const c=libOf(cid);if(!c)return;
@@ -2157,21 +2184,25 @@ function addPleItem(cid,at){
 }
 function drawPleList(){
  const list=$('#ple-list');
+ /* 뷰어(재생목록 편집 권한 없음)는 재생 순서를 읽기 전용으로 — 핸들·삭제·시간 조절·드래그 모두 비노출/차단 */
+ const ro=!canEdit('playlists');
+ const _ph=$('#ple-hint');if(_ph)_ph.hidden=ro;
  const total=pleDraft.items.reduce((n,i)=>n+i.d,0);
  $('#ple-total').innerHTML=`총 <b class="num" style="color:var(--text)">${durFmt(total)}</b> · ${pleDraft.items.length}개`;
  $('#ple-count').textContent=pleDraft.items.length?`${pleDraft.items.length}개 · 총 ${durFmt(total)}`:'';
  list.innerHTML=pleDraft.items.map((it,i)=>{
   const c=libOf(it.c);if(!c)return'';
-  return `<div class="ple-item" draggable="true" data-pli="${i}">
-   <span class="grip"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+  return `<div class="ple-item${ro?' ro':''}" draggable="${ro?'false':'true'}" data-pli="${i}">
+   ${ro?'':`<span class="grip"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>`}
    <span class="no num">${i+1}</span>
    <span class="im" style="background:${c.g}">${c.e}</span>
    <span class="tx"><span class="nm">${c.name}</span><span class="sub">${c.type==='video'?'동영상 · 원본 '+durFmt(c.dur):c.type==='url'?'웹 페이지':'이미지'}</span></span>
-   <span class="dur-quick">${[5,10,15,30].map(s=>`<button data-dq="${i}:${s}">${s}s</button>`).join('')}</span>
+   ${ro?`<span class="dur-ro num">${it.d}초</span>`:`<span class="dur-quick">${[5,10,15,30].map(s=>`<button data-dq="${i}:${s}">${s}s</button>`).join('')}</span>
    <span class="dur-ctl"><span class="step"><button data-dm="${i}" aria-label="5초 줄이기">−</button><input class="num" data-din="${i}" value="${it.d}"><button data-dp="${i}" aria-label="5초 늘리기">＋</button></span><span class="u">초</span></span>
-   <button class="icon-btn rm" data-plrm="${i}" aria-label="목록에서 제거">${IC.x}</button>
+   <button class="icon-btn rm" data-plrm="${i}" aria-label="목록에서 제거">${IC.x}</button>`}
   </div>`;
- }).join('')||`<div class="empty" style="padding:70px 20px;border:1.5px dashed var(--border-2);border-radius:12px"><b>아직 콘텐츠가 없어요</b><span>왼쪽 라이브러리에서 끌어다 놓거나 더블클릭으로 추가하세요.</span></div>`;
+ }).join('')||`<div class="empty" style="padding:70px 20px;border:1.5px dashed var(--border-2);border-radius:12px"><b>아직 콘텐츠가 없어요</b><span>${ro?'이 재생목록에는 콘텐츠가 없어요.':'왼쪽 라이브러리에서 끌어다 놓거나 더블클릭으로 추가하세요.'}</span></div>`;
+ if(ro)return; /* 읽기 전용(뷰어): 아래 시간 조절·삭제·드래그 정렬 핸들러를 아예 연결하지 않음 */
  /* 시간 조작 */
  $$('[data-dq]').forEach(b=>b.onclick=()=>{const[i,s]=b.dataset.dq.split(':').map(Number);pleDraft.items[i].d=s;drawPleList()});
  $$('[data-dm]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dm;pleDraft.items[i].d=Math.max(1,pleDraft.items[i].d-5);drawPleList()});

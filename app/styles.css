@@ -595,6 +595,9 @@ body.perm-ro [data-block]{pointer-events:none!important;cursor:default!important
 .dur-quick button:hover{color:var(--blue);border-color:var(--blue-200)}
 .ple-item .rm{color:var(--text-3)}
 .ple-item .rm:hover{color:var(--red);background:var(--red-bg)}
+/* 읽기 전용(뷰어) 재생 순서 행 — 편집 컨트롤 제거 후 재생시간만 정적 표기 */
+.ple-item.ro{cursor:default}
+.ple-item .dur-ro{font-size:13px;font-weight:700;color:var(--text-2);font-variant-numeric:tabular-nums;padding-right:2px}
 /* 미리보기 재생 */
 .play-stage{aspect-ratio:16/9;background:#0B0E13;border-radius:var(--r-lg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff}
 .play-stage .e{font-size:74px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5))}
