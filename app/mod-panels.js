@@ -1311,7 +1311,39 @@ const periodError=st=>{
 let SCHED=[];
 const DAYS=['월 29','화 30','수 1','목 2','금 3','토 4','일 5'];
 const TODAY=6;
-const hLabel=h=>`${String(Math.floor(h)).padStart(2,'0')}:${h%1?'30':'00'}`;
+/* 시 단위 숫자(10.25=10:15) → "HH:MM". 임의 분(1분 단위)까지 지원 — 직접 입력 대응 */
+const hLabel=h=>{const t=Math.round(h*60);return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;};
+/* "HH:MM"·"H:MM"·"HHMM"·"HH"·"8시30분" 등 자유 입력 → 시 단위 숫자. 형식·범위 오류는 null */
+function parseHM(str){
+ let s=String(str==null?'':str).trim();if(!s)return null;
+ let hh,mm;let m=s.match(/^(\d{1,2})\s*[:：.\s시]\s*(\d{1,2})?\s*분?$/);
+ if(m){hh=+m[1];mm=(m[2]==null||m[2]==='')?0:+m[2];}
+ else if(/^\d{4}$/.test(s)){hh=+s.slice(0,2);mm=+s.slice(2);}
+ else if(/^\d{3}$/.test(s)){hh=+s.slice(0,1);mm=+s.slice(1);}
+ else if(/^\d{1,2}$/.test(s)){hh=+s;mm=0;}
+ else return null;
+ if(!(hh>=0&&hh<=23)||!(mm>=0&&mm<=59))return null;
+ return hh+mm/60;
+}
+const TC_CARET='<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 6 4 4 4-4"/></svg>';
+/* 송출 시간 입력 컨트롤 — 30분 단위 목록(▾)에서 고르거나 HH:MM을 직접 입력. val=시 단위 숫자 */
+function timeCombo(id,val){
+ return `<div class="time-combo"><input class="input input-sm tc-inp num" id="${id}" type="text" inputmode="numeric" maxlength="5" autocomplete="off" value="${hLabel(val)}" placeholder="HH:MM" aria-label="송출 시간 직접 입력 (HH:MM)"><button type="button" class="tc-caret" id="${id}-c" tabindex="-1" aria-label="30분 단위 목록 열기">${TC_CARET}</button></div>`;
+}
+/* timeCombo 바인딩. get()=현재 숫자값, presets=목록에 띄울 30분 단위 값 배열, commit(v)=확정 처리(상태 반영/재렌더) */
+function bindTimeCombo(scope,id,{get,presets,commit}){
+ const inp=scope.querySelector('#'+id);if(!inp)return;
+ const caret=scope.querySelector('#'+id+'-c');
+ const apply=v=>{commit(v);if(document.contains(inp))inp.value=hLabel(v);};
+ inp.onchange=()=>{
+  const v=parseHM(inp.value);
+  if(v==null||v<7||v>23){inp.value=hLabel(get());inp.classList.add('error');toast('시간을 07:00~23:00 사이로 입력해주세요 (예: 08:15).',{err:true});setTimeout(()=>inp.classList.remove('error'),1000);return;}
+  apply(v);
+ };
+ inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}};
+ inp.onfocus=()=>{try{inp.select()}catch(_){}};
+ if(caret)caret.onclick=()=>popMenu(inp,(presets||[]).map(h=>({label:hLabel(h),checked:Math.abs(h-get())<1e-6,onClick:()=>apply(h)})),{cls:'tc-menu'});
+}
 /* ── 편성 적용 대상: 범위(scope) 기반 선택. 전체/매장/그룹/미지정/개별을 조합하고, 실제 적용은 고유 화면 기준(중복 제거) ── */
 const SCHEDULABLE=p=>!!p&&!p.wall; /* 비디오월 소속 화면은 개별 편성 대상에서 제외(월 단위 편성) */
 function scopeIds(sc){
@@ -1716,13 +1748,13 @@ function openBlockSide(cfg){
     ${cur?`<button class="asset-field" id="bs-content"><span class="cthumb" style="background:${cur.g}">${cur.e||''}</span><span class="asset-tx"><b>${cur.name}</b><span>${kindL}</span></span><span class="asset-chg">변경</span></button>`
      :`<button class="asset-field empty" id="bs-content"><span class="asset-empty-plus"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="asset-empty-tx">콘텐츠 · 템플릿 · 재생목록 선택</span></button>`}</div>
    ${periodField(sel.sd,sel.ed,sel.noEnd,'bs')}
-   <div class="f-row"><label>송출 시간</label><div class="time-row"><select class="select select-sm" id="bs-ts">${times.filter(h=>h<23).map(h=>`<option value="${h}" ${h===sel.s?'selected':''}>${hLabel(h)}</option>`).join('')}</select><span class="time-dash">~</span><select class="select select-sm" id="bs-te">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===sel.e?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div></div>
+   <div class="f-row"><label>송출 시간</label><div class="time-row">${timeCombo('bs-ts',sel.s)}<span class="time-dash">~</span>${timeCombo('bs-te',sel.e)}</div></div>
    <div class="f-row"><label>반복 주기</label><div class="day-chips">${REPEAT_N.map((d,i)=>`<button class="day-chip ${sel.days.includes(i)?'on':''}" data-bsd="${i}">${d}</button>`).join('')}</div></div>
    <div class="f-row"><label>색상</label><div class="color-picker">${CAL_COLORS.map(c=>`<button class="color-sw ${sel.color===c?'on':''}" data-bscolor="${c}" style="background:${c}" aria-label="일정 색상">${sel.color===c?IC.check:''}</button>`).join('')}</div></div>`;
   body.querySelector('#bs-content').onclick=()=>openAssetPicker(sel.content,ref=>{sel.content=ref;draw();});
   bindPeriod(body,'bs',sel,draw);
-  body.querySelector('#bs-ts').onchange=e=>{sel.s=+e.target.value;if(sel.e<=sel.s)sel.e=Math.min(23,sel.s+.5);draw();};
-  body.querySelector('#bs-te').onchange=e=>{sel.e=+e.target.value;draw();};
+  bindTimeCombo(body,'bs-ts',{get:()=>sel.s,presets:times.filter(h=>h<23),commit:v=>{sel.s=v;if(sel.e<=sel.s)sel.e=Math.min(23,sel.s+.5);draw();}});
+  bindTimeCombo(body,'bs-te',{get:()=>sel.e,presets:times.filter(h=>h>7),commit:v=>{sel.e=v;draw();}});
   body.querySelectorAll('[data-bsd]').forEach(b=>b.onclick=()=>{const i=+b.dataset.bsd;sel.days=sel.days.includes(i)?sel.days.filter(x=>x!==i):[...sel.days,i];draw();});
   body.querySelectorAll('[data-bsty]').forEach(b=>b.onclick=()=>{sel.type=b.dataset.bsty;draw();});
   body.querySelectorAll('[data-bscolor]').forEach(b=>b.onclick=()=>{sel.color=b.dataset.bscolor;draw();});
@@ -2253,9 +2285,9 @@ function openWallWizard(existing,opts={}){
       <div style="padding:14px 16px 20px;display:flex;flex-direction:column;gap:20px">
        ${periodField(scPd.sd,scPd.ed,scPd.noEnd,'w3')}
        <div class="f-row" style="margin:0"><label>송출 시간</label><div class="time-row">
-        <select class="select select-sm" id="w3-s" aria-label="시작 시간">${times.filter(h=>h<23).map(h=>`<option value="${h}" ${h===scS?'selected':''}>${hLabel(h)}</option>`).join('')}</select>
+        ${timeCombo('w3-s',scS)}
         <span style="color:var(--text-3)">–</span>
-        <select class="select select-sm" id="w3-e" aria-label="종료 시간">${times.filter(h=>h>7).map(h=>`<option value="${h}" ${h===scE?'selected':''}>${hLabel(h)}</option>`).join('')}</select></div><div class="ferr" id="w3-time-err" style="display:none">종료 시간이 시작 시간보다 빨라요</div></div>
+        ${timeCombo('w3-e',scE)}</div><div class="ferr" id="w3-time-err" style="display:none">종료 시간이 시작 시간보다 빨라요</div></div>
        <div class="f-row" style="margin:0"><label>재생 주기</label>
         <div class="time-row">
          <input class="input input-sm" id="w3-cyc" type="number" min="0" inputmode="numeric" value="${scCycN}" ${scCont?'disabled':''} aria-label="재생 주기 값" style="flex:1;min-width:0">
@@ -2287,8 +2319,8 @@ function openWallWizard(existing,opts={}){
    bindPeriod(body,'w3',scPd,draw);
    const _ws=body.querySelector('#w3-s'),_we=body.querySelector('#w3-e'),_wte=body.querySelector('#w3-time-err');
    const validTime=()=>{const bad=scE<=scS;_wte.style.display=bad?'flex':'none';_ws.classList.toggle('error',bad);_we.classList.toggle('error',bad);return !bad;};
-   _ws.onchange=e=>{scS=+e.target.value;validTime();};
-   _we.onchange=e=>{scE=+e.target.value;validTime();};
+   bindTimeCombo(body,'w3-s',{get:()=>scS,presets:times.filter(h=>h<23),commit:v=>{scS=v;validTime();}});
+   bindTimeCombo(body,'w3-e',{get:()=>scE,presets:times.filter(h=>h>7),commit:v=>{scE=v;validTime();}});
    validTime();
   }
  };
