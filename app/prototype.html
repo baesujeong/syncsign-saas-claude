@@ -1914,15 +1914,21 @@ function openUrlModal(onDone){
     onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);if(!sel.includes(t))sel.push(t);drawTf();},
     onManage:openLibTagManager});};
   drawTf();
-  ov.querySelector('#url-ok').onclick=()=>{
+  ov.querySelector('#url-ok').onclick=function(){
    const u=ov.querySelector('#url-in').value.trim();
    if(!u.startsWith('http')){ov.querySelector('#url-in').classList.add('error');toast('올바른 URL을 입력해주세요.',{err:true});return}
    const nm=ov.querySelector('#url-nm').value.trim()||u.replace(/^https?:\/\//,'').slice(0,24);
-   LIB.unshift(C('c'+(cSeq++),nm,'url',lFolder==='all'?'lf4':lFolder,[...sel],'—',0,'linear-gradient(135deg,#0E7490,#083A47)','🔗',0,0));
-   obDone.upload=true;renderObBanner();
-   ov.remove();
-   if(curPage==='library'){drawLibFolders();drawLib();}
-   if(typeof onDone==='function')onDone(nm);else toast(`'${nm}'을 추가했어요.`);
+   /* 등록 완료 처리. TODO(API): 실제 URL 등록 API 호출로 교체하고 응답(성공/실패) 후 처리 */
+   const commit=()=>{
+    LIB.unshift(C('c'+(cSeq++),nm,'url',lFolder==='all'?'lf4':lFolder,[...sel],'—',0,'linear-gradient(135deg,#0E7490,#083A47)','🔗',0,0));
+    obDone.upload=true;renderObBanner();
+    ov.remove();
+    if(curPage==='library'){drawLibFolders();drawLib();}
+    if(typeof onDone==='function')onDone(nm);else toast(`'${nm}'을 추가했어요.`);
+   };
+   /* 추가 버튼을 로딩 상태(스피너+비활성)로 전환 — 등록 진행 중 중복 클릭에 의한 다중 등록을 차단한다 */
+   ov.querySelectorAll('[data-close]').forEach(b=>b.disabled=true);
+   window.LoadUX?window.LoadUX.btn(this,commit):commit();
   };
  }});
 }
