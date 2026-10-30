@@ -171,6 +171,14 @@ function rndSeed(str){let h=0;for(const c of str)h=(h*31+c.charCodeAt(0))%997;re
 ['옥외 배너 A','옥외 배너 B','팝업스토어 입구','팝업스토어 무대','행사장 A','행사장 B','로비 사이니지','주차타워 안내','푸드트럭 존','시즌 부스 1','시즌 부스 2','창고형 매장 대기'].forEach((nm,i)=>{
  PANELS.push({id:'p'+(pSeq++),store:null,name:nm,status:i%5?'on':'off',content:i%5?pick(CONTENTS).id:null,unsch:i%5===0,schedN:i%5?1+(i%3):0,lastMin:i%5?2:180,tags:[TAGS[i%TAGS.length]||'입구'],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.5',stb:{sn:'STB-U'+String(i).padStart(4,'0')}});
 });
+/* 데모: 지역 미설정 매장 — 매장은 지정됐지만 지역(시/도) 없이 등록한 케이스를 보여주기 위한 시드.
+   (매장 자체가 없는 '미지정'(store=null)과 구분) region=null → 어떤 REGIONS 버킷에도 없어 '지역 미설정'으로 묶인다.
+   TODO(API): 서버 매장 테이블에서 region_id = NULL 로 내려오는 매장이 여기에 해당 */
+[['s_nr1','테스트 매장'],['s_nr2','신규 가맹 1호(지역 미정)'],['s_nr3','팝업 플래그십(지역 미정)']].forEach(([sid,snm],si)=>{
+ STORES.push({id:sid,name:snm,region:null});
+ const n=3+Math.floor(rnd()*5);
+ for(let k=0;k<n;k++)PANELS.push({id:'p'+(pSeq++),store:sid,name:PANEL_NAMES[k%PANEL_NAMES.length]+(k>=PANEL_NAMES.length?' 2':''),status:rnd()<.9?'on':'off',content:pick(CONTENTS).id,unsch:false,schedN:1+(k%3),lastMin:Math.floor(rnd()*4),tags:[TAGS[k%TAGS.length]],fav:false,follow:null,wall:null,res:'1920×1080 · 가로',fw:'v3.6',stb:{sn:'STB-NR'+String(si)+String(k).padStart(3,'0')}});
+});
 /* 신규 가입 직후 환경(#tour): 매장·화면·그룹·비디오월·태그 모두 비움 */
 if(window.EMPTY_MODE){REGIONS.length=0;STORES.length=0;PANELS.length=0;GROUPS.length=0;WALLS.length=0;TAGS.length=0;}
 let RECENT=[];
@@ -188,6 +196,12 @@ const NO_STORE_KEY='__none';
 const storeName=id=>storeOf(id)?.name||NO_STORE;
 const storeHtml=id=>storeOf(id)?.name||`<span class="store-none">${NO_STORE}</span>`;
 const unassignedPanels=()=>PANELS.filter(p=>!p.store);
+/* 지역 미설정 — 매장은 지정됐으나 지역(시/도)이 설정되지 않은 매장 묶음.
+   store.region 이 없거나 존재하지 않는 지역 id를 가리키면 '지역 미설정'으로 본다.
+   (매장 자체가 없는 화면의 '미지정'(store=null)과는 다른 개념) */
+const NO_REGION='지역 미설정';
+const NO_REGION_ID='__noregion';
+const noRegionStores=()=>STORES.filter(s=>!s.region||!REGIONS.some(r=>r.id===s.region));
 /* 드롭다운용 매장 목록 — 매장이 많아(수백 개) 앞 50개만 노출하되,
    현재 선택된 매장이 그 밖에 있으면 맨 앞으로 끌어올려 선택이 사라지지 않게 한다.
    더 많은 매장 중에서 고를 때는 검색이 되는 매장 선택 모달(openStorePicker)을 쓴다. */
@@ -375,7 +389,18 @@ function renderRail(){
  $('#store-total').textContent=`· ${fmt(STORES.length)}개`;
  const unN=unassignedPanels().length;
  const showUn=(unN||flt.store===NO_STORE_KEY)&&(!q||NO_STORE.includes(q));
+ /* 지역 미설정 — 지역(시/도) 없이 등록된 매장 묶음. 미지정 아래, 실제 지역들 위에 노출 */
+ const nrStores=noRegionStores().filter(s=>!q||s.name.includes(q)||NO_REGION.includes(q));
+ const nrPanels=nrStores.reduce((n,s)=>n+panelsOf(s.id).length,0);
+ const nrOpen=q?nrStores.length<=12:(flt.region===NO_REGION_ID||(flt.store&&!storeOf(flt.store)?.region));
+ const nrHtml=nrStores.length?`<div><button class="region-row ${nrOpen?'open':''}" data-region="${NO_REGION_ID}">${IC.chev}${NO_REGION}<span class="cnt num">매장 ${nrStores.length} · 화면 ${fmt(nrPanels)}</span></button>
+  <div class="store-list">${nrStores.slice(0,60).map(s=>{
+   const ps=panelsOf(s.id);const bad=ps.some(p=>p.status!=='on');
+   return `<button class="store-row ${flt.store===s.id?'on':''}" data-store="${s.id}"><span class="dot ${bad?'err':'on'}" style="width:6px;height:6px"></span>${s.name}<span class="cnt num">${ps.length}</span></button>`}).join('')}
+   ${nrStores.length>60?`<div style="font-size:12px;color:var(--text-3);padding:4px 10px">외 ${nrStores.length-60}개 매장 — 검색으로 찾기</div>`:''}
+  </div></div>`:'';
  $('#store-tree').innerHTML=(showUn?`<button class="store-row store-row-none ${flt.store===NO_STORE_KEY?'on':''}" data-store="${NO_STORE_KEY}"><span class="dash"></span>${NO_STORE}<span class="cnt num">${fmt(unN)}</span></button>`:'')
+ +nrHtml
  +REGIONS.map(r=>{
   const stores=r.storeIds.map(storeOf).filter(s=>!q||s.name.includes(q));
   if(q&&!stores.length)return'';
@@ -1891,6 +1916,13 @@ function openScopePicker(state){
    /* 매장 — 맨 위 '미지정' + 지역 → 매장 → 화면 */
    let storeInner='';
    if(UNASSIGNED.length&&(!q||'미지정'.includes(q))) storeInner+=unitRow('미지정','매장이 지정되지 않은 화면 전체','unassigned:',UNASSIGNED);
+   /* 지역 미설정 — 매장은 지정됐지만 지역(시/도)이 없는 매장 묶음 (지역 그룹과 동일한 펼침·개별 매장 선택) */
+   const nrStores=noRegionStores().filter(s=>storePanels(s.id).length&&(!q||s.name.toLowerCase().includes(q)||NO_REGION.toLowerCase().includes(q)));
+   if(nrStores.length){
+    const exp=!!q||expRegions.has(NO_REGION_ID),show=q?nrStores:nrStores.slice(0,40);
+    const npc=nrStores.reduce((n,s)=>n+storePanels(s.id).length,0);
+    storeInner+=`<div class="scope-region"><button class="scope-region-h" data-region="${NO_REGION_ID}"><span class="scope-chev ${exp?'exp':''}">${IC.chev}</span><b>${NO_REGION}</b><span class="scope-region-meta">매장 ${fmt(nrStores.length)} · 화면 ${fmt(npc)}</span></button>${exp?`<div class="scope-region-body">${show.map(s=>unitRow(`${s.name} 전체`,'이 매장의 편성 가능한 화면 전체','store:'+s.id,storePanels(s.id))).join('')}${!q&&nrStores.length>40?`<div class="scope-more">지역 미설정 매장이 ${fmt(nrStores.length)}개예요 · 상단 검색으로 좁혀보세요</div>`:''}</div>`:''}</div>`;
+   }
    storeInner+=REGIONS.map(region=>{
     const stores=region.storeIds.map(storeOf).filter(s=>s&&storePanels(s.id).length&&(!q||s.name.toLowerCase().includes(q)||region.name.toLowerCase().includes(q)));
     if(!stores.length)return '';
@@ -2657,10 +2689,17 @@ window.__openPanelSchedule=()=>{openSchedule([]);};
    TODO(API): 서버 연동 시 매장은 단일 소스(1개 테이블)가 되어 이 프론트 간 동기화는 불필요 — 화면/편성/대시보드가 같은 매장 데이터를 조회하면 됨 */
 window.__syncStore=s=>{
  if(!s)return;
- let r=REGIONS.find(x=>x.name===(s.region||'기타'));
- if(!r){r={id:'r_'+REGIONS.length,name:s.region||'기타',storeIds:[]};REGIONS.push(r);}
- if(!STORES.some(x=>x.id===s.id))STORES.push({id:s.id,name:s.name,region:r.id});
- if(!r.storeIds.includes(s.id))r.storeIds.push(s.id);
+ /* 지역(시/도)은 선택값 — 비어 있으면 '지역 미설정'(region=null)으로 둔다.
+    값이 있으면 이름으로 REGIONS 버킷을 찾거나 새로 만든다. */
+ const rname=(s.region||'').trim();
+ let rid=null;
+ if(rname){let r=REGIONS.find(x=>x.name===rname);if(!r){r={id:'r_'+REGIONS.length,name:rname,storeIds:[]};REGIONS.push(r);}rid=r.id;}
+ let st=STORES.find(x=>x.id===s.id);
+ if(!st){st={id:s.id,name:s.name,region:rid};STORES.push(st);}
+ else{st.name=s.name;st.region=rid;} /* 수정 시 지역 변경·해제 반영 */
+ /* 모든 지역 버킷에서 제거 후 새 지역에만 추가 — 지역 미설정이면 어떤 버킷에도 넣지 않는다 */
+ REGIONS.forEach(r=>{const i=r.storeIds.indexOf(st.id);if(i>=0)r.storeIds.splice(i,1);});
+ if(rid){const r=REGIONS.find(x=>x.id===rid);if(r&&!r.storeIds.includes(st.id))r.storeIds.push(st.id);}
  if(typeof renderScope==='function')renderScope();
  if(typeof renderRail==='function')renderRail();
 };

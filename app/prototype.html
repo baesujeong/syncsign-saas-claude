@@ -385,14 +385,15 @@ const KR_REGIONS=['서울','경기','인천','부산','대구','대전','광주'
 /* 매장 위치 입력 공용 헬퍼 — 국가 선택 + 지역: 대한민국은 시/도 셀렉트, 해외는 직접 입력.
    저장 시 regionBucket: 국내=시/도, 해외=국가명(매장 트리·필터 버킷), 해외 지역 텍스트는 주소 앞에 합쳐짐 */
 const locRegionHtml=(pfx,country,region)=>country==='대한민국'
- ?`<select class="select" id="${pfx}-region">${KR_REGIONS.map(r=>`<option ${r===region?'selected':''}>${r}</option>`).join('')}</select>`
+ ?`<select class="select" id="${pfx}-region"><option value="" ${!KR_REGIONS.includes(region)?'selected':''}>지역 미설정 (선택 안 함)</option>${KR_REGIONS.map(r=>`<option ${r===region?'selected':''}>${r}</option>`).join('')}</select>`
  :`<input class="input" id="${pfx}-region" value="${region&&!KR_REGIONS.includes(region)&&region!==country?region:''}" placeholder="예) Tokyo / California / Sydney">`;
-const locFieldsHtml=(pfx,country='대한민국',region='서울')=>`
+const locFieldsHtml=(pfx,country='대한민국',region='')=>`
  <div class="f-row"><label>국가 <span class="req">*</span></label><select class="select" id="${pfx}-country">${COUNTRIES.map(c=>`<option ${c===country?'selected':''}>${c}</option>`).join('')}</select></div>
- <div class="f-row"><label>지역(시/도)</label><span id="${pfx}-region-wrap">${locRegionHtml(pfx,country,region)}</span></div>`;
-const bindLocFields=(root,pfx)=>{const cs=root.querySelector(`#${pfx}-country`);cs.onchange=()=>{root.querySelector(`#${pfx}-region-wrap`).innerHTML=locRegionHtml(pfx,cs.value,cs.value==='대한민국'?'서울':'');};};
+ <div class="f-row"><label>지역(시/도) <span style="font-weight:500;color:var(--text-3)">선택</span></label><span id="${pfx}-region-wrap">${locRegionHtml(pfx,country,region)}</span></div>`;
+const bindLocFields=(root,pfx)=>{const cs=root.querySelector(`#${pfx}-country`);cs.onchange=()=>{root.querySelector(`#${pfx}-region-wrap`).innerHTML=locRegionHtml(pfx,cs.value,'');};};
 const readLocFields=(root,pfx,addr)=>{const c=root.querySelector(`#${pfx}-country`).value;const r=(root.querySelector(`#${pfx}-region`)?.value||'').trim();
- return c==='대한민국'?{country:c,region:r||'서울',addr:addr||''}:{country:c,region:c,addr:[r,addr||''].filter(Boolean).join(' · ')};};
+ /* 지역은 선택값 — 국내에서 미선택이면 빈 값(지역 미설정)으로 둔다. 해외는 국가명이 지역 버킷이 된다. */
+ return c==='대한민국'?{country:c,region:r,addr:addr||''}:{country:c,region:c,addr:[r,addr||''].filter(Boolean).join(' · ')};};
 /* 프로필 아바타 팔레트 — 저채도 4색(슬레이트·블루·세이지·토프)만 순환 사용 (2026-07 컬러 정리) */
 const AV=['#5C6B85','#4C6FAF','#5F7E72','#8C7A62','#5C6B85','#4C6FAF','#5F7E72','#8C7A62'];
 let uSeq=10;
@@ -426,6 +427,9 @@ let STORES=[
  {id:'s6',name:'판교테크노밸리점',region:'경기',addr:'경기 성남시 분당구 판교역로 235',mgrs:[],panels:{on:3,total:3,last:'방금 전'},call:{on:false,method:null}},
  {id:'s7',name:'해운대점',region:'부산',addr:'부산 해운대구 해운대해변로 264',mgrs:[],panels:{on:7,total:8,last:'12분 전'},call:{on:true,method:'manual'}},
  {id:'s8',name:'제주공항점',region:'제주',addr:'제주 제주시 공항로 2',mgrs:[],panels:{on:2,total:3,last:'2일 전'},call:{on:false,method:null}},
+ /* 데모: 지역(시/도) 없이 등록된 매장 — 국가만 선택하고 지역을 비운 케이스. region='' → '지역 미설정'으로 묶인다 */
+ {id:'s9',name:'테스트 매장',region:'',addr:'',mgrs:[],panels:{on:4,total:5,last:'방금 전'},call:{on:false,method:null}},
+ {id:'s10',name:'신규 가맹 1호(지역 미정)',region:'',addr:'',mgrs:[],panels:{on:3,total:3,last:'10분 전'},call:{on:false,method:null}},
 ];
 const userOf=id=>USERS.find(u=>u.id===id);
 const G={g1:'linear-gradient(135deg,#7A1E1E,#3D0E0E)',g2:'linear-gradient(135deg,#2A2F36,#15181D)',g3:'linear-gradient(135deg,#0E5E63,#093A40)',g4:'linear-gradient(135deg,#3B2A6B,#1E1440)',g5:'linear-gradient(135deg,#15243F,#0B1220)',g6:'linear-gradient(135deg,#8A4B12,#4A2708)',g7:'linear-gradient(135deg,#0F5132,#062A18)',g8:'linear-gradient(135deg,#831843,#4A0E27)'};
@@ -1152,7 +1156,7 @@ function openRolesDrawer(){
 let sFlt={q:'',region:'all',call:'all'};
 const sChecked=new Set(); /* 매장 다중 선택 — 리스트 공통 패턴 */
 const storesFiltered=()=>STORES.filter(s=>
- (sFlt.region==='all'||s.region===sFlt.region)&&
+ (sFlt.region==='all'||(sFlt.region==='__none'?!s.region:s.region===sFlt.region))&&
  (sFlt.call==='all'||(sFlt.call==='on'?s.call.on:!s.call.on))&&
  (!sFlt.q||s.name.includes(sFlt.q)||s.addr.includes(sFlt.q)));
 /* ═══════════ 매장 관리(#stores) ═══════════
@@ -1166,7 +1170,7 @@ function renderStoresPage(root){
    <div class="actions"><button class="btn btn-primary" id="btn-add-store" ${canEdit('stores')?'':'disabled'}>${IC.plus}매장 등록</button></div></header>
   <div class="toolbar">
    <div class="search-wrap">${IC.search}<input class="input input-sm" id="s-q" placeholder="${t('ph.stores')}" value="${sFlt.q}"></div>
-   <select class="select select-sm" id="s-region" style="width:110px"><option value="all">모든 지역</option>${[...new Set(STORES.map(s=>s.region))].map(r=>`<option ${sFlt.region===r?'selected':''}>${r}</option>`).join('')}</select>
+   <select class="select select-sm" id="s-region" style="width:110px"><option value="all">모든 지역</option>${[...new Set(STORES.map(s=>s.region).filter(Boolean))].map(r=>`<option ${sFlt.region===r?'selected':''}>${r}</option>`).join('')}${STORES.some(s=>!s.region)?`<option value="__none" ${sFlt.region==='__none'?'selected':''}>지역 미설정</option>`:''}</select>
    <div style="display:flex;gap:6px" id="s-call-chips"></div>
    <div class="spacer"></div>
    <span style="font-size:12px;color:var(--text-3)" id="s-count"></span>
@@ -1200,7 +1204,7 @@ function drawStores(){
   const bad=s.panels.on<s.panels.total;
   return `<tr data-srow="${s.id}" style="cursor:pointer">
    <td><span class="checkbox ${sChecked.has(s.id)?'on':''}" data-schk="${s.id}" role="checkbox" aria-label="${s.name} 선택">${IC.check}</span></td>
-   <td><b>${s.name}</b><div style="font-size:12px;color:var(--text-3)">${s.region}${s.addr?' · '+s.addr:''}</div></td>
+   <td><b>${s.name}</b><div style="font-size:12px;color:var(--text-3)">${s.region||'지역 미설정'}${s.addr?' · '+s.addr:''}</div></td>
    <td>${s.mgrs.length?`<span class="mgr-chips">${s.mgrs.slice(0,3).map(id=>{const u=userOf(id);return u?`<span class="avatar" style="background:${u.c}" title="${u.name}">${u.name[0]}</span>`:''}).join('')}${s.mgrs.length>3?`<span class="more">+${s.mgrs.length-3}</span>`:''}</span>`:'<span style="color:var(--text-3);font-size:14px">미지정</span>'}</td>
    <td><span style="display:inline-flex;align-items:center;gap:8px;font-size:14px"><span class="dot ${bad?'err':'on'}"></span><b class="num">${s.panels.on}</b><span style="color:var(--text-3)">/ ${s.panels.total} 온라인</span></span></td>
    <td>${callBadge(s)}</td>
@@ -1271,10 +1275,11 @@ function openStoreModal(store){
  /* store가 실제 매장 객체(id 보유)일 때만 수정 모드. 이벤트 핸들러로 잘못 넘어온 Event 등은 등록 모드로 처리 */
  const edit=!!(store&&store.id);
  if(!edit)store=null;
- /* 저장 시 region은 국내=시/도, 해외=국가명으로 버킷팅되므로, 수정 모드 프리필도 같은 규칙을 역으로 복원한다 */
- const isKR=edit?KR_REGIONS.includes(store.region):true;
+ /* 저장 시 region은 국내=시/도, 해외=국가명으로 버킷팅되므로, 수정 모드 프리필도 같은 규칙을 역으로 복원한다.
+    지역 미설정(빈 값)은 국내 매장으로 간주 — 해외는 저장 시 항상 국가명이 region에 들어가 빈 값일 수 없다 */
+ const isKR=edit?(!store.region||KR_REGIONS.includes(store.region)):true;
  const initCountry=edit?(isKR?'대한민국':store.region):'대한민국';
- const initRegion=edit?(isKR?store.region:''):'서울';
+ const initRegion=edit?(isKR?(store.region||''):''):'';
  /* 담당자는 다중 지정 가능. 로컬 사본(selMgrs)으로 편집하고 저장 시 store.mgrs에 반영한다. */
  const selMgrs=edit?[...store.mgrs]:[];
  openModal(`
@@ -1345,7 +1350,7 @@ function openStoreDrawer(s,tab='info'){
  const wrap=openDrawer('',{});
  const draw=t=>{
   wrap.querySelector('.drawer').innerHTML=`
-   <div class="drawer-head"><div><h2>${s.name}</h2><span class="sub">${s.region}${s.addr?' · '+s.addr:''}</span></div>
+   <div class="drawer-head"><div><h2>${s.name}</h2><span class="sub">${s.region||'지역 미설정'}${s.addr?' · '+s.addr:''}</span></div>
     <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
    <div class="drawer-body sd-body">
     <div class="dtabs">${[['info','정보'],['panels','화면 '+s.panels.total],['call','번호호출']].map(([k,l])=>`<button class="${t===k?'on':''}" data-st="${k}">${l}</button>`).join('')}</div>
@@ -1358,7 +1363,7 @@ function openStoreDrawer(s,tab='info'){
   const body=wrap.querySelector('#st-body');
   if(t==='info'){
    body.innerHTML=`
-    <dl class="kv"><dt>매장명</dt><dd>${s.name}</dd><dt>지역</dt><dd>${s.region}</dd><dt>주소</dt><dd>${s.addr||'—'}</dd><dt>등록일</dt><dd>2025.11.02</dd></dl>
+    <dl class="kv"><dt>매장명</dt><dd>${s.name}</dd><dt>지역</dt><dd>${s.region||'지역 미설정'}</dd><dt>주소</dt><dd>${s.addr||'—'}</dd><dt>등록일</dt><dd>2025.11.02</dd></dl>
     <div style="margin-bottom:18px"><h3 style="margin:0 0 8px;font-size:14px;font-weight:700">담당자</h3>
      <div class="tag-row" style="display:flex;gap:6px;flex-wrap:wrap">
       ${s.mgrs.map(id=>{const u=userOf(id);return u?`<span class="chip on">${u.name}${ro?'':`<button data-mgrm="${id}" style="display:inline-flex;color:var(--blue)">${IC.xs}</button>`}</span>`:''}).join('')}
