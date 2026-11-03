@@ -811,6 +811,11 @@ function completeSignup({name,email,invite,via}){
    셋탑박스가 TV 화면에 표시하는 등록 코드. 영문(A-Z)·숫자(0-9) 혼용 6자리이며 구분 기호(하이픈)는 없다.
    온보딩 화면 연결 · 화면 추가 · 셋탑 연결/재연결 세 곳이 같은 규칙을 공유해야 하므로 여기서 한 번만 정의한다. */
 const STB_CODE_LEN=6;
+/* 연결 코드 방식 노출 여부 (2026-11 결정: 이번 출시 버전은 OFF).
+   이번 버전은 기존 방식 유지 — CMS에서 화면을 등록해 두면, 셋탑 앱에서 계정으로 로그인한 뒤 화면 목록에서 해당 화면을 선택해 연결한다.
+   false이면 연결 코드를 입력하는 UI를 모두 숨긴다: 온보딩 4단계(화면 연결) · 화면 추가 모달의 연결 코드 항목·안내 배너 ·
+   셋탑 연결하기/재연결 모달 진입점(⋯ 메뉴 · 상세 드로어 · 토스트 액션). 코드 방식을 도입하는 버전에서 true로 바꾸면 그대로 복구된다. */
+const STB_CODE_PAIRING=false;
 /* 입력 정규화 — 대문자 변환 후 영숫자만 남긴다(붙여넣은 하이픈·공백 제거) */
 const normStbCode=v=>String(v==null?'':v).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,STB_CODE_LEN);
 function bindStbCodeInput(input){
@@ -843,7 +848,7 @@ function startOnboard(msg){
 }
 function renderOnboard(){
  /* Process Stepper — 비디오월 위저드와 동일한 표준 컴포넌트(.wiz-step) 사용 */
- $('#ob-steps').innerHTML=[['1','업종 선택'],['2','운영 형태'],['3','첫 매장 만들기'],['4','화면 연결']].map(([n,l])=>`<span class="wiz-step ${+n===obStep?'cur':+n<obStep?'done':''}"><span class="n">${n}</span>${l}</span>`).join('');
+ $('#ob-steps').innerHTML=[['1','업종 선택'],['2','운영 형태'],['3','첫 매장 만들기'],...(STB_CODE_PAIRING?[['4','화면 연결']]:[])].map(([n,l])=>`<span class="wiz-step ${+n===obStep?'cur':+n<obStep?'done':''}"><span class="n">${n}</span>${l}</span>`).join('');
  const card=$('#ob-card');
  if(obStep===1){
   card.innerHTML=`<h2>${session.name?`${session.name}님, `:''}어떤 매장을 운영하시나요?</h2><div class="sub">업종에 맞는 템플릿과 위젯을 추천해 드려요. 나중에 바꿀 수 있어요.</div>
@@ -885,7 +890,10 @@ function renderOnboard(){
    session.country=loc.country;
    STORES.unshift({id:'s'+Date.now(),name:v,region:loc.region,addr:loc.addr,mgrs:['u1'],panels:{on:0,total:0,last:'—'},call:{on:false,method:null}});
    window.__syncStore&&window.__syncStore(STORES[0]);
-   obDone.store=true;obStep=4;renderOnboard();
+   obDone.store=true;
+   /* 연결 코드 방식 OFF: 화면 연결 단계 없이 매장 생성으로 온보딩 종료 — 화면은 화면 관리에서 등록하고 셋탑 앱에서 선택해 연결 */
+   if(!STB_CODE_PAIRING){finishOnboard(false);return}
+   obStep=4;renderOnboard();
   }else{
    const codeInp=card.querySelector('#ob-code'),code=normStbCode(codeInp.value);
    /* 코드를 비워두면 화면 없이 진행(=나중에 하기). 입력했다면 6자리를 모두 채워야 한다 */
@@ -3031,7 +3039,7 @@ function renderEmptyDashboard(root,ps){
  const n={store:STORES.length,panel:ps.panels+(obDone.panel&&!ps.panels?1:0),content:LIB.length,cast:PLAYLISTS.length};
  const steps=[
   ['store','🏪','아직 등록된 매장이 없어요','매장을 등록하고 지역·담당자를 정리해요','매장 등록하기',c=>`매장 ${c}개 등록됨`],
-  ['panel','🖥️','아직 연결된 화면이 없어요','매장에 설치된 화면을 연결 코드로 등록해요','화면 연결하기',c=>`화면 ${c}개 연결됨`],
+  ['panel','🖥️','아직 연결된 화면이 없어요',STB_CODE_PAIRING?'매장에 설치된 화면을 연결 코드로 등록해요':'화면을 등록하고, 셋탑 앱에서 로그인해 연결해요','화면 연결하기',c=>`화면 ${c}개 연결됨`],
   ['content','🖼️','아직 등록된 콘텐츠가 없어요','이미지·영상·URL을 올려 어디서든 재사용해요','콘텐츠 등록하기',c=>`콘텐츠 ${c}개 등록됨`],
   ['cast','📡','아직 편성·송출한 화면이 없어요','콘텐츠를 재생목록으로 묶어 화면에 편성하고 송출해요','편성 시작하기',c=>`재생목록 ${c}개 편성됨`],
  ];

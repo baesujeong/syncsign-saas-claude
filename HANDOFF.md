@@ -69,7 +69,7 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 | `p.broadcast=false` (⋯ "송출 중단") | 송출 중단 | 송출 중단 API |
 | `deletePanel` | 화면 삭제 | DELETE |
 | `renamePanel` | 화면 이름 변경 | PUT |
-| `openStbModal`(연결/재연결) | 셋탑 연결 | 연결 코드 검증/등록 API |
+| `openStbModal`(연결/재연결) | 셋탑 연결 | 연결 코드 검증/등록 API — **이번 출시 버전은 미사용**(`STB_CODE_PAIRING=false`, 아래 참고) |
 | `detachStb` | 셋탑 연결 해제 | PUT/DELETE |
 | `openStorePicker`(매장 지정) | 화면-매장 지정 | PUT |
 | `openGroupModal` | 그룹 생성 | POST |
@@ -103,6 +103,9 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 1. LNB `화면 관리` → `mountLegacy('panels')` → `renderAll()` (`renderStats/renderRail/renderScope/renderList`).
 2. 카드/행 클릭 → `openPanelDrawer()` (상세: 개요/일정/정보/네트워크/스크린샷/로그 탭 — 조회 전용 데모).
 3. `화면 추가` → `openAddPanelModal` → 셋탑 연결(`openStbModal`). ⋯ 메뉴 → 이름변경/재연결/해제/삭제/일정편집.
+   - **셋탑 연결 방식(2026-11, 이번 출시 버전)**: 연결 코드 방식이 아닌 **기존 방식** — CMS에서 화면을 등록해 두면, 셋탑 앱에서 계정으로 로그인한 뒤 화면 목록에서 해당 화면을 선택해 연결한다.
+     `prototype.html`의 `STB_CODE_PAIRING=false`로 연결 코드 입력 UI를 모두 숨김(온보딩 4단계 · 화면 추가 모달 연결 코드 항목/안내 · ⋯ 메뉴 셋탑 연결하기/재연결 · 드로어 [셋탑 연결하기] · 토스트 [지금 연결]/[다시 연결]).
+     코드는 삭제하지 않았으므로 코드 방식 도입 시 `true`로 바꾸면 복구된다. 서버 측에는 셋탑 로그인·화면 목록 조회·화면 선택(바인딩) API가 필요하다(셋탑 앱 영역).
 4. `일정 편집` → `openSchedule([panelId])` → 그 화면을 대상으로 하는 새 편성표 편집(편성일정과 연결).
 
 ## 8. 현재 구현된 기능

@@ -637,22 +637,23 @@ function openAddPanelModal(opts){
  <div class="modal-head"><div><h2>화면 추가</h2></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
  <div class="modal-body">
   <div class="f-row"><label>화면 이름 <span class="req">*</span></label><input class="input" id="ap-name" placeholder="예) 카운터 좌측"><div class="ferr" id="ap-name-err" style="display:none">필수항목입니다. 화면 이름을 입력해주세요.</div></div>
-  <div class="f-row"><label>설치 매장</label>
+  <div class="f-row" ${STB_CODE_PAIRING?'':'style="margin-bottom:0"'}><label>설치 매장</label>
    <select class="select" id="ap-store">
     <option value="" ${defStore?'':'selected'}>${NO_STORE}</option>
     ${STORES.length?`<optgroup label="매장">${storeOptions(defStore).map(s=>`<option value="${s.id}" ${s.id===defStore?'selected':''}>${s.name}</option>`).join('')}</optgroup>`:''}
    </select></div>
-  <div class="f-row" style="margin-bottom:0"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ"><div class="ferr" id="ap-code-err" style="display:none">연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.</div>
-   <div class="info-note" style="margin-top:10px">${IC.info}<span>셋탑박스를 TV에 연결하고, 앱을 실행하면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 나중에 연결해도 괜찮아요.</span></div></div>
+  ${STB_CODE_PAIRING?`<div class="f-row" style="margin-bottom:0"><label>연결 코드</label><input class="input" id="ap-code" placeholder="예) 3F82KQ"><div class="ferr" id="ap-code-err" style="display:none">연결 코드 ${STB_CODE_LEN}자리를 모두 입력해주세요.</div>
+   <div class="info-note" style="margin-top:10px">${IC.info}<span>셋탑박스를 TV에 연결하고, 앱을 실행하면 <b>6자리 연결 코드</b>가 화면에 표시돼요. 아직 없다면 비워 두고 나중에 연결해도 괜찮아요.</span></div></div>`:''}
  </div>
  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="ap-ok">추가하기</button></div>`,
  {width:'440px',onMount:ov=>{
   const nmField=ov.querySelector('#ap-name');nmField.focus();
   const nmErr=ov.querySelector('#ap-name-err');
   nmField.addEventListener('input',()=>{nmField.classList.remove('error');nmErr.style.display='none';});
+  /* 연결 코드 항목은 STB_CODE_PAIRING일 때만 렌더링 — OFF면 apCode=null, 항상 '셋탑 미연결' 화면으로 등록 */
   const apCode=bindStbCodeInput(ov.querySelector('#ap-code'));
   const codeErr=ov.querySelector('#ap-code-err');
-  apCode.addEventListener('input',()=>{codeErr.style.display='none';});
+  if(apCode)apCode.addEventListener('input',()=>{codeErr.style.display='none';});
   const create=(nm,stb)=>{
    /* 빈 문자열 = 미지정 — 매장이 없어도 화면은 등록할 수 있다 */
    const sid=ov.querySelector('#ap-store').value||null;
@@ -666,11 +667,12 @@ function openAddPanelModal(opts){
    const nm=(nmField.value||'').trim();
    if(!nm){nmField.classList.add('error');nmErr.style.display='flex';nmField.focus();return}
    /* 코드를 입력하다 만 경우만 막고, 아예 비워 뒀다면 '나중에 연결'로 처리한다 */
-   const code=normStbCode(apCode.value);
+   const code=apCode?normStbCode(apCode.value):'';
    if(code&&code.length<STB_CODE_LEN){apCode.classList.add('error');codeErr.style.display='flex';apCode.focus();return}
    const p=create(nm,!!code);
    if(opts.onCreated){opts.onCreated(p);return}
-   if(!code)toast(`'${p.name}' 화면을 만들었어요. 셋탑박스가 준비되면 [셋탑 연결하기]로 연결하세요.`,{action:'지금 연결',onAction:()=>openStbModal(p)});
+   if(!code&&!STB_CODE_PAIRING)toast(`'${p.name}' 화면을 만들었어요. 셋탑 앱에서 로그인한 뒤 이 화면을 선택하면 연결돼요.`);
+   else if(!code)toast(`'${p.name}' 화면을 만들었어요. 셋탑박스가 준비되면 [셋탑 연결하기]로 연결하세요.`,{action:'지금 연결',onAction:()=>openStbModal(p)});
    else if(p.store)toast('화면이 연결됐어요. 목록 맨 위에서 확인하세요.');
    else toast(`화면이 연결됐어요. 설치 매장은 '${NO_STORE}' 상태예요.`,{action:'매장 지정',onAction:()=>openStorePicker([p])});
   };
@@ -715,7 +717,7 @@ function openStbModal(p,reconnect){
 function detachStb(p,after){
  confirmDialog({title:'셋탑 연결을 해제할까요?',desc:`연결을 해제하면 현재 화면의 송출이 즉시 중단됩니다.<br>화면 정보, 일정, 태그 설정은 삭제되지 않습니다.`,confirmText:'연결 해제',danger:true,onConfirm:()=>{
   p.stb=null;p.status='off';p.content=null;p.lastMin=0;renderAll();
-  toast(`'${p.name}' 셋탑 연결을 해제했어요. 화면 정보는 유지돼요.`,{action:'다시 연결',onAction:()=>openStbModal(p)});
+  toast(`'${p.name}' 셋탑 연결을 해제했어요. 화면 정보는 유지돼요.`,STB_CODE_PAIRING?{action:'다시 연결',onAction:()=>openStbModal(p)}:undefined);
   after&&after();
  }});
 }
@@ -794,7 +796,7 @@ function panelManageMenu(anchor,p,opt){
   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
   'sep',
-  {label:'셋탑 재연결',icon:IC.stb,onClick:()=>openStbModal(p)},
+  ...(STB_CODE_PAIRING?[{label:'셋탑 재연결',icon:IC.stb,onClick:()=>openStbModal(p)}]:[]),
   {label:'화면 재시작',icon:IC.restart,onClick:()=>confirmDialog({title:'화면을 재시작할까요?',desc:'재시작하는 동안 화면이 잠시 꺼집니다. 화면 이용 중에는 재시작에 주의해주세요.',confirmText:'재시작',danger:true,onConfirm:()=>toast(`'${p.name}'에 재시작을 요청했어요.`)})},
   'sep',
   {label:'셋탑 연결 해제',icon:IC.unlink,danger:true,onClick:()=>detachStb(p,after)},
@@ -805,8 +807,7 @@ function panelManageMenu(anchor,p,opt){
   {label:'일정 편집',icon:IC.cal,onClick:()=>openSchedule([p.id])},
   {label:p.store?'매장 변경':'매장 지정',icon:IC.store,onClick:()=>openStorePicker([p],after)},
   'sep',
-  {label:'셋탑 연결하기',icon:IC.stb,onClick:()=>openStbModal(p)},
-  'sep',
+  ...(STB_CODE_PAIRING?[{label:'셋탑 연결하기',icon:IC.stb,onClick:()=>openStbModal(p)},'sep']:[]),
   {label:'화면 삭제',icon:IC.trash,danger:true,onClick:()=>deletePanel(p,del)},
  ],{cls:'mp-manage'});
 }
@@ -1063,7 +1064,7 @@ function openPanelDrawer(p,tab='overview'){
    </div>
    <div class="drawer-foot ro-foot">
     <button class="btn btn-icon" id="d-more" aria-label="화면 관리">${IC.dots}</button>
-    ${p.stb?`<button class="btn btn-primary" id="d-sched" style="flex:1">${IC.cal}일정 편집</button>`
+    ${p.stb||!STB_CODE_PAIRING?`<button class="btn btn-primary" id="d-sched" style="flex:1">${IC.cal}일정 편집</button>`
     :`<button class="btn btn-primary" id="d-stb-connect" style="flex:1">${STB_IC(14)}셋탑 연결하기</button>`}
    </div></div>`;
   wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
@@ -1086,7 +1087,8 @@ function openPanelDrawer(p,tab='overview'){
      <button class="icon-btn refresh" aria-label="미리보기 새로고침"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 4v5h-5"/></svg></button>
      ${preview}
     </div>
-    ${!p.stb?`<div class="ov-connect-note"><b>${IC.info}아직 셋탑 연결이 안됐어요</b><p>셋탑박스를 TV에 연결하고 전원을 켜고, Syncsign 앱을 실행하면 화면에 6자리 연결 코드가 표시돼요. 코드를 입력하면 바로 송출을 시작할 수 있어요.</p></div>`:''}
+    ${!p.stb?`<div class="ov-connect-note"><b>${IC.info}아직 셋탑 연결이 안됐어요</b><p>${STB_CODE_PAIRING?'셋탑박스를 TV에 연결하고 전원을 켜고, Syncsign 앱을 실행하면 화면에 6자리 연결 코드가 표시돼요. 코드를 입력하면 바로 송출을 시작할 수 있어요.'
+     :`셋탑박스를 TV에 연결하고 전원을 켠 뒤, Syncsign 앱에서 로그인해 화면 목록에서 '${p.name}'을 선택하면 바로 송출을 시작할 수 있어요.`}</p></div>`:''}
     <div class="dcard">
      <dl class="info-list">
       <div><dt>셋탑 연결</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span> <span class="badge badge-green">연결됨</span>`:'<span class="badge badge-amber">미연결</span> 셋탑박스 설치 대기'}</dd></div>
