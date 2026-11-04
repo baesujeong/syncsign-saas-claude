@@ -1208,7 +1208,7 @@ function openPanelDrawer(p,tab='overview'){
         <option value="" ${isStore&&d.store?'':'selected'} disabled hidden>선택</option>
         ${isStore?storeOptions(d.store).map(s=>`<option value="${s.id}" ${s.id===d.store?'selected':''}>${s.name}</option>`).join(''):''}
        </select></div>
-       ${!canStore?`<div class="wg-loc-addr">설치 매장이 지정되지 않은 화면이에요. <button type="button" class="lnk" id="loc-assign">매장 지정</button></div>`
+       ${!canStore?`<div class="wg-loc-addr">매장 미지정 화면이에요.</div>` /* 매장 지정은 필수가 아니므로 안내만 — 위치는 직접 입력으로 설정 */
         :isStore&&d.store?`<div class="wg-loc-addr">${sa?sa.text:'등록된 매장 주소가 없어 날씨 정보를 불러올 수 없어요. 직접 입력으로 위치를 설정해주세요.'}</div>`:''}
       </div>
       <button type="button" class="wg-loc-opt" data-lmode="manual"><span class="rdo ${!isStore?'on':''}"></span><span class="wg-loc-body"><b>직접 입력</b></span></button>
@@ -1227,7 +1227,6 @@ function openPanelDrawer(p,tab='overview'){
     const _ls=body.querySelector('#loc-store');if(_ls)_ls.onchange=e=>{d.store=e.target.value;drawLoc();};
     const _sd=body.querySelector('#loc-sido');if(_sd)_sd.onchange=e=>{d.sido=e.target.value;d.dong='';drawLoc();}; /* 상위 지역 변경 → 동·읍·면 초기화 */
     const _dg=body.querySelector('#loc-dong');if(_dg)_dg.onchange=e=>{d.dong=e.target.value;drawLoc();};
-    const _as=body.querySelector('#loc-assign');if(_as)_as.onclick=()=>openStorePicker([p],()=>{locDraft=null;draw('location');});
     if(ro)body.querySelectorAll('button,select').forEach(x=>x.disabled=true);
    };
    drawLoc();

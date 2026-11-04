@@ -1350,7 +1350,6 @@ table.grid tr.checked td{background:var(--blue-50)}
 .loc-tab .select{height:40px}
 .loc-tab .select.is-ph,.loc-tab .select:disabled{color:var(--text-3)}
 .loc-tab .select:disabled{background-color:var(--surface);cursor:not-allowed;opacity:1}
-.loc-tab .wg-loc-addr .lnk{font-size:13px}
 .wg-loc-opt:disabled{cursor:not-allowed;opacity:.5}
 /* 위치 미설정 경고 — 레드 톤(warn-note 레이아웃 재사용) */
 .warn-note.err-note{background:var(--red-bg);border-color:#EDCFCC;color:#B5433D}
