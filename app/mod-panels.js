@@ -1189,9 +1189,10 @@ function openPanelDrawer(p,tab='overview'){
    /* 화면 위치 — 날씨 위젯 기준 위치(panelWeatherLoc). 매장 주소 사용 / 직접 입력(지역 → 동·읍·면).
       편집값은 locDraft에 두고 [저장] 시 p.loc에 반영, [취소]·탭 이동 시 버린다.
       선택 변경 시에는 탭 본문만 다시 그린다(드로어 전체를 다시 그리면 등장 애니메이션이 반복됨). */
-   const canStore=!!p.store,ro=!canEdit('panels'); /* 뷰어: 조회 전용 — 컨트롤 비활성 + 푸터 숨김(ro-foot) */
+   /* 매장 주소 사용은 설치 매장이 없는 화면에서도 선택 가능 — 고른 매장의 주소를 위치로만 쓰고, 화면의 설치 매장(p.store)은 바꾸지 않는다 */
+   const hasStore=!!p.store,ro=!canEdit('panels'); /* 뷰어: 조회 전용 — 컨트롤 비활성 + 푸터 숨김(ro-foot) */
    if(!locDraft){const l=p.loc||{};
-    locDraft={mode:l.mode||(canStore?'store':'manual'),store:(l.mode!=='manual'&&l.store)||p.store||'',sido:l.mode==='manual'?l.sido:'',dong:l.mode==='manual'?l.dong:''};}
+    locDraft={mode:l.mode||(hasStore?'store':'manual'),store:(l.mode!=='manual'&&l.store)||p.store||'',sido:l.mode==='manual'?l.sido:'',dong:l.mode==='manual'?l.dong:''};}
    const d=locDraft;
    const ph=v=>v?'':' is-ph';
    const drawLoc=()=>{
@@ -1202,14 +1203,14 @@ function openPanelDrawer(p,tab='overview'){
      <p class="loc-desc">날씨 위젯은 이 화면에 등록된 위치를 기준으로 정보를 표시합니다.</p>
      ${saved?'':`<div class="warn-note err-note">${IC.info}<span><b>위치가 설정되지 않은 화면이에요.</b> 날씨 위젯이 포함된 콘텐츠를 송출해도 이 화면에는 날씨 정보가 표시되지 않아요.</span></div>`}
      <div class="wg-loc">
-      <button type="button" class="wg-loc-opt" data-lmode="store" ${canStore?'':'disabled'}><span class="rdo ${isStore?'on':''}"></span><span class="wg-loc-body"><b>매장 주소 사용</b></span></button>
+      <button type="button" class="wg-loc-opt" data-lmode="store"><span class="rdo ${isStore?'on':''}"></span><span class="wg-loc-body"><b>매장 주소 사용</b></span></button>
       <div class="wg-loc-fields">
-       <div class="wg-fld"><label for="loc-store">매장</label><select class="select${ph(isStore&&d.store)}" id="loc-store" ${isStore&&canStore?'':'disabled'}>
+       <div class="wg-fld"><label for="loc-store">매장</label><select class="select${ph(isStore&&d.store)}" id="loc-store" ${isStore?'':'disabled'}>
         <option value="" ${isStore&&d.store?'':'selected'} disabled hidden>선택</option>
         ${isStore?storeOptions(d.store).map(s=>`<option value="${s.id}" ${s.id===d.store?'selected':''}>${s.name}</option>`).join(''):''}
        </select></div>
-       ${!canStore?`<div class="wg-loc-addr">매장 미지정 화면이에요.</div>` /* 매장 지정은 필수가 아니므로 안내만 — 위치는 직접 입력으로 설정 */
-        :isStore&&d.store?`<div class="wg-loc-addr">${sa?sa.text:'등록된 매장 주소가 없어 날씨 정보를 불러올 수 없어요. 직접 입력으로 위치를 설정해주세요.'}</div>`:''}
+       ${isStore&&d.store?`<div class="wg-loc-addr">${sa?sa.text:'등록된 매장 주소가 없어 날씨 정보를 불러올 수 없어요. 직접 입력으로 위치를 설정해주세요.'}</div>`
+        :!hasStore?`<div class="wg-loc-addr">매장 미지정 화면이에요.</div>`:''}
       </div>
       <button type="button" class="wg-loc-opt" data-lmode="manual"><span class="rdo ${!isStore?'on':''}"></span><span class="wg-loc-body"><b>직접 입력</b></span></button>
       <div class="wg-loc-fields">
