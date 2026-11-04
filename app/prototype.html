@@ -445,6 +445,10 @@ let MY_TPLS=[
  {id:'t6',name:'디저트 메뉴판',folder:'tf2',ratio:'16:9',size:'2560×1440',mod:'06.18',fav:false,g:G.g8,e:'🍰',tt:'DESSERT'},
 ];
 MY_TPLS[0].by='김민규';MY_TPLS[1].by='박서연';MY_TPLS[3].by='이준호';MY_TPLS[4].by='박서연';
+/* 템플릿에 들어 있는 위젯 종류(widgets) — 송출 전 '날씨 위젯 × 위치 미설정 화면' 안내 판단에 사용.
+   [MOCK DATA] 데모: '여름 스무디 프로모션'에 날씨 위젯 포함. 에디터 저장 시 __setTplWidgets로 갱신.
+   TODO(API): 템플릿 저장 시 서버가 포함 위젯 메타를 함께 저장·반환 */
+MY_TPLS[1].widgets=['weather'];
 const GAL_USE=['메뉴','이벤트','광고','안내','소개','기타'];
 const GAL_PLACE=['건강','교육기관','기업','공공 · 센터 · 협회','병원 · 의원','여행 · 관광','요식업','부동산','의류 · 뷰티','종교단체','판매','기타'];
 const GAL_UE={메뉴:'🍽️',이벤트:'🎉',광고:'📢',안내:'ℹ️',소개:'✨',기타:'📄'};
@@ -495,6 +499,9 @@ const plDur=pl=>pl.items.reduce((n,i)=>n+i.d,0);
    폴더 트리(lf/tf/pf)와 폴더 헬퍼(fFlat/fDescIds/fPath)도 함께 노출해 선택기에서 폴더 탐색 지원 */
 window.__assets=()=>({lib:LIB,tpls:MY_TPLS,gals:GALLERY,pls:PLAYLISTS,plDur,durFmt,
  lf:LIB_FOLDERS,tf:MY_FOLDERS,pf:PL_FOLDERS,fFlat,fDescIds,fPath});
+/* 에디터 저장 시 템플릿의 포함 위젯 메타 갱신 — 데모 에디터는 템플릿 id를 들고 있지 않아 콘텐츠 이름으로 매칭한다.
+   TODO(API): 서버 연동 시 템플릿 id 기준 저장 응답으로 대체 */
+window.__setTplWidgets=(name,kinds)=>{const t=MY_TPLS.find(x=>x.name===name);if(t)t.widgets=[...new Set(kinds||[])];};
 /* 신규 가입 직후 환경: 최고관리자 계정·템플릿 갤러리·카테고리 구조만 남기고 모든 등록 데이터 비움 */
 if(window.EMPTY_MODE){
  USERS=USERS.filter(u=>u.role==='owner');

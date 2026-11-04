@@ -71,6 +71,11 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 | `renamePanel` | 화면 이름 변경 | PUT |
 | `openStbModal`(연결/재연결) | 셋탑 연결 | 연결 코드 검증/등록 API — **이번 출시 버전은 미사용**(`STB_CODE_PAIRING=false`, 아래 참고) |
 | `detachStb` | 셋탑 연결 해제 | PUT/DELETE |
+| `openPanelDrawer` 위치 탭(`#loc-save`) | 화면 위치 저장(날씨 기준) | PUT — payload `p.loc` (`{mode:'store'}` · `{mode:'store',store}` · `{mode:'manual',sido,dong}`), 화면 조회 응답에 `loc` 포함 |
+| `WX_SIDO`/`WX_DONGS` (mod-panels.js) | 지역 → 동·읍·면 선택지 | 행정구역(법정동) 코드 조회 API (현재 데모용 일부 목록) |
+| `storeAddr()` (mod-panels.js) | 매장 주소(날씨 기준 위치) | 매장 조회 응답의 주소 + 행정동 코드 (현재 mock 주소 생성) |
+| `panelWeatherLoc()` (mod-panels.js) | 송출 시 날씨 조회 위치 | 셋탑/플레이어(또는 송출 서버)가 **화면 위치**로 날씨 API 조회 — 템플릿에는 위치 저장 안 함 |
+| `window.__setTplWidgets` · 템플릿 `widgets` 메타 | 템플릿 포함 위젯 종류 | 템플릿 저장 시 포함 위젯 메타 저장·반환 (`wxLocPreflight` 판단에 사용) |
 | `openStorePicker`(매장 지정) | 화면-매장 지정 | PUT |
 | `openGroupModal` | 그룹 생성 | POST |
 | `bindListEvents`의 `[data-fav]` 토글 | 화면 즐겨찾기 | 사용자별 즐겨찾기 저장 PUT/DELETE (현재 로컬 `p.fav`만 변경) |
@@ -103,6 +108,10 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 1. LNB `화면 관리` → `mountLegacy('panels')` → `renderAll()` (`renderStats/renderRail/renderScope/renderList`).
 2. 카드/행 클릭 → `openPanelDrawer()` (상세: 개요/일정/정보/네트워크/스크린샷/로그 탭 — 조회 전용 데모).
 3. `화면 추가` → `openAddPanelModal` → 셋탑 연결(`openStbModal`). ⋯ 메뉴 → 이름변경/재연결/해제/삭제/일정편집.
+   - **화면 위치 · 날씨 위젯(2026-11)**: 날씨 위젯은 템플릿이 아니라 **송출되는 화면에 등록된 위치**로 날씨를 표시한다(같은 템플릿도 화면마다 그 지역 날씨).
+     위치는 화면 상세 Drawer **[위치] 탭**에서 화면 단위로 저장 — 매장 주소 사용(기본값: 설치 매장 주소) / 직접 입력(지역 → 동·읍·면, 지역 변경 시 동·읍·면 초기화).
+     `p.loc`이 없고 설치 매장도 없으면 '위치 미설정'(정보 탭 배지·위치 탭 경고). 에디터 날씨 위젯 패널에는 위치 입력 대신 안내 + [화면 위치 설정 방법 보기] 모달(`openWxLocGuide` — 실제 화면을 단순화한 HTML/CSS 일러스트 모션 + 재생 위치 연동 3단계, 화면 UI가 크게 바뀌면 `wlmWorldHtml` 마크업도 맞춤).
+     날씨 위젯 템플릿을 위치 미설정 화면에 송출하면 `wxLocPreflight`가 안내 모달(그대로 송출 / 화면별 [위치 설정])을 띄운다 — 편성표 [송출하기]·목록 ⋯ [송출하기] 공통. 에디터 송출 모달도 화면별 날씨 위치·미설정 경고 표시.
    - **셋탑 연결 방식(2026-11, 이번 출시 버전)**: 연결 코드 방식이 아닌 **기존 방식** — CMS에서 화면을 등록해 두면, 셋탑 앱에서 계정으로 로그인한 뒤 화면 목록에서 해당 화면을 선택해 연결한다.
      `prototype.html`의 `STB_CODE_PAIRING=false`로 연결 코드 입력 UI를 모두 숨김(온보딩 4단계 · 화면 추가 모달 연결 코드 항목/안내 · ⋯ 메뉴 셋탑 연결하기/재연결 · 드로어 [셋탑 연결하기] · 토스트 [지금 연결]/[다시 연결]).
      코드는 삭제하지 않았으므로 코드 방식 도입 시 `true`로 바꾸면 복구된다. 서버 측에는 셋탑 로그인·화면 목록 조회·화면 선택(바인딩) API가 필요하다(셋탑 앱 영역).

@@ -207,6 +207,59 @@ const noRegionStores=()=>STORES.filter(s=>!s.region||!REGIONS.some(r=>r.id===s.r
    더 많은 매장 중에서 고를 때는 검색이 되는 매장 선택 모달(openStorePicker)을 쓴다. */
 const storeOptions=cur=>{const arr=STORES.slice(0,50),c=cur&&storeOf(cur);if(c&&!arr.includes(c))arr.unshift(c);return arr};
 const panelOf=id=>PANELS.find(p=>p.id===id);
+/* ═══════════ 화면 위치 (날씨 위젯 기준 위치) ═══════════
+   날씨 위젯은 템플릿에 위치를 저장하지 않고, 실제로 송출되는 '화면'에 등록된 위치로 날씨를 조회한다.
+   → 같은 템플릿을 서울·부산 화면에 송출해도 각 화면 위치의 날씨가 표시된다.
+   p.loc 형태(화면 단위 저장):
+     null/없음                                → 기본값: 설치 매장이 있으면 매장 주소, 없으면 '위치 미설정'
+     {mode:'store'}                           → 설치 매장 주소 사용(화면의 매장이 바뀌면 함께 따라감)
+     {mode:'store',store:'<매장 id>'}         → 설치 매장이 아닌 다른 매장의 주소를 명시적으로 사용
+     {mode:'manual',sido:'경기',dong:'정자동'} → 직접 입력(지역 → 동·읍·면)
+   TODO(API): 화면 조회 응답에 위치(loc) 포함 · 저장은 PUT. 동·읍·면 목록(WX_DONGS)은 행정구역(법정동) 코드 API로 대체.
+   TODO(API): 송출 시 셋탑/플레이어(또는 송출 서버)가 panelWeatherLoc(화면) 위치로 날씨 API를 조회 —
+              위치를 바꾸면 다음 조회부터 바뀐 위치의 날씨가 표시된다(재송출 불필요). */
+const WX_SIDO={서울:'서울특별시',경기:'경기도',인천:'인천광역시',부산:'부산광역시',대구:'대구광역시',대전:'대전광역시',광주:'광주광역시',강원:'강원특별자치도',제주:'제주특별자치도'};
+/* 지역 → 동·읍·면 [이름, 시·군·구]. [MOCK DATA] 데모용 일부 목록 */
+const WX_DONGS={
+ 서울:[['역삼동','강남구'],['삼성동','강남구'],['서교동','마포구'],['성수동2가','성동구'],['여의도동','영등포구'],['잠실동','송파구'],['명동','중구'],['신촌동','서대문구'],['화양동','광진구'],['목동','양천구'],['상계동','노원구'],['마곡동','강서구']],
+ 경기:[['삼평동','성남시 분당구'],['매산로1가','수원시 팔달구'],['장항동','고양시 일산동구'],['서현동','성남시 분당구'],['이의동','수원시 영통구'],['평택동','평택시'],['정자동','성남시 분당구'],['상대원동','성남시 중원구'],['청계동','의왕시']],
+ 인천:[['운서동','중구'],['송도동','연수구'],['부평동','부평구'],['구월동','남동구']],
+ 부산:[['부전동','부산진구'],['우동','해운대구'],['광안동','수영구'],['초량동','동구']],
+ 대구:[['삼덕동','중구'],['두산동','수성구'],['칠성동','북구']],
+ 대전:[['둔산동','서구'],['정동','동구']],
+ 광주:[['충장로1가','동구'],['치평동','서구']],
+ 강원:[['조양동','춘천시'],['견소동','강릉시']],
+ 제주:[['용담이동','제주시'],['성산읍','서귀포시']],
+};
+const wxDong=(sido,dong)=>(WX_DONGS[sido]||[]).find(d=>d[0]===dong)||null;
+const wxManualLabel=(sido,dong)=>{const d=wxDong(sido,dong);return [WX_SIDO[sido]||sido,d?d[1]:'',dong].filter(Boolean).join(' ');};
+/* 매장 주소 — 매장 관리에서 등록한 매장은 s.addr(실주소) 우선, 그 외 [MOCK DATA]는 지역·순번으로 결정적 생성(지번 주소).
+   반환 null = 주소 없음(지역 미설정 매장 등). TODO(API): 매장 조회 응답의 주소(+ 행정동 코드)로 대체 */
+function storeAddr(s){
+ if(!s)return null;
+ const r=REGIONS.find(x=>x.id===s.region);
+ if(s.addr)return {sido:r?r.name:'',dong:'',text:s.addr};
+ const list=r&&WX_DONGS[r.name];if(!list)return null;
+ const i=Math.max(0,r.storeIds.indexOf(s.id)),[dong,sgg]=list[i%list.length];
+ return {sido:r.name,dong,text:`${WX_SIDO[r.name]} ${sgg} ${dong} ${100+(i*37)%880}`};
+}
+/* 화면의 날씨 조회 위치 — 송출 데이터의 기준. null = '위치 미설정'(날씨를 불러올 수 없음) */
+function panelWeatherLoc(p){
+ if(!p)return null;
+ const l=p.loc||{mode:'store'}; /* 따로 설정하지 않았다면 설치 매장 주소가 기본 위치 */
+ if(l.mode==='manual')return l.sido&&l.dong?{src:'manual',sido:l.sido,dong:l.dong,label:wxManualLabel(l.sido,l.dong)}:null;
+ const sid=l.store||p.store,a=storeAddr(storeOf(sid));
+ return a?{src:'store',store:sid,sido:a.sido,dong:a.dong,label:a.text}:null;
+}
+/* 콘텐츠(편성 참조)에 날씨 위젯이 들어 있는지 — 위젯은 템플릿('T:')에만 들어간다(재생목록·라이브러리는 미디어만).
+   템플릿의 widgets 메타는 에디터 저장 시 갱신(window.__setTplWidgets). TODO(API): 템플릿 조회 응답의 포함 위젯 메타 사용 */
+function contentHasWeather(ref){
+ const s=String(ref||'');if(s.slice(0,2)!=='T:')return false;
+ const A=window.__assets&&window.__assets();if(!A)return false;
+ const t=A.tpls.find(x=>x.id===s.slice(2))||A.gals.find(x=>x.id===s.slice(2));
+ return !!(t&&(t.widgets||[]).includes('weather'));
+}
+window.__panelWeatherLoc=id=>panelWeatherLoc(panelOf(id));
 const ago=m=>m<1?'방금 전':m<60?`${m}분 전`:m<1440?`${Math.floor(m/60)}시간 전`:`${Math.floor(m/1440)}일 전`;
 let flt={q:'',status:'all',view:'all',store:null,region:null,group:null,wall:null,wallOnly:false,tags:[],sort:'issue'};
 /* 화면 태그 관리자 — TAGS를 원본으로, 모든 화면·필터·스마트뷰에 반영 */
@@ -1048,7 +1101,9 @@ function openPanelDrawer(p,tab='overview'){
  /* 네트워크·스크린샷 탭의 선택 날짜·정렬은 드로어가 열려 있는 동안 유지(탭 전환에도 보존).
     asc=false = 최신순(기본), asc=true = 오래된순 — 두 탭 동일 기준. */
  let netIdx=0,shotIdx=0,netAsc=false,shotAsc=false,logIdx=0,logAsc=false,logFilter='all';
+ let locDraft=null; /* 위치 탭 편집 중인 값 — 다른 탭으로 이동하면 버린다 */
  const draw=(tab)=>{
+  if(tab!=='location')locDraft=null;
   const st=!p.stb?['셋탑 미연결','badge-amber']:p.status==='on'?(p.unsch?['미편성','badge-amber']:['온라인','badge-green']):['오프라인','badge-gray'];
   wrap.innerHTML=`<div class="drawer" role="dialog" aria-modal="true">
    <div class="drawer-head">
@@ -1057,16 +1112,18 @@ function openPanelDrawer(p,tab='overview'){
     <button class="icon-btn" data-close style="margin-left:auto" aria-label="닫기">${IC.x}</button>
    </div>
    <div class="dtabs">
-    ${[['overview','개요'],['schedule','일정'],['info','정보'],['network','네트워크'],['screenshot','스크린샷'],['log','활동 로그']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-dtab="${k}">${l}</button>`).join('')}
+    ${[['overview','개요'],['schedule','일정'],['info','정보'],['network','네트워크'],['screenshot','스크린샷'],['log','활동 로그'],['location','위치']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-dtab="${k}">${l}</button>`).join('')}
    </div>
    <div class="drawer-body">
     <div id="dtab-body"></div>
    </div>
-   <div class="drawer-foot ro-foot">
+   ${tab==='location'?`<div class="drawer-foot loc-foot ro-foot">
+    <span class="grow"></span><button class="btn" id="loc-cancel">취소</button><button class="btn btn-primary" id="loc-save">저장</button>
+   </div>`:`<div class="drawer-foot ro-foot">
     <button class="btn btn-icon" id="d-more" aria-label="화면 관리">${IC.dots}</button>
     ${p.stb||!STB_CODE_PAIRING?`<button class="btn btn-primary" id="d-sched" style="flex:1">${IC.cal}일정 편집</button>`
     :`<button class="btn btn-primary" id="d-stb-connect" style="flex:1">${STB_IC(14)}셋탑 연결하기</button>`}
-   </div></div>`;
+   </div>`}</div>`;
   wrap.querySelector('[data-close]').onclick=()=>wrap.remove();
   wrap.querySelectorAll('[data-dtab]').forEach(b=>b.onclick=()=>draw(b.dataset.dtab));
   const _more=wrap.querySelector('#d-more');if(_more)_more.onclick=()=>panelManageMenu(_more,p,{after:()=>draw(tab),onDelete:()=>wrap.remove()});
@@ -1121,11 +1178,77 @@ function openPanelDrawer(p,tab='overview'){
      <div><dt>네트워크</dt><dd>${!p.stb?'—':p.status==='off'?'연결 끊김':'유선 · 32ms'}</dd></div>
      <div><dt>셋탑 S/N</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span>`:'<span class="badge badge-amber">미연결</span>'}</dd></div>
      <div><dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd></div>
+     <div style="grid-column:1/-1"><dt>위치 <span class="dt-hint">날씨 위젯 기준</span></dt><dd>${(L=>L?L.label:'<span class="badge badge-amber">위치 미설정</span>')(panelWeatherLoc(p))} <button class="lnk perm-lock" id="if-loc">${panelWeatherLoc(p)?'변경':'위치 설정'}</button></dd></div>
     </dl></div>
    <div class="dcard"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3>
     <div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요. <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>`;
    const _st=body.querySelector('#if-store');if(_st)_st.onclick=()=>openStorePicker([p],()=>draw('info'));
+   const _lo=body.querySelector('#if-loc');if(_lo)_lo.onclick=()=>draw('location');
    body.querySelectorAll('[data-ptag-edit]').forEach(b=>b.onclick=tagEdit);
+  }else if(tab==='location'){
+   /* 화면 위치 — 날씨 위젯 기준 위치(panelWeatherLoc). 매장 주소 사용 / 직접 입력(지역 → 동·읍·면).
+      편집값은 locDraft에 두고 [저장] 시 p.loc에 반영, [취소]·탭 이동 시 버린다.
+      선택 변경 시에는 탭 본문만 다시 그린다(드로어 전체를 다시 그리면 등장 애니메이션이 반복됨). */
+   const canStore=!!p.store,ro=!canEdit('panels'); /* 뷰어: 조회 전용 — 컨트롤 비활성 + 푸터 숨김(ro-foot) */
+   if(!locDraft){const l=p.loc||{};
+    locDraft={mode:l.mode||(canStore?'store':'manual'),store:(l.mode!=='manual'&&l.store)||p.store||'',sido:l.mode==='manual'?l.sido:'',dong:l.mode==='manual'?l.dong:''};}
+   const d=locDraft;
+   const ph=v=>v?'':' is-ph';
+   const drawLoc=()=>{
+    const isStore=d.mode==='store',saved=panelWeatherLoc(p);
+    const sa=isStore&&d.store?storeAddr(storeOf(d.store)):null;
+    body.innerHTML=`<div class="loc-tab">
+     <h3 class="loc-title">화면 위치 설정</h3>
+     <p class="loc-desc">날씨 위젯은 이 화면에 등록된 위치를 기준으로 정보를 표시합니다.</p>
+     ${saved?'':`<div class="warn-note">${IC.info}<span><b>위치가 설정되지 않은 화면이에요.</b> 날씨 위젯이 포함된 콘텐츠를 송출해도 이 화면에는 날씨 정보가 표시되지 않아요.</span></div>`}
+     <div class="wg-loc">
+      <button type="button" class="wg-loc-opt" data-lmode="store" ${canStore?'':'disabled'}><span class="rdo ${isStore?'on':''}"></span><span class="wg-loc-body"><b>매장 주소 사용</b></span></button>
+      <div class="wg-loc-fields">
+       <div class="wg-fld"><label for="loc-store">매장</label><select class="select${ph(isStore&&d.store)}" id="loc-store" ${isStore&&canStore?'':'disabled'}>
+        <option value="" ${isStore&&d.store?'':'selected'} disabled hidden>선택</option>
+        ${isStore?storeOptions(d.store).map(s=>`<option value="${s.id}" ${s.id===d.store?'selected':''}>${s.name}</option>`).join(''):''}
+       </select></div>
+       ${!canStore?`<div class="wg-loc-addr">설치 매장이 지정되지 않은 화면이에요. <button type="button" class="lnk" id="loc-assign">매장 지정</button></div>`
+        :isStore&&d.store?`<div class="wg-loc-addr">${sa?sa.text:'등록된 매장 주소가 없어 날씨 정보를 불러올 수 없어요. 직접 입력으로 위치를 설정해주세요.'}</div>`:''}
+      </div>
+      <button type="button" class="wg-loc-opt" data-lmode="manual"><span class="rdo ${!isStore?'on':''}"></span><span class="wg-loc-body"><b>직접 입력</b></span></button>
+      <div class="wg-loc-fields">
+       <div class="wg-fld"><label for="loc-sido">지역</label><select class="select${ph(!isStore&&d.sido)}" id="loc-sido" ${isStore?'disabled':''}>
+        <option value="" ${!isStore&&d.sido?'':'selected'} disabled hidden>선택</option>
+        ${!isStore?Object.keys(WX_DONGS).map(k=>`<option value="${k}" ${k===d.sido?'selected':''}>${k}</option>`).join(''):''}
+       </select></div>
+       <div class="wg-fld"><label for="loc-dong">동·읍·면</label><select class="select${ph(!isStore&&d.dong)}" id="loc-dong" ${isStore||!d.sido?'disabled':''}>
+        <option value="" ${!isStore&&d.dong?'':'selected'} disabled hidden>선택</option>
+        ${!isStore?(WX_DONGS[d.sido]||[]).map(([n,g])=>`<option value="${n}" ${n===d.dong?'selected':''}>${n} (${g})</option>`).join(''):''}
+       </select><div class="ferr" id="loc-err" style="display:none"></div></div>
+      </div>
+     </div></div>`;
+    body.querySelectorAll('[data-lmode]').forEach(b=>b.onclick=()=>{if(b.disabled||d.mode===b.dataset.lmode)return;d.mode=b.dataset.lmode;if(d.mode==='store'&&!d.store)d.store=p.store||'';drawLoc();});
+    const _ls=body.querySelector('#loc-store');if(_ls)_ls.onchange=e=>{d.store=e.target.value;drawLoc();};
+    const _sd=body.querySelector('#loc-sido');if(_sd)_sd.onchange=e=>{d.sido=e.target.value;d.dong='';drawLoc();}; /* 상위 지역 변경 → 동·읍·면 초기화 */
+    const _dg=body.querySelector('#loc-dong');if(_dg)_dg.onchange=e=>{d.dong=e.target.value;drawLoc();};
+    const _as=body.querySelector('#loc-assign');if(_as)_as.onclick=()=>openStorePicker([p],()=>{locDraft=null;draw('location');});
+    if(ro)body.querySelectorAll('button,select').forEach(x=>x.disabled=true);
+   };
+   drawLoc();
+   wrap.querySelector('#loc-cancel').onclick=()=>{locDraft=null;draw('location');};
+   wrap.querySelector('#loc-save').onclick=()=>{
+    const err=body.querySelector('#loc-err');
+    if(d.mode==='manual'){
+     if(!d.sido||!d.dong){
+      const f=body.querySelector(d.sido?'#loc-dong':'#loc-sido');f.classList.add('error');f.focus();
+      err.textContent=d.sido?'동·읍·면을 선택해주세요.':'지역을 선택해주세요.';err.style.display='flex';return;
+     }
+     p.loc={mode:'manual',sido:d.sido,dong:d.dong};
+    }else{
+     if(!d.store)return toast('위치로 사용할 매장을 선택해주세요.',{err:true});
+     p.loc=d.store===p.store?{mode:'store'}:{mode:'store',store:d.store}; /* 설치 매장이면 매장 변경 시 함께 따라가도록 id를 고정하지 않는다 */
+    }
+    /* TODO(API): 화면 위치 저장 PUT (payload = p.loc). 저장 후 송출 중인 날씨 위젯은 다음 조회부터 새 위치로 표시 */
+    locDraft=null;draw('location');
+    const L=panelWeatherLoc(p);
+    toast(L?`화면 위치를 저장했어요. 이 화면의 날씨는 '${L.label}' 기준으로 표시돼요.`:'화면 위치를 저장했어요. 매장 주소가 없어 날씨 정보는 표시되지 않아요.');
+   };
   }else if(tab==='network'){
    const H=netHistory(p);
    if(netIdx>H.days.length-1)netIdx=Math.max(0,H.days.length-1);
@@ -1611,7 +1734,7 @@ function progRowMenu(anchor,p){
      if(!p.blocks||!p.blocks.length){toast('송출하려면 일정을 한 개 이상 등록해주세요.',{err:true});return}
      if(!progUnique(p).length){toast('송출할 화면(대상)을 먼저 지정해주세요.',{err:true});return}
      const pr=progPeriod(p);if(pr&&pr.ed&&pr.ed<PROG_NOW){toast('편성 종료일이 지났어요. 편집에서 편성 기간을 먼저 수정해주세요.',{err:true});return}
-     p.broadcast=true;drawProgFilters();drawProgList();toast(`'${p.name||'편성표'}' 송출을 시작했어요.`);}}];
+     wxLocPreflight(p,()=>{p.broadcast=true;drawProgFilters();drawProgList();toast(`'${p.name||'편성표'}' 송출을 시작했어요.`);});}}];
    if(st.k==='scheduled'||st.k==='live')return[{label:'송출 중단',icon:IC.liveoff,onClick:()=>{p.broadcast=false;drawProgFilters();drawProgList();toast(`'${p.name||'편성표'}' 송출을 중단했어요.`);}}];
    return[];})(),
   'sep',
@@ -1835,7 +1958,30 @@ function saveProgram(broadcast){
   {width:'440px',onMount:ov=>{ov.querySelector('#prog-nt-pick').onclick=()=>{ov.remove();openScopePicker({scopes:curProg.scopes,onChange:renderProgTargets});};}});
   return;
  }
+ if(broadcast)return wxLocPreflight(curProg,()=>commitProgram(true));
  commitProgram(broadcast);
+}
+/* 날씨 위젯 송출 사전 확인 — 날씨 위젯이 든 콘텐츠(템플릿)를 위치 미설정 화면에 송출하려 하면 안내 모달을 띄운다.
+   날씨는 송출되는 '화면'의 위치(panelWeatherLoc)로 조회되므로, 위치가 없는 화면에는 날씨 정보가 표시되지 않는다.
+   안내 후 [그대로 송출]로 진행하거나, [위치 설정]으로 해당 화면의 상세 Drawer 위치 탭을 바로 연다.
+   prog: 편성표(blocks·scopes) · onGo: 실제 송출 실행. 해당 사항이 없으면 onGo를 바로 호출한다. */
+function wxLocPreflight(prog,onGo){
+ const refs=[...new Set((prog.blocks||[]).map(b=>b.content))].filter(contentHasWeather);
+ const miss=refs.length?progUnique(prog).map(panelOf).filter(p=>p&&!panelWeatherLoc(p)):[];
+ if(!miss.length)return onGo();
+ const names=refs.map(r=>`'${(contentOf(r)||{}).name}'`).join(', '),show=miss.slice(0,5);
+ openModal(`
+  <div class="modal-head"><div><h2>위치가 설정되지 않은 화면이 있어요</h2><div class="sub">${names}에 날씨 위젯이 포함돼 있어요. 아래 화면 ${fmt(miss.length)}개는 위치가 없어 날씨 정보가 표시되지 않아요.</div></div><button class="icon-btn" data-close aria-label="닫기">${IC.x}</button></div>
+  <div class="modal-body">
+   <div class="wxm-list">${show.map(p=>`<div class="wxm-row"><span class="wxm-nm"><b>${p.name}</b><span>${storeName(p.store)}</span></span><span class="badge badge-amber">위치 미설정</span><button class="btn btn-sm" data-wxloc="${p.id}">위치 설정</button></div>`).join('')}
+   ${miss.length>show.length?`<div class="wxm-more">외 ${fmt(miss.length-show.length)}개 화면</div>`:''}</div>
+   <div class="info-note" style="margin-top:12px">${IC.info}<span>화면 관리 › 화면 상세 › <b>[위치]</b> 탭에서 위치를 등록하면, 송출 중에도 해당 지역의 날씨가 자동으로 표시돼요.</span></div>
+  </div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="wxm-go">그대로 송출</button></div>`,
+ {width:'520px',onMount:ov=>{
+  ov.querySelector('#wxm-go').onclick=()=>{ov.remove();onGo();};
+  ov.querySelectorAll('[data-wxloc]').forEach(b=>b.onclick=()=>{ov.remove();openPanelDrawer(panelOf(b.dataset.wxloc),'location');});
+ }});
 }
 function backToSchedList(){
  $('#screen-schedule').hidden=true;$('#app').hidden=false;
@@ -2699,6 +2845,7 @@ window.__syncStore=s=>{
  let st=STORES.find(x=>x.id===s.id);
  if(!st){st={id:s.id,name:s.name,region:rid};STORES.push(st);}
  else{st.name=s.name;st.region=rid;} /* 수정 시 지역 변경·해제 반영 */
+ st.addr=(s.addr||'').trim()||null; /* 매장 주소 — '매장 주소 사용' 화면의 날씨 기준 위치(storeAddr) */
  /* 모든 지역 버킷에서 제거 후 새 지역에만 추가 — 지역 미설정이면 어떤 버킷에도 넣지 않는다 */
  REGIONS.forEach(r=>{const i=r.storeIds.indexOf(st.id);if(i>=0)r.storeIds.splice(i,1);});
  if(rid){const r=REGIONS.find(x=>x.id===rid);if(r&&!r.storeIds.includes(st.id))r.storeIds.push(st.id);}

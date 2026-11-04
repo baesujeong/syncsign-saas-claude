@@ -796,30 +796,10 @@ function callWidgetHtml(layout,theme,w){
   return `<div class="wg-call2 cl-ticket ${t}"${u}><div class="cp-big hi">00001</div><div class="cp-grid">${cell('00002')}${cell('00003')}${cell('00004')}${cell('00005')}${cell('00006')}${cell('00007')}</div></div>`;
  return `<div class="wg-call2 cl-pickup ${t}"${u}><div class="cp-title">PICK UP</div><div class="cp-sub"><b>영수증</b> 번호를 확인해주세요</div><div class="cp-grid">${cell(129,1)}${cell(128)}${cell(127)}${cell(126)}${cell(125)}${cell(124)}${cell(123)}${cell('')}</div></div>`;
 }
-/* 날씨 위젯 : 국가 → 지역(시·도) 2단 선택 (글로벌 사용자 지원) */
-const WEATHER_REGIONS={
- '대한민국':['서울특별시','부산광역시','인천광역시','대구광역시','대전광역시','광주광역시','제주특별자치도'],
- '일본':['도쿄','오사카','후쿠오카','삿포로'],
- '미국':['뉴욕','로스앤젤레스','시카고','샌프란시스코'],
- '호주':['시드니','멜버른','브리즈번'],
- '싱가포르':['싱가포르'],
- '베트남':['호치민','하노이','다낭'],
- '영국':['런던','맨체스터'],
-};
-/* 매장 목록 — 매장 관리에 등록된 매장(주소=국가·지역). TODO(API): 매장 관리 데이터와 연동. 빈 배열이면 미등록(직접 설정 유도) */
-let WX_STORES=[
- {id:'st1',name:'강남 본점',country:'대한민국',region:'서울특별시'},
- {id:'st2',name:'부산 서면점',country:'대한민국',region:'부산광역시'},
- {id:'st3',name:'제주 중문점',country:'대한민국',region:'제주특별자치도'},
- {id:'st4',name:'도쿄 시부야점',country:'일본',region:'도쿄'},
-];
-const wxStore=id=>WX_STORES.find(s=>s.id===id)||WX_STORES[0]||null;
-/* 날씨 위젯의 실제 조회 위치 — locMode(store/manual)에 따라 선택 매장 주소 또는 직접 설정값 반환. locMode 없으면(팔레트 프리뷰) 전달된 region 사용 */
-function weatherLoc(o){
- if(!o.locMode)return {country:o.country,region:o.region};
- if(o.locMode==='store'){const s=wxStore(o.storeId);if(s)return {country:s.country,region:s.region};}
- return {country:o.country||'대한민국',region:o.region||'서울특별시'};
-}
+/* 날씨 위젯 위치 — 템플릿(위젯)에는 위치를 저장하지 않는다(2026-11 정책).
+   송출되는 화면에 등록된 위치(화면 관리 › 화면 상세 › [위치] 탭, mod-panels.js panelWeatherLoc)로 날씨를 조회하므로
+   같은 템플릿이라도 화면마다 그 지역의 날씨가 표시된다. 에디터 캔버스에는 지역 대신 '화면 위치' 자리표시를 보여준다. */
+const WX_REGION_PH='화면 위치';
 const WEATHER_STYLES=[
  {id:'a',name:'타입 A',desc:'상세 정보(풍속·풍향·강수·미세먼지)',w:380,h:400},
  {id:'b',name:'타입 B',desc:'기온 + 아이콘',w:380,h:180},
@@ -1137,7 +1117,7 @@ function widgetInnerHtml(o){
  if(o.kind==='call')return callWidgetHtml(o.layout||'pickup',o.theme||'light',o.w);
  if(o.kind==='weather'){
   const u=((o.w||340)/100).toFixed(3);
-  const region=weatherLoc(o).region;
+  const region=o.preview?(o.region||'서울'):WX_REGION_PH; /* 팔레트 썸네일만 샘플 지역, 캔버스는 화면 위치 기준 */
   if(o.styleId==='b'){ /* 타입 B — 기온 + 아이콘 + 지역 (카드) */
    const sun=`<svg class="wb-ico" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="8.5" fill="#FFC629"/><g stroke="#FFC629" stroke-width="3.4" stroke-linecap="round"><path d="M20 3.2v4.4"/><path d="M20 32.4v4.4"/><path d="M6.6 6.6l3.1 3.1"/><path d="M30.3 30.3l3.1 3.1"/><path d="M3.2 20h4.4"/><path d="M32.4 20h4.4"/><path d="M6.6 33.4l3.1-3.1"/><path d="M30.3 9.7l3.1-3.1"/></g></svg>`;
    return `<div class="wg wg-wb" style="--u:${u}px"><div class="wb-top"><span class="wb-temp">28°</span>${sun}</div><span class="wb-region">${region}</span></div>`;
@@ -1917,7 +1897,7 @@ function drawWgBody(body,hasMenu){
  }else{
   /* 날씨·뉴스 — 대기/호출·메뉴 팔레트와 통일(썸네일 좌측 + 제목·설명 우측, 1행 배치) */
   const DEFS=wgTab==='weather'?WEATHER_STYLES:NEWS_STYLES;
-  const intro=wgTab==='weather'?'선택한 지역의 날씨 정보를 보여주는 위젯이에요.':'실시간 뉴스 헤드라인을 보여주는 위젯이에요.';
+  const intro=wgTab==='weather'?'송출되는 화면의 위치를 기준으로 날씨 정보를 보여주는 위젯이에요.':'실시간 뉴스 헤드라인을 보여주는 위젯이에요.';
   body.innerHTML=`<p class="wg-intro">${intro}</p>
    <div class="mtype-lib">${DEFS.map(d=>{const W=d.tw||d.w||340,H=d.th||d.h||180,sc=Math.min(88/W,56/H).toFixed(3);
      return `<button class="mtype-card" data-wgadd="${d.id}">
@@ -1927,7 +1907,7 @@ function drawWgBody(body,hasMenu){
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{
    const def=DEFS.find(d=>d.id===b.dataset.wgadd)||{};
    const props=wgTab==='weather'
-    ?{kind:'weather',styleId:b.dataset.wgadd,locMode:'store',storeId:(WX_STORES[0]||{}).id,country:'대한민국',region:'서울특별시',w:def.w,h:def.h} /* 기본: 매장 주소 사용(첫 매장) */
+    ?{kind:'weather',styleId:b.dataset.wgadd,w:def.w,h:def.h} /* 위치는 화면 단위로 관리 — 위젯에는 저장하지 않음 */
     :{kind:'news',styleId:b.dataset.wgadd,w:def.w,h:def.h};
    addObject('widget',props);
   });
@@ -2527,7 +2507,7 @@ function renderTypeProps(o,el){
  /* 위젯(메뉴·대기/호출·날씨·뉴스)은 각 전용 패널에서 처리 — 여기서는 아코디언 토글만 */
  el.querySelectorAll('[data-acc]').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
 }
-/* ═══════════ 에디터 : 날씨·뉴스 위젯 전용 패널 — 정렬 / 순서 / 사이즈 조정(비율 고정) + (날씨) 위치 ═══════════ */
+/* ═══════════ 에디터 : 날씨·뉴스 위젯 전용 패널 — 정렬 / 순서 / 사이즈 조정(비율 고정) + (날씨) 화면 위치 안내 ═══════════ */
 function renderWnPanel(o){
  const set=$('#panel-settings');
  const title=o.kind==='weather'?'날씨 위젯':'뉴스 위젯';
@@ -2549,7 +2529,7 @@ function renderWnPanel(o){
     </div>
     <p class="cw-hint">지정된 비율로만 확대·축소돼요</p>
    </div>
-   ${o.kind==='weather'?`<div class="bg-divider"></div>${weatherLocSec(o)}`:''}
+   ${o.kind==='weather'?`<div class="bg-divider"></div>${wxLocNoticeHtml()}`:''}
   </div>`;
  set.querySelector('#wn-copy').onclick=()=>duplicateSelection();
  set.querySelector('#wn-delete').onclick=()=>{deleteSelected();toast('위젯을 삭제했어요');};
@@ -2557,44 +2537,144 @@ function renderWnPanel(o){
  const wIn=set.querySelector('#wn-w'),hIn=set.querySelector('#wn-h');
  wIn.addEventListener('change',()=>{let v=parseFloat(wIn.value);if(isNaN(v))v=o.w;v=Math.max(40,v);o.w=Math.round(v);o.h=Math.round(v/ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
  hIn.addEventListener('change',()=>{let v=parseFloat(hIn.value);if(isNaN(v))v=o.h;v=Math.max(40,v);o.h=Math.round(v);o.w=Math.round(v*ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
- if(o.kind==='weather')bindWeatherLoc(o,set);
+ const _wg=set.querySelector('#wx-loc-guide');if(_wg)_wg.onclick=openWxLocGuide;
 }
-/* 날씨 위젯 위치 섹션 마크업 (tx-sec) — 매장 주소 사용(매장 선택+주소) / 직접 설정(국가·지역) */
-function weatherLocSec(o){
- const manual=o.locMode==='manual';
- const countries=Object.keys(WEATHER_REGIONS);
- const regions=WEATHER_REGIONS[o.country]||WEATHER_REGIONS['대한민국'];
- const store=wxStore(o.storeId);
- const storeFields=WX_STORES.length
-  ?`<div class="wg-loc-fields">
-     <div class="wg-fld"><label>매장</label><select class="select select-sm" id="wg-store">${WX_STORES.map(s=>`<option value="${s.id}" ${store&&store.id===s.id?'selected':''}>${s.name}</option>`).join('')}</select></div>
-     ${store?`<div class="wg-loc-addr">${store.country} · ${store.region}</div>`:''}
-    </div>`
-  :`<div class="wg-loc-fields"><div class="wg-loc-warn">등록된 매장 주소가 없어 날씨 정보를 불러올 수 없어요.<br>'직접 설정'을 선택해 위치를 입력해주세요.</div></div>`;
- return `<div class="tx-sec"><div class="tx-sec-lbl">위치</div><div class="wg-loc">
-   <button type="button" class="wg-loc-opt" data-locmode="store"><span class="rdo ${!manual?'on':''}"></span><span class="wg-loc-body"><b>매장 주소 사용</b></span></button>
-   ${!manual?storeFields:''}
-   <button type="button" class="wg-loc-opt" data-locmode="manual"><span class="rdo ${manual?'on':''}"></span><span class="wg-loc-body"><b>직접 설정</b></span></button>
-   ${manual?`<div class="wg-loc-fields">
-    <div class="wg-fld"><label>국가</label><select class="select select-sm" id="wg-country">${countries.map(c=>`<option ${o.country===c?'selected':''}>${c}</option>`).join('')}</select></div>
-    <div class="wg-fld"><label>지역</label><select class="select select-sm" id="wg-region">${regions.map(r=>`<option ${o.region===r?'selected':''}>${r}</option>`).join('')}</select></div>
-   </div>`:''}
-  </div></div>`;
+/* 날씨 위젯 패널 — 화면 위치 안내 영역(위치 입력 UI 대신). 위치는 화면 관리에서 화면 단위로 등록한다 */
+function wxLocNoticeHtml(){
+ const alertIc='<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#9CA3AF"/><path d="M12 7v6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.3" fill="#fff"/></svg>';
+ return `<div class="tx-sec"><div class="info-note wx-loc-note">${alertIc}<div>
+   <p><b>날씨 정보를 표시하려면 화면 위치가 필요해요.</b><br>날씨는 실제 송출되는 화면의 위치를 기준으로 표시돼요. 화면마다 위치를 등록하면 해당 지역의 날씨 정보를 자동으로 불러옵니다.</p>
+   <button type="button" class="wx-loc-link" id="wx-loc-guide">화면 위치 설정 방법 보기</button>
+  </div></div></div>`;
 }
-/* 날씨 위젯 위치 컨트롤 바인딩 — 방식 전환(직접 설정값 보관·복원) + 매장/국가/지역 변경 */
-function bindWeatherLoc(o,el){
- el.querySelectorAll('[data-locmode]').forEach(b=>b.onclick=()=>{
-  const m=b.dataset.locmode;if((o.locMode||'store')===m)return;
-  o.locMode=m;
-  if(m==='store'&&!o.storeId)o.storeId=(WX_STORES[0]||{}).id;
-  if(m==='manual'){o.country=o.country||'대한민국';o.region=o.region||(WEATHER_REGIONS[o.country||'대한민국']||[])[0];} /* 직접 설정 복원(보관된 값 유지) */
-  pushHistory();renderStage();renderWnPanel(o);
- });
- const st=el.querySelector('#wg-store');
- if(st)st.onchange=e=>{o.storeId=e.target.value;pushHistory();renderStage();renderWnPanel(o)}; /* 매장 변경 → 주소 텍스트·미리보기 갱신 */
- const cy=el.querySelector('#wg-country');
- if(cy)cy.onchange=e=>{o.country=e.target.value;o.region=(WEATHER_REGIONS[o.country]||[])[0]||'';pushHistory();renderStage();renderWnPanel(o)};
- const rg=el.querySelector('#wg-region');if(rg)rg.onchange=e=>{o.region=e.target.value;pushHistory();renderStage()};
+/* 화면 위치 설정 방법 안내 모달 — 실제 화면(화면 관리 · 화면 상세 위치 탭)을 단순화한 HTML/CSS 일러스트 모션 + 3단계 목록.
+   영상 파일 없이 DOM으로 그려 어떤 해상도에서도 선명하고 용량이 거의 없다.
+   구조: 1600×1000 '월드'(축소된 앱 화면)를 카메라(확대·이동)로 비추고, 커서·클릭 효과는 그 위 레이어에 그린다.
+   모든 상태는 시간 t의 함수(wlmRender) — 루프·단계 이동(시킹)·일시정지가 단순하다.
+   WX_GUIDE_STEPS[].t = 단계 시작 시각(초). 화면 UI가 크게 바뀌면 wlmWorldHtml 마크업을 함께 맞춘다.
+   prefers-reduced-motion 환경에서는 자동 재생하지 않는다(▶ 버튼·단계 클릭으로 확인). */
+const WX_GUIDE_STEPS=[
+ {t:0,  title:'화면 관리로 이동',              desc:'화면 관리 페이지로 이동해 주세요.'},
+ {t:3.6,title:'날씨 위젯을 사용할 화면 선택',   desc:'목록에서 원하는 화면을 선택한 다음, 화면 상세의 [위치] 탭으로 이동해주세요.'},
+ {t:7.0,title:'화면 위치 등록',               desc:'매장 주소를 사용하거나, 지역과 상세 지역을 직접 선택한 후 저장해 주세요.'},
+];
+const WLM_END=17;
+function wlmWorldHtml(){
+ const nav=[['a','대시보드'],['s','콘텐츠'],['a','콘텐츠 관리'],['a','재생목록 관리'],['a','템플릿'],['a','상품 관리'],['s','운영'],['p','화면 관리'],['a','비디오월'],['a','편성일정'],['a','매장 관리'],['s','설정'],['a','사용자 관리']];
+ const cards=[['2층 증축 홀','강남대로점','셋탑 미연결'],['카운터 우측','강남대로점','일정 2건'],['쇼윈도','홍대입구점','일정 1건'],['입구 안내','성수연무장점','일정 1건'],['홀 메뉴판','여의도IFC점','일정 3건'],['드라이브스루','판교테크노밸리점','일정 2건']];
+ const tabs=['개요','일정','정보','네트워크','스크린샷','활동 로그','위치'];
+ const stats=(a)=>`<div class="w-stats">${a.map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join('')}</div>`;
+ const rows=n=>Array.from({length:n},(_,i)=>`<div class="w-row"><i></i><span><b style="width:${90+i*23%70}px"></b><em style="width:${130+i*31%80}px"></em></span><u></u></div>`).join('');
+ return `<div class="w-world">
+  <aside class="w-lnb"><div class="w-logo"><i></i>syncsign</div>
+   <div class="w-prof"><span>김</span><div><b>김민규님</b><em>그리디쉬프라이</em></div></div>
+   <nav>${nav.map(([k,l])=>k==='s'?`<small>${l}</small>`:`<a ${k==='p'?'data-w="nav"':''}>${l}</a>`).join('')}</nav></aside>
+  <main class="w-main">
+   <section class="w-pg" data-w="pg-dash"><h3>대시보드</h3>${stats([['505','매장'],['3,589','전체 화면'],['3,382','온라인'],['164','오프라인']])}
+    <div class="w-cards"><div class="w-card"><h4>지금 확인이 필요한 화면</h4>${rows(5)}</div><div class="w-card"><h4>배포 현황</h4>${rows(5)}</div></div></section>
+   <section class="w-pg" data-w="pg-panels"><h3>화면 관리</h3>${stats([['3,589','전체 화면'],['3,382','온라인'],['166','오프라인'],['46','미편성']])}
+    <div class="w-search">화면명, 매장, 콘텐츠 검색</div>
+    <div class="w-grid">${cards.map(([n,s,b],i)=>`<div class="w-pc" ${i===1?'data-w="card"':''}><div class="w-pv">${i?'신호 없음 · 2분 전':'셋탑 미연결'}</div><div class="w-pi"><b>${n}</b><em>${s} · 2분 전</em><span>${b}</span></div></div>`).join('')}</div></section>
+  </main>
+  <div class="w-dim" data-w="dim"></div>
+  <aside class="w-drawer" data-w="drawer">
+   <div class="w-dh"><div><b>카운터 우측 <span>온라인</span></b><em>강남대로점 · 마지막 업데이트 2분 전</em></div><i>✕</i></div>
+   <div class="w-tabs">${tabs.map((l,i)=>`<span ${i===0?'data-w="tab0"':i===6?'data-w="tab"':''}>${l}</span>`).join('')}<u data-w="ul"></u></div>
+   <div class="w-db" data-w="ov"><div class="w-dpv">신호 없음 · 2분 전</div><div class="w-card">${rows(3)}</div></div>
+   <div class="w-db w-loc" data-w="loc">
+    <h4>화면 위치 설정</h4><p>날씨 위젯은 이 화면에 등록된 위치를 기준으로 정보를 표시합니다.</p>
+    <div class="w-opt" data-w="o-store"><i class="rd"></i>매장 주소 사용</div>
+    <div class="w-fl"><label>매장</label><div class="w-sel" data-w="ssel"><span>강남대로점</span></div><em data-w="addr">서울특별시 강남구 역삼동 100</em></div>
+    <div class="w-opt" data-w="o-man"><i class="rd"></i>직접 입력</div>
+    <div class="w-fl"><label>지역</label><div class="w-sel" data-w="sido"><span>선택</span>
+      <div class="w-dd" data-w="dd-sido"><i>서울</i><i data-w="o-gg">경기</i><i>인천</i><i>부산</i></div></div>
+     <label>동·읍·면</label><div class="w-sel" data-w="dong"><span>선택</span>
+      <div class="w-dd" data-w="dd-dong"><i>삼평동 (성남시 분당구)</i><i>서현동 (성남시 분당구)</i><i data-w="o-jj">정자동 (성남시 분당구)</i><i>상대원동 (성남시 중원구)</i></div></div></div>
+   </div>
+   <div class="w-df" data-w="f-ro"><i>⋯</i><b>일정 편집</b></div>
+   <div class="w-df w-df2" data-w="f-loc"><span>취소</span><b data-w="save">저장</b></div>
+  </aside>
+  <div class="w-toast" data-w="toast"><i>✓</i>화면 위치를 저장했어요. 이 화면의 날씨는 '경기도 성남시 분당구 정자동' 기준으로 표시돼요.</div>
+ </div>`;
+}
+function openWxLocGuide(){
+ const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const ov=openModal(`
+  <div class="modal-head"><div><h2>화면 위치는 어떻게 설정하나요?</h2><div class="sub">날씨 위젯은 각 화면에 등록된 위치를 기준으로 날씨 정보를 표시합니다. 아래 순서에 따라 화면 위치를 설정해주세요.</div></div></div>
+  <div class="modal-body">
+   <div class="wlm" id="wlm" role="img" aria-label="화면 관리에서 화면을 선택하고 위치 탭에서 위치를 저장하는 과정">
+    <div class="wlm-cam">${wlmWorldHtml()}</div>
+    <div class="wlm-cur" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 2.5l15 11.2-6.6 1.1 3.9 7.3-2.9 1.5-3.9-7.4L4.6 21z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+    <div class="wlm-rip" aria-hidden="true"></div>
+    <button type="button" class="wlg-play" id="wlg-play" aria-label="일시정지"></button>
+   </div>
+   <ol class="wlg-steps">${WX_GUIDE_STEPS.map((st,i)=>`
+    <li><button type="button" class="wlg-step" data-wlg="${i}"><span class="wlg-bar"><i></i></span>
+     <b><span class="wlg-num">${i+1}</span>${st.title}</b><span class="wlg-desc">${st.desc}</span></button></li>`).join('')}
+   </ol>
+  </div>
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button></div>`,{width:'760px'});
+ ov.querySelector('.modal').classList.add('wlg-modal'); /* 시안 스펙 패딩·타이포(styles.css .wlg-modal) */
+ const stage=ov.querySelector('#wlm'),cam=stage.querySelector('.wlm-cam'),world=stage.querySelector('.w-world');
+ const cur=stage.querySelector('.wlm-cur'),rip=stage.querySelector('.wlm-rip'),pb=ov.querySelector('#wlg-play');
+ const E={};world.querySelectorAll('[data-w]').forEach(el=>E[el.dataset.w]=el);
+ const steps=[...ov.querySelectorAll('[data-wlg]')];
+ /* 월드 좌표 측정(transform 영향 없는 offset 기준) — 숨김 요소도 재기 위해 측정 모드로 잠시 모두 노출 */
+ const rel=el=>{let x=0,y=0,e=el;while(e&&e!==world){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent;}return{x,y,w:el.offsetWidth,h:el.offsetHeight};};
+ const ctr=(el,fx=.5,fy=.5)=>{const r=rel(el);return[r.x+r.w*fx,r.y+r.h*fy];};
+ stage.classList.add('meas');
+ const P={nav:ctr(E.nav,.4),card:ctr(E.card,.5,.32),tab:ctr(E.tab),tab0:rel(E.tab0),tabR:rel(E.tab),man:ctr(E['o-man'].querySelector('.rd')),
+  sido:ctr(E.sido,.3),gg:ctr(E['o-gg'],.25),dong:ctr(E.dong,.3),jj:ctr(E['o-jj'],.25),save:ctr(E.save),title:rel(world.querySelector('.w-loc h4')),sidoR:rel(E.sido)};
+ stage.classList.remove('meas');
+ const WW=1600,WH=1000,AR=WW/WH;
+ const C=(x,y,w)=>{const h=w/AR;return{x:Math.max(0,Math.min(WW-w,x)),y:Math.max(0,Math.min(WH-h,y)),w};};
+ /* 카메라 [시작, 끝, 목표 시야(x,y,w)] */
+ const CAM=[[0,0,C(0,0,WW)],[0.6,1.6,C(0,P.nav[1]-260,760)],[2.6,3.4,C(0,0,WW)],[3.6,4.5,C(P.card[0]-430,P.card[1]-250,900)],
+  [5.0,5.8,C(800,0,800)],[7.0,7.8,C(980,P.title.y-150,620)],[9.8,10.5,C(980,P.sidoR.y-210,620)],[13.5,14.2,C(WW-760,P.dong[1]-70,760)],[14.8,15.6,C(440,WH,1160)]];
+ /* 커서 이동 [시작, 끝, 목표] · 클릭 [시각, 위치] */
+ const MOV=[[0.7,1.7,P.nav],[3.7,4.6,P.card],[5.6,6.5,P.tab],[8.4,9.3,P.man],[9.9,10.5,P.sido],[10.9,11.3,P.gg],[11.8,12.3,P.dong],[12.7,13.1,P.jj],[13.6,14.3,P.save]];
+ const CLK=[[2.0,P.nav],[4.8,P.card],[6.8,P.tab],[9.6,P.man],[10.7,P.sido],[11.5,P.gg],[12.5,P.dong],[13.3,P.jj],[14.5,P.save]];
+ const ease=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,cl=k=>Math.max(0,Math.min(1,k));
+ const lerp=(a,b,k)=>a+(b-a)*k;
+ const camAt=t=>{let v=CAM[0][2];for(const[s,e,to] of CAM){if(t>=e)v=to;else if(t>s){const k=ease((t-s)/(e-s));return{x:lerp(v.x,to.x,k),y:lerp(v.y,to.y,k),w:lerp(v.w,to.w,k)};}else break;}return v;};
+ const curAt=t=>{let p=[900,600];for(const[s,e,to] of MOV){if(t>=e)p=to;else if(t>s){const k=ease((t-s)/(e-s));return[lerp(p[0],to[0],k),lerp(p[1],to[1],k)];}else break;}return p;};
+ const tog=(el,c,on)=>el.classList.toggle(c,!!on);
+ const render=t=>{
+  const sw=stage.clientWidth,c=camAt(t),s=sw/c.w;
+  cam.style.transform=`translate(${-c.x*s}px,${-c.y*s}px) scale(${s})`;
+  stage.style.opacity=t<0.3?t/0.3:t>WLM_END-0.4?(WLM_END-t)/0.4:1; /* 루프 이음새 페이드 */
+  tog(E.nav,'on',t>=2.0);
+  E['pg-panels'].style.opacity=cl((t-2.1)/0.3);E['pg-dash'].style.opacity=1-cl((t-2.1)/0.3);
+  tog(E.card,'sel',t>=4.8);
+  const d=1-Math.pow(1-cl((t-5.0)/0.4),3);
+  E.drawer.style.transform=`translateX(${(1-d)*100}%)`;E.dim.style.opacity=d;E.drawer.style.visibility=d>0?'':'hidden'; /* 닫힌 상태에서 그림자가 화면 가장자리에 비치지 않게 */
+  const onLoc=t>=6.8,tk=ease(cl((t-6.8)/0.25)),a=P.tab0,b=P.tabR;
+  tog(E.tab,'on',onLoc);tog(E.tab0,'on',!onLoc);
+  E.ul.style.left=lerp(a.x,b.x,tk)-rel(E.ul.parentElement).x+'px';E.ul.style.width=lerp(a.w,b.w,tk)+'px';
+  E.ov.style.display=onLoc?'none':'';E.loc.style.display=onLoc?'':'none';
+  E['f-ro'].style.display=onLoc?'none':'';E['f-loc'].style.display=onLoc?'':'none';
+  const man=t>=9.6;tog(E.loc,'man',man);
+  E.sido.firstElementChild.textContent=t>=11.5?'경기':'선택';tog(E.sido,'val',t>=11.5);
+  E.dong.firstElementChild.textContent=t>=13.3?'정자동 (성남시 분당구)':'선택';tog(E.dong,'val',t>=13.3);
+  tog(E['dd-sido'],'open',t>=10.7&&t<11.5);tog(E['dd-dong'],'open',t>=12.5&&t<13.3);
+  tog(E['o-gg'],'hov',t>=11.25);tog(E['o-jj'],'hov',t>=13.05);
+  tog(E.save,'press',t>=14.5&&t<14.7);
+  E.toast.style.opacity=cl((t-14.7)/0.25);E.toast.style.transform=`translate(-50%,${(1-cl((t-14.7)/0.25))*16}px)`;
+  const p=curAt(t);cur.style.transform=`translate(${(p[0]-c.x)*s-3}px,${(p[1]-c.y)*s-2}px)`;
+  const ck=CLK.find(([tc])=>t>=tc&&t<tc+0.55);
+  if(ck){const k=(t-ck[0])/0.55;rip.style.display='block';rip.style.opacity=1-k;rip.style.transform=`translate(${(ck[1][0]-c.x)*s-20}px,${(ck[1][1]-c.y)*s-20}px) scale(${0.3+k*1.1})`;}
+  else rip.style.display='none';
+  steps.forEach((el,i)=>{const s0=WX_GUIDE_STEPS[i].t,e0=i<WX_GUIDE_STEPS.length-1?WX_GUIDE_STEPS[i+1].t:WLM_END;
+   el.classList.toggle('on',t>=s0&&t<e0);el.querySelector('.wlg-bar i').style.width=(t>=e0?100:t<=s0?0:(t-s0)/(e0-s0)*100)+'%';});
+ };
+ let t=0,playing=!reduce,last=performance.now(),raf=0;
+ const setPaused=()=>{pb.classList.toggle('paused',!playing);pb.setAttribute('aria-label',playing?'일시정지':'재생');};
+ const loop=now=>{if(!ov.isConnected)return;if(playing){t+=(now-last)/1000;if(t>=WLM_END)t=0;}last=now;render(t);raf=requestAnimationFrame(loop);};
+ setPaused();render(0);raf=requestAnimationFrame(loop);
+ pb.onclick=()=>{playing=!playing;setPaused();};
+ stage.addEventListener('click',e=>{if(e.target!==pb){playing=!playing;setPaused();}});
+ steps.forEach((el,i)=>el.onclick=()=>{t=WX_GUIDE_STEPS[i].t+0.01;if(!reduce){playing=true;setPaused();}render(t);});
+ new MutationObserver((_,mo)=>{if(!ov.isConnected){cancelAnimationFrame(raf);mo.disconnect();}}).observe(document.body,{childList:true});
 }
 
 /* ═══════════ 에디터 : 캔버스 · 배경 설정 ═══════════ */
@@ -2732,6 +2812,8 @@ function drawOptTab(body,ids){
 
 /* ═══════════ 저장 / 프리뷰 / 송출 ═══════════ */
 $('#btn-save-content').onclick=()=>{
+ /* 포함 위젯 메타 갱신 — 편성 송출 시 '날씨 위젯 × 위치 미설정 화면' 안내 판단에 쓰인다. TODO(API): 템플릿 저장 payload에 포함 */
+ window.__setTplWidgets&&window.__setTplWidgets(CONTENT_NAME(),objects.filter(o=>o.type==='widget').map(o=>o.kind));
  toast(`'${CONTENT_NAME()}'을 저장했어요.`,{action:'송출하기',onAction:openBroadcast});
 };
 $('#btn-preview').onclick=()=>{
@@ -2748,11 +2830,13 @@ $('#btn-preview').onclick=()=>{
  document.body.appendChild(pv);
  requestAnimationFrame(fitPv);
 };
+/* [MOCK DATA] 에디터 송출 모달용 화면 목록. loc = 화면에 등록된 위치(날씨 기준) — null이면 위치 미설정.
+   TODO(API): 화면 목록 조회(화면 관리와 동일 데이터, 위치 포함)로 대체 */
 const PANELS=[
- {id:'pn1',name:'1층 카운터 좌측',sub:'55" 가로형 · 카운터존',on:true},
- {id:'pn2',name:'1층 카운터 우측',sub:'55" 가로형 · 카운터존',on:true},
- {id:'pn3',name:'2층 홀 안내',sub:'43" 가로형 · 홀',on:true},
- {id:'pn4',name:'테이크아웃 존',sub:'32" 가로형 · 입구',on:false},
+ {id:'pn1',name:'1층 카운터 좌측',sub:'55" 가로형 · 카운터존',on:true,loc:'서울 강남구 역삼동'},
+ {id:'pn2',name:'1층 카운터 우측',sub:'55" 가로형 · 카운터존',on:true,loc:'서울 강남구 역삼동'},
+ {id:'pn3',name:'2층 홀 안내',sub:'43" 가로형 · 홀',on:true,loc:null},
+ {id:'pn4',name:'테이크아웃 존',sub:'32" 가로형 · 입구',on:false,loc:'서울 강남구 역삼동'},
 ];
 function openBroadcast(){
  if(!objects.length&&!splitLayout){toast('먼저 콘텐츠를 추가해 주세요.',{err:true});return}
@@ -2773,11 +2857,14 @@ function openBroadcast(){
   </div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="bc-go"></button></div>
  `,{width:'480px'});
+ /* 날씨 위젯이 있으면 화면별 날씨 기준 위치를 함께 보여주고, 위치 미설정 화면을 선택하면 안내한다 */
+ const hasWx=objects.some(o=>o.type==='widget'&&o.kind==='weather');
  const draw=()=>{
-  ov.querySelector('#bc-panels').innerHTML=PANELS.map(p=>`
+  const miss=hasWx?PANELS.filter(p=>sel.has(p.id)&&!p.loc):[];
+  ov.querySelector('#bc-panels').innerHTML=(miss.length?`<div class="warn-note">${IC.info}<span>날씨 위젯이 포함된 콘텐츠예요. 선택한 화면 중 <b>${miss.map(p=>`'${p.name}'`).join(', ')}</b>은(는) 위치가 설정되지 않아 날씨 정보가 표시되지 않아요. 화면 관리 › 화면 상세 › [위치] 탭에서 위치를 등록해주세요.</span></div>`:'')+PANELS.map(p=>`
    <button class="panel-row ${sel.has(p.id)?'on':''}" data-bp="${p.id}" ${p.on?'':'disabled style="opacity:.55;cursor:not-allowed"'}>
     <span class="mon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8" stroke-linecap="round"/></svg></span>
-    <span style="text-align:left"><b>${p.name}</b><span class="sub">${p.sub}</span></span>
+    <span style="text-align:left"><b>${p.name}</b><span class="sub">${p.sub}${hasWx?` · ${p.loc?`날씨 ${p.loc}`:'<span class="bc-noloc">위치 미설정</span>'}`:''}</span></span>
     <span class="st ${p.on?'on-air':'off'}"><span class="dot"></span>${p.on?'온라인':'오프라인'}</span></button>`).join('');
   ov.querySelectorAll('[data-bp]').forEach(b=>{if(b.disabled)return;b.onclick=()=>{const id=b.dataset.bp;sel.has(id)?sel.delete(id):sel.add(id);draw()}});
   ov.querySelector('#bc-go').textContent=when==='now'?`${sel.size}개 화면에 송출`:`${sel.size}개 화면에 예약`;
