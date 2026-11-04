@@ -1200,7 +1200,7 @@ function openPanelDrawer(p,tab='overview'){
     body.innerHTML=`<div class="loc-tab">
      <h3 class="loc-title">화면 위치 설정</h3>
      <p class="loc-desc">날씨 위젯은 이 화면에 등록된 위치를 기준으로 정보를 표시합니다.</p>
-     ${saved?'':`<div class="warn-note">${IC.info}<span><b>위치가 설정되지 않은 화면이에요.</b> 날씨 위젯이 포함된 콘텐츠를 송출해도 이 화면에는 날씨 정보가 표시되지 않아요.</span></div>`}
+     ${saved?'':`<div class="warn-note err-note">${IC.info}<span><b>위치가 설정되지 않은 화면이에요.</b> 날씨 위젯이 포함된 콘텐츠를 송출해도 이 화면에는 날씨 정보가 표시되지 않아요.</span></div>`}
      <div class="wg-loc">
       <button type="button" class="wg-loc-opt" data-lmode="store" ${canStore?'':'disabled'}><span class="rdo ${isStore?'on':''}"></span><span class="wg-loc-body"><b>매장 주소 사용</b></span></button>
       <div class="wg-loc-fields">
