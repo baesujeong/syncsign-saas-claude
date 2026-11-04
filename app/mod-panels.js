@@ -1178,7 +1178,7 @@ function openPanelDrawer(p,tab='overview'){
      <div><dt>네트워크</dt><dd>${!p.stb?'—':p.status==='off'?'연결 끊김':'유선 · 32ms'}</dd></div>
      <div><dt>셋탑 S/N</dt><dd>${p.stb?`<span class="num">${p.stb.sn}</span>`:'<span class="badge badge-amber">미연결</span>'}</dd></div>
      <div><dt>연결일</dt><dd>${p.stb?'2025.11.14':'—'}</dd></div>
-     <div style="grid-column:1/-1"><dt>위치 <span class="dt-hint">날씨 위젯 기준</span></dt><dd>${(L=>L?L.label:'<span class="badge badge-amber">위치 미설정</span>')(panelWeatherLoc(p))} <button class="lnk perm-lock" id="if-loc">${panelWeatherLoc(p)?'변경':'위치 설정'}</button></dd></div>
+     <div style="grid-column:1/-1"><dt>위치 <span class="dt-hint">날씨 위젯 기준</span></dt><dd>${(L=>L?L.label:'<span class="store-none">위치 미설정</span>')(panelWeatherLoc(p))} <button class="lnk perm-lock" id="if-loc">${panelWeatherLoc(p)?'변경':'위치 설정'}</button></dd></div>
     </dl></div>
    <div class="dcard"><h3>태그 <button class="lnk" data-ptag-edit>편집</button></h3>
     <div class="tag-badges">${p.tags.length?p.tags.map(t=>`<span class="badge badge-gray">${t}</span>`).join(''):'<span style="font-size:13px;color:var(--text-3)">지정된 태그가 없어요. <button class="lnk" data-ptag-edit>태그 추가</button></span>'}</div></div>`;
