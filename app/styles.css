@@ -2797,3 +2797,12 @@ table.grid tr.checked td{background:var(--blue-50)}
 .crop-rect{position:absolute;box-shadow:0 0 0 1.5px #22D3EE;cursor:move;z-index:5}
 .crop-clip{position:absolute;inset:0;overflow:hidden}
 .crop-rect .eo-h{border-color:#22D3EE;z-index:6}
+
+/* 상품 수정 — 송출 화면 반영 상태(드로어 본문과 푸터 사이). sync-note(진행) / warn-note.err-note(실패) 재사용 */
+.prod-sync{flex:none;padding:12px 22px 0;border-top:1px solid var(--border)}
+.prod-sync>div{margin-bottom:0}
+.prod-sync .sync-note{align-items:flex-start}
+.prod-sync .sync-note .spinner{width:16px;height:16px;margin-top:2px;flex:none}
+.prod-sync+.drawer-foot{border-top:0}
+.btn.is-syncing:disabled{opacity:.75}
+.drawer-body.is-syncing{pointer-events:none} /* 반영 중 입력 잠금 */

@@ -233,15 +233,25 @@ function filtered(){
  return arr;
 }
 const usedIn=p=>widget&&widgetItemIds().includes(p.id)?CONTENT_NAME():null;
-/* [MOCK DATA] 상품별 '사용 중인 메뉴판' 표시용 메뉴판 목록. TODO(API): 메뉴판(콘텐츠) 목록을 서버 조회로 대체 */
+/* [MOCK DATA] 상품별 '사용 중인 메뉴판' 표시용 메뉴판 목록. TODO(API): 메뉴판(콘텐츠) 목록을 서버 조회로 대체
+   live = 이 메뉴판을 지금 송출 중인 화면 수(0이면 송출 안 함) → 상품 저장 시 '송출 화면 반영' 로딩 여부 판단(liveBoards) */
 let MENU_BOARDS=[
- {id:'mb1',name:'매장 메인 메뉴판',g:'linear-gradient(135deg,#5B2B2B,#361212)',res:'1920×1080',items:['p1','p2','p3','p5','p6','p12','p13']},
- {id:'mb2',name:'2층 카페 메뉴판',g:'linear-gradient(135deg,#1E3A5F,#0F2038)',res:'1920×1080',items:['p1','p2','p4','p7','p8']},
- {id:'mb3',name:'테이크아웃 보드',g:'linear-gradient(135deg,#1F4A3A,#0E2A20)',res:'3840×2160',items:['p1','p9','p10','p11']},
- {id:'mb4',name:'디저트 쇼케이스',g:'linear-gradient(135deg,#472B52,#28152F)',res:'1920×1080',items:['p12','p13','p14']},
+ {id:'mb1',name:'매장 메인 메뉴판',g:'linear-gradient(135deg,#5B2B2B,#361212)',res:'1920×1080',items:['p1','p2','p3','p5','p6','p12','p13'],live:3},
+ {id:'mb2',name:'2층 카페 메뉴판',g:'linear-gradient(135deg,#1E3A5F,#0F2038)',res:'1920×1080',items:['p1','p2','p4','p7','p8'],live:2},
+ {id:'mb3',name:'테이크아웃 보드',g:'linear-gradient(135deg,#1F4A3A,#0E2A20)',res:'3840×2160',items:['p1','p9','p10','p11'],live:1},
+ {id:'mb4',name:'디저트 쇼케이스',g:'linear-gradient(135deg,#472B52,#28152F)',res:'1920×1080',items:['p12','p13','p14'],live:0},
 ];
 if(window.EMPTY_MODE)MENU_BOARDS.length=0;
 const usedInBoards=p=>p?MENU_BOARDS.filter(b=>b.items.includes(p.id)):[];
+/* 송출 중인 메뉴판 — 이 상품을 쓰는 메뉴판 중 화면에 송출되고 있는 것. TODO(API): 상품 상세 응답의 liveScreens(송출 화면 수)로 대체 */
+const liveBoards=p=>usedInBoards(p).filter(b=>b.live>0);
+/* 송출 화면 반영 대기 — 저장 API 응답(200)과 별개로, 송출 중인 모든 화면(STB)이 변경분을 받아 다시 그렸다고 확인될 때 resolve.
+   [MOCK] 지연 후 성공. 실패 재현: 콘솔에서 window.__PROD_SYNC_FAIL=true.
+   TODO(API): 저장 응답의 syncId로 GET /products/{id}/sync/{syncId} 폴링(또는 웹소켓 product.synced 이벤트) —
+   status: pending → done(모든 송출 화면 ack) | failed(일부/전체 화면 미반영·타임아웃). done일 때만 resolve, failed·타임아웃은 reject */
+function waitScreenSync(p){
+ return new Promise((res,rej)=>setTimeout(()=>window.__PROD_SYNC_FAIL?rej(new Error('sync failed')):res(),2400));
+}
 /* 옵션 세트 — p.opt는 적용된 세트 id 배열. 목록/라벨(예: '사이즈 3 · 온도 2')과 사이즈 옵션 여부 */
 const optSetsOf=p=>((p&&p.opt)||[]).map(id=>optionSets.find(o=>o.id===id)).filter(Boolean);
 const optLabel=p=>{const n=optSetsOf(p).length;return n?`옵션 ${n}개`:null;};
@@ -407,6 +417,7 @@ function openDrawer(edit){
     </div>
    </div>
   </div>
+  ${!ro&&isEdit?`<div class="prod-sync" id="f-sync" hidden></div>`:''}
   <div class="drawer-foot">
    ${ro?`<span style="flex:1"></span><button class="btn" data-close>닫기</button>`:`<button class="btn" data-close>취소</button>
    <button class="btn btn-primary" id="f-save" style="flex:1">${isEdit?'저장':'등록'}</button>`}
@@ -519,7 +530,10 @@ function openDrawer(edit){
   const finalMain=Math.min(mainIdx,finalImgs.length-1);
   /* 다국어: 이름·설명 중 하나라도 입력된 언어만 저장 (백엔드 메뉴 렌더 시 언어별 표시에 사용) */
   const i18n={};I18N_LANGS.forEach(l=>{const d=i18nData[l.k];if(d&&((d.name||'').trim()||(d.desc||'').trim()))i18n[l.k]={name:(d.name||'').trim(),desc:(d.desc||'').trim()};});
-  if(isEdit){Object.assign(edit,{name,price,cur,desc:wrap.querySelector('#f-desc').value.trim(),cat,opt,discount:dc,imgs:finalImgs,mainIdx:finalMain,i18n,mod:'07.04'});toast(usedIn(edit)?`'${name}' 수정을 완료했어요. 사용 중인 메뉴판에 바로 반영됐어요.`:'상품을 수정했어요');}
+  const patch={name,price,cur,desc:wrap.querySelector('#f-desc').value.trim(),cat,opt,discount:dc,imgs:finalImgs,mainIdx:finalMain,i18n,mod:'07.04'};
+  /* 송출 중인 상품 수정 — ①저장 API 완료 ②송출 화면 반영 완료를 구분. ②가 확인되기 전에는 성공 처리하지 않는다 */
+  if(isEdit&&liveBoards(edit).length){saveLive(patch);return;}
+  if(isEdit){Object.assign(edit,patch);toast(usedIn(edit)?`'${name}' 수정을 완료했어요. 사용 중인 메뉴판에 바로 반영됐어요.`:'상품을 수정했어요');}
   else{const np=P('p'+(++seq),name,wrap.querySelector('#f-desc').value.trim(),cat,price,opt,dc,'sale','🍽️',30,'07.04');np.cur=cur;np.imgs=finalImgs;np.mainIdx=finalMain;np.i18n=i18n;products.unshift(np);toast(`'${name}'을 등록했어요.`);}
   renderCats();renderProducts();renderBoard();
   wrap.remove();
@@ -531,6 +545,34 @@ function openDrawer(edit){
   wrap.querySelectorAll('[data-optset]').forEach(c=>{c.style.pointerEvents='none';const row=c.closest('.optset-row');if(row)row.style.cursor='default';});
   wrap.querySelectorAll('[data-lang]').forEach(ch=>{ch.disabled=true;});
  }
+ /* 송출 반영 로딩 — 버튼: '반영 중...' 텍스트(비활성·중복 클릭 차단) / 안내 문구 노출. 완료 시 성공 Toast 후 닫기, 실패 시 오류 안내 + 버튼 재활성(재시도) */
+ const syncEl=wrap.querySelector('#f-sync');
+ let syncing=false;
+ const setSync=st=>{
+  const sv=wrap.querySelector('#f-save');syncing=st==='pending';
+  sv.disabled=syncing;sv.classList.toggle('is-syncing',syncing);
+  sv.textContent=syncing?'반영 중...':'저장'; /* 로딩 아이콘은 상단 안내 문구에만 — 버튼은 텍스트 + 비활성 */
+  wrap.querySelector('.drawer-body').classList.toggle('is-syncing',syncing);
+  syncEl.hidden=!st;
+  syncEl.innerHTML=st==='pending'?`<div class="sync-note"><span class="spinner"></span><span>현재 송출 중인 화면에 상품 정보를 반영하고 있습니다. 변경사항이 적용될 때까지 잠시만 기다려 주세요.</span></div>`
+   :st==='failed'?`<div class="warn-note err-note"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5M12 16h.01"/></svg><span>변경사항 반영에 실패했습니다. 다시 시도해 주세요.</span></div>`:'';
+ };
+ const saveLive=patch=>{
+  if(syncing)return;
+  setSync('pending');
+  /* ① 저장 API — TODO(API): PUT /products/{id} (patch). 응답 완료 = 데이터 저장 완료일 뿐, 송출 화면 반영 완료가 아님 */
+  setTimeout(()=>{
+   Object.assign(edit,patch);renderCats();renderProducts();renderBoard();
+   /* ② 송출 화면 반영 확인 — 확인될 때까지 로딩 유지. 드로어를 닫아도 결과는 Toast로 안내 */
+   waitScreenSync(edit).then(()=>{
+    toast('변경사항이 송출 화면에 반영되었습니다.');
+    wrap.remove();
+   }).catch(()=>{
+    setSync('failed');
+    toast('변경사항 반영에 실패했습니다. 다시 시도해 주세요.',{err:true});
+   });
+  },window.LoadUX?window.LoadUX.BTN_MS:600);
+ };
  const _sv=wrap.querySelector('#f-save');if(_sv)_sv.onclick=()=>save();
 }
 $('#btn-add-product').onclick=()=>openDrawer();

@@ -269,3 +269,14 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 - ⋯ 관리 메뉴 통일: 레이아웃 편집·일정 편집·이름 변경·송출 중단/송출하기·삭제. 인라인 [일정 편집]/[레이아웃] 버튼 및 관련 죽은 위임 핸들러 제거.
 - **기능 무변경**(생성/편집/일정/이름/삭제 동일), 정보 구조·상태 표현만 개편. `wallCellsHtml`/`wallContentLabel`/`wallTileContent`는 화면 관리 카드·상세 드로어에서 계속 사용(유지).
 - 변경 파일: `app/mod-panels.js`(데이터 모델·`renderWallsPage`·⋯메뉴·헤더 주석), `app/styles.css`(`.vw-*` 카드 스타일), `HANDOFF.md`.
+
+## 상품 수정 — 송출 화면 반영 로딩 (`app/mod-products.js` `openDrawer` · `saveLive` · `waitScreenSync`)
+
+- 대상: 수정하는 상품이 **송출 중인 메뉴판**(`liveBoards(p)` — 상품을 쓰는 메뉴판 중 `live>0`)에 포함된 경우만. 신규 등록·미송출 상품은 기존 저장 흐름 그대로.
+- 흐름: [저장] → 버튼 `반영 중...` 텍스트(비활성, 로딩 아이콘은 안내 문구에만, 드로어 입력 잠금) + 안내 문구 → ① 저장 API 완료(데이터 반영) → ② **송출 화면 반영 확인 후에만** 성공 Toast `변경사항이 송출 화면에 반영되었습니다.` + 드로어 닫힘.
+- 실패: 로딩 종료 → 드로어 하단 오류 안내 + 오류 Toast `변경사항 반영에 실패했습니다. 다시 시도해 주세요.` → [저장] 재활성(재시도 = 같은 payload 재저장).
+- TODO(API)
+  - `PUT /products/{id}` 응답에 `syncId`(+ 송출 화면 수) 포함.
+  - `GET /products/{id}/sync/{syncId}` 폴링 또는 웹소켓 `product.synced` — `pending → done | failed`. 모든 송출 화면(STB) ack 시 `done`, 일부 미반영·타임아웃은 `failed`.
+  - 메뉴판 송출 여부: mock `MENU_BOARDS[].live` → 상품 상세 응답의 `liveScreens`로 대체.
+- 프로토타입 실패 재현: 콘솔 `window.__PROD_SYNC_FAIL=true`.
