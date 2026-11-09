@@ -280,3 +280,15 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
   - `GET /products/{id}/sync/{syncId}` 폴링 또는 웹소켓 `product.synced` — `pending → done | failed`. 모든 송출 화면(STB) ack 시 `done`, 일부 미반영·타임아웃은 `failed`.
   - 메뉴판 송출 여부: mock `MENU_BOARDS[].live` → 상품 상세 응답의 `liveScreens`로 대체.
 - 프로토타입 실패 재현: 콘솔 `window.__PROD_SYNC_FAIL=true`.
+
+## 주문호출관리 시스템 로그인 — SaaS 전용 (`app/order-call-login.html` 신규)
+
+- 진입: 매장 관리 › 매장 상세 › [번호호출] › '수동 입력' 선택 시 노출되는 사이트 링크(`prototype.html` `drawCallTab` `#call-site`) → 새 탭.
+- 구성: SyncSign 로고 / 타이틀 `주문호출관리 시스템` / 매장 검색(이름·주소 부분 일치, ↑↓·Enter 선택) → 선택 매장 카드([변경]) / [로그인](매장 선택 전 비활성).
+- 기존 시스템(sdm.el-bigs.com/register)의 '소상공인/프랜차이즈' 유형 선택은 없음 — 매장 정보만으로 로그인.
+- 번호호출 '수동 입력'을 사용 중인 매장만 선택 가능. 그 외 매장은 목록에 `수동 입력 미사용`으로 비활성 노출. 검색 결과 없음 안내 포함.
+- 로그인 이후 주문호출 화면은 범위 밖 — 자리표시 + [로그아웃].
+- TODO(API)
+  - `GET /order-call/stores?q=` → `[{id,name,addr,manual}]` (현재 프로토타입은 CMS 링크 클릭 시 localStorage `ss.callStores`로 매장 목록 전달 → API 연동 시 제거).
+  - `POST /order-call/sessions {storeId}` → 세션 발급 후 주문호출 화면 이동. 실패 시 오류 Toast(재현: `window.__OCL_LOGIN_FAIL=true`).
+  - 최종 도메인 확정 시 CMS의 표시·복사 주소(현재 기존 주소 유지) 교체.

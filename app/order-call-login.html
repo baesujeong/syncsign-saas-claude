@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>주문호출관리 시스템 — SyncSign</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./styles.css">
+<!--
+ 주문호출관리 시스템 로그인 (SyncSign SaaS 전용) — 매장 관리 › 매장 상세 › [번호호출] › '수동 입력' 사이트 링크의 도착 페이지.
+ 흐름: 매장 검색 → 매장 선택 → [로그인] → 주문호출 화면(이번 범위 밖, 자리표시).
+ 기존 시스템(sdm.el-bigs.com/register)과 달리 '소상공인/프랜차이즈' 유형 선택이 없다 — SaaS 계정의 매장 정보만으로 로그인.
+ TODO(API)
+  · 매장 검색: GET /order-call/stores?q= → [{id,name,addr,manual:boolean}] (번호호출 '수동 입력'을 사용 중인 매장만 manual=true)
+  · 로그인:   POST /order-call/sessions {storeId} → 세션 토큰 발급 후 주문호출 화면으로 이동
+  · 최종 도메인 확정 시 CMS 링크(prototype.html drawCallTab의 call-url) 주소·복사 문구도 함께 교체
+-->
+<style>
+body.ocl{overflow:auto;background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+body.ocl #app{flex:1;display:flex;flex-direction:column;min-width:0;height:auto;min-height:100vh}
+.ocl-top{display:flex;align-items:center;padding:24px 32px;flex:none}
+.ocl-main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px 96px}
+.ocl-card{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-sm);padding:40px 36px 36px}
+.ocl-card h1{margin:0 0 6px;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.ocl-card .sub{margin:0 0 28px;font-size:14px;color:var(--text-2);line-height:1.6}
+.ocl-lbl{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px}
+/* 매장 검색 콤보박스 */
+.ocl-search{position:relative}
+.ocl-search>svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none}
+.ocl-search .input{height:48px;padding:0 42px 0 42px;font-size:15px}
+.ocl-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--text-3);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ocl-clear:hover{background:var(--sunken);color:var(--text-2)}
+.ocl-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:6px;max-height:300px;overflow-y:auto;margin:0;list-style:none}
+.ocl-opt{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-md);cursor:pointer}
+.ocl-opt.act{background:var(--blue-50)}
+.ocl-opt .tx{flex:1;min-width:0}
+.ocl-opt b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-opt b mark{background:none;color:var(--blue);font-weight:700}
+.ocl-opt span{display:block;font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-opt.dis{cursor:default}
+.ocl-opt.dis .tx{opacity:.55}
+.ocl-opt.dis em{font-style:normal;font-size:12px;color:var(--text-3);flex:none}
+.ocl-none{padding:22px 12px;text-align:center;font-size:13px;color:var(--text-3);line-height:1.6}
+.ocl-none b{display:block;color:var(--text-2);font-size:14px;margin-bottom:2px}
+/* 선택한 매장 */
+.ocl-picked{display:flex;align-items:center;gap:12px;height:64px;padding:0 10px 0 16px;border:1px solid var(--blue);border-radius:var(--r-md);background:var(--blue-50)}
+.ocl-picked .tx{flex:1;min-width:0}
+.ocl-picked b{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-picked span{display:block;font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-hint{font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.55}
+.ocl-go{width:100%;margin-top:24px;height:48px;font-size:15px}
+.ocl-foot{margin:20px 0 0;text-align:center;font-size:12px;color:var(--text-3);line-height:1.6}
+/* 로그인 이후(이번 범위 밖 — 자리표시) */
+.ocl-app{flex:1;display:flex;flex-direction:column}
+.ocl-bar{display:flex;align-items:center;gap:14px;height:64px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);flex:none}
+.ocl-bar .sep{width:1px;height:18px;background:var(--border-2)}
+.ocl-bar .nm{font-size:15px;font-weight:700}
+.ocl-ph{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 16px}
+.ocl-ph .empty{background:var(--surface);border:1px dashed var(--border-2);border-radius:var(--r-xl);width:100%;max-width:560px}
+@media (max-width:520px){.ocl-top{padding:18px 16px}.ocl-card{padding:32px 20px 28px;border-radius:var(--r-lg)}.ocl-bar{padding:0 16px}}
+</style>
+</head>
+<body class="ocl">
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><symbol id="logo-light" viewBox="0 0 146 39"><path d="M141.208 12.4133C142.664 12.4133 143.823 12.8819 144.685 13.8191C145.562 14.7417 146 16.0157 146 17.6412V24.802H142.211V18.1464C142.211 17.3263 141.995 16.6893 141.564 16.2354C141.133 15.7814 140.554 15.5544 139.826 15.5544C139.098 15.5544 138.518 15.7814 138.087 16.2354C137.656 16.6893 137.441 17.3263 137.441 18.1464V24.802H133.629V12.5451H137.441V14.1706C137.827 13.6288 138.347 13.2041 139.001 12.8966C139.655 12.5744 140.39 12.4133 141.208 12.4133Z" fill="#243859"></path>
+<path d="M123.227 12.3718C124.103 12.3718 124.869 12.5476 125.522 12.899C126.191 13.2505 126.704 13.7117 127.06 14.2829V12.5476H130.872V24.7825C130.872 25.9101 130.642 26.9278 130.181 27.8358C129.735 28.7583 129.044 29.4905 128.108 30.0323C127.187 30.5742 126.035 30.8451 124.653 30.8451C122.811 30.8451 121.317 30.4131 120.173 29.5491C119.029 28.6997 118.375 27.5429 118.211 26.0785H121.978C122.097 26.5471 122.38 26.9132 122.825 27.1768C123.271 27.455 123.821 27.5941 124.475 27.5941C125.262 27.5941 125.887 27.3672 126.347 26.9132C126.823 26.4739 127.06 25.7636 127.06 24.7825V23.0472C126.689 23.6183 126.176 24.0869 125.522 24.453C124.869 24.8045 124.103 24.9802 123.227 24.9802C122.201 24.9802 121.273 24.7239 120.44 24.2114C119.608 23.6842 118.947 22.9447 118.457 21.9929C117.981 21.0264 117.743 19.9134 117.743 18.654C117.743 17.3947 117.981 16.2891 118.457 15.3372C118.947 14.3854 119.608 13.6532 120.44 13.1406C121.273 12.6281 122.201 12.3718 123.227 12.3718ZM127.06 18.676C127.06 17.7388 126.793 16.9993 126.258 16.4575C125.738 15.9156 125.099 15.6447 124.341 15.6447C123.583 15.6447 122.937 15.9156 122.402 16.4575C121.882 16.9846 121.622 17.7168 121.622 18.654C121.622 19.5913 121.882 20.3381 122.402 20.8946C122.937 21.4364 123.583 21.7073 124.341 21.7073C125.099 21.7073 125.738 21.4364 126.258 20.8946C126.793 20.3527 127.06 19.6132 127.06 18.676Z" fill="#243859"></path>
+<path d="M113.844 11.2724C113.175 11.2724 112.625 11.082 112.194 10.7013C111.778 10.3059 111.57 9.82267 111.57 9.25156C111.57 8.66581 111.778 8.18256 112.194 7.80182C112.625 7.40643 113.175 7.20874 113.844 7.20874C114.497 7.20874 115.032 7.40643 115.448 7.80182C115.879 8.18256 116.095 8.66581 116.095 9.25156C116.095 9.82267 115.879 10.3059 115.448 10.7013C115.032 11.082 114.497 11.2724 113.844 11.2724ZM115.738 12.5464V24.8034H111.927V12.5464H115.738Z" fill="#243859"></path>
+<path d="M104.557 24.9802C103.472 24.9802 102.506 24.7972 101.659 24.4311C100.812 24.065 100.143 23.5671 99.6531 22.9374C99.1627 22.2931 98.8878 21.5755 98.8284 20.7847H102.595C102.64 21.2094 102.841 21.5535 103.197 21.8171C103.554 22.0807 103.992 22.2125 104.512 22.2125C104.988 22.2125 105.352 22.1246 105.604 21.9489C105.872 21.7586 106.006 21.5169 106.006 21.224C106.006 20.8726 105.82 20.6163 105.448 20.4552C105.077 20.2795 104.475 20.0891 103.643 19.8841C102.751 19.6791 102.008 19.4668 101.414 19.2471C100.82 19.0128 100.307 18.654 99.876 18.1708C99.4451 17.6729 99.2296 17.0066 99.2296 16.1719C99.2296 15.469 99.4228 14.832 99.8091 14.2609C100.21 13.6751 100.79 13.2138 101.548 12.877C102.32 12.5402 103.234 12.3718 104.289 12.3718C105.85 12.3718 107.076 12.7526 107.967 13.514C108.874 14.2755 109.394 15.286 109.527 16.5453H106.006C105.946 16.1207 105.753 15.7838 105.426 15.5349C105.114 15.286 104.698 15.1615 104.178 15.1615C103.732 15.1615 103.39 15.2493 103.153 15.4251C102.915 15.5862 102.796 15.8131 102.796 16.106C102.796 16.4575 102.982 16.7211 103.353 16.8968C103.74 17.0725 104.334 17.2482 105.136 17.424C106.058 17.6583 106.808 17.8926 107.388 18.1269C107.967 18.3465 108.472 18.7126 108.903 19.2252C109.349 19.7231 109.579 20.3967 109.594 21.246C109.594 21.9636 109.386 22.6079 108.97 23.179C108.569 23.7355 107.982 24.1748 107.209 24.497C106.451 24.8191 105.567 24.9802 104.557 24.9802Z" fill="#243859"></path>
+<path d="M85.2444 18.676C85.2444 17.402 85.5044 16.2891 86.0245 15.3372C86.5595 14.3854 87.295 13.6532 88.2312 13.1406C89.1822 12.6281 90.267 12.3718 91.4855 12.3718C93.0458 12.3718 94.346 12.7745 95.3862 13.5799C96.4413 14.3854 97.1323 15.5203 97.4592 16.9846H93.4024C93.0607 16.0474 92.3994 15.5788 91.4187 15.5788C90.7202 15.5788 90.163 15.8497 89.7469 16.3916C89.3308 16.9188 89.1228 17.6802 89.1228 18.676C89.1228 19.6718 89.3308 20.4406 89.7469 20.9824C90.163 21.5096 90.7202 21.7732 91.4187 21.7732C92.3994 21.7732 93.0607 21.3046 93.4024 20.3674H97.4592C97.1323 21.8025 96.4413 22.9301 95.3862 23.7501C94.3312 24.5702 93.0309 24.9802 91.4855 24.9802C90.267 24.9802 89.1822 24.7239 88.2312 24.2114C87.295 23.6989 86.5595 22.9667 86.0245 22.0148C85.5044 21.063 85.2444 19.95 85.2444 18.676Z" fill="#243859"></path>
+<path d="M78.5616 12.4133C80.0179 12.4133 81.177 12.8819 82.0388 13.8191C82.9156 14.7417 83.3539 16.0157 83.3539 17.6412V24.802H79.5647V18.1464C79.5647 17.3263 79.3492 16.6893 78.9183 16.2354C78.4873 15.7814 77.9078 15.5544 77.1797 15.5544C76.4515 15.5544 75.872 15.7814 75.441 16.2354C75.0101 16.6893 74.7946 17.3263 74.7946 18.1464V24.802H70.9831V12.5451H74.7946V14.1706C75.181 13.6288 75.7011 13.2041 76.3549 12.8966C77.0088 12.5744 77.7443 12.4133 78.5616 12.4133Z" fill="#243859"></path>
+<path d="M69.6034 12.5476L61.802 30.6255H57.7006L60.5537 24.3872L55.494 12.5476H59.7513L62.6267 20.2137L65.4798 12.5476H69.6034Z" fill="#243859"></path>
+<path d="M49.5294 24.9802C48.4447 24.9802 47.4788 24.7972 46.6318 24.4311C45.7848 24.065 45.1161 23.5671 44.6257 22.9374C44.1353 22.2931 43.8604 21.5755 43.801 20.7847H47.5679C47.6125 21.2094 47.8131 21.5535 48.1698 21.8171C48.5264 22.0807 48.9648 22.2125 49.4849 22.2125C49.9604 22.2125 50.3244 22.1246 50.5771 21.9489C50.8445 21.7586 50.9783 21.5169 50.9783 21.224C50.9783 20.8726 50.7925 20.6163 50.421 20.4552C50.0495 20.2795 49.4477 20.0891 48.6156 19.8841C47.724 19.6791 46.981 19.4668 46.3866 19.2471C45.7922 19.0128 45.2795 18.654 44.8486 18.1708C44.4176 17.6729 44.2022 17.0066 44.2022 16.1719C44.2022 15.469 44.3954 14.832 44.7817 14.2609C45.1829 13.6751 45.7625 13.2138 46.5203 12.877C47.293 12.5402 48.2069 12.3718 49.262 12.3718C50.8222 12.3718 52.0482 12.7526 52.9398 13.514C53.8462 14.2755 54.3663 15.286 54.5001 16.5453H50.9783C50.9188 16.1207 50.7257 15.7838 50.3987 15.5349C50.0867 15.286 49.6706 15.1615 49.1505 15.1615C48.7047 15.1615 48.3629 15.2493 48.1252 15.4251C47.8874 15.5862 47.7685 15.8131 47.7685 16.106C47.7685 16.4575 47.9543 16.7211 48.3258 16.8968C48.7121 17.0725 49.3065 17.2482 50.109 17.424C51.0303 17.6583 51.7807 17.8926 52.3602 18.1269C52.9398 18.3465 53.445 18.7126 53.8759 19.2252C54.3217 19.7231 54.5521 20.3967 54.5669 21.246C54.5669 21.9636 54.3589 22.6079 53.9428 23.179C53.5416 23.7355 52.9546 24.1748 52.1819 24.497C51.4241 24.8191 50.5399 24.9802 49.5294 24.9802Z" fill="#243859"></path>
+<path d="M23.4637 26.805L4.82725 31.3059C4.43764 31.3711 4.11298 31.1752 4.11298 30.7839V8.21399C4.11298 7.88783 4.50257 7.62671 4.82725 7.69194L23.4637 11.932C23.7235 11.932 23.9183 12.1931 23.9183 12.454V26.2829C23.9183 26.5439 23.7235 26.7397 23.4637 26.805Z" fill="url(#paint0_linear_38191_6110)"></path>
+<path d="M34.1778 28.6962L19.3075 24.9125C19.0478 24.9125 18.853 24.6517 18.853 24.3908V14.4755C18.853 14.2146 19.0478 14.019 19.3075 13.9538L34.1778 10.366C34.5674 10.3008 34.892 10.5616 34.892 10.8877V28.1741C34.892 28.5003 34.5024 28.7614 34.1778 28.6962Z" fill="url(#paint1_linear_38191_6110)"></path>
+<defs>
+<linearGradient id="paint0_linear_38191_6110" x1="4.04804" y1="19.4989" x2="23.8534" y2="19.4989" gradientUnits="userSpaceOnUse">
+<stop stop-color="#1367F4"></stop>
+<stop offset="0.2" stop-color="#105CEE"></stop>
+<stop offset="0.6" stop-color="#0940E0"></stop>
+<stop offset="1" stop-color="#0323D1"></stop>
+</linearGradient>
+<linearGradient id="paint1_linear_38191_6110" x1="18.853" y1="19.4985" x2="34.892" y2="19.4985" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0077FF"></stop>
+<stop offset="0.2" stop-color="#209AFF"></stop>
+<stop offset="0.6" stop-color="#46C5FF"></stop>
+<stop offset="0.8" stop-color="#5EDFFF"></stop>
+<stop offset="1" stop-color="#67E9FF"></stop>
+</linearGradient>
+</defs></symbol></svg>
+<div id="app"></div>
+<div id="toasts" class="toasts"></div>
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const LOGO='<svg viewBox="0 0 146 39" style="height:26px;width:auto;display:block" role="img" aria-label="syncsign"><use href="#logo-light"/></svg>';
+const IC={
+ search:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+ x:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg,{err}={}){
+ const t=document.createElement('div');t.className='toast'+(err?' err':'');
+ t.innerHTML=`${err?IC.x:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></svg>'}<span>${msg}</span>`;
+ $('#toasts').appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320)},3200);
+}
+/* [MOCK DATA] 이 SaaS 계정의 매장 목록. CMS(prototype.html)에서 링크를 누르면 현재 매장 관리 상태를 localStorage('ss.callStores')로 넘겨준다.
+   직접 열었거나 저장소를 쓸 수 없으면 아래 기본값 사용. manual = 번호호출 '수동 입력' 사용 중(로그인 가능) */
+let STORES=[
+ {id:'s1',name:'강남대로점',addr:'서울 강남구 강남대로 396',manual:true},
+ {id:'s2',name:'인천공항 1터미널',addr:'인천 중구 공항로 272',manual:false},
+ {id:'s3',name:'잠실롯데월드점',addr:'서울 송파구 올림픽로 240',manual:false},
+ {id:'s4',name:'서면점',addr:'부산 부산진구 서면로 39',manual:false},
+ {id:'s5',name:'홍대입구점',addr:'서울 마포구 양화로 160',manual:false},
+ {id:'s6',name:'판교테크노밸리점',addr:'경기 성남시 분당구 판교역로 235',manual:false},
+ {id:'s7',name:'해운대점',addr:'부산 해운대구 해운대해변로 264',manual:true},
+ {id:'s8',name:'제주공항점',addr:'제주 제주시 공항로 2',manual:false},
+];
+try{const v=JSON.parse(localStorage.getItem('ss.callStores')||'null');if(Array.isArray(v)&&v.length)STORES=v;}catch(e){}
+
+let q='',picked=null,act=-1,open=false;
+const results=()=>{const k=q.trim().replace(/\s+/g,'').toLowerCase();if(!k)return[];
+ return STORES.filter(s=>s.name.replace(/\s+/g,'').toLowerCase().includes(k)||(s.addr||'').replace(/\s+/g,'').includes(k))
+  .sort((a,b)=>(b.manual-a.manual)||a.name.localeCompare(b.name,'ko'));};
+const hl=name=>{const k=q.trim();if(!k)return esc(name);const i=name.toLowerCase().indexOf(k.toLowerCase());
+ return i<0?esc(name):esc(name.slice(0,i))+'<mark>'+esc(name.slice(i,i+k.length))+'</mark>'+esc(name.slice(i+k.length));};
+
+function renderLogin(){
+ document.title='주문호출관리 시스템 — SyncSign';
+ $('#app').innerHTML=`
+ <header class="ocl-top">${LOGO}</header>
+ <main class="ocl-main"><section class="ocl-card" aria-labelledby="ocl-title">
+  <h1 id="ocl-title">주문호출관리 시스템</h1>
+  <p class="sub">번호호출을 사용할 매장을 검색해 선택하면 바로 시작할 수 있어요.</p>
+  <label class="ocl-lbl" for="ocl-q">매장</label>
+  <div id="ocl-field"></div>
+  <button class="btn btn-primary ocl-go" id="ocl-go" disabled>로그인</button>
+  <p class="ocl-foot">매장 관리 › 번호호출에서 <b style="color:var(--text-2);font-weight:600">수동 입력</b>을 사용 중인 매장만 로그인할 수 있어요.</p>
+ </section></main>`;
+ drawField();
+ $('#ocl-go').onclick=login;
+}
+function drawField(){
+ const f=$('#ocl-field'),go=$('#ocl-go');
+ go.disabled=!picked;
+ if(picked){
+  f.innerHTML=`<div class="ocl-picked"><div class="tx"><b>${esc(picked.name)}</b><span>${esc(picked.addr||'주소 미등록')}</span></div>
+   <button class="btn btn-sm" id="ocl-change" type="button">변경</button></div>`;
+  $('#ocl-change').onclick=()=>{picked=null;drawField();$('#ocl-q').focus();$('#ocl-q').select();};
+  return;
+ }
+ f.innerHTML=`<div class="ocl-search" id="ocl-search">${IC.search}
+  <input class="input" id="ocl-q" type="text" placeholder="매장 이름을 입력해 주세요" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="ocl-list" aria-autocomplete="list" value="${esc(q)}">
+  <button class="ocl-clear" id="ocl-clear" type="button" aria-label="검색어 지우기" ${q?'':'hidden'}>${IC.x}</button>
+  <ul class="ocl-list" id="ocl-list" role="listbox" hidden></ul></div>
+  <p class="ocl-hint">매장 이름이나 주소 일부만 입력해도 찾을 수 있어요.</p>`;
+ const inp=$('#ocl-q');
+ inp.addEventListener('input',()=>{q=inp.value;act=-1;open=!!q.trim();$('#ocl-clear').hidden=!q;drawList();});
+ inp.addEventListener('focus',()=>{if(q.trim()){open=true;drawList();}});
+ inp.addEventListener('keydown',e=>{
+  const rs=results(),ok=rs.map((s,i)=>s.manual?i:-1).filter(i=>i>=0);
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!ok.length)return;e.preventDefault();open=true;
+   const p=ok.indexOf(act);act=e.key==='ArrowDown'?ok[(p+1)%ok.length]:ok[(p<=0?ok.length:p)-1];drawList();}
+  else if(e.key==='Enter'){e.preventDefault();const i=act>=0?act:(ok.length===1?ok[0]:-1);if(i>=0)pick(rs[i]);}
+  else if(e.key==='Escape'){if(open){e.stopPropagation();open=false;drawList();}}
+ });
+ $('#ocl-clear').onclick=()=>{q='';inp.value='';$('#ocl-clear').hidden=true;open=false;drawList();inp.focus();};
+}
+function drawList(){
+ const ul=$('#ocl-list'),inp=$('#ocl-q');if(!ul)return;
+ const rs=results();
+ ul.hidden=!open;inp.setAttribute('aria-expanded',String(open));
+ if(!open)return;
+ ul.innerHTML=rs.length?rs.map((s,i)=>`<li class="ocl-opt ${s.manual?'':'dis'} ${i===act?'act':''}" role="option" id="ocl-o${i}" data-i="${i}" aria-disabled="${!s.manual}" aria-selected="${i===act}">
+   <div class="tx"><b>${hl(s.name)}</b><span>${esc(s.addr||'주소 미등록')}</span></div>${s.manual?'':'<em>수동 입력 미사용</em>'}</li>`).join('')
+  :`<li class="ocl-none"><b>검색 결과가 없어요</b>매장 관리에 등록된 매장 이름을 확인해 주세요.</li>`;
+ inp.setAttribute('aria-activedescendant',act>=0?'ocl-o'+act:'');
+ ul.querySelector('.act')?.scrollIntoView({block:'nearest'});
+ ul.querySelectorAll('.ocl-opt:not(.dis)').forEach(li=>{
+  li.addEventListener('mousedown',e=>{e.preventDefault();pick(rs[+li.dataset.i]);});
+  li.addEventListener('mousemove',()=>{if(act!==+li.dataset.i){act=+li.dataset.i;ul.querySelectorAll('.ocl-opt').forEach(o=>o.classList.toggle('act',o===li));}});
+ });
+}
+document.addEventListener('mousedown',e=>{if(open&&!e.target.closest('#ocl-search')){open=false;drawList();}});
+function pick(s){if(!s||!s.manual)return;picked=s;open=false;act=-1;drawField();$('#ocl-go').focus();}
+function login(){
+ const go=$('#ocl-go');if(!picked||go.dataset.loading)return;
+ go.dataset.loading='1';go.disabled=true;go.innerHTML='<span class="spinner inv"></span>';
+ /* TODO(API): POST /order-call/sessions {storeId} — 실패 시 오류 Toast 후 버튼 복구 */
+ setTimeout(()=>{
+  if(window.__OCL_LOGIN_FAIL){delete go.dataset.loading;go.disabled=false;go.textContent='로그인';toast('로그인하지 못했어요. 잠시 후 다시 시도해 주세요.',{err:true});return;}
+  renderApp(picked);
+ },900);
+}
+/* 로그인 이후 — 주문호출 화면은 이번 범위 밖이라 자리표시만 둔다 */
+function renderApp(s){
+ document.title=`${s.name} · 주문호출관리 — SyncSign`;
+ $('#app').innerHTML=`<div class="ocl-app">
+  <header class="ocl-bar">${LOGO}<span class="sep"></span><span class="nm">${esc(s.name)}</span>
+   <span style="flex:1"></span><button class="btn btn-sm" id="ocl-out">로그아웃</button></header>
+  <main class="ocl-ph"><div class="empty"><b>주문호출 화면</b><span>'${esc(s.name)}' 매장으로 로그인했어요.<br>주문 번호 입력·호출 화면은 이번 프로토타입 범위에 포함되지 않아요.</span></div></main></div>`;
+ toast(`'${esc(s.name)}' 매장으로 로그인했어요.`);
+ $('#ocl-out').onclick=()=>{picked=null;q='';renderLogin();};
+}
+renderLogin();
+})();
+</script>
+</body>
+</html>
