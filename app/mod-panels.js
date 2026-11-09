@@ -450,7 +450,7 @@ function renderRail(){
   <div class="store-list">${nrStores.slice(0,60).map(s=>{
    const ps=panelsOf(s.id);const bad=ps.some(p=>p.status!=='on');
    return `<button class="store-row ${flt.store===s.id?'on':''}" data-store="${s.id}"><span class="dot ${bad?'err':'on'}" style="width:6px;height:6px"></span>${s.name}<span class="cnt num">${ps.length}</span></button>`}).join('')}
-   ${nrStores.length>60?`<div style="font-size:12px;color:var(--text-3);padding:4px 10px">외 ${nrStores.length-60}개 매장 — 검색으로 찾기</div>`:''}
+   ${nrStores.length>60?`<div style="font-size:13px;color:var(--text-3);padding:4px 10px">외 ${nrStores.length-60}개 매장 — 검색으로 찾기</div>`:''}
   </div></div>`:'';
  $('#store-tree').innerHTML=(showUn?`<button class="store-row store-row-none ${flt.store===NO_STORE_KEY?'on':''}" data-store="${NO_STORE_KEY}"><span class="dash"></span>${NO_STORE}<span class="cnt num">${fmt(unN)}</span></button>`:'')
  +nrHtml
@@ -463,7 +463,7 @@ function renderRail(){
   <div class="store-list">${stores.slice(0,60).map(s=>{
    const ps=panelsOf(s.id);const bad=ps.some(p=>p.status!=='on');
    return `<button class="store-row ${flt.store===s.id?'on':''}" data-store="${s.id}"><span class="dot ${bad?'err':'on'}" style="width:6px;height:6px"></span>${s.name}<span class="cnt num">${ps.length}</span></button>`}).join('')}
-   ${stores.length>60?`<div style="font-size:12px;color:var(--text-3);padding:4px 10px">외 ${stores.length-60}개 매장 — 검색으로 찾기</div>`:''}
+   ${stores.length>60?`<div style="font-size:13px;color:var(--text-3);padding:4px 10px">외 ${stores.length-60}개 매장 — 검색으로 찾기</div>`:''}
   </div></div>`;
  }).join('');
  $$('[data-region]').forEach(b=>b.onclick=()=>b.classList.toggle('open'));
@@ -1068,7 +1068,7 @@ function openStorePicker(list,after){
   ov.querySelector('#sp-list').innerHTML=
    ((!q||NO_STORE.includes(q))?row(null,NO_STORE,`화면 ${fmt(unassignedPanels().length)}`,true):'')
    +shown.map(s=>row(s.id,s.name,`${REGIONS.find(r=>r.id===s.region)?.name||''} · 화면 ${fmt(panelsOf(s.id).length)}`)).join('')
-   +(arr.length>shown.length?`<div style="font-size:12px;color:var(--text-3);padding:8px 10px">외 ${fmt(arr.length-shown.length)}개 매장 — 검색으로 찾아보세요</div>`:'')
+   +(arr.length>shown.length?`<div style="font-size:13px;color:var(--text-3);padding:8px 10px">외 ${fmt(arr.length-shown.length)}개 매장 — 검색으로 찾아보세요</div>`:'')
    +(q&&!arr.length&&!NO_STORE.includes(q)?`<div style="font-size:13px;color:var(--text-3);padding:14px 10px">'${q}'와 일치하는 매장이 없어요</div>`:'');
   ov.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{sel=b.dataset.sp===NO_STORE_KEY?null:b.dataset.sp;draw()});
   const nochange=sel===undefined||(same&&sel===(list[0].store||null));
@@ -1285,12 +1285,12 @@ function openWallDrawer(w){
   <button class="icon-btn" data-close style="margin-left:auto">${IC.x}</button></div>
   <div class="drawer-body">
    <div class="dpreview" style="background:#0B0E13">
-    ${wallCellsHtml(w,t=>{const p=panelOf(t.p);const tc=wallTileContent(w,t);return `<div style="background:${tc.g};border-radius:5px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:12px;color:rgba(255,255,255,.75);font-weight:700">${p?p.name:'빈 칸'}</span><span class="dot ${p&&p.status==='on'?'on':'off'}" style="position:absolute;right:6px;top:6px"></span></div>`},'4px')}
+    ${wallCellsHtml(w,t=>{const p=panelOf(t.p);const tc=wallTileContent(w,t);return `<div style="background:${tc.g};border-radius:5px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="position:absolute;left:6px;top:4px;font-size:13px;color:rgba(255,255,255,.75);font-weight:700">${p?p.name:'빈 칸'}</span><span class="dot ${p&&p.status==='on'?'on':'off'}" style="position:absolute;right:6px;top:6px"></span></div>`},'4px')}
    </div>
    <div class="sync-note">${IC.info}<span><b>일정은 비디오월 단위, 콘텐츠는 화면별</b>로 편성돼요. 각 화면은 자기 타일 영역만 재생하고, 프레임은 자동으로 동기화돼요.</span></div>
    <div class="dsec"><h3>화면별 콘텐츠</h3>
     ${wallTiles(w).map(t=>{const p=panelOf(t.p);const ref=w.cm&&w.cm[t.p];const a=ref?contentOf(ref):null;
-     return `<div class="tl-item"><span class="cthumb" style="background:${a?a.g:c.g}">${a?a.e:''}</span><span class="nm">${p?p.name:'빈 칸'}</span><span style="font-size:12px;color:var(--text-2);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%">${a?a.name:c.name}</span></div>`}).join('')}
+     return `<div class="tl-item"><span class="cthumb" style="background:${a?a.g:c.g}">${a?a.e:''}</span><span class="nm">${p?p.name:'빈 칸'}</span><span style="font-size:13px;color:var(--text-2);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%">${a?a.name:c.name}</span></div>`}).join('')}
    </div>
   </div>
   <div class="drawer-foot ro-foot">
@@ -2347,7 +2347,7 @@ function openWallWizard(existing,opts={}){
     </div>
     ${MY_WALL_LAYOUTS.length?`<div class="scp-sec" style="padding-left:2px;margin-top:16px">내 레이아웃 — 저장해 둔 배치 재사용</div>
     <div class="layout-cards">${MY_WALL_LAYOUTS.map(L=>`
-      <button class="layout-card" data-mylayout="${L.id}" style="position:relative"><span class="lc-prev"><span class="lc-grid" style="aspect-ratio:${L.gw*16}/${L.gh*9};grid-template-columns:repeat(${L.gw},1fr);grid-template-rows:repeat(${L.gh},1fr)">${L.tiles.map(([x,y,w,h])=>`<i style="grid-column:${x+1}/span ${w};grid-row:${y+1}/span ${h}"></i>`).join('')}</span></span><b>${L.name}</b><span>${L.tiles.length}칸 · ${L.gw}×${L.gh}</span><span class="lnk" data-mydel="${L.id}" style="position:absolute;right:10px;top:8px;font-size:12px">삭제</span></button>`).join('')}</div>`:''}
+      <button class="layout-card" data-mylayout="${L.id}" style="position:relative"><span class="lc-prev"><span class="lc-grid" style="aspect-ratio:${L.gw*16}/${L.gh*9};grid-template-columns:repeat(${L.gw},1fr);grid-template-rows:repeat(${L.gh},1fr)">${L.tiles.map(([x,y,w,h])=>`<i style="grid-column:${x+1}/span ${w};grid-row:${y+1}/span ${h}"></i>`).join('')}</span></span><b>${L.name}</b><span>${L.tiles.length}칸 · ${L.gw}×${L.gh}</span><span class="lnk" data-mydel="${L.id}" style="position:absolute;right:10px;top:8px;font-size:13px">삭제</span></button>`).join('')}</div>`:''}
     </div>`;
    body.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.preset;
@@ -2375,8 +2375,8 @@ function openWallWizard(existing,opts={}){
     <div class="wb-pool">
      <select class="select select-sm" id="wb-store"><option value="" ${storeId?'':'selected'}>${NO_STORE} 화면</option>${storeOptions(storeId).map(s=>`<option value="${s.id}" ${s.id===storeId?'selected':''}>${s.name}</option>`).join('')}</select>
      <div class="pool-list">${pool.map(p=>{const used=tiles.some(t=>t.p===p.id);
-      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'off'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||`<div style="padding:14px;font-size:12px;color:var(--text-3)">${storeId?'이 매장에':'미지정 화면 중'} 배치 가능한 화면이 없어요. 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요.</div>`}</div>
-     <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5">① 화면을 캔버스의 빈 칸으로 끌어다 놓거나, 화면을 고른 뒤 빈 칸을 눌러 배치해요.<br>② 배치된 칸에 마우스를 올리면 좌측 상단 ×로 화면을 빼고, 끌면 위치 이동·맞바꾸기가 돼요.</p>
+      return `<div class="pool-item ${used?'used':''}" draggable="${!used}" data-pool="${p.id}" ${pickPid===p.id?'style="background:var(--blue-50)"':''}><span class="dot ${p.status==='on'?'on':'off'}"></span><span style="flex:1"><b>${p.name}</b><span class="sub">${p.res}</span></span>${used?'<span class="badge badge-blue">배치됨</span>':''}</div>`}).join('')||`<div style="padding:14px;font-size:13px;color:var(--text-3)">${storeId?'이 매장에':'미지정 화면 중'} 배치 가능한 화면이 없어요. 셋탑이 연결된 온라인 화면만 비디오월로 묶을 수 있어요.</div>`}</div>
+     <p style="font-size:13px;color:var(--text-3);margin:0;line-height:1.5">① 화면을 캔버스의 빈 칸으로 끌어다 놓거나, 화면을 고른 뒤 빈 칸을 눌러 배치해요.<br>② 배치된 칸에 마우스를 올리면 좌측 상단 ×로 화면을 빼고, 끌면 위치 이동·맞바꾸기가 돼요.</p>
     </div>
     <div class="wb-grid-wrap">
      <div class="vwb-toolbar">
@@ -2392,7 +2392,7 @@ function openWallWizard(existing,opts={}){
         ${p?`<b>${p.name}</b><span class="sz">${p.res}</span>`:`<b>빈 칸</b><span class="sz">화면을 놓아주세요</span>`}
        </div>`}).join('')}
      </div></div>
-     <span style="font-size:12px;color:var(--text-2)">화면 ${placedN}개 배치${ghostN?` · 빈 칸 ${ghostN}개`:''} · 캔버스 ${gw}×${gh} (${orient}) — 송출 시 각 타일이 자기 영역의 화면 조각을 나눠 재생해요</span>
+     <span style="font-size:13px;color:var(--text-2)">화면 ${placedN}개 배치${ghostN?` · 빈 칸 ${ghostN}개`:''} · 캔버스 ${gw}×${gh} (${orient}) — 송출 시 각 타일이 자기 영역의 화면 조각을 나눠 재생해요</span>
     </div></div>`;
    /* 캔버스 실측 사이징 — 그리드는 콘텐츠 크기가 없으면 붕괴하므로, 스테이지 크기에 맞춰
       비율(가로형 16:9 유닛 / 세로형 9:16 유닛)을 유지한 실제 px 크기를 계산해 지정 */
@@ -2452,16 +2452,16 @@ function openWallWizard(existing,opts={}){
    const times=[];for(let h=7;h<=23;h+=.5)times.push(h);
    body.innerHTML=`<div class="wall-build" style="align-items:stretch">
     <div class="rail-main std" style="flex:1.25;min-width:0">
-     <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">화면별 콘텐츠</b><span style="font-size:12px;color:var(--text-3)">${an} / ${placed.length} 지정</span><span class="spacer"></span><button class="btn btn-sm" id="w3-fill" ${placed.length?'':'disabled'}>전체 같은 콘텐츠</button></div>
+     <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">화면별 콘텐츠</b><span style="font-size:13px;color:var(--text-3)">${an} / ${placed.length} 지정</span><span class="spacer"></span><button class="btn btn-sm" id="w3-fill" ${placed.length?'':'disabled'}>전체 같은 콘텐츠</button></div>
      <div class="content-scroll" style="padding:10px;display:flex;flex-direction:column;gap:2px">
       ${placed.map(t=>{const p=panelOf(t.p);const ref=cm[t.p];const a=ref?contentOf(ref):null;
        return `<div class="scp-row ${a?'on':''}" data-w3c="${t.p}" role="button" tabindex="0" style="width:100%"><span class="cthumb${a?'':' ph'}" style="${a?`background:${a.g}`:''};flex:none">${a?a.e:IC.image}</span><span class="tx" style="flex:1;min-width:0"><b>${p?p.name:'화면'}</b><span>${a?a.name:'콘텐츠를 선택해주세요'}</span></span><button class="btn btn-sm">${a?'변경':'선택'}</button></div>`}).join('')||'<div class="empty" style="padding:30px"><b>배치된 화면이 없어요</b><span>이전 단계에서 화면을 먼저 배치해주세요.</span></div>'}
-      <p style="font-size:12px;color:var(--text-3);margin:8px 4px 0;line-height:1.5">화면마다 서로 다른 콘텐츠를 지정할 수 있어요. 지정하지 않은 화면은 검은 화면으로 대기해요.</p>
+      <p style="font-size:13px;color:var(--text-3);margin:8px 4px 0;line-height:1.5">화면마다 서로 다른 콘텐츠를 지정할 수 있어요. 지정하지 않은 화면은 검은 화면으로 대기해요.</p>
      </div>
     </div>
     <div class="vwb-side plain" style="width:340px;overflow-y:auto">
      <div class="rail-main std" style="flex:none">
-      <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">일정 설정</b><span style="font-size:12px;color:var(--text-3)">비디오월 전체에 하나로 적용</span></div>
+      <div class="prod-toolbar" style="padding:12px 16px"><b style="font-size:14px">일정 설정</b><span style="font-size:13px;color:var(--text-3)">비디오월 전체에 하나로 적용</span></div>
       <div style="padding:14px 16px 20px;display:flex;flex-direction:column;gap:20px">
        ${periodField(scPd.sd,scPd.ed,scPd.noEnd,'w3')}
        <div class="f-row" style="margin:0"><label>송출 시간</label><div class="time-row">
@@ -2473,16 +2473,16 @@ function openWallWizard(existing,opts={}){
          <input class="input input-sm" id="w3-cyc" type="number" min="0" inputmode="numeric" value="${scCycN}" ${scCont?'disabled':''} aria-label="재생 주기 값" style="flex:1;min-width:0">
          <select class="select select-sm" id="w3-cycu" ${scCont?'disabled':''} aria-label="재생 주기 단위" style="width:96px;flex:none">${[['sec','초'],['min','분'],['hour','시간']].map(([v,l])=>`<option value="${v}" ${scCycUnit===v?'selected':''}>${l}</option>`).join('')}</select></div>
         <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-2);margin-top:10px;cursor:pointer"><span class="checkbox ${scCont?'on':''}" id="w3-cont" role="checkbox" aria-checked="${scCont}" tabindex="0">${IC.check}</span>연속 재생</label>
-        <p style="font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.5">콘텐츠 전체가 1회 재생된 뒤 다음 회차까지의 <b>대기 시간</b>이에요. 연속 재생은 대기 없이 바로 이어서 재생해요.</p></div>
+        <p style="font-size:13px;color:var(--text-3);margin:8px 0 0;line-height:1.5">콘텐츠 전체가 1회 재생된 뒤 다음 회차까지의 <b>대기 시간</b>이에요. 연속 재생은 대기 없이 바로 이어서 재생해요.</p></div>
        <div class="f-row" style="margin:0"><label>반복 주기</label><div class="day-chips">${['월','화','수','목','금','토','일'].map((d,i)=>`<button class="day-chip ${scDays.includes(i)?'on':''}" data-w3d="${i}">${d}</button>`).join('')}</div></div>
-       <div class="sync-note" style="margin:0;font-size:12px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요. 같은 시간의 일반 일정보다 먼저 재생돼요.</span></div>
+       <div class="sync-note" style="margin:0;font-size:13px">${IC.info}<span>비디오월 일정은 <b>항상 최우선으로 송출</b>돼요. 같은 시간의 일반 일정보다 먼저 재생돼요.</span></div>
       </div>
      </div>
      <div class="scp-sec" style="padding:12px 2px 4px">미리보기</div>
      <div style="display:grid;grid-template-columns:repeat(${gw},1fr);grid-template-rows:repeat(${gh},1fr);gap:2px;aspect-ratio:${orient==='세로형'?gw*9+'/'+gh*16:gw*16+'/'+gh*9};background:#0B0E13;padding:6px;border-radius:8px;max-height:170px;width:100%">
-      ${tiles.map(t=>{const a=t.p&&cm[t.p]?contentOf(cm[t.p]):null;return `<div style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h};background:${a?a.g:t.p?'#2A3B52':'transparent'};border:${t.p?'1px solid rgba(255,255,255,.15)':'1px dashed #39424F'};border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px">${a?a.e:''}</div>`}).join('')}
+      ${tiles.map(t=>{const a=t.p&&cm[t.p]?contentOf(cm[t.p]):null;return `<div style="grid-column:${t.x+1}/span ${t.w};grid-row:${t.y+1}/span ${t.h};background:${a?a.g:t.p?'#2A3B52':'transparent'};border:${t.p?'1px solid rgba(255,255,255,.15)':'1px dashed #39424F'};border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:13px">${a?a.e:''}</div>`}).join('')}
      </div>
-     <div class="sync-note" style="margin-top:12px;font-size:12px">${IC.info}<span>[비디오월 저장]을 누르면 <b>비디오월 생성과 편성 등록이 한 번에</b> 완료돼요. 콘텐츠를 하나도 지정하지 않으면 레이아웃만 저장돼요.</span></div>
+     <div class="sync-note" style="margin-top:12px;font-size:13px">${IC.info}<span>[비디오월 저장]을 누르면 <b>비디오월 생성과 편성 등록이 한 번에</b> 완료돼요. 콘텐츠를 하나도 지정하지 않으면 레이아웃만 저장돼요.</span></div>
     </div></div>`;
    body.querySelectorAll('[data-w3c]').forEach(rowEl=>rowEl.onclick=()=>{
     const pid=rowEl.dataset.w3c;

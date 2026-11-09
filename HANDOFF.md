@@ -292,3 +292,12 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
   - `GET /order-call/stores?q=` → `[{id,name,addr,manual}]` (현재 프로토타입은 CMS 링크 클릭 시 localStorage `ss.callStores`로 매장 목록 전달 → API 연동 시 제거).
   - `POST /order-call/sessions {storeId,password}` → 세션 발급 후 주문호출 화면 이동. 401 = 비밀번호 불일치 → 입력 아래 `비밀번호가 일치하지 않아요. 다시 확인해 주세요.`(재현: `window.__OCL_PW_WRONG=true`) / 그 외 실패는 오류 Toast(재현: `window.__OCL_LOGIN_FAIL=true`).
   - 최종 도메인 확정 시 CMS의 표시·복사 주소(현재 기존 주소 유지) 교체.
+
+## 번호호출 위젯 — 매장 설정 안내 (`app/mod-products.js` `callStoreGuideHtml` · `openStoreCallSetup`, `app/prototype.html` `sCallGuide`)
+- 에디터 위젯 패널 [대기/호출] 탭 상단에 항상 안내 노출: "매장 번호호출 설정이 필요해요." + [매장 번호호출 설정하기]. 위젯 추가는 막지 않는다.
+- 에디터는 신규 템플릿 제작으로도 진입하므로 **매장 조회·추론·자동 선택을 하지 않는다**(템플릿↔매장 연결 전제 없음).
+- 버튼 → 매장 관리를 **새 탭**으로 연다(편집 중 템플릿 유지). 프로토타입은 `prototype.html#stores-call`, 실서비스는 `/stores?guide=call` 같은 쿼리로 대체(TODO(API)).
+- `#stores-call` 진입 시 목록 로딩 후 **번호호출 설정 방법 안내 모달**(`openCallSetupGuide`) 1회 자동 노출 — 날씨 위젯 '화면 위치 설정 방법' 모달과 같은 HTML/CSS 일러스트 모션(영상 파일 없음) + 3단계(매장 선택 → 번호호출 켜기 → 호출 방식 확인 후 등록). 배너의 [설정 방법 보기]로 다시 열 수 있다. 단계 시각은 `CALL_GUIDE_STEPS`, 매장 관리/번호호출 탭 UI가 바뀌면 `cgmWorldHtml` 마크업도 맞출 것.
+- `#stores-call` 진입 시 매장 목록 상단 안내 배너(닫기 가능) → 행 클릭 시 매장 상세 Drawer가 **[번호호출] 탭**으로 열림. 배너 닫기·다른 메뉴 이동 시 해제(`showPage`).
+- 최고관리자 등 다매장 사용자도 같은 흐름(목록에서 직접 매장 선택). 매장 편집 권한이 없으면 기존 Drawer 읽기 전용 처리 그대로.
+- 함께 수정: `LoadUX.pageGate` 지연 재렌더가 다른 페이지로 이동한 뒤에도 대시보드로 덮어쓰던 문제 → `curPage===key`일 때만 재렌더(딥링크 진입 시 발생).

@@ -172,7 +172,7 @@ function editCat(id){
  openModal(`
   <div class="modal-head"><h2>카테고리 이름 수정</h2></div>
   <div class="modal-body"><div class="f-row"><label>카테고리 이름</label><input class="input" id="cat-nm" value="${c.name}" maxlength="20"><div class="ferr" id="cat-nm-err" style="display:none"></div></div>
-  <p style="font-size:12px;color:var(--text-3);margin:4px 0 8px">이름을 바꾸면 이 카테고리를 연동한 메뉴판에도 바로 반영돼요.</p></div>
+  <p style="font-size:13px;color:var(--text-3);margin:4px 0 8px">이름을 바꾸면 이 카테고리를 연동한 메뉴판에도 바로 반영돼요.</p></div>
   <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>취소</button><button class="btn btn-primary" id="cat-save">저장</button></div>
  `,{width:'400px',onMount:ov=>{
   const inp=ov.querySelector('#cat-nm'),err=ov.querySelector('#cat-nm-err');inp.focus();inp.select();
@@ -383,7 +383,7 @@ function openDrawer(edit){
    <div class="form-sec"><h3>기본 정보</h3>
     <div class="f-row"><label>상품 이미지 <span style="font-weight:500;color:var(--text-3);margin-left:2px">최대 5장 · JPG·PNG 10MB</span></label>
      <div class="img-list" id="img-list"></div>
-     ${ro?'':`<p style="font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.6">타일을 클릭하면 <b style="color:var(--text-2);font-weight:600">대표 이미지</b>로 지정되고, 드래그하면 순서를 바꿀 수 있어요. 몇 번째에 있든 대표로 지정한 이미지가 상품 목록과 메뉴판에 표시돼요.</p>`}</div>
+     ${ro?'':`<p style="font-size:13px;color:var(--text-3);margin:8px 0 0;line-height:1.6">타일을 클릭하면 <b style="color:var(--text-2);font-weight:600">대표 이미지</b>로 지정되고, 드래그하면 순서를 바꿀 수 있어요. 몇 번째에 있든 대표로 지정한 이미지가 상품 목록과 메뉴판에 표시돼요.</p>`}</div>
     <div class="f-row"><label>상품 이름 <span class="req">*</span></label><input class="input" id="f-name" placeholder="예) 아메리카노" value="${isEdit?edit.name:''}" maxlength="40"><div class="ferr" id="f-name-err" style="display:none">상품 이름을 입력해주세요.</div></div>
     <div class="f-grid">
      <div class="f-row"><label>카테고리 <span class="req">*</span></label><select class="select" id="f-cat">${CATS.map(c=>`<option value="${c.id}" ${isEdit&&edit.cat===c.id?'selected':''}>${c.name}</option>`).join('')}<option value="__new">＋ 새 카테고리 만들기</option></select></div>
@@ -392,7 +392,7 @@ function openDrawer(edit){
     <div class="f-row" id="new-cat-row" hidden style="background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--r-md);padding:12px"><label style="color:var(--blue)">새 카테고리 이름</label>
      <div style="display:flex;gap:6px"><input class="input" id="new-cat-nm" placeholder="예) 시즌 한정" maxlength="20" style="flex:1;background:var(--surface)"><button type="button" class="btn btn-primary" id="new-cat-ok">추가</button><button type="button" class="btn" id="new-cat-cancel">취소</button></div>
      <div class="ferr" id="new-cat-err" style="display:none"></div>
-     <p style="font-size:12px;color:var(--text-2);margin:8px 0 0">추가하면 이 상품에 바로 적용되고, 카테고리 목록에도 나타나요.</p></div>
+     <p style="font-size:13px;color:var(--text-2);margin:8px 0 0">추가하면 이 상품에 바로 적용되고, 카테고리 목록에도 나타나요.</p></div>
     <div class="f-row"><label>설명</label><input class="input" id="f-desc" placeholder="메뉴판에 함께 표시할 한 줄 설명" value="${isEdit?edit.desc:''}" maxlength="60"></div>
    </div>
    <div class="form-sec"><h3>추가 설정 <span class="opt-tag">선택</span></h3>
@@ -406,7 +406,7 @@ function openDrawer(edit){
     <div class="acc ${isEdit&&edit.discount?'open':''}" id="acc-dc">
      <button class="acc-head" type="button" data-acc2>할인<span class="st" id="dc-st">${isEdit&&edit.discount?money(edit.discount,edit.cur)+'로 할인 중':'사용 안 함'}</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
      <div class="acc-body"><div class="f-row"><label>할인 적용가</label><div style="position:relative"><input class="input num" id="f-dc" inputmode="decimal" placeholder="예) ${isEdit?Math.round(edit.price*0.9):'4,000'}" value="${isEdit&&edit.discount?edit.discount:''}" style="padding-right:44px"><span id="f-dc-suf" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px">${curOf(isEdit?edit.cur:'KRW').suffix||curOf(isEdit?edit.cur:'KRW').sym}</span></div><div class="ferr" id="f-dc-err" style="display:none">할인 적용가는 기본 가격보다 낮아야 해요.</div></div>
-     <p style="font-size:12px;color:var(--text-3);margin:8px 0 0">메뉴판에는 정가에 취소선이 그어지고 할인가가 강조돼요.</p></div>
+     <p style="font-size:13px;color:var(--text-3);margin:8px 0 0">메뉴판에는 정가에 취소선이 그어지고 할인가가 강조돼요.</p></div>
     </div>
     <div class="acc ${isEdit&&hasI18n(edit)?'open':''}" id="acc-lang">
      <button class="acc-head" type="button" data-acc2>다국어 이름·설명<span class="st" id="lang-st">사용 안 함</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
@@ -1929,11 +1929,12 @@ function drawWgBody(body,hasMenu){
      <div class="mtype-prev"><div class="wcall-thumb" style="aspect-ratio:${F.ratio};height:auto;width:100%"><img class="wcall-thumb-img" src="${F.img}" alt="${F.name}" draggable="false"></div></div>
      <div class="mtype-cap"><b>${F.name}</b><span>${F.desc}</span></div>
     </button>`).join('');
-  body.innerHTML=`<p class="wg-intro">기본 레이아웃은 추가 후 Light/Dark 테마를 바꿀 수 있어요. 브랜드 고정 테마는 완성형이라 테마 선택 없이 그대로 사용돼요.</p>
+  body.innerHTML=`${callStoreGuideHtml()}
    <div class="wg-grp-lbl">기본 레이아웃</div>
    <div class="mtype-lib">${layoutCards}</div>
    <div class="wg-grp-lbl" style="margin-top:16px">브랜드 고정 테마</div>
    <div class="mtype-lib">${fixedCards}</div>`;
+  body.querySelector('#call-store-go').onclick=openStoreCallSetup;
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{const L=CALL_LAYOUTS.find(x=>x.id===b.dataset.wgadd);const w=Math.round(canvasW*0.31);addObject('widget',{kind:'call',layout:L.id,theme:'light',ratio:L.ratio,w,h:Math.round(w/L.ratio)});});
   body.querySelectorAll('[data-wgfixed]').forEach(b=>b.onclick=()=>{const F=callFixed(b.dataset.wgfixed);const w=Math.round(canvasW*0.5);addObject('widget',{kind:'call',layout:F.id,fixed:true,ratio:F.ratio,w,h:Math.round(w/F.ratio)});});
  }else{
@@ -2540,7 +2541,7 @@ function renderLayerList(el){
    <button class="icon-btn" data-lup="${o.id}" aria-label="한 칸 위로"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 15 6-6 6 6"/></svg></button>
    <button class="icon-btn" data-ldn="${o.id}" aria-label="한 칸 아래로"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
   </div>`;
- }).join('')||'<div style="font-size:12px;color:var(--text-3);padding:8px 0">객체가 없어요</div>';
+ }).join('')||'<div style="font-size:13px;color:var(--text-3);padding:8px 0">객체가 없어요</div>';
  el.querySelectorAll('[data-layer]').forEach(r=>r.addEventListener('click',e=>{if(e.target.closest('[data-lup],[data-ldn]'))return;selectObject(r.dataset.layer)}));
  el.querySelectorAll('[data-lup]').forEach(b=>b.onclick=e=>{e.stopPropagation();zOrder(b.dataset.lup,'up')});
  el.querySelectorAll('[data-ldn]').forEach(b=>b.onclick=e=>{e.stopPropagation();zOrder(b.dataset.ldn,'down')});
@@ -2580,6 +2581,22 @@ function renderWnPanel(o){
  wIn.addEventListener('change',()=>{let v=parseFloat(wIn.value);if(isNaN(v))v=o.w;v=Math.max(40,v);o.w=Math.round(v);o.h=Math.round(v/ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
  hIn.addEventListener('change',()=>{let v=parseFloat(hIn.value);if(isNaN(v))v=o.h;v=Math.max(40,v);o.h=Math.round(v);o.w=Math.round(v*ratio);wIn.value=o.w;hIn.value=o.h;pushHistory();renderStage();});
  const _wg=set.querySelector('#wx-loc-guide');if(_wg)_wg.onclick=openWxLocGuide;
+}
+/* 대기/호출(번호호출) 위젯 탭 — 매장 번호호출 설정 안내.
+   에디터는 신규 템플릿 제작으로도 진입하므로 '이 템플릿이 어느 매장에 송출되는지'를 전제하지 않는다
+   → 매장 정보를 조회·추론하거나 매장을 자동 선택하지 않고, 항상 같은 안내를 노출한다(위젯 추가는 막지 않음).
+   [매장 번호호출 설정하기] → 매장 관리를 새 탭으로 연다(편집 중인 템플릿 유지). 새 탭은 #stores-call 딥링크로
+   '매장 선택 → 매장 상세 [번호호출] 탭' 안내 배너를 띄우고, 행 클릭 시 번호호출 탭으로 바로 연다(prototype.html sCallGuide). */
+function callStoreGuideHtml(){
+ const alertIc='<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#9CA3AF"/><path d="M12 7v6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.3" fill="#fff"/></svg>';
+ return `<div class="info-note wx-loc-note call-store-note">${alertIc}<div>
+   <p><b>매장 번호호출 설정이 필요해요.</b><br>번호호출 위젯을 사용하려면 먼저 매장 관리에서 번호호출 기능을 활성화해주세요.</p>
+   <button type="button" class="btn btn-sm" id="call-store-go" title="매장 관리가 새 탭으로 열려요">매장 번호호출 설정하기<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M10 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4"/></svg><span class="sr-only">(새 탭)</span></button>
+  </div></div>`;
+}
+function openStoreCallSetup(){
+ /* TODO(API): 실서비스는 CMS 라우트 /stores?guide=call 을 새 탭으로 연다(권한 없는 계정은 매장 관리 진입 시 기존 권한 처리 따름) */
+ window.open('./prototype.html#stores-call','_blank','noopener');
 }
 /* 날씨 위젯 패널 — 화면 위치 안내 영역(위치 입력 UI 대신). 위치는 화면 관리에서 화면 단위로 등록한다 */
 function wxLocNoticeHtml(){
