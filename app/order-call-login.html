@@ -7,11 +7,11 @@
 <link rel="stylesheet" href="./styles.css">
 <!--
  주문호출관리 시스템 로그인 (SyncSign SaaS 전용) — 매장 관리 › 매장 상세 › [번호호출] › '수동 입력' 사이트 링크의 도착 페이지.
- 흐름: 매장 검색 → 매장 선택 → [로그인] → 주문호출 화면(이번 범위 밖, 자리표시).
+ 흐름: 매장 검색 → 매장 선택 → 계정 비밀번호 입력 → [로그인] → 주문호출 화면(이번 범위 밖, 자리표시).
  기존 시스템(sdm.el-bigs.com/register)과 달리 '소상공인/프랜차이즈' 유형 선택이 없다 — SaaS 계정의 매장 정보만으로 로그인.
  TODO(API)
   · 매장 검색: GET /order-call/stores?q= → [{id,name,addr,manual:boolean}] (번호호출 '수동 입력'을 사용 중인 매장만 manual=true)
-  · 로그인:   POST /order-call/sessions {storeId} → 세션 토큰 발급 후 주문호출 화면으로 이동
+  · 로그인:   POST /order-call/sessions {storeId,password} → 세션 토큰 발급 후 주문호출 화면으로 이동 (401 = 비밀번호 불일치)
   · 최종 도메인 확정 시 CMS 링크(prototype.html drawCallTab의 call-url) 주소·복사 문구도 함께 교체
 -->
 <style>
@@ -48,6 +48,15 @@ body.ocl #app{flex:1;display:flex;flex-direction:column;min-width:0;height:auto;
 .ocl-picked span{display:block;font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ocl-hint{font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.55}
 .ocl-go{width:100%;margin-top:24px;height:48px;font-size:15px}
+/* 계정 비밀번호 */
+.ocl-pw{margin-top:20px}
+.ocl-pwbox{position:relative}
+.ocl-pwbox .input{height:48px;padding:0 46px 0 14px;font-size:15px}
+.ocl-pwbox .input:disabled{background:var(--sunken);cursor:not-allowed}
+.ocl-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-3);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ocl-eye:hover{background:var(--sunken);color:var(--text-2)}
+.ocl-eye:disabled{display:none}
+.ocl-pw .ferr[hidden]{display:none}
 .ocl-foot{margin:20px 0 0;text-align:center;font-size:12px;color:var(--text-3);line-height:1.6}
 /* 로그인 이후(이번 범위 밖 — 자리표시) */
 .ocl-app{flex:1;display:flex;flex-direction:column}
@@ -93,6 +102,8 @@ const $=s=>document.querySelector(s);
 const LOGO='<svg viewBox="0 0 146 39" style="height:26px;width:auto;display:block" role="img" aria-label="syncsign"><use href="#logo-light"/></svg>';
 const IC={
  search:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+ eye:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+ eyeOff:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.6 3.4M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></svg>',
  x:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
 };
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -128,18 +139,37 @@ function renderLogin(){
  <header class="ocl-top">${LOGO}</header>
  <main class="ocl-main"><section class="ocl-card" aria-labelledby="ocl-title">
   <h1 id="ocl-title">주문호출관리 시스템</h1>
-  <p class="sub">번호호출을 사용할 매장을 검색해 선택하면 바로 시작할 수 있어요.</p>
+  <p class="sub">매장을 선택하고 매장 계정 비밀번호를 입력해 로그인해 주세요.</p>
   <label class="ocl-lbl" for="ocl-q">매장</label>
   <div id="ocl-field"></div>
+  <div class="ocl-pw"><label class="ocl-lbl" for="ocl-pw">비밀번호</label>
+   <div class="ocl-pwbox"><input class="input" id="ocl-pw" type="password" autocomplete="current-password" placeholder="매장을 먼저 선택해 주세요" disabled>
+    <button class="ocl-eye" id="ocl-eye" type="button" aria-label="비밀번호 보기" aria-pressed="false" disabled>${IC.eye}</button></div>
+   <div class="ferr" id="ocl-pw-err" hidden></div></div>
   <button class="btn btn-primary ocl-go" id="ocl-go" disabled>로그인</button>
   <p class="ocl-foot">매장 관리 › 번호호출에서 <b style="color:var(--text-2);font-weight:600">수동 입력</b>을 사용 중인 매장만 로그인할 수 있어요.</p>
  </section></main>`;
  drawField();
  $('#ocl-go').onclick=login;
+ const pw=$('#ocl-pw'),eye=$('#ocl-eye');
+ pw.addEventListener('input',()=>{clearPwErr();syncGo();});
+ pw.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();login();}});
+ eye.onclick=()=>{const show=pw.type==='password';pw.type=show?'text':'password';eye.innerHTML=show?IC.eyeOff:IC.eye;
+  eye.setAttribute('aria-pressed',String(show));eye.setAttribute('aria-label',show?'비밀번호 숨기기':'비밀번호 보기');pw.focus();};
+}
+const syncGo=()=>{const go=$('#ocl-go');if(go&&!go.dataset.loading)go.disabled=!(picked&&$('#ocl-pw').value);};
+const clearPwErr=()=>{$('#ocl-pw').classList.remove('error');$('#ocl-pw-err').hidden=true;};
+const showPwErr=msg=>{const pw=$('#ocl-pw'),er=$('#ocl-pw-err');pw.classList.add('error');er.textContent=msg;er.hidden=false;pw.focus();pw.select();};
+/* 매장 선택 여부에 따라 비밀번호 입력 활성/비활성 — 매장을 바꾸면 입력한 비밀번호는 지운다 */
+function syncPw(){
+ const pw=$('#ocl-pw'),eye=$('#ocl-eye');
+ if(!picked){pw.value='';pw.type='password';eye.innerHTML=IC.eye;eye.setAttribute('aria-pressed','false');clearPwErr();}
+ pw.disabled=eye.disabled=!picked;pw.placeholder=picked?'비밀번호를 입력해 주세요':'매장을 먼저 선택해 주세요';
+ syncGo();
 }
 function drawField(){
- const f=$('#ocl-field'),go=$('#ocl-go');
- go.disabled=!picked;
+ const f=$('#ocl-field');
+ syncPw();
  if(picked){
   f.innerHTML=`<div class="ocl-picked"><div class="tx"><b>${esc(picked.name)}</b><span>${esc(picked.addr||'주소 미등록')}</span></div>
    <button class="btn btn-sm" id="ocl-change" type="button">변경</button></div>`;
@@ -179,13 +209,17 @@ function drawList(){
  });
 }
 document.addEventListener('mousedown',e=>{if(open&&!e.target.closest('#ocl-search')){open=false;drawList();}});
-function pick(s){if(!s||!s.manual)return;picked=s;open=false;act=-1;drawField();$('#ocl-go').focus();}
+function pick(s){if(!s||!s.manual)return;picked=s;open=false;act=-1;drawField();$('#ocl-pw').focus();}
 function login(){
- const go=$('#ocl-go');if(!picked||go.dataset.loading)return;
- go.dataset.loading='1';go.disabled=true;go.innerHTML='<span class="spinner inv"></span>';
- /* TODO(API): POST /order-call/sessions {storeId} — 실패 시 오류 Toast 후 버튼 복구 */
+ const go=$('#ocl-go'),pw=$('#ocl-pw');if(!picked||go.dataset.loading)return;
+ if(!pw.value){showPwErr('비밀번호를 입력해 주세요.');return;}
+ go.dataset.loading='1';go.disabled=true;go.innerHTML='<span class="spinner inv"></span>';pw.disabled=true;
+ const done=()=>{delete go.dataset.loading;go.textContent='로그인';pw.disabled=false;syncGo();};
+ /* TODO(API): POST /order-call/sessions {storeId,password} — 401: 비밀번호 불일치(입력 아래 오류) / 그 외 실패: 오류 Toast. 둘 다 버튼 복구
+    [MOCK] 비밀번호는 아무 값이나 통과. 재현: window.__OCL_PW_WRONG=true(불일치) · window.__OCL_LOGIN_FAIL=true(서버 오류) */
  setTimeout(()=>{
-  if(window.__OCL_LOGIN_FAIL){delete go.dataset.loading;go.disabled=false;go.textContent='로그인';toast('로그인하지 못했어요. 잠시 후 다시 시도해 주세요.',{err:true});return;}
+  if(window.__OCL_PW_WRONG){done();showPwErr('비밀번호가 일치하지 않아요. 다시 확인해 주세요.');return;}
+  if(window.__OCL_LOGIN_FAIL){done();toast('로그인하지 못했어요. 잠시 후 다시 시도해 주세요.',{err:true});return;}
   renderApp(picked);
  },900);
 }
