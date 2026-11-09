@@ -19,9 +19,9 @@ body.ocl{overflow:auto;background:var(--bg);min-height:100vh;display:flex;flex-d
 body.ocl #app{flex:1;display:flex;flex-direction:column;min-width:0;height:auto;min-height:100vh}
 .ocl-top{display:flex;align-items:center;padding:24px 32px;flex:none}
 .ocl-main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px 96px}
-.ocl-card{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-sm);padding:40px 36px 36px}
+.ocl-card{width:480px;max-width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-sm);padding:40px 36px 36px}
 .ocl-card h1{margin:0 0 6px;font-size:24px;font-weight:800;letter-spacing:-.02em}
-.ocl-card .sub{margin:0 0 28px;font-size:14px;color:var(--text-2);line-height:1.6}
+.ocl-card .sub{margin:0 0 28px;font-size:15px;color:var(--text-2);line-height:1.6;word-break:keep-all}
 .ocl-lbl{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px}
 /* 매장 검색 콤보박스 */
 .ocl-search{position:relative}
@@ -35,29 +35,28 @@ body.ocl #app{flex:1;display:flex;flex-direction:column;min-width:0;height:auto;
 .ocl-opt .tx{flex:1;min-width:0}
 .ocl-opt b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ocl-opt b mark{background:none;color:var(--blue);font-weight:700}
-.ocl-opt span{display:block;font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-opt span{display:block;font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ocl-opt.dis{cursor:default}
 .ocl-opt.dis .tx{opacity:.55}
-.ocl-opt.dis em{font-style:normal;font-size:12px;color:var(--text-3);flex:none}
+.ocl-opt.dis em{font-style:normal;font-size:13px;color:var(--text-3);flex:none}
 .ocl-none{padding:22px 12px;text-align:center;font-size:13px;color:var(--text-3);line-height:1.6}
 .ocl-none b{display:block;color:var(--text-2);font-size:14px;margin-bottom:2px}
 /* 선택한 매장 */
 .ocl-picked{display:flex;align-items:center;gap:12px;height:64px;padding:0 10px 0 16px;border:1px solid var(--blue);border-radius:var(--r-md);background:var(--blue-50)}
 .ocl-picked .tx{flex:1;min-width:0}
 .ocl-picked b{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ocl-picked span{display:block;font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ocl-hint{font-size:12px;color:var(--text-3);margin:8px 0 0;line-height:1.55}
+.ocl-picked span{display:block;font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-hint{font-size:13px;color:var(--text-3);margin:8px 0 0;line-height:1.55}
 .ocl-go{width:100%;margin-top:24px;height:48px;font-size:15px}
 /* 계정 비밀번호 */
-.ocl-pw{margin-top:20px}
+.ocl-pw{margin-top:20px;animation:fade .18s ease-out}
 .ocl-pwbox{position:relative}
 .ocl-pwbox .input{height:48px;padding:0 46px 0 14px;font-size:15px}
-.ocl-pwbox .input:disabled{background:var(--sunken);cursor:not-allowed}
 .ocl-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-3);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ocl-eye:hover{background:var(--sunken);color:var(--text-2)}
-.ocl-eye:disabled{display:none}
+.ocl-pw .ferr{font-size:13px}
 .ocl-pw .ferr[hidden]{display:none}
-.ocl-foot{margin:20px 0 0;text-align:center;font-size:12px;color:var(--text-3);line-height:1.6}
+.ocl-foot{margin:20px 0 0;text-align:center;font-size:13px;color:var(--text-3);line-height:1.6}
 /* 로그인 이후(이번 범위 밖 — 자리표시) */
 .ocl-app{flex:1;display:flex;flex-direction:column}
 .ocl-bar{display:flex;align-items:center;gap:14px;height:64px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);flex:none}
@@ -142,9 +141,9 @@ function renderLogin(){
   <p class="sub">매장을 선택하고 매장 계정 비밀번호를 입력해 로그인해 주세요.</p>
   <label class="ocl-lbl" for="ocl-q">매장</label>
   <div id="ocl-field"></div>
-  <div class="ocl-pw"><label class="ocl-lbl" for="ocl-pw">비밀번호</label>
-   <div class="ocl-pwbox"><input class="input" id="ocl-pw" type="password" autocomplete="current-password" placeholder="매장을 먼저 선택해 주세요" disabled>
-    <button class="ocl-eye" id="ocl-eye" type="button" aria-label="비밀번호 보기" aria-pressed="false" disabled>${IC.eye}</button></div>
+  <div class="ocl-pw" id="ocl-pwrow" hidden><label class="ocl-lbl" for="ocl-pw">비밀번호</label>
+   <div class="ocl-pwbox"><input class="input" id="ocl-pw" type="password" autocomplete="current-password" placeholder="비밀번호를 입력해 주세요">
+    <button class="ocl-eye" id="ocl-eye" type="button" aria-label="비밀번호 보기" aria-pressed="false">${IC.eye}</button></div>
    <div class="ferr" id="ocl-pw-err" hidden></div></div>
   <button class="btn btn-primary ocl-go" id="ocl-go" disabled>로그인</button>
   <p class="ocl-foot">매장 관리 › 번호호출에서 <b style="color:var(--text-2);font-weight:600">수동 입력</b>을 사용 중인 매장만 로그인할 수 있어요.</p>
@@ -160,11 +159,11 @@ function renderLogin(){
 const syncGo=()=>{const go=$('#ocl-go');if(go&&!go.dataset.loading)go.disabled=!(picked&&$('#ocl-pw').value);};
 const clearPwErr=()=>{$('#ocl-pw').classList.remove('error');$('#ocl-pw-err').hidden=true;};
 const showPwErr=msg=>{const pw=$('#ocl-pw'),er=$('#ocl-pw-err');pw.classList.add('error');er.textContent=msg;er.hidden=false;pw.focus();pw.select();};
-/* 매장 선택 여부에 따라 비밀번호 입력 활성/비활성 — 매장을 바꾸면 입력한 비밀번호는 지운다 */
+/* 비밀번호 입력은 매장을 선택하면 노출 — 매장을 바꾸면(선택 해제) 숨기고 입력한 비밀번호는 지운다 */
 function syncPw(){
  const pw=$('#ocl-pw'),eye=$('#ocl-eye');
  if(!picked){pw.value='';pw.type='password';eye.innerHTML=IC.eye;eye.setAttribute('aria-pressed','false');clearPwErr();}
- pw.disabled=eye.disabled=!picked;pw.placeholder=picked?'비밀번호를 입력해 주세요':'매장을 먼저 선택해 주세요';
+ $('#ocl-pwrow').hidden=!picked;
  syncGo();
 }
 function drawField(){
