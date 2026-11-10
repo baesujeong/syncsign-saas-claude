@@ -811,16 +811,26 @@ const SPLIT_PRESETS=[
  {id:'sp4',name:'4분할',regions:[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]]},
 ];
 /* 대기/호출 위젯 — 서비스 제공 4가지 레이아웃(고정 비율) × Light/Dark 테마. 사용자는 디자인을 직접 편집하지 않고 조합만 선택 */
+/* 위젯 패널 카드는 타이틀 없이 디자인 이미지(thumb)만 노출 — 순서 = 패널 노출 순서(2열). name은 접근성 라벨·속성 패널용 */
+const CP='../uploads/call-presets/';
 const CALL_LAYOUTS=[
- {id:'pickup', name:'픽업 보드', desc:'PICK UP 안내 + 대기 번호', ratio:600/1015},
- {id:'grid',   name:'번호판',    desc:'번호 격자 표시',          ratio:600/760},
- {id:'feature',name:'대기 번호', desc:'최근 호출 번호 강조',      ratio:600/900},
- {id:'ticket', name:'번호표',    desc:'현재 번호 + 대기 목록',    ratio:600/720},
+ {id:'grid',   name:'기본 A · 번호판',    desc:'번호 격자 표시',          ratio:600/760,  thumb:CP+'basic-a.png'},
+ {id:'ticket', name:'기본 B · 번호표',    desc:'현재 번호 + 대기 목록',    ratio:600/720,  thumb:CP+'basic-b.png'},
+ {id:'feature',name:'기본 C · 대기 번호', desc:'최근 호출 번호 강조',      ratio:600/900,  thumb:CP+'basic-c.png'},
+ {id:'pickup', name:'기본 D · 픽업 보드', desc:'PICK UP 안내 + 대기 번호', ratio:600/1015, thumb:CP+'basic-d.png'},
 ];
-/* 대기/호출 — 브랜드 고정 테마: 디자인이 완성되어 제공되는 테마. Light/Dark 선택 없이 이미지 그대로 사용.
-   썸네일·캔버스 렌더 모두 등록된 이미지를 그대로 표시한다. (img/ratio는 uploads의 실제 파일에 맞춤) */
+/* 대기/호출 — 브랜드 테마: 디자인이 완성되어 제공되는 테마. Light/Dark 선택 없이 이미지 그대로 사용.
+   썸네일·캔버스 렌더 모두 등록된 이미지를 그대로 표시한다. (img/ratio는 uploads/call-presets의 실제 파일에 맞춤)
+   TODO(디자인): 현재 이미지는 패널 썸네일 해상도(약 270~800px). 캔버스·송출용 고해상도(예: 1920px) 원본으로 교체 필요 */
 const CALL_FIXED=[
- {id:'brand-01', name:'번호판 테마', desc:'브랜드 제공 · 제조완료번호', img:'../uploads/call-theme-01.png', ratio:1920/1080},
+ {id:'brand-h-a',name:'가로 A · 영상 + 1열 번호', img:CP+'brand-h-a.png',ratio:568/376},
+ {id:'brand-h-b',name:'가로 B · 영상 + 2열 번호', img:CP+'brand-h-b.png',ratio:568/376},
+ {id:'brand-v-a',name:'세로 A · 영상 + 3열 번호', img:CP+'brand-v-a.png',ratio:272/528},
+ {id:'brand-v-b',name:'세로 B · 영상 + 4열 번호', img:CP+'brand-v-b.png',ratio:272/528},
+ {id:'brand-f-a',name:'전체 A · 제조완료번호 5열', img:CP+'brand-f-a.png',ratio:413/232},
+ {id:'brand-f-b',name:'전체 B · 제조완료번호 표',  img:CP+'brand-f-b.png',ratio:411/231},
+ {id:'brand-f-c',name:'전체 C · Ready for Pickup 5열', img:CP+'brand-f-c.png',ratio:414/233},
+ {id:'brand-f-d',name:'전체 D · Ready for Pickup 6열', img:CP+'brand-f-d.png',ratio:411/231},
 ];
 const callFixed=id=>CALL_FIXED.find(f=>f.id===id)||null;
 /* 마크업 — 렌더 폭(w px)을 받아 --u(=w/100)로 텍스트·여백을 스케일. 캔버스=객체 폭, 미리보기=고정 패널 기준 폭 */
@@ -1920,20 +1930,14 @@ function drawWgBody(body,hasMenu){
     </button>`).join('')}</div>`;
   body.querySelectorAll('[data-mtype]').forEach(b=>b.onclick=()=>{const t=b.dataset.mtype;createWidget({type:t});toast(`타입 ${t} 메뉴판을 추가했어요. 상품을 불러와 채워보세요.`);});
  }else if(wgTab==='call'){
-  /* 대기/호출 — ①기본 레이아웃(Light/Dark 전환) ②브랜드 고정 테마(완성형, 테마 선택 없음) 두 그룹 */
-  const layoutCards=CALL_LAYOUTS.map(L=>`<button class="mtype-card" data-wgadd="${L.id}">
-     <div class="mtype-prev"><div class="wcall-thumb" style="aspect-ratio:${L.ratio}">${callWidgetHtml(L.id,'light',Math.round(60*L.ratio))}</div></div>
-     <div class="mtype-cap"><b>${L.name}</b><span>${L.desc}</span></div>
-    </button>`).join('');
-  const fixedCards=CALL_FIXED.map(F=>`<button class="mtype-card" data-wgfixed="${F.id}">
-     <div class="mtype-prev"><div class="wcall-thumb" style="aspect-ratio:${F.ratio};height:auto;width:100%"><img class="wcall-thumb-img" src="${F.img}" alt="${F.name}" draggable="false"></div></div>
-     <div class="mtype-cap"><b>${F.name}</b><span>${F.desc}</span></div>
-    </button>`).join('');
+  /* 대기/호출 — ①기본 레이아웃(Light/Dark 전환) ②브랜드 테마(완성형, 테마 선택 없음) 두 그룹.
+     카드는 타이틀 없이 디자인 이미지만 2열로 노출(이름은 aria-label·hover 툴팁) */
+  const card=(attr,id,name,src)=>`<button type="button" class="wcall-card" ${attr}="${id}" aria-label="${name} 추가" title="${name}"><img src="${src}" alt="" draggable="false"></button>`;
   body.innerHTML=`${callStoreGuideHtml()}
    <div class="wg-grp-lbl">기본 레이아웃</div>
-   <div class="mtype-lib">${layoutCards}</div>
-   <div class="wg-grp-lbl" style="margin-top:16px">브랜드 고정 테마</div>
-   <div class="mtype-lib">${fixedCards}</div>`;
+   <div class="wcall-lib">${CALL_LAYOUTS.map(L=>card('data-wgadd',L.id,L.name,L.thumb)).join('')}</div>
+   <div class="wg-grp-lbl" style="margin-top:24px">브랜드 테마</div>
+   <div class="wcall-lib">${CALL_FIXED.map(F=>card('data-wgfixed',F.id,F.name,F.img)).join('')}</div>`;
   body.querySelector('#call-store-go').onclick=openStoreCallSetup;
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{const L=CALL_LAYOUTS.find(x=>x.id===b.dataset.wgadd);const w=Math.round(canvasW*0.31);addObject('widget',{kind:'call',layout:L.id,theme:'light',ratio:L.ratio,w,h:Math.round(w/L.ratio)});});
   body.querySelectorAll('[data-wgfixed]').forEach(b=>b.onclick=()=>{const F=callFixed(b.dataset.wgfixed);const w=Math.round(canvasW*0.5);addObject('widget',{kind:'call',layout:F.id,fixed:true,ratio:F.ratio,w,h:Math.round(w/F.ratio)});});

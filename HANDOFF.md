@@ -312,3 +312,9 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 - `#stores-call` 진입 시 매장 목록 상단 안내 배너(닫기 가능) → 행 클릭 시 매장 상세 Drawer가 **[번호호출] 탭**으로 열림. 배너 닫기·다른 메뉴 이동 시 해제(`showPage`).
 - 최고관리자 등 다매장 사용자도 같은 흐름(목록에서 직접 매장 선택). 매장 편집 권한이 없으면 기존 Drawer 읽기 전용 처리 그대로.
 - 함께 수정: `LoadUX.pageGate` 지연 재렌더가 다른 페이지로 이동한 뒤에도 대시보드로 덮어쓰던 문제 → `curPage===key`일 때만 재렌더(딥링크 진입 시 발생).
+
+## 대기/호출 위젯 프리셋 패널 — 이미지 카드 (`app/mod-products.js` `CALL_LAYOUTS` · `CALL_FIXED`, `uploads/call-presets/`)
+- 에디터 위젯 패널 [대기/호출] 탭: 카드 타이틀·설명 제거, 디자인 이미지만 2열 카드(`.wcall-lib` / `.wcall-card`, 높이 100 · 배경 #E8EAEE)로 노출. 이름은 `aria-label`·hover 툴팁으로만 제공.
+- 기본 레이아웃 4종(기본 A~D = grid · ticket · feature · pickup): 카드는 이미지(`thumb`), 클릭 시 기존처럼 HTML 렌더 위젯 추가(Light/Dark 전환 유지).
+- 브랜드 테마 8종(가로 A·B / 세로 A·B / 전체 A~D): 이미지 그대로 캔버스에 배치(테마 선택 없음). 기존 `brand-01`(call-theme-01.png)은 패널에서 제거.
+- TODO(디자인): 브랜드 테마 이미지는 썸네일 해상도(약 270~570px) — 캔버스·송출용 고해상도 원본으로 교체 필요. 실서비스는 테마 목록·이미지를 서버(브랜드별 제공 테마)에서 조회(TODO(API)).

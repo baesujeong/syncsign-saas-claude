@@ -1120,10 +1120,13 @@ table.grid tr.checked td{background:var(--blue-50)}
 .wg-nv .yl-ico{width:calc(var(--u)*9);height:calc(var(--u)*8.1);flex:none}
 .wg-nv .yl b{font-size:calc(var(--u)*8);color:#0E3E8C;font-weight:800;letter-spacing:-.02em}
 .wg-nv .nv-head{font-size:calc(var(--u)*12);font-weight:800;color:#1A1A1A;line-height:1.35;word-break:keep-all;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
-/* 대기/호출 위젯 라이브러리 카드 — 메뉴 팔레트(.mtype-*)와 통일, 썸네일 프리뷰만 고정 높이로 맞춤 */
-.wcall-thumb{height:60px;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(20,28,40,.14)}
-/* 브랜드 고정 테마 — 완성형 이미지를 썸네일·캔버스에 그대로 표시 */
-.wcall-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
+/* 대기/호출 위젯 라이브러리 — 타이틀 없이 디자인 이미지만 2열 카드로 노출(2026-11 시안) */
+.wcall-lib{display:grid;grid-template-columns:1fr 1fr;gap:16px 14px}
+.wcall-card{height:100px;padding:12px;border:0;border-radius:14px;background:#E8EAEE;display:flex;align-items:center;justify-content:center;cursor:pointer;min-width:0;transition:box-shadow .12s,background .12s}
+.wcall-card img{max-width:100%;max-height:100%;object-fit:contain;display:block;pointer-events:none}
+.wcall-card:hover{background:#E1E4E9;box-shadow:inset 0 0 0 1.5px var(--border-2)}
+.wcall-card:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* 브랜드 테마 — 완성형 이미지를 캔버스에 그대로 표시 */
 .wg-call2.cl-fixed{padding:0;background:transparent;box-shadow:none}
 .wg-call2.cl-fixed img{width:100%;height:100%;object-fit:cover;display:block}
 /* 위젯 팔레트 그룹 라벨(기본 레이아웃 / 브랜드 고정 테마) */
