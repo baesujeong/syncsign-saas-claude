@@ -853,8 +853,8 @@ function callWidgetHtml(layout,theme,w){
    같은 템플릿이라도 화면마다 그 지역의 날씨가 표시된다. 에디터 캔버스에는 지역 대신 '화면 위치' 자리표시를 보여준다. */
 const WX_REGION_PH='화면 위치';
 const WEATHER_STYLES=[
- {id:'a',name:'타입 A',desc:'상세 정보(풍속·풍향·강수·미세먼지)',w:380,h:400},
- {id:'b',name:'타입 B',desc:'기온 + 아이콘',w:380,h:180},
+ {id:'a',name:'타입 A',desc:'상세 정보(풍속·풍향·강수·미세먼지)',w:380,h:400,thumb:'../uploads/weather-presets/weather-a.png'},
+ {id:'b',name:'타입 B',desc:'기온 + 아이콘',w:380,h:180,thumb:'../uploads/weather-presets/weather-b.png'},
 ];
 const NEWS_STYLES=[
  {id:'ticker',name:'티커형',desc:'흰색 배경 + 로고·헤드라인',w:720,h:104},
@@ -1924,10 +1924,8 @@ function drawWgBody(body,hasMenu){
  if(wgTab==='menu'){
   /* 스타일 타입 선택 → 새 메뉴판 위젯 추가(여러 개 가능). 이후 상품 불러오기로 채움 */
   body.innerHTML=`<p class="wg-intro">메뉴 스타일을 선택하고, 상품 정보를 불러오면 이름·이미지·가격·옵션이 자동 반영되며, 스타일·옵션 설정으로 디자인을 수정할 수 있어요.</p>
-   <div class="mtype-lib">${MENU_TYPES.map(T=>`<button class="mtype-card" data-mtype="${T.id}">
-     <div class="mtype-prev">${stylePv(T.id)}</div>
-     <div class="mtype-cap"><b>${T.name}</b><span>${T.desc}</span></div>
-    </button>`).join('')}</div>`;
+   <div class="wcall-lib">${MENU_TYPES.map(T=>`<button type="button" class="wcall-card" data-mtype="${T.id}" aria-label="메뉴판 ${T.name} 추가" title="메뉴판 ${T.name} · ${T.desc}">
+     <div class="mtype-prev">${stylePv(T.id)}</div></button>`).join('')}</div>`;
   body.querySelectorAll('[data-mtype]').forEach(b=>b.onclick=()=>{const t=b.dataset.mtype;createWidget({type:t});toast(`타입 ${t} 메뉴판을 추가했어요. 상품을 불러와 채워보세요.`);});
  }else if(wgTab==='call'){
   /* 대기/호출 — ①기본 레이아웃(Light/Dark 전환) ②브랜드 테마(완성형, 테마 선택 없음) 두 그룹.
@@ -1942,15 +1940,16 @@ function drawWgBody(body,hasMenu){
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{const L=CALL_LAYOUTS.find(x=>x.id===b.dataset.wgadd);const w=Math.round(canvasW*0.31);addObject('widget',{kind:'call',layout:L.id,theme:'light',ratio:L.ratio,w,h:Math.round(w/L.ratio)});});
   body.querySelectorAll('[data-wgfixed]').forEach(b=>b.onclick=()=>{const F=callFixed(b.dataset.wgfixed);const w=Math.round(canvasW*0.5);addObject('widget',{kind:'call',layout:F.id,fixed:true,ratio:F.ratio,w,h:Math.round(w/F.ratio)});});
  }else{
-  /* 날씨·뉴스 — 대기/호출·메뉴 팔레트와 통일(썸네일 좌측 + 제목·설명 우측, 1행 배치) */
+  /* 날씨·뉴스 — 대기/호출·메뉴와 같은 이미지 카드(타이틀 없이 2열). 날씨=디자인 이미지, 뉴스=위젯 축소 프리뷰 */
   const DEFS=wgTab==='weather'?WEATHER_STYLES:NEWS_STYLES;
   const intro=wgTab==='weather'?'송출되는 화면의 위치를 기준으로 날씨 정보를 보여주는 위젯이에요.':'실시간 뉴스 헤드라인을 보여주는 위젯이에요.';
-  body.innerHTML=`<p class="wg-intro">${intro}</p>
-   <div class="mtype-lib">${DEFS.map(d=>{const W=d.tw||d.w||340,H=d.th||d.h||180,sc=Math.min(88/W,56/H).toFixed(3);
-     return `<button class="mtype-card" data-wgadd="${d.id}">
-     <div class="mtype-prev"><div class="wg-thumb"><div class="wg-thumb-in" style="width:${W}px;height:${H}px;transform:scale(${sc})">${widgetInnerHtml({kind:wgTab,styleId:d.id,region:'서울',w:W,preview:true})}</div></div></div>
-     <div class="mtype-cap"><b>${d.name}</b><span>${d.desc}</span></div>
-    </button>`;}).join('')}</div>`;
+  /* 날씨 — 대기/호출과 같은 이미지 카드(타이틀 없이 디자인 이미지만 2열). 클릭 시 기존 렌더 위젯 추가 */
+  body.innerHTML=wgTab==='weather'?`<p class="wg-intro">${intro}</p>
+   <div class="wcall-lib">${DEFS.map(d=>`<button type="button" class="wcall-card" data-wgadd="${d.id}" aria-label="날씨 ${d.name} 추가" title="날씨 ${d.name}"><img src="${d.thumb}" alt="" draggable="false"></button>`).join('')}</div>`
+  :`<p class="wg-intro">${intro}</p>
+   <div class="wcall-lib">${DEFS.map(d=>{const W=d.tw||d.w||340,H=d.th||d.h||180,sc=Math.min(116/W,76/H).toFixed(3);
+     return `<button type="button" class="wcall-card" data-wgadd="${d.id}" aria-label="뉴스 ${d.name} 추가" title="뉴스 ${d.name} · ${d.desc}">
+     <div class="wg-thumb"><div class="wg-thumb-in" style="width:${W}px;height:${H}px;transform:scale(${sc})">${widgetInnerHtml({kind:wgTab,styleId:d.id,region:'서울',w:W,preview:true})}</div></div></button>`;}).join('')}</div>`;
   body.querySelectorAll('[data-wgadd]').forEach(b=>b.onclick=()=>{
    const def=DEFS.find(d=>d.id===b.dataset.wgadd)||{};
    const props=wgTab==='weather'
@@ -2808,7 +2807,7 @@ function drawStyleTab(body){
  const bg=widget.bg,hasImg=menuType(widget.type).img;const stepSvg=d=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="${d}"/></svg>`;
  body.innerHTML=`
   <div class="mn-lbl" style="margin-top:2px">메뉴 스타일</div>
-  <div class="mn-styles" id="st-styles">${MENU_TYPES.map(T=>`<button class="mn-style ${widget.type===T.id?'on':''}" data-mtype="${T.id}"><div class="mn-style-pv">${stylePv(T.id)}</div><b>${T.name}</b></button>`).join('')}</div>
+  <div class="mn-styles" id="st-styles">${MENU_TYPES.map(T=>`<button type="button" class="mn-style ${widget.type===T.id?'on':''}" data-mtype="${T.id}" aria-label="메뉴 스타일 ${T.name}" aria-pressed="${widget.type===T.id}" title="${T.name} · ${T.desc}"><div class="mn-style-pv">${stylePv(T.id)}</div></button>`).join('')}</div>
   <div class="mn-divider"></div>
   ${widget.type!=='E'?`<div class="mn-styhd">레이아웃</div>
    <div class="mn-row"><label>한줄 표시</label><div class="stepper"><button data-cols="-1" aria-label="줄임">${stepSvg('M5 12h14')}</button><b>${widget.cols||4}</b><button data-cols="1" aria-label="늘림">${stepSvg('M12 5v14M5 12h14')}</button></div></div>

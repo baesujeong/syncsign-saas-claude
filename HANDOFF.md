@@ -318,3 +318,6 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 - 기본 레이아웃 4종(기본 A~D = grid · ticket · feature · pickup): 카드는 이미지(`thumb`), 클릭 시 기존처럼 HTML 렌더 위젯 추가(Light/Dark 전환 유지).
 - 브랜드 테마 8종(가로 A·B / 세로 A·B / 전체 A~D): 이미지 그대로 캔버스에 배치(테마 선택 없음). 기존 `brand-01`(call-theme-01.png)은 패널에서 제거.
 - TODO(디자인): 브랜드 테마 이미지는 썸네일 해상도(약 270~570px) — 캔버스·송출용 고해상도 원본으로 교체 필요. 실서비스는 테마 목록·이미지를 서버(브랜드별 제공 테마)에서 조회(TODO(API)).
+- 날씨 위젯 탭도 같은 이미지 카드로 변경(`WEATHER_STYLES[].thumb`, `uploads/weather-presets/weather-a.png` · `weather-b.png`). 타이틀·설명 제거, 상단 안내 문구는 유지. 클릭 시 기존 렌더 위젯 추가(위치는 화면 단위 관리 그대로).
+- 메뉴·뉴스 탭도 타이틀·설명 제거, 같은 2열 카드(`.wcall-card`). 디자인 이미지가 없어 기존 축소 프리뷰(`stylePv` · `widgetInnerHtml`)를 카드 안에 표시 — 이미지 시안이 오면 날씨처럼 `thumb`로 교체. 이름은 `aria-label`·hover 툴팁. 4개 탭 모두 상단 안내 문구는 유지(대기/호출은 매장 설정 안내).
+- 메뉴 위젯 상세 패널 [스타일] › 메뉴 스타일 카드(`.mn-style`)도 타입명 제거 — 미리보기만 노출, 선택 표시(파란 테두리)·`aria-pressed`·툴팁으로 구분.

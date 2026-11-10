@@ -1126,6 +1126,9 @@ table.grid tr.checked td{background:var(--blue-50)}
 .wcall-card img{max-width:100%;max-height:100%;object-fit:contain;display:block;pointer-events:none}
 .wcall-card:hover{background:#E1E4E9;box-shadow:inset 0 0 0 1.5px var(--border-2)}
 .wcall-card:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* 메뉴판 타입 카드 — 기존 미니 프리뷰(100×68 기준)를 카드 크기에 맞춰 확대 */
+.wcall-card .mtype-prev{background:none;transform:scale(1.15);pointer-events:none}
+.wcall-card .wg-thumb{pointer-events:none}
 /* 브랜드 테마 — 완성형 이미지를 캔버스에 그대로 표시 */
 .wg-call2.cl-fixed{padding:0;background:transparent;box-shadow:none}
 .wg-call2.cl-fixed img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1501,10 +1504,10 @@ table.grid tr.checked td{background:var(--blue-50)}
 .mn-lbl .c{font-size:13px;font-weight:600;color:var(--text-3);margin-left:4px}
 /* 메뉴 스타일 카드 (5개, 3열) */
 .mn-styles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.mn-style{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);padding:8px 8px 9px;cursor:pointer;text-align:center;transition:border-color .12s,box-shadow .12s}
+.mn-style{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);padding:8px;cursor:pointer;text-align:center;transition:border-color .12s,box-shadow .12s}
 .mn-style:hover{border-color:var(--border-2)}
 .mn-style.on{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-100)}
-.mn-style b{display:block;font-size:13px;font-weight:700;margin-top:7px}
+/* 메뉴 스타일 카드 — 타이틀 없이 미리보기만(이름은 aria-label·툴팁) */
 .mn-style-pv{height:60px;border-radius:7px;background:#EDF0F4;display:flex;align-items:center;justify-content:center;overflow:hidden}
 /* 스타일 카드 미니 프리뷰 (실제 배치 축소) */
 .mn-pv{width:80%;background:#fff;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.12);padding:5px 6px;box-sizing:border-box;font-size:5px;line-height:1.35;color:#232B36;overflow:hidden;text-align:left}
