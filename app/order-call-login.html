@@ -7,11 +7,19 @@
 <link rel="stylesheet" href="./styles.css">
 <!--
  주문호출관리 시스템 로그인 (SyncSign SaaS 전용) — 매장 관리 › 매장 상세 › [번호호출] › '수동 입력' 사이트 링크의 도착 페이지.
- 흐름: 매장 검색 → 매장 선택 → 계정 비밀번호 입력 → [로그인] → 주문호출 화면(이번 범위 밖, 자리표시).
- 기존 시스템(sdm.el-bigs.com/register)과 달리 '소상공인/프랜차이즈' 유형 선택이 없다 — SaaS 계정의 매장 정보만으로 로그인.
+ 매장에는 별도 계정·비밀번호가 없다. 매장을 관리하는 사용자가 SyncSign 개인 계정으로 로그인한 뒤 매장을 고른다.
+ 흐름: Step 01 관리자 계정 로그인(이메일·비밀번호) → Step 02 번호호출을 사용할 매장 선택 → [시작하기] → 주문호출 화면(이번 범위 밖, 자리표시).
+ 매장 목록 권한(서버가 판단, 프론트는 받은 목록만 그린다)
+  · 최고관리자(owner)            → 브랜드 전체 매장
+  · 관리자·뷰어(admin/viewer)    → 계정에 연결된 매장만 (사용자 관리의 '담당 매장' 범위 · 매장 관리의 담당자 지정)
  TODO(API)
-  · 매장 검색: GET /order-call/stores?q= → [{id,name,addr,manual:boolean}] (번호호출 '수동 입력'을 사용 중인 매장만 manual=true)
-  · 로그인:   POST /order-call/sessions {storeId,password} → 세션 토큰 발급 후 주문호출 화면으로 이동 (401 = 비밀번호 불일치)
+  · 로그인:     POST /auth/login {email,password} — CMS 로그인과 같은 인증. → {accessToken, user:{id,name,email,role}}
+                401 = 이메일·비밀번호 불일치(입력 아래 오류) / 그 외 실패 = 오류 Toast
+  · Google:     CMS와 같은 Google OAuth(GET /auth/google?redirect=<이 페이지>) → 콜백에서 accessToken 발급
+                SyncSign에 가입되지 않은 Google 계정 = 404 → 오류 Toast(가입은 CMS에서)
+  · 매장 목록:  GET /order-call/stores (Authorization) → [{id,name,addr,manual}] — 권한 범위는 서버가 필터링.
+                manual = 번호호출 '수동 입력' 사용 중(선택 가능). 매장이 많으면 ?q= 서버 검색으로 전환
+  · 시작:       POST /order-call/sessions {storeId} (Authorization) → 주문호출 화면 진입. 403 = 그 사이 권한 회수 → 목록 다시 조회
   · 최종 도메인 확정 시 CMS 링크(prototype.html drawCallTab의 call-url) 주소·복사 문구도 함께 교체
 -->
 <style>
@@ -19,44 +27,56 @@ body.ocl{overflow:auto;background:var(--bg);min-height:100vh;display:flex;flex-d
 body.ocl #app{flex:1;display:flex;flex-direction:column;min-width:0;height:auto;min-height:100vh}
 .ocl-top{display:flex;align-items:center;padding:24px 32px;flex:none}
 .ocl-main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px 96px}
-.ocl-card{width:480px;max-width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-sm);padding:40px 36px 36px}
+.ocl-card{width:480px;max-width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-sm);padding:40px 36px 36px;animation:fade .18s ease-out}
 .ocl-card h1{margin:0 0 6px;font-size:24px;font-weight:800;letter-spacing:-.02em}
 .ocl-card .sub{margin:0 0 28px;font-size:15px;color:var(--text-2);line-height:1.6;word-break:keep-all}
 .ocl-lbl{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:8px}
-/* 매장 검색 콤보박스 */
-.ocl-search{position:relative}
-.ocl-search>svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none}
-.ocl-search .input{height:48px;padding:0 42px 0 42px;font-size:15px}
-.ocl-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--text-3);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.ocl-clear:hover{background:var(--sunken);color:var(--text-2)}
-.ocl-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:6px;max-height:300px;overflow-y:auto;margin:0;list-style:none}
-.ocl-opt{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-md);cursor:pointer}
-.ocl-opt.act{background:var(--blue-50)}
-.ocl-opt .tx{flex:1;min-width:0}
-.ocl-opt b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ocl-opt b mark{background:none;color:var(--blue);font-weight:700}
-.ocl-opt span{display:block;font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ocl-opt.dis{cursor:default}
-.ocl-opt.dis .tx{opacity:.55}
-.ocl-opt.dis em{font-style:normal;font-size:13px;color:var(--text-3);flex:none}
-.ocl-none{padding:22px 12px;text-align:center;font-size:13px;color:var(--text-3);line-height:1.6}
-.ocl-none b{display:block;color:var(--text-2);font-size:14px;margin-bottom:2px}
-/* 선택한 매장 */
-.ocl-picked{display:flex;align-items:center;gap:12px;height:64px;padding:0 10px 0 16px;border:1px solid var(--blue);border-radius:var(--r-md);background:var(--blue-50)}
-.ocl-picked .tx{flex:1;min-width:0}
-.ocl-picked b{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ocl-picked span{display:block;font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ocl-hint{font-size:13px;color:var(--text-3);margin:8px 0 0;line-height:1.55}
-.ocl-go{width:100%;margin-top:24px;height:48px;font-size:15px}
-/* 계정 비밀번호 */
-.ocl-pw{margin-top:20px;animation:fade .18s ease-out}
+.ocl-f+.ocl-f{margin-top:18px}
+.ocl-f .input{height:48px;padding:0 14px;font-size:15px}
+.ocl-f .ferr[hidden]{display:none}
 .ocl-pwbox{position:relative}
-.ocl-pwbox .input{height:48px;padding:0 46px 0 14px;font-size:15px}
+.ocl-pwbox .input{padding-right:46px}
 .ocl-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-3);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ocl-eye:hover{background:var(--sunken);color:var(--text-2)}
-.ocl-pw .ferr{font-size:13px}
-.ocl-pw .ferr[hidden]{display:none}
-.ocl-foot{margin:20px 0 0;text-align:center;font-size:13px;color:var(--text-3);line-height:1.6}
+.ocl-go{width:100%;margin-top:24px;height:48px;font-size:15px}
+.ocl-foot{margin:20px 0 0;text-align:center;font-size:13px;color:var(--text-3);line-height:1.6;word-break:keep-all}
+.ocl-demo{margin:16px 0 0;padding:12px 14px;border:1px dashed var(--border-2);border-radius:var(--r-md);font-size:13px;color:var(--text-3);line-height:1.6}
+.ocl-demo button{border:0;background:none;padding:0;color:var(--blue);font:inherit;font-weight:600;cursor:pointer}
+/* Step 02 — 로그인한 계정 */
+.ocl-acct{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--sunken);margin-bottom:24px}
+.ocl-acct .tx{flex:1;min-width:0}
+.ocl-acct b{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700}
+.ocl-acct span.em{display:block;font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-acct .btn{flex:none}
+/* Step 02 — 매장 검색 + 목록 */
+.ocl-search{position:relative}
+.ocl-search>svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none}
+.ocl-search .input{height:44px;padding:0 42px;font-size:15px}
+.ocl-search .input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;display:none} /* 브라우저 기본 x 숨김 — #ocl-clear만 사용 */
+.ocl-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--text-3);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ocl-clear:hover{background:var(--sunken);color:var(--text-2)}
+.ocl-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 2px 8px;font-size:13px;color:var(--text-3)}
+.ocl-meta b{color:var(--text-2);font-weight:600}
+.ocl-list{border:1px solid var(--border);border-radius:var(--r-lg);max-height:312px;overflow-y:auto;padding:4px;margin:0}
+.ocl-store{position:relative;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--r-md);cursor:pointer;border:1.5px solid transparent}
+.ocl-store+.ocl-store{margin-top:2px}
+.ocl-store:hover{background:var(--sunken)}
+.ocl-store.on{background:var(--blue-50);border-color:var(--blue)}
+.ocl-store input{position:absolute;opacity:0;pointer-events:none}
+.ocl-store .radio{flex:none}
+.ocl-store:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:-2px}
+.ocl-store .tx{flex:1;min-width:0}
+.ocl-store .tx b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-store .tx b mark{background:none;color:var(--blue);font-weight:700}
+.ocl-store .tx span{display:block;font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocl-store.dis{cursor:default}
+.ocl-store.dis:hover{background:none}
+.ocl-store.dis .tx,.ocl-store.dis .radio{opacity:.5}
+.ocl-store em{font-style:normal;font-size:13px;color:var(--text-3);flex:none}
+.ocl-sk{display:flex;align-items:center;gap:12px;padding:13px 12px}
+.ocl-state{padding:36px 16px;text-align:center;font-size:13px;color:var(--text-3);line-height:1.6;word-break:keep-all}
+.ocl-state b{display:block;color:var(--text-2);font-size:15px;margin-bottom:4px}
+.ocl-state .btn{margin-top:14px}
 /* 로그인 이후(이번 범위 밖 — 자리표시) */
 .ocl-app{flex:1;display:flex;flex-direction:column}
 .ocl-bar{display:flex;align-items:center;gap:14px;height:64px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);flex:none}
@@ -64,7 +84,7 @@ body.ocl #app{flex:1;display:flex;flex-direction:column;min-width:0;height:auto;
 .ocl-bar .nm{font-size:15px;font-weight:700}
 .ocl-ph{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 16px}
 .ocl-ph .empty{background:var(--surface);border:1px dashed var(--border-2);border-radius:var(--r-xl);width:100%;max-width:560px}
-@media (max-width:520px){.ocl-top{padding:18px 16px}.ocl-card{padding:32px 20px 28px;border-radius:var(--r-lg)}.ocl-bar{padding:0 16px}}
+@media (max-width:520px){.ocl-top{padding:18px 16px}.ocl-card{padding:32px 20px 28px;border-radius:var(--r-lg)}.ocl-bar{padding:0 16px;gap:10px}.ocl-bar .who{display:none}}
 </style>
 </head>
 <body class="ocl">
@@ -103,6 +123,7 @@ const IC={
  search:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
  eye:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
  eyeOff:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.6 3.4M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></svg>',
+google:'<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>',
  x:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
 };
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -111,126 +132,264 @@ function toast(msg,{err}={}){
  t.innerHTML=`${err?IC.x:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></svg>'}<span>${msg}</span>`;
  $('#toasts').appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320)},3200);
 }
-/* [MOCK DATA] 이 SaaS 계정의 매장 목록. CMS(prototype.html)에서 링크를 누르면 현재 매장 관리 상태를 localStorage('ss.callStores')로 넘겨준다.
-   직접 열었거나 저장소를 쓸 수 없으면 아래 기본값 사용. manual = 번호호출 '수동 입력' 사용 중(로그인 가능) */
+const ROLE_META={owner:['최고관리자','role-owner'],admin:['관리자','role-admin'],viewer:['뷰어','role-viewer']};
+
+/* ═══════════ [MOCK DATA] — API 연동 시 이 블록 전체 제거 ═══════════
+   CMS(prototype.html)에서 사이트 링크를 누르면 현재 매장·사용자 상태를 localStorage('ss.callStores' · 'ss.callUsers')로 넘겨준다.
+   직접 열었거나 저장소를 쓸 수 없으면 아래 기본값(CMS 기본 데이터와 동일) 사용.
+   매장 = {id,name,addr,region,mgrs:[userId],manual} · manual = 번호호출 '수동 입력' 사용 중 */
 let STORES=[
- {id:'s1',name:'강남대로점',addr:'서울 강남구 강남대로 396',manual:true},
- {id:'s2',name:'인천공항 1터미널',addr:'인천 중구 공항로 272',manual:false},
- {id:'s3',name:'잠실롯데월드점',addr:'서울 송파구 올림픽로 240',manual:false},
- {id:'s4',name:'서면점',addr:'부산 부산진구 서면로 39',manual:false},
- {id:'s5',name:'홍대입구점',addr:'서울 마포구 양화로 160',manual:false},
- {id:'s6',name:'판교테크노밸리점',addr:'경기 성남시 분당구 판교역로 235',manual:false},
- {id:'s7',name:'해운대점',addr:'부산 해운대구 해운대해변로 264',manual:true},
- {id:'s8',name:'제주공항점',addr:'제주 제주시 공항로 2',manual:false},
+ {id:'s1',name:'강남대로점',region:'서울',addr:'서울 강남구 강남대로 396',mgrs:['u3'],manual:true},
+ {id:'s2',name:'인천공항 1터미널',region:'인천',addr:'인천 중구 공항로 272',mgrs:['u4'],manual:false},
+ {id:'s3',name:'잠실롯데월드점',region:'서울',addr:'서울 송파구 올림픽로 240',mgrs:['u5'],manual:false},
+ {id:'s4',name:'서면점',region:'부산',addr:'부산 부산진구 서면로 39',mgrs:['u6','u7'],manual:false},
+ {id:'s5',name:'홍대입구점',region:'서울',addr:'서울 마포구 양화로 160',mgrs:['u8'],manual:false},
+ {id:'s6',name:'판교테크노밸리점',region:'경기',addr:'경기 성남시 분당구 판교역로 235',mgrs:[],manual:false},
+ {id:'s7',name:'해운대점',region:'부산',addr:'부산 해운대구 해운대해변로 264',mgrs:[],manual:true},
+ {id:'s8',name:'제주공항점',region:'제주',addr:'제주 제주시 공항로 2',mgrs:[],manual:false},
+];
+let USERS=[
+ {id:'u1',name:'김민규',email:'mk.kim@greedish.com',role:'owner',scope:'전체 매장',status:'active'},
+ {id:'u2',name:'박서연',email:'sy.park@greedish.com',role:'admin',scope:'전체 매장',status:'active'},
+ {id:'u3',name:'이준호',email:'jh.lee@greedish.com',role:'admin',scope:'강남대로점',status:'active'},
+ {id:'u4',name:'최다은',email:'de.choi@greedish.com',role:'admin',scope:'인천공항 1터미널',status:'invited'},
+ {id:'u5',name:'정우성',email:'ws.jung@greedish.com',role:'admin',scope:'잠실롯데월드점',status:'inactive'},
+ {id:'u6',name:'한지민',email:'jm.han@greedish.com',role:'viewer',scope:'부산 전체',status:'active'},
+ {id:'u7',name:'오세훈',email:'sh.oh@greedish.com',role:'viewer',scope:'서면점',status:'active'},
+ {id:'u8',name:'윤가영',email:'gy.yoon@greedish.com',role:'admin',scope:'홍대입구점',status:'invited'},
 ];
 try{const v=JSON.parse(localStorage.getItem('ss.callStores')||'null');if(Array.isArray(v)&&v.length)STORES=v;}catch(e){}
+try{const v=JSON.parse(localStorage.getItem('ss.callUsers')||'null');if(Array.isArray(v)&&v.length)USERS=v;}catch(e){}
+/* 데모 전용: 연결된 매장이 없는 계정(빈 상태 확인용) */
+USERS.push({id:'u_demo_none',name:'매장 미배정',email:'no.store@greedish.com',role:'admin',scope:'',status:'active'});
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+/* POST /auth/login — 프로토타입: 목록에 없는 이메일은 최고관리자로 로그인(CMS 로그인과 동일한 규칙). 비밀번호 'error' = 불일치 */
+async function apiLogin(email,pw){
+ await wait(800);
+ if(window.__OCL_LOGIN_FAIL)throw {status:500};
+ const u=USERS.find(x=>x.email.toLowerCase()===email.toLowerCase());
+ if(pw==='error'||(u&&u.status==='invited'))throw {status:401};
+ if(u&&u.status==='inactive')throw {status:403,code:'inactive'};
+ return u?{...u}:{id:'u_guest',name:email.split('@')[0],email,role:'owner',scope:'전체 매장',status:'active'};
+}
+/* Google OAuth — 프로토타입: 팝업 없이 최고관리자 계정(김민규)으로 로그인. window.__OCL_GOOGLE_NOACCT=true = 미가입 계정 */
+async function apiGoogle(){
+ await wait(900);
+ if(window.__OCL_LOGIN_FAIL)throw {status:500};
+ if(window.__OCL_GOOGLE_NOACCT)throw {status:404};
+ return {...(USERS.find(u=>u.role==='owner')||USERS[0])};
+}
+/* GET /order-call/stores — 권한 범위는 서버가 필터링한다. 아래는 그 규칙의 목업.
+   최고관리자 또는 담당 범위 '전체 매장' → 전체 / 그 외 → 담당자로 지정된 매장 + 담당 범위(매장명 · '○○ 전체' 지역) */
+async function apiStores(user){
+ await wait(900);
+ if(window.__OCL_STORES_FAIL)throw {status:500};
+ const all=user.role==='owner'||user.scope==='전체 매장';
+ const reg=/ 전체$/.test(user.scope||'')?user.scope.replace(/ 전체$/,''):null;
+ return STORES.filter(s=>all||(s.mgrs||[]).includes(user.id)||s.name===user.scope||(reg&&s.region===reg))
+  .map(({id,name,addr,manual})=>({id,name,addr,manual:!!manual}));
+}
+/* POST /order-call/sessions {storeId} — 403 = 그 사이 권한이 회수됨 */
+async function apiStart(storeId){
+ await wait(700);
+ if(window.__OCL_START_FORBIDDEN)throw {status:403};
+ return {storeId};
+}
+/* ═══════════ /MOCK ═══════════ */
 
-let q='',picked=null,act=-1,open=false;
-const results=()=>{const k=q.trim().replace(/\s+/g,'').toLowerCase();if(!k)return[];
- return STORES.filter(s=>s.name.replace(/\s+/g,'').toLowerCase().includes(k)||(s.addr||'').replace(/\s+/g,'').includes(k))
-  .sort((a,b)=>(b.manual-a.manual)||a.name.localeCompare(b.name,'ko'));};
-const hl=name=>{const k=q.trim();if(!k)return esc(name);const i=name.toLowerCase().indexOf(k.toLowerCase());
- return i<0?esc(name):esc(name.slice(0,i))+'<mark>'+esc(name.slice(i,i+k.length))+'</mark>'+esc(name.slice(i+k.length));};
+let me=null;            /* 로그인한 계정 {id,name,email,role} — 실서비스는 accessToken과 함께 보관 */
+let list=null;          /* null = 조회 중 · 'err' = 조회 실패 · [] = 접근 가능한 매장 없음 */
+let picked=null,q='';
 
-function renderLogin(){
+/* ───────── Step 01. 관리자 계정 로그인 ───────── */
+function renderLogin(prefill=''){
+ me=null;list=null;picked=null;q='';
  document.title='주문호출관리 시스템 — SyncSign';
  $('#app').innerHTML=`
  <header class="ocl-top">${LOGO}</header>
  <main class="ocl-main"><section class="ocl-card" aria-labelledby="ocl-title">
   <h1 id="ocl-title">주문호출관리 시스템</h1>
-  <p class="sub">매장을 선택하고 매장 계정 비밀번호를 입력해 로그인해 주세요.</p>
-  <label class="ocl-lbl" for="ocl-q">매장</label>
-  <div id="ocl-field"></div>
-  <div class="ocl-pw" id="ocl-pwrow" hidden><label class="ocl-lbl" for="ocl-pw">비밀번호</label>
-   <div class="ocl-pwbox"><input class="input" id="ocl-pw" type="password" autocomplete="current-password" placeholder="비밀번호를 입력해 주세요">
-    <button class="ocl-eye" id="ocl-eye" type="button" aria-label="비밀번호 보기" aria-pressed="false">${IC.eye}</button></div>
-   <div class="ferr" id="ocl-pw-err" hidden></div></div>
-  <button class="btn btn-primary ocl-go" id="ocl-go" disabled>로그인</button>
-  <p class="ocl-foot">매장 관리 › 번호호출에서 <b style="color:var(--text-2);font-weight:600">수동 입력</b>을 사용 중인 매장만 로그인할 수 있어요.</p>
+  <p class="sub">SyncSign 관리자 계정으로 로그인해 주세요.</p>
+  <button class="btn btn-google" id="ocl-google" type="button">${IC.google}Google로 계속하기</button>
+  <div class="auth-div">또는 이메일로</div>
+  <form id="ocl-form" novalidate>
+   <div class="ocl-f"><label class="ocl-lbl" for="ocl-email">이메일</label>
+    <input class="input" id="ocl-email" type="email" autocomplete="username" placeholder="you@company.com" value="${esc(prefill)}">
+    <div class="ferr" id="ocl-email-err" role="alert" hidden></div></div>
+   <div class="ocl-f"><label class="ocl-lbl" for="ocl-pw">비밀번호</label>
+    <div class="ocl-pwbox"><input class="input" id="ocl-pw" type="password" autocomplete="current-password" placeholder="비밀번호를 입력해 주세요">
+     <button class="ocl-eye" id="ocl-eye" type="button" aria-label="비밀번호 보기" aria-pressed="false">${IC.eye}</button></div>
+    <div class="ferr" id="ocl-err" role="alert" hidden></div></div>
+   <button class="btn btn-primary ocl-go" id="ocl-login" type="submit" disabled>로그인</button>
+  </form>
+  <p class="ocl-foot">SyncSign CMS와 같은 계정을 사용해요.</p>
+  <div class="ocl-demo">프로토타입 계정(비밀번호는 아무 값, <b>error</b> 입력 시 오류) ·
+   <button type="button" data-demo="mk.kim@greedish.com">최고관리자</button> ·
+   <button type="button" data-demo="jh.lee@greedish.com">관리자(강남대로점)</button> ·
+   <button type="button" data-demo="jm.han@greedish.com">뷰어(부산 전체)</button> ·
+   <button type="button" data-demo="no.store@greedish.com">매장 없음</button></div>
  </section></main>`;
- drawField();
- $('#ocl-go').onclick=login;
- const pw=$('#ocl-pw'),eye=$('#ocl-eye');
- pw.addEventListener('input',()=>{clearPwErr();syncGo();});
- pw.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();login();}});
+ const em=$('#ocl-email'),pw=$('#ocl-pw'),eye=$('#ocl-eye'),go=$('#ocl-login');
+ const sync=()=>{if(!go.dataset.loading)go.disabled=!(em.value.trim()&&pw.value);};
+ [em,pw].forEach(i=>i.addEventListener('input',()=>{clearErr();sync();}));
  eye.onclick=()=>{const show=pw.type==='password';pw.type=show?'text':'password';eye.innerHTML=show?IC.eyeOff:IC.eye;
   eye.setAttribute('aria-pressed',String(show));eye.setAttribute('aria-label',show?'비밀번호 숨기기':'비밀번호 보기');pw.focus();};
+ document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{em.value=b.dataset.demo;pw.value='demo1234';clearErr();sync();go.focus();});
+ $('#ocl-form').onsubmit=e=>{e.preventDefault();login();};
+ $('#ocl-google').onclick=loginGoogle;
+ (prefill?pw:em).focus();
 }
-const syncGo=()=>{const go=$('#ocl-go');if(go&&!go.dataset.loading)go.disabled=!(picked&&$('#ocl-pw').value);};
-const clearPwErr=()=>{$('#ocl-pw').classList.remove('error');$('#ocl-pw-err').hidden=true;};
-const showPwErr=msg=>{const pw=$('#ocl-pw'),er=$('#ocl-pw-err');pw.classList.add('error');er.textContent=msg;er.hidden=false;pw.focus();pw.select();};
-/* 비밀번호 입력은 매장을 선택하면 노출 — 매장을 바꾸면(선택 해제) 숨기고 입력한 비밀번호는 지운다 */
-function syncPw(){
- const pw=$('#ocl-pw'),eye=$('#ocl-eye');
- if(!picked){pw.value='';pw.type='password';eye.innerHTML=IC.eye;eye.setAttribute('aria-pressed','false');clearPwErr();}
- $('#ocl-pwrow').hidden=!picked;
- syncGo();
+const clearErr=()=>{['#ocl-email','#ocl-pw'].forEach(s=>$(s).classList.remove('error'));$('#ocl-email-err').hidden=$('#ocl-err').hidden=true;};
+/* 오류 위치: 이메일에 관한 오류(형식·비활성 계정)는 이메일 입력 아래, 이메일·비밀번호 불일치는 비밀번호 입력 아래 */
+function showErr(msg,field='both'){
+ const em=$('#ocl-email'),pw=$('#ocl-pw');clearErr();
+ if(field==='email'){em.classList.add('error');const er=$('#ocl-email-err');er.textContent=msg;er.hidden=false;em.focus();em.select();return;}
+ em.classList.add('error');pw.classList.add('error');const er=$('#ocl-err');er.textContent=msg;er.hidden=false;pw.focus();pw.select();
 }
-function drawField(){
- const f=$('#ocl-field');
- syncPw();
- if(picked){
-  f.innerHTML=`<div class="ocl-picked"><div class="tx"><b>${esc(picked.name)}</b><span>${esc(picked.addr||'주소 미등록')}</span></div>
-   <button class="btn btn-sm" id="ocl-change" type="button">변경</button></div>`;
-  $('#ocl-change').onclick=()=>{picked=null;drawField();$('#ocl-q').focus();$('#ocl-q').select();};
+async function login(){
+ const em=$('#ocl-email'),pw=$('#ocl-pw'),go=$('#ocl-login');
+ if(go.dataset.loading||go.disabled)return;
+ const email=em.value.trim();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('올바른 이메일 형식으로 입력해 주세요.','email');return;}
+ go.dataset.loading='1';go.disabled=true;go.innerHTML='<span class="spinner inv"></span>';em.disabled=pw.disabled=$('#ocl-google').disabled=true;
+ const done=()=>{delete go.dataset.loading;go.textContent='로그인';em.disabled=pw.disabled=$('#ocl-google').disabled=false;go.disabled=!(em.value.trim()&&pw.value);};
+ try{
+  me=await apiLogin(email,pw.value);
+  renderStores();
+ }catch(err){
+  done();
+  if(err.status===401)showErr('이메일 또는 비밀번호가 일치하지 않아요.');
+  else if(err.code==='inactive')showErr('비활성화된 계정이에요. 최고관리자에게 계정 상태를 확인해 주세요.','email');
+  else toast('로그인하지 못했어요. 잠시 후 다시 시도해 주세요.',{err:true});
+ }
+}
+
+/* Google로 계속하기 — CMS 로그인과 같은 계정 연동. 요청 중에는 이메일 로그인까지 잠근다 */
+async function loginGoogle(){
+ const gb=$('#ocl-google'),go=$('#ocl-login'),em=$('#ocl-email'),pw=$('#ocl-pw');
+ if(gb.disabled||go.dataset.loading)return;
+ const html=gb.innerHTML;clearErr();
+ gb.disabled=go.disabled=em.disabled=pw.disabled=true;gb.innerHTML='<span class="spinner"></span>Google 계정 확인 중…';
+ try{me=await apiGoogle();renderStores();}
+ catch(err){
+  gb.innerHTML=html;gb.disabled=em.disabled=pw.disabled=false;go.disabled=!(em.value.trim()&&pw.value);
+  toast(err.status===404?'SyncSign에 가입되지 않은 Google 계정이에요. CMS에서 먼저 가입해 주세요.':'Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.',{err:true});
+ }
+}
+
+/* ───────── Step 02. 번호호출 사용할 매장 선택 ───────── */
+function renderStores(){
+ document.title='매장 선택 · 주문호출관리 — SyncSign';
+ const [roleNm,roleCls]=ROLE_META[me.role]||ROLE_META.admin;
+ const owner=me.role==='owner';
+ $('#app').innerHTML=`
+ <header class="ocl-top">${LOGO}</header>
+ <main class="ocl-main"><section class="ocl-card" aria-labelledby="ocl-title">
+  <h1 id="ocl-title">번호호출 매장 선택</h1>
+  <p class="sub">번호호출을 사용할 매장을 선택해 주세요.<br>${owner?'최고관리자 계정은 전체 매장 중에서 선택할 수 있어요.':'내 계정에 연결된 매장만 표시돼요.'}</p>
+  <div class="ocl-acct"><span class="avatar" style="background:#5C6B85" aria-hidden="true">${esc((me.name||'?').slice(0,1))}</span>
+   <div class="tx"><b>${esc(me.name)} <span class="badge ${roleCls}">${roleNm}</span></b><span class="em">${esc(me.email)}</span></div>
+   <button class="btn btn-sm" id="ocl-out" type="button">로그아웃</button></div>
+  <div id="ocl-pick"></div>
+  <button class="btn btn-primary ocl-go" id="ocl-start" type="button" disabled>시작하기</button>
+  <p class="ocl-foot">번호호출 <b style="color:var(--text-2);font-weight:600">수동 입력</b>을 사용 중인 매장만 시작할 수 있어요.<br>매장 관리 › 매장 상세 › [번호호출]에서 설정해요.</p>
+ </section></main>`;
+ $('#ocl-out').onclick=()=>{toast('로그아웃했어요.');renderLogin();};
+ $('#ocl-start').onclick=start;
+ loadStores();
+}
+async function loadStores(){
+ list=null;picked=null;drawPick();
+ try{list=await apiStores(me);}catch(e){list='err';}
+ if(!$('#ocl-pick'))return;      /* 조회 중 로그아웃 */
+ drawPick();
+ $('#ocl-q')?.focus();
+}
+const keyOf=s=>String(s||'').replace(/\s+/g,'').toLowerCase();
+const filtered=()=>{const k=keyOf(q);
+ return list.filter(s=>!k||keyOf(s.name).includes(k)||keyOf(s.addr).includes(k))
+  .sort((a,b)=>(b.manual-a.manual)||a.name.localeCompare(b.name,'ko'));};
+const hl=name=>{const k=q.trim();if(!k)return esc(name);const i=name.toLowerCase().indexOf(k.toLowerCase());
+ return i<0?esc(name):esc(name.slice(0,i))+'<mark>'+esc(name.slice(i,i+k.length))+'</mark>'+esc(name.slice(i+k.length));};
+const syncStart=()=>{const b=$('#ocl-start');if(b&&!b.dataset.loading)b.disabled=!picked;};
+/* 검색창 + 목록 틀. 상태: 조회 중(스켈레톤) / 실패(재시도) / 접근 가능한 매장 없음 / 목록 */
+function drawPick(){
+ const box=$('#ocl-pick');if(!box)return;
+ syncStart();
+ if(Array.isArray(list)&&!list.length){
+  box.innerHTML=`<div class="ocl-list"><div class="ocl-state" role="status"><b>선택할 수 있는 매장이 없어요</b>접근할 수 있는 매장이 없습니다. 관리자에게 매장 접근 권한을 확인해 주세요.
+   <div><button class="btn btn-sm" id="ocl-relogin" type="button">다른 계정으로 로그인</button></div></div></div>`;
+  $('#ocl-relogin').onclick=()=>renderLogin();
   return;
  }
- f.innerHTML=`<div class="ocl-search" id="ocl-search">${IC.search}
-  <input class="input" id="ocl-q" type="text" placeholder="매장 이름을 입력해 주세요" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="ocl-list" aria-autocomplete="list" value="${esc(q)}">
-  <button class="ocl-clear" id="ocl-clear" type="button" aria-label="검색어 지우기" ${q?'':'hidden'}>${IC.x}</button>
-  <ul class="ocl-list" id="ocl-list" role="listbox" hidden></ul></div>
-  <p class="ocl-hint">매장 이름이나 주소 일부만 입력해도 찾을 수 있어요.</p>`;
+ const ready=Array.isArray(list);
+ box.innerHTML=`<div class="ocl-search">${IC.search}
+   <input class="input" id="ocl-q" type="search" placeholder="매장 이름이나 주소로 검색" autocomplete="off" aria-controls="ocl-list" aria-label="매장 검색" value="${esc(q)}" ${ready?'':'disabled'}>
+   <button class="ocl-clear" id="ocl-clear" type="button" aria-label="검색어 지우기" ${q?'':'hidden'}>${IC.x}</button></div>
+  <div class="ocl-meta" id="ocl-meta" aria-live="polite"></div>
+  <div class="ocl-list" id="ocl-list" role="radiogroup" aria-label="매장 목록" aria-busy="${!ready}"></div>`;
+ if(!ready){
+  $('#ocl-meta').innerHTML='<span>매장 목록을 불러오는 중…</span>';
+  $('#ocl-list').innerHTML=list==='err'
+   ?''
+   :Array.from({length:5},()=>`<div class="ocl-sk" aria-hidden="true"><span class="skel" style="width:20px;height:20px;border-radius:50%"></span><div style="flex:1"><div class="skel skel-line" style="width:42%"></div><div class="skel skel-line" style="width:68%;margin-top:7px;height:10px"></div></div></div>`).join('');
+  if(list==='err'){
+   $('#ocl-meta').innerHTML='';
+   $('#ocl-list').innerHTML=`<div class="ocl-state" role="alert"><b>매장 목록을 불러오지 못했어요</b>네트워크 상태를 확인하고 다시 시도해 주세요.<div><button class="btn btn-sm" id="ocl-retry" type="button">다시 시도</button></div></div>`;
+   $('#ocl-retry').onclick=loadStores;
+  }
+  return;
+ }
  const inp=$('#ocl-q');
- inp.addEventListener('input',()=>{q=inp.value;act=-1;open=!!q.trim();$('#ocl-clear').hidden=!q;drawList();});
- inp.addEventListener('focus',()=>{if(q.trim()){open=true;drawList();}});
+ inp.addEventListener('input',()=>{q=inp.value;$('#ocl-clear').hidden=!q;drawList();});
  inp.addEventListener('keydown',e=>{
-  const rs=results(),ok=rs.map((s,i)=>s.manual?i:-1).filter(i=>i>=0);
-  if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!ok.length)return;e.preventDefault();open=true;
-   const p=ok.indexOf(act);act=e.key==='ArrowDown'?ok[(p+1)%ok.length]:ok[(p<=0?ok.length:p)-1];drawList();}
-  else if(e.key==='Enter'){e.preventDefault();const i=act>=0?act:(ok.length===1?ok[0]:-1);if(i>=0)pick(rs[i]);}
-  else if(e.key==='Escape'){if(open){e.stopPropagation();open=false;drawList();}}
+  if(e.key==='Enter'){e.preventDefault();const ok=filtered().filter(s=>s.manual);if(ok.length===1){picked=ok[0];drawList();}else if(picked)start();}
+  else if(e.key==='ArrowDown'){e.preventDefault();($('#ocl-list input:checked')||$('#ocl-list input:not(:disabled)'))?.focus();}
  });
- $('#ocl-clear').onclick=()=>{q='';inp.value='';$('#ocl-clear').hidden=true;open=false;drawList();inp.focus();};
+ $('#ocl-clear').onclick=()=>{q='';inp.value='';$('#ocl-clear').hidden=true;drawList();inp.focus();};
+ drawList();
 }
 function drawList(){
- const ul=$('#ocl-list'),inp=$('#ocl-q');if(!ul)return;
- const rs=results();
- ul.hidden=!open;inp.setAttribute('aria-expanded',String(open));
- if(!open)return;
- ul.innerHTML=rs.length?rs.map((s,i)=>`<li class="ocl-opt ${s.manual?'':'dis'} ${i===act?'act':''}" role="option" id="ocl-o${i}" data-i="${i}" aria-disabled="${!s.manual}" aria-selected="${i===act}">
-   <div class="tx"><b>${hl(s.name)}</b><span>${esc(s.addr||'주소 미등록')}</span></div>${s.manual?'':'<em>수동 입력 미사용</em>'}</li>`).join('')
-  :`<li class="ocl-none"><b>검색 결과가 없어요</b>매장 관리에 등록된 매장 이름을 확인해 주세요.</li>`;
- inp.setAttribute('aria-activedescendant',act>=0?'ocl-o'+act:'');
- ul.querySelector('.act')?.scrollIntoView({block:'nearest'});
- ul.querySelectorAll('.ocl-opt:not(.dis)').forEach(li=>{
-  li.addEventListener('mousedown',e=>{e.preventDefault();pick(rs[+li.dataset.i]);});
-  li.addEventListener('mousemove',()=>{if(act!==+li.dataset.i){act=+li.dataset.i;ul.querySelectorAll('.ocl-opt').forEach(o=>o.classList.toggle('act',o===li));}});
+ const ul=$('#ocl-list');if(!ul)return;
+ const rs=filtered();
+ $('#ocl-meta').innerHTML=`<span>${q.trim()?`검색 결과 <b>${rs.length}</b>개`:`접근 가능한 매장 <b>${list.length}</b>개`}</span>${picked?`<span>선택: <b>${esc(picked.name)}</b></span>`:''}`;
+ ul.innerHTML=rs.length?rs.map(s=>{const on=picked&&picked.id===s.id;
+  return `<label class="ocl-store ${s.manual?'':'dis'} ${on?'on':''}">
+   <input type="radio" name="ocl-store" value="${esc(s.id)}" ${on?'checked':''} ${s.manual?'':'disabled'}>
+   <span class="radio ${on?'on':''}" aria-hidden="true"></span>
+   <span class="tx"><b>${hl(s.name)}</b><span>${esc(s.addr||'주소 미등록')}</span></span>${s.manual?'':'<em>수동 입력 미사용</em>'}</label>`;}).join('')
+  :`<div class="ocl-state"><b>검색 결과가 없어요</b>매장 이름이나 주소를 다시 확인해 주세요.</div>`;
+ ul.querySelectorAll('input').forEach(r=>{
+  r.addEventListener('change',()=>{picked=list.find(s=>s.id===r.value);const f=document.activeElement===r;drawList();syncStart();if(f)ul.querySelector('input:checked')?.focus();});
+  r.addEventListener('keydown',e=>{if(e.key==='Enter'&&picked){e.preventDefault();start();}});
  });
+ syncStart();
 }
-document.addEventListener('mousedown',e=>{if(open&&!e.target.closest('#ocl-search')){open=false;drawList();}});
-function pick(s){if(!s||!s.manual)return;picked=s;open=false;act=-1;drawField();$('#ocl-pw').focus();}
-function login(){
- const go=$('#ocl-go'),pw=$('#ocl-pw');if(!picked||go.dataset.loading)return;
- if(!pw.value){showPwErr('비밀번호를 입력해 주세요.');return;}
- go.dataset.loading='1';go.disabled=true;go.innerHTML='<span class="spinner inv"></span>';pw.disabled=true;
- const done=()=>{delete go.dataset.loading;go.textContent='로그인';pw.disabled=false;syncGo();};
- /* TODO(API): POST /order-call/sessions {storeId,password} — 401: 비밀번호 불일치(입력 아래 오류) / 그 외 실패: 오류 Toast. 둘 다 버튼 복구
-    [MOCK] 비밀번호는 아무 값이나 통과. 재현: window.__OCL_PW_WRONG=true(불일치) · window.__OCL_LOGIN_FAIL=true(서버 오류) */
- setTimeout(()=>{
-  if(window.__OCL_PW_WRONG){done();showPwErr('비밀번호가 일치하지 않아요. 다시 확인해 주세요.');return;}
-  if(window.__OCL_LOGIN_FAIL){done();toast('로그인하지 못했어요. 잠시 후 다시 시도해 주세요.',{err:true});return;}
-  renderApp(picked);
- },900);
+async function start(){
+ const b=$('#ocl-start');if(!picked||b.dataset.loading)return;
+ const s=picked;
+ b.dataset.loading='1';b.disabled=true;b.innerHTML='<span class="spinner inv"></span>';
+ try{
+  await apiStart(s.id);
+  renderApp(s);
+ }catch(e){
+  delete b.dataset.loading;b.textContent='시작하기';
+  if(e.status===403){toast('이 매장에 대한 접근 권한이 없어요. 매장 목록을 새로 불러올게요.',{err:true});loadStores();}
+  else{syncStart();toast('번호호출을 시작하지 못했어요. 잠시 후 다시 시도해 주세요.',{err:true});}
+ }
 }
-/* 로그인 이후 — 주문호출 화면은 이번 범위 밖이라 자리표시만 둔다 */
+
+/* ───────── 진입 이후 — 주문호출 화면은 이번 범위 밖이라 자리표시만 둔다 ───────── */
 function renderApp(s){
  document.title=`${s.name} · 주문호출관리 — SyncSign`;
  $('#app').innerHTML=`<div class="ocl-app">
   <header class="ocl-bar">${LOGO}<span class="sep"></span><span class="nm">${esc(s.name)}</span>
-   <span style="flex:1"></span><button class="btn btn-sm" id="ocl-out">로그아웃</button></header>
-  <main class="ocl-ph"><div class="empty"><b>주문호출 화면</b><span>'${esc(s.name)}' 매장으로 로그인했어요.<br>주문 번호 입력·호출 화면은 이번 프로토타입 범위에 포함되지 않아요.</span></div></main></div>`;
- toast(`'${esc(s.name)}' 매장으로 로그인했어요.`);
- $('#ocl-out').onclick=()=>{picked=null;q='';renderLogin();};
+   <span style="flex:1"></span><span class="who" style="font-size:13px;color:var(--text-3)">${esc(me.name)} · ${esc(me.email)}</span>
+   <button class="btn btn-sm" id="ocl-switch">매장 변경</button><button class="btn btn-sm" id="ocl-out">로그아웃</button></header>
+  <main class="ocl-ph"><div class="empty"><b>주문호출 화면</b><span>'${esc(s.name)}' 매장으로 번호호출을 시작했어요.<br>주문 번호 입력·호출 화면은 이번 프로토타입 범위에 포함되지 않아요.</span></div></main></div>`;
+ toast(`'${esc(s.name)}' 매장으로 시작했어요.`);
+ $('#ocl-switch').onclick=()=>{q='';renderStores();};
+ $('#ocl-out').onclick=()=>{toast('로그아웃했어요.');renderLogin();};
 }
 renderLogin();
 })();

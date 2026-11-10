@@ -281,16 +281,27 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
   - 메뉴판 송출 여부: mock `MENU_BOARDS[].live` → 상품 상세 응답의 `liveScreens`로 대체.
 - 프로토타입 실패 재현: 콘솔 `window.__PROD_SYNC_FAIL=true`.
 
-## 주문호출관리 시스템 로그인 — SaaS 전용 (`app/order-call-login.html` 신규)
+## 주문호출관리 시스템 로그인 — SaaS 전용 (`app/order-call-login.html`)
 
 - 진입: 매장 관리 › 매장 상세 › [번호호출] › '수동 입력' 선택 시 노출되는 사이트 링크(`prototype.html` `drawCallTab` `#call-site`) → 새 탭.
-- 구성: SyncSign 로고 / 타이틀 `주문호출관리 시스템` / 매장 검색(이름·주소 부분 일치, ↑↓·Enter 선택) → 선택 매장 카드([변경]) / 계정 비밀번호(매장을 선택하면 노출, 보기 토글, 매장 변경 시 숨김·초기화) / [로그인](매장 선택 + 비밀번호 입력 시 활성, Enter 제출).
-- 기존 시스템(sdm.el-bigs.com/register)의 '소상공인/프랜차이즈' 유형 선택은 없음 — 매장 정보만으로 로그인.
-- 번호호출 '수동 입력'을 사용 중인 매장만 선택 가능. 그 외 매장은 목록에 `수동 입력 미사용`으로 비활성 노출. 검색 결과 없음 안내 포함.
-- 로그인 이후 주문호출 화면은 범위 밖 — 자리표시 + [로그아웃].
+- **매장에는 별도 계정·비밀번호가 없다.** (2026-11 변경) 기존 '매장 선택 → 매장 비밀번호' 방식 폐기 → 관리자 개인 계정 로그인 후 매장 선택.
+- Step 01 관리자 계정 로그인: [Google로 계속하기](CMS 로그인과 같은 계정 연동, 요청 중 스피너·이메일 로그인 잠금, 미가입 Google 계정은 오류 Toast — 재현 `window.__OCL_GOOGLE_NOACCT=true`) / '또는 이메일로' 구분선 / 이메일 / 비밀번호(보기 토글) / [로그인](둘 다 입력 시 활성, Enter 제출, 요청 중 스피너·입력 잠금).
+  - 오류 위치: 이메일 형식·비활성 계정 → 이메일 입력 아래 / 이메일·비밀번호 불일치(401) → 비밀번호 입력 아래.
+  - 이메일 형식 오류 → `올바른 이메일 형식으로 입력해 주세요.` / 401 → `이메일 또는 비밀번호가 일치하지 않아요.`(CMS 로그인과 같은 문구) / 비활성 계정 → `비활성화된 계정이에요. 최고관리자에게 계정 상태를 확인해 주세요.` / 그 외 → 오류 Toast.
+- Step 02 번호호출 매장 선택: 로그인 계정 카드(이름·역할 배지·이메일·[로그아웃]) / 매장 검색(이름·주소 부분 일치, 결과 1개면 Enter로 선택) / 매장 목록(라디오, 키보드 ↑↓) / [시작하기](매장 선택 전 비활성).
+  - 매장 자동 선택 없음(1개뿐이어도 사용자가 직접 선택).
+  - '수동 입력'을 쓰지 않는 매장은 `수동 입력 미사용`으로 비활성 노출(기존 규칙 유지).
+  - 상태: 조회 중 스켈레톤 / 조회 실패 `매장 목록을 불러오지 못했어요` + [다시 시도] / 접근 가능한 매장 없음 `접근할 수 있는 매장이 없습니다. 관리자에게 매장 접근 권한을 확인해 주세요.` + [다른 계정으로 로그인] / 검색 결과 없음.
+- 권한별 목록(서버 필터, 프론트는 받은 목록만 표시): 최고관리자 → 전체 매장 / 관리자·뷰어 → 계정에 연결된 매장(사용자 관리 '담당 매장' 범위 + 매장 관리 담당자 지정). 담당 범위가 '전체 매장'인 관리자는 전체.
+  - ⚠️ 뷰어(매장 관리 권한 '없음')도 담당 매장에 한해 번호호출 사용 가능으로 가정 — 정책 확정 필요.
+- 진입 이후 주문호출 화면은 범위 밖 — 자리표시 + [매장 변경](재로그인 없이 Step 02) · [로그아웃].
 - TODO(API)
-  - `GET /order-call/stores?q=` → `[{id,name,addr,manual}]` (현재 프로토타입은 CMS 링크 클릭 시 localStorage `ss.callStores`로 매장 목록 전달 → API 연동 시 제거).
-  - `POST /order-call/sessions {storeId,password}` → 세션 발급 후 주문호출 화면 이동. 401 = 비밀번호 불일치 → 입력 아래 `비밀번호가 일치하지 않아요. 다시 확인해 주세요.`(재현: `window.__OCL_PW_WRONG=true`) / 그 외 실패는 오류 Toast(재현: `window.__OCL_LOGIN_FAIL=true`).
+  - `POST /auth/login {email,password}` — CMS 로그인과 같은 인증 → `{accessToken,user:{id,name,email,role}}`.
+  - Google: CMS와 같은 OAuth(`GET /auth/google?redirect=<이 페이지>`) → 콜백에서 accessToken 발급. 미가입 계정 404.
+  - `GET /order-call/stores` (Authorization) → `[{id,name,addr,manual}]`. 매장이 많으면 `?q=` 서버 검색으로 전환.
+  - `POST /order-call/sessions {storeId}` → 403(권한 회수) 시 Toast 후 목록 재조회.
+  - 프로토타입 목업: CMS 링크 클릭 시 localStorage `ss.callStores`(매장·담당자·지역·manual) / `ss.callUsers`(계정·역할·담당 범위) 전달 → API 연동 시 제거.
+  - 재현 플래그: 비밀번호 `error`(401) · `window.__OCL_LOGIN_FAIL`(서버 오류) · `__OCL_STORES_FAIL`(목록 실패) · `__OCL_START_FORBIDDEN`(시작 403). 데모 계정 버튼(최고관리자/관리자/뷰어/매장 없음)은 프로토타입 전용.
   - 최종 도메인 확정 시 CMS의 표시·복사 주소(현재 기존 주소 유지) 교체.
 
 ## 번호호출 위젯 — 매장 설정 안내 (`app/mod-products.js` `callStoreGuideHtml` · `openStoreCallSetup`, `app/prototype.html` `sCallGuide`)
