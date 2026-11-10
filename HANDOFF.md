@@ -301,7 +301,7 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
   - `GET /order-call/stores` (Authorization) → `[{id,name,addr,manual}]`. 매장이 많으면 `?q=` 서버 검색으로 전환.
   - `POST /order-call/sessions {storeId}` → 403(권한 회수) 시 Toast 후 목록 재조회.
   - 프로토타입 목업: CMS 링크 클릭 시 localStorage `ss.callStores`(매장·담당자·지역·manual) / `ss.callUsers`(계정·역할·담당 범위) 전달 → API 연동 시 제거.
-  - 재현 플래그: 비밀번호 `error`(401) · `window.__OCL_LOGIN_FAIL`(서버 오류) · `__OCL_STORES_FAIL`(목록 실패) · `__OCL_START_FORBIDDEN`(시작 403). 데모 계정 버튼(최고관리자/관리자/뷰어/매장 없음)은 프로토타입 전용.
+  - 재현: 목업 계정 비밀번호는 `demo1234` — 그 외 비밀번호·미가입 이메일은 401 · `window.__OCL_LOGIN_FAIL`(서버 오류) · `__OCL_STORES_FAIL`(목록 실패) · `__OCL_START_FORBIDDEN`(시작 403). 데모 계정 버튼(최고관리자/관리자/뷰어/매장 없음)은 프로토타입 전용.
   - 최종 도메인 확정 시 CMS의 표시·복사 주소(현재 기존 주소 유지) 교체.
 
 ## 번호호출 위젯 — 매장 설정 안내 (`app/mod-products.js` `callStoreGuideHtml` · `openStoreCallSetup`, `app/prototype.html` `sCallGuide`)

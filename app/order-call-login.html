@@ -163,14 +163,15 @@ try{const v=JSON.parse(localStorage.getItem('ss.callUsers')||'null');if(Array.is
 /* 데모 전용: 연결된 매장이 없는 계정(빈 상태 확인용) */
 USERS.push({id:'u_demo_none',name:'매장 미배정',email:'no.store@greedish.com',role:'admin',scope:'',status:'active'});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-/* POST /auth/login — 프로토타입: 목록에 없는 이메일은 최고관리자로 로그인(CMS 로그인과 동일한 규칙). 비밀번호 'error' = 불일치 */
+/* POST /auth/login — 프로토타입: 모든 목업 계정의 비밀번호는 DEMO_PW. 비밀번호가 다르거나 가입되지 않은 이메일이면 401(같은 문구 — 가입 여부 노출 방지) */
+const DEMO_PW='demo1234';
 async function apiLogin(email,pw){
  await wait(800);
  if(window.__OCL_LOGIN_FAIL)throw {status:500};
  const u=USERS.find(x=>x.email.toLowerCase()===email.toLowerCase());
- if(pw==='error'||(u&&u.status==='invited'))throw {status:401};
+ if(!u||pw!==DEMO_PW||u.status==='invited')throw {status:401};
  if(u&&u.status==='inactive')throw {status:403,code:'inactive'};
- return u?{...u}:{id:'u_guest',name:email.split('@')[0],email,role:'owner',scope:'전체 매장',status:'active'};
+ return {...u};
 }
 /* Google OAuth — 프로토타입: 팝업 없이 최고관리자 계정(김민규)으로 로그인. window.__OCL_GOOGLE_NOACCT=true = 미가입 계정 */
 async function apiGoogle(){
@@ -223,7 +224,7 @@ function renderLogin(prefill=''){
    <button class="btn btn-primary ocl-go" id="ocl-login" type="submit" disabled>로그인</button>
   </form>
   <p class="ocl-foot">SyncSign CMS와 같은 계정을 사용해요.</p>
-  <div class="ocl-demo">프로토타입 계정(비밀번호는 아무 값, <b>error</b> 입력 시 오류) ·
+  <div class="ocl-demo">프로토타입 계정(비밀번호 <b>demo1234</b>, 그 외 값은 오류) ·
    <button type="button" data-demo="mk.kim@greedish.com">최고관리자</button> ·
    <button type="button" data-demo="jh.lee@greedish.com">관리자(강남대로점)</button> ·
    <button type="button" data-demo="jm.han@greedish.com">뷰어(부산 전체)</button> ·
@@ -234,7 +235,7 @@ function renderLogin(prefill=''){
  [em,pw].forEach(i=>i.addEventListener('input',()=>{clearErr();sync();}));
  eye.onclick=()=>{const show=pw.type==='password';pw.type=show?'text':'password';eye.innerHTML=show?IC.eyeOff:IC.eye;
   eye.setAttribute('aria-pressed',String(show));eye.setAttribute('aria-label',show?'비밀번호 숨기기':'비밀번호 보기');pw.focus();};
- document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{em.value=b.dataset.demo;pw.value='demo1234';clearErr();sync();go.focus();});
+ document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{em.value=b.dataset.demo;pw.value=DEMO_PW;clearErr();sync();go.focus();});
  $('#ocl-form').onsubmit=e=>{e.preventDefault();login();};
  $('#ocl-google').onclick=loginGoogle;
  (prefill?pw:em).focus();
