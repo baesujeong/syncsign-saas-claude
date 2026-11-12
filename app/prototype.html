@@ -58,9 +58,10 @@
   <aside class="auth-brand">
     <!-- 좌측 배경 = 실제 매장 장면(장식). 벽걸이 디스플레이 화면 영역에 메뉴·프로모션 콘텐츠를 HTML로 얹어 교차 전환.
          이미지는 패널을 cover로 채우고(가로 중앙·세로 30% 기준), 디스플레이 좌표는 이미지 기준 %라 크롭돼도 화면에 정확히 붙는다.
+         srcset: 1x=store-scene.jpg(960w) · 2x=store-scene@2x.jpg(1920w). sizes는 .auth-scene-in 폭 계산식(max(100cqw,75cqh) = 패널 44vw / 75vh)과 동일.
          이미지 실패 시 장면 전체를 숨기고 네이비 배경만 남김. 모바일(≤1100px)은 패널이 숨겨져 lazy 이미지를 받지 않는다. -->
     <div class="auth-scene" aria-hidden="true"><div class="auth-scene-in">
-      <img class="auth-scene-img" src="../uploads/login/store-scene.jpg" alt="" loading="lazy" decoding="async" onerror="this.closest('.auth-scene').hidden=true">
+      <img class="auth-scene-img" src="../uploads/login/store-scene.jpg" srcset="../uploads/login/store-scene.jpg 960w, ../uploads/login/store-scene@2x.jpg 1920w" sizes="max(44vw, 75vh)" alt="" loading="lazy" decoding="async" onerror="this.closest('.auth-scene').hidden=true">
       <div class="auth-screen">
         <div class="slide s-menu"><span class="k">COFFEE</span><ul><li>아메리카노<b>4,500</b></li><li>카페 라떼<b>5,000</b></li><li>콜드브루<b>5,500</b></li></ul></div>
         <div class="slide s-promo"><span class="k">SEASON LIMITED</span><strong>블루베리 라떼</strong><em>5,900</em></div>

@@ -325,9 +325,10 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 ## 로그인 좌측 — 매장 메뉴보드 비주얼 (`app/prototype.html` `.auth-scene` · `app/styles.css` `.auth-brand` / `.auth-screen`)
 - 좌측 패널 전체를 실제 매장 장면으로 채우고, 로고·헤드라인·설명·운영 지표는 그 위에 오버레이(하단 정렬). 하단 블랙 그라데이션 = 패널 하단 36.7%, 투명도 0→1(시안 실측), 설명·지표 라벨 #BEBEBE. 우측 로그인 영역은 변경 없음.
 - 에셋(`uploads/login/`, Figma AI 생성 — 원본 Figma 파일 URlJcOw8r1vf1CC1wYrlrd):
-  - `store-scene.jpg` 960×1280 — 카페 내부(블루·네이비·쿨그레이 톤, 브랜드 블루 #3B66F1과 조화), 벽걸이 디스플레이(화면은 꺼진 상태로 생성)
-  - `board-drinks.jpg` · `board-promo.jpg` 960×540 — 디스플레이에 얹는 메뉴/프로모션 슬라이드 배경
+  - `store-scene.jpg` 960×1280(1x) · `store-scene@2x.jpg` 1920×2560(2x, `srcset`/`sizes="max(44vw, 75vh)"`로 DPR에 따라 선택) — 카페 내부(블루·네이비·쿨그레이 톤, 브랜드 블루 #3B66F1과 조화), 벽걸이 디스플레이(화면은 꺼진 상태로 생성)
+    ⚠️ 2x 파일은 생성 원본(960×1280)을 Lanczos 2배 + 언샤프 마스크로 만든 것 — 진짜 고해상 디테일은 아님. 생성 도구(Figma AI) 출력 상한이 960×1280.
+  - `board-drinks.jpg` · `board-promo.jpg` 1536×864 — 디스플레이에 얹는 메뉴/프로모션 슬라이드 배경
 - 디스플레이 콘텐츠는 HTML(`.auth-screen .slide`) — 메뉴·가격 텍스트가 선명하고 문구 교체가 쉬움. 2장 6초 간격 교차 전환(CSS 애니메이션). `prefers-reduced-motion`이면 첫 장 고정.
-- 크롭: `.auth-scene`을 이미지 비율(3:4)로 두고 `width:max(100cqw,75cqh)`로 패널을 덮음(= object-fit:cover). 가로 중앙·세로 30% 기준이라 디스플레이가 잘리지 않음. 디스플레이 좌표는 이미지 기준 %(x299·y202·360×187 / 960×1280) — **이미지를 교체하면 좌표도 다시 측정**.
+- 크롭: `.auth-scene`을 이미지 비율(3:4)로 두고 `width:max(100cqw,75cqh)`로 패널을 덮음(= object-fit:cover). 가로 중앙·세로 30% 기준이라 디스플레이가 잘리지 않음. 디스플레이 좌표는 이미지 기준 %(x290·y184·380×197 / 960×1280) — **이미지를 교체하면 좌표도 다시 측정**.
 - 실패 처리: 장면 이미지 `onerror` → 장면 전체 숨김(네이비 배경 + 텍스트만). 모바일(≤1100px)은 패널이 숨겨지고 이미지는 `loading="lazy"`라 받지 않음.
-- TODO(디자인): 장면 이미지 해상도 960×1280 — 대형 모니터(패널 폭 800px+, 2x)에선 약간 소프트. 확정 시 고해상도 원본으로 교체.
+- TODO(디자인): 장면 이미지 실제 해상도 960×1280 — 확정 시 AI 업스케일(Topaz/Real-ESRGAN 등) 또는 고해상 원본으로 `store-scene@2x.jpg`(1920×2560 이상)만 교체하면 됨(좌표·코드 변경 없음).
