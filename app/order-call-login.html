@@ -20,7 +20,7 @@
   · 매장 목록:  GET /order-call/stores (Authorization) → [{id,name,addr,manual}] — 권한 범위는 서버가 필터링.
                 manual = 번호호출 '수동 입력' 사용 중(선택 가능). 매장이 많으면 ?q= 서버 검색으로 전환
   · 시작:       POST /order-call/sessions {storeId} (Authorization) → 주문호출 화면 진입. 403 = 그 사이 권한 회수 → 목록 다시 조회
-  · 최종 도메인 확정 시 CMS 링크(prototype.html drawCallTab의 call-url) 주소·복사 문구도 함께 교체
+  · 최종 도메인 확정 시 CMS 링크(prototype.html drawCallTab의 call-url) 표시 주소도 함께 교체
 -->
 <style>
 body.ocl{overflow:auto;background:var(--bg);min-height:100vh;display:flex;flex-direction:column}

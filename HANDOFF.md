@@ -302,7 +302,7 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
   - `POST /order-call/sessions {storeId}` → 403(권한 회수) 시 Toast 후 목록 재조회.
   - 프로토타입 목업: CMS 링크 클릭 시 localStorage `ss.callStores`(매장·담당자·지역·manual) / `ss.callUsers`(계정·역할·담당 범위) 전달 → API 연동 시 제거.
   - 재현: 목업 계정 비밀번호는 `demo1234` — 그 외 비밀번호·미가입 이메일은 401 · `window.__OCL_LOGIN_FAIL`(서버 오류) · `__OCL_STORES_FAIL`(목록 실패) · `__OCL_START_FORBIDDEN`(시작 403). 데모 계정 버튼(최고관리자/관리자/뷰어/매장 없음)은 프로토타입 전용.
-  - 최종 도메인 확정 시 CMS의 표시·복사 주소(현재 기존 주소 유지) 교체.
+  - 최종 도메인 확정 시 CMS의 표시 주소(복사 버튼은 2026-11 제거)(현재 기존 주소 유지) 교체.
 
 ## 번호호출 위젯 — 매장 설정 안내 (`app/mod-products.js` `callStoreGuideHtml` · `openStoreCallSetup`, `app/prototype.html` `sCallGuide`)
 - 에디터 위젯 패널 [대기/호출] 탭 상단에 항상 안내 노출: "매장 번호호출 설정이 필요해요." + [매장 번호호출 설정하기]. 위젯 추가는 막지 않는다.
@@ -321,3 +321,13 @@ Program 편성표     { id, name, broadcast:boolean, scopes:Scope[], blocks:Bloc
 - 날씨 위젯 탭도 같은 이미지 카드로 변경(`WEATHER_STYLES[].thumb`, `uploads/weather-presets/weather-a.png` · `weather-b.png`). 타이틀·설명 제거, 상단 안내 문구는 유지. 클릭 시 기존 렌더 위젯 추가(위치는 화면 단위 관리 그대로).
 - 메뉴·뉴스 탭도 타이틀·설명 제거, 같은 2열 카드(`.wcall-card`). 디자인 이미지가 없어 기존 축소 프리뷰(`stylePv` · `widgetInnerHtml`)를 카드 안에 표시 — 이미지 시안이 오면 날씨처럼 `thumb`로 교체. 이름은 `aria-label`·hover 툴팁. 4개 탭 모두 상단 안내 문구는 유지(대기/호출은 매장 설정 안내).
 - 메뉴 위젯 상세 패널 [스타일] › 메뉴 스타일 카드(`.mn-style`)도 타입명 제거 — 미리보기만 노출, 선택 표시(파란 테두리)·`aria-pressed`·툴팁으로 구분.
+
+## 로그인 좌측 — 매장 메뉴보드 비주얼 (`app/prototype.html` `.auth-scene` · `app/styles.css` `.auth-brand` / `.auth-screen`)
+- 좌측 패널 전체를 실제 매장 장면으로 채우고, 로고·헤드라인·설명·운영 지표는 그 위에 오버레이(하단 정렬). 하단 블랙 그라데이션 = 패널 하단 36.7%, 투명도 0→1(시안 실측), 설명·지표 라벨 #BEBEBE. 우측 로그인 영역은 변경 없음.
+- 에셋(`uploads/login/`, Figma AI 생성 — 원본 Figma 파일 URlJcOw8r1vf1CC1wYrlrd):
+  - `store-scene.jpg` 960×1280 — 카페 내부(블루·네이비·쿨그레이 톤, 브랜드 블루 #3B66F1과 조화), 벽걸이 디스플레이(화면은 꺼진 상태로 생성)
+  - `board-drinks.jpg` · `board-promo.jpg` 960×540 — 디스플레이에 얹는 메뉴/프로모션 슬라이드 배경
+- 디스플레이 콘텐츠는 HTML(`.auth-screen .slide`) — 메뉴·가격 텍스트가 선명하고 문구 교체가 쉬움. 2장 6초 간격 교차 전환(CSS 애니메이션). `prefers-reduced-motion`이면 첫 장 고정.
+- 크롭: `.auth-scene`을 이미지 비율(3:4)로 두고 `width:max(100cqw,75cqh)`로 패널을 덮음(= object-fit:cover). 가로 중앙·세로 30% 기준이라 디스플레이가 잘리지 않음. 디스플레이 좌표는 이미지 기준 %(x299·y202·360×187 / 960×1280) — **이미지를 교체하면 좌표도 다시 측정**.
+- 실패 처리: 장면 이미지 `onerror` → 장면 전체 숨김(네이비 배경 + 텍스트만). 모바일(≤1100px)은 패널이 숨겨지고 이미지는 `loading="lazy"`라 받지 않음.
+- TODO(디자인): 장면 이미지 해상도 960×1280 — 대형 모니터(패널 폭 800px+, 2x)에선 약간 소프트. 확정 시 고해상도 원본으로 교체.

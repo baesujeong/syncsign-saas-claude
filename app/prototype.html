@@ -56,18 +56,19 @@
 <!-- ═══════════ 인증 ═══════════ -->
 <div id="screen-auth">
   <aside class="auth-brand">
+    <!-- 좌측 배경 = 실제 매장 장면(장식). 벽걸이 디스플레이 화면 영역에 메뉴·프로모션 콘텐츠를 HTML로 얹어 교차 전환.
+         이미지는 패널을 cover로 채우고(가로 중앙·세로 30% 기준), 디스플레이 좌표는 이미지 기준 %라 크롭돼도 화면에 정확히 붙는다.
+         이미지 실패 시 장면 전체를 숨기고 네이비 배경만 남김. 모바일(≤1100px)은 패널이 숨겨져 lazy 이미지를 받지 않는다. -->
+    <div class="auth-scene" aria-hidden="true"><div class="auth-scene-in">
+      <img class="auth-scene-img" src="../uploads/login/store-scene.jpg" alt="" loading="lazy" decoding="async" onerror="this.closest('.auth-scene').hidden=true">
+      <div class="auth-screen">
+        <div class="slide s-menu"><span class="k">COFFEE</span><ul><li>아메리카노<b>4,500</b></li><li>카페 라떼<b>5,000</b></li><li>콜드브루<b>5,500</b></li></ul></div>
+        <div class="slide s-promo"><span class="k">SEASON LIMITED</span><strong>블루베리 라떼</strong><em>5,900</em></div>
+      </div>
+    </div></div>
     <div class="logo"><svg viewBox="0 0 202 54" style="height:28px;width:auto;display:block" role="img" aria-label="syncsign"><use href="#logo-dark"/></svg></div>
     <h1>매장의 모든 화면을<br>한 곳에서 관리하세요</h1>
-    <p>메뉴판·광고·안내 화면을 웹에서 만들고, 전국 매장의 화면에 원격으로 송출하는 디지털 사이니지 클라우드예요.</p>
-    <div class="auth-mock"><div class="bar"><i></i><i></i><i></i></div>
-      <div class="scr">
-        <i style="background:linear-gradient(135deg,#7A1E1E,#3D0E0E)">🍅</i>
-        <i style="background:linear-gradient(135deg,#2A2F36,#15181D)">☕</i>
-        <i style="background:linear-gradient(135deg,#0E5E63,#093A40)">🏖️</i>
-        <i style="background:linear-gradient(135deg,#3B2A6B,#1E1440)">✨</i>
-        <i style="background:linear-gradient(135deg,#8A4B12,#4A2708)">🎁</i>
-        <i style="background:linear-gradient(135deg,#15243F,#0B1220)">🎬</i>
-      </div></div>
+    <p>메뉴판·광고·안내 화면을 웹에서 만들고, 전국 매장의 화면에 원격으로 송출할 수 있어요</p>
     <div class="quotes"><span><b>3,200+</b>운영 중인 화면</span><span><b>500+</b>연결된 매장</span><span><b>99.9%</b>송출 안정성</span></div>
   </aside>
   <div class="auth-side"><div class="auth-card" id="auth-card"></div></div>
@@ -1553,7 +1554,7 @@ function drawCallTab(body,s,wrap){
     <div style="flex:1;min-width:0">
      <b>${NM[m.k]} ${m.soon?'<span class="badge badge-gray" style="border-radius:99px">준비중</span>':m.badge}</b>
      <p>${m.desc}</p>
-     ${m.k==='manual'&&d.method==='manual'?`<div class="call-url"><div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--text-3);margin-bottom:1px">사이트</div><a href="./order-call-login.html" id="call-site" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none;word-break:break-all">https://sdm.el-bigs.com/register</a></div><button class="btn btn-sm" id="copy-url" style="flex:none">복사</button></div>`:''}
+     ${m.k==='manual'&&d.method==='manual'?`<div class="call-url"><div style="flex:1;min-width:0"><div style="font-size:13px;color:var(--text-3);margin-bottom:1px">사이트</div><a href="./order-call-login.html" id="call-site" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none;word-break:break-all">https://sdm.el-bigs.com/register</a></div></div>`:''}
      ${!m.soon&&m.k!=='manual'&&d.method===m.k?`<div class="call-status">${IC.check}${d.requested?'연동 신청 완료':'연동 완료'}</div>`:''}
     </div>
     ${m.soon||ro?'':`<span class="radio ${d.method===m.k?'on':''}"></span>`}
@@ -1561,16 +1562,15 @@ function drawCallTab(body,s,wrap){
   +`<div class="info-note" style="margin-top:4px">${IC.info}<span>번호호출 위젯을 사용하지 않은 화면은 호출해도 표시되지 않아요. 번호호출 위젯이 사용된 템플릿을 화면에 송출해야 사용 가능해요.</span></div>`
    :`<div class="empty" style="padding:36px 12px"><b>번호호출 기능이 꺼져 있어요</b><span>주문 번호를 매장 화면에 실시간으로 띄우는 기능이에요.<br>켜면 수동 입력 방식이 기본으로 활성화돼요.</span></div>`}`;
  if(!ro)body.querySelector('#call-sw').onclick=()=>{d.on=!d.on;if(d.on&&!d.method)d.method='manual';drawCallTab(body,s,wrap)};
- body.querySelector('#copy-url')?.addEventListener('click',()=>toast('호출 사이트 주소를 복사했어요.'));
  /* 수동 입력 사이트 → SaaS 전용 주문호출관리 로그인(order-call-login.html, 새 탭). 프로토타입: 현재 매장 목록·번호호출 상태(이 매장은 편집 중인 값)를
     localStorage로 넘겨 로그인 페이지의 매장 목록·계정 권한 목업에 쓴다(매장 담당자·사용자 담당 범위 포함).
     TODO(API): 로그인 페이지가 /auth/login · /order-call/stores 를 직접 조회하면 이 전달은 제거.
-    표시·복사 주소는 최종 도메인 확정 전까지 기존 주소 유지 */
+    표시 주소는 최종 도메인 확정 전까지 기존 주소 유지(복사 버튼 없음) */
  body.querySelector('#call-site')?.addEventListener('click',()=>{
   try{localStorage.setItem('ss.callStores',JSON.stringify(STORES.map(x=>{const c=x.id===s.id?d:x.call;return {id:x.id,name:x.name,addr:x.addr,region:x.region,mgrs:x.mgrs||[],manual:!!(c.on&&c.method==='manual')};})));
    localStorage.setItem('ss.callUsers',JSON.stringify(USERS.map(({id,name,email,role,scope,status})=>({id,name,email,role,scope,status}))));}catch(e){}
  });
- body.querySelectorAll('[data-cm]').forEach(c=>c.onclick=e=>{if(e.target.closest('#copy-url'))return;const m=c.dataset.cm;if(m===d.method)return;if(m==='manual'){d.method='manual';d.requested=false;drawCallTab(body,s,wrap);return}openCallRequestModal(s,m,()=>{d.method=m;d.requested=true;drawCallTab(body,s,wrap)})});
+ body.querySelectorAll('[data-cm]').forEach(c=>c.onclick=e=>{if(e.target.closest('#call-site'))return;const m=c.dataset.cm;if(m===d.method)return;if(m==='manual'){d.method='manual';d.requested=false;drawCallTab(body,s,wrap);return}openCallRequestModal(s,m,()=>{d.method=m;d.requested=true;drawCallTab(body,s,wrap)})});
 }
 function openCallRequestModal(s,m,onDone){
  const label=m==='pos'?'POS':'KDS';
