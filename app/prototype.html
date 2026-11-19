@@ -969,7 +969,7 @@ function renderShell(){
   /* 초대로 가입한 팀원은 '미리보기'가 아니라 실제 권한이므로 종료 버튼 없이 안내만 한다 */
   pb.innerHTML=memberSession
    ?`${IC.info} <b>${ROLE_META[memberSession.role][0]}</b> 권한으로 팀에 참여 중이에요 · 담당 범위 <b>${memberSession.scope}</b>`
-   :`${IC.info} <b>${ROLE_META[previewRole][0]}</b> 권한으로 화면을 미리보는 중이에요<button id="perm-exit">미리보기 종료</button>`;
+   :`${IC.info} <b>${ROLE_META[previewRole][0]}</b> 권한으로 미리보는 중이에요<button id="perm-exit">미리보기 종료</button>`;
   const px=pb.querySelector('#perm-exit');
   if(px)px.onclick=()=>{previewRole=null;renderShell();if(!canSee(curPage))curPage='library';showPage(curPage);};}
  renderObBanner();
@@ -3180,16 +3180,16 @@ function renderEmptyDashboard(root,ps){
  const steps=[
   ['store','🏪','아직 등록된 매장이 없어요','매장을 등록하고 지역·담당자를 정리해요','매장 등록하기',c=>`매장 ${c}개 등록됨`],
   ['panel','🖥️','아직 연결된 화면이 없어요',STB_CODE_PAIRING?'매장에 설치된 화면을 연결 코드로 등록해요':'화면을 등록하고, 셋탑 앱에서 로그인해 연결해요','화면 연결하기',c=>`화면 ${c}개 연결됨`],
-  ['content','🖼️','아직 등록된 콘텐츠가 없어요','이미지·영상·URL을 올려 어디서든 재사용해요','콘텐츠 등록하기',c=>`콘텐츠 ${c}개 등록됨`],
+  ['content','🖼️','아직 등록된 콘텐츠가 없어요','이미지·영상·URL을 올려두면 재생목록에서 골라 쓸 수 있어요','콘텐츠 등록하기',c=>`콘텐츠 ${c}개 등록됨`],
   ['cast','📡','아직 편성·송출한 화면이 없어요','콘텐츠를 재생목록으로 묶어 화면에 편성하고 송출해요','편성 시작하기',c=>`재생목록 ${c}개 편성됨`],
  ];
  const doneN=steps.filter(([k])=>n[k]>0).length,total=steps.length;
  root.innerHTML=`
-  <header class="page-head"><h1>${t('page.dash.t')}</h1><span class="desc">${PROFILE.name}님, 싱크사인에 오신 것을 환영해요 👋 · 아래 순서대로 준비하면 첫 화면을 송출할 수 있어요</span></header>
+  <header class="page-head"><h1>${t('page.dash.t')}</h1><span class="desc">${PROFILE.name}님, 싱크사인에 오신 것을 환영해요</span></header>
   <div class="content-scroll" style="padding-top:12px"><div class="dash-wrap" style="max-width:900px">
    <div class="dash-empty-hero">
     <div class="deh-ic">🚀</div>
-    <div class="deh-tx"><b>서비스 준비를 시작해볼까요?</b><p>매장 등록 → 화면 연결 → 콘텐츠 등록 → 편성 및 화면 송출 순서로 진행하면 첫 화면을 내보낼 수 있어요.</p>
+    <div class="deh-tx"><b>첫 화면 송출 준비</b><p>아래 ${total}단계를 마치면 매장 화면에 첫 콘텐츠가 송출돼요.</p>
      <div class="deh-prog"><div class="deh-bar"><span style="width:${(doneN/total*100).toFixed(0)}%"></span></div><span class="deh-cnt num">${doneN} / ${total} 완료</span></div>
     </div>
    </div>
@@ -3224,6 +3224,8 @@ function renderDashboard(root){
  if(window.EMPTY_MODE){renderEmptyDashboard(root,ps);return;}
  const multi=session.userType!=='single';
  const done=DASH_SCHED.filter(s=>s.st==='done').length,next=DASH_SCHED.filter(s=>s.st==='next').length,fail=DASH_SCHED.filter(s=>s.st==='fail').length;
+ /* 헤더 요약: 고정 문구 대신 실제 집계(오프라인 화면 · 배포 실패)를 노출 */
+ const issues=[ps.off?`오프라인 화면 ${fmt(ps.off)}대`:'',fail?`배포 실패 ${fail}건`:''].filter(Boolean);
  const emptyRow=msg=>`<div class="empty" style="padding:20px 14px"><b style="font-size:13px">${msg}</b></div>`;
  /* 상단 현황 카드(공통 4종): 매장 · 전체 패널 · 온라인 · 오프라인 — '오류'는 오프라인으로 통합(2026-08 정책) */
  const stats=[
@@ -3241,12 +3243,12 @@ function renderDashboard(root){
  const myPanels=(window.__panelList?window.__panelList(5):[]);
  const liveOn=myPanels.filter(p=>p.stb&&p.status==='on').length,liveOff=myPanels.filter(p=>!p.stb||p.status==='off').length;
  const cardLive=`<div class="dash-card"><h3>화면 실시간 상태 <span style="font-size:13px;color:var(--text-2);font-weight:600">온라인 <b style="color:var(--green)">${liveOn}</b> · 오프라인 <b>${liveOff}</b></span><span class="lnk" data-att-all>화면 관리에서 모두 보기</span></h3>
-   ${myPanels.length?myPanels.map(p=>`<div class="dash-row" data-att-all><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${p.name} <span style="font-weight:500;color:var(--text-3)">· ${p.store}</span></b><span>${p.stb?(p.status==='off'?'신호 없음 · '+p.ago:p.content?'송출 중 · '+p.content:'편성된 일정 없음'):'셋탑 미연결 — 연결하면 송출을 시작해요'}</span></span>
+   ${myPanels.length?myPanels.map(p=>`<div class="dash-row" data-att-all><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${p.name} <span style="font-weight:500;color:var(--text-3)">· ${p.store}</span></b><span>${p.stb?(p.status==='off'?'신호 없음 · '+p.ago:p.content?'송출 중 · '+p.content:'편성된 일정 없음'):'셋탑을 연결하면 송출을 시작해요'}</span></span>
     <span class="badge ${!p.stb?'badge-amber':p.status==='on'?'badge-green':'badge-gray'}">${!p.stb?'셋탑 미연결':p.status==='on'?'온라인':'오프라인'}</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>아직 연결된 화면이 없어요</b><span>화면 관리에서 연결 코드로 등록해보세요.</span></div>'}
   </div>`;
  /* 프랜차이즈·기업: 지금 확인이 필요한 패널 */
  const cardAttention=`<div class="dash-card"><h3>지금 확인이 필요한 화면 <span style="font-size:13px;color:var(--text-2);font-weight:600">오프라인 <b>${fmt(ps.off)}</b></span><span class="lnk" data-att>화면 관리에서 모두 보기</span></h3>
-   ${ps.attention.length?ps.attention.map(a=>`<div class="dash-row" data-att><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${a.name} <span style="font-weight:500;color:var(--text-3)">· ${a.store}</span></b><span>신호 없음 · ${a.ago}</span></span><span class="badge badge-gray">오프라인</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>모든 화면이 정상이에요 🎉</b></div>'}
+   ${ps.attention.length?ps.attention.map(a=>`<div class="dash-row" data-att><span class="thumb-mini" style="background:var(--sunken)"></span><span class="tx"><b>${a.name} <span style="font-weight:500;color:var(--text-3)">· ${a.store}</span></b><span>신호 없음 · ${a.ago}</span></span><span class="badge badge-gray">오프라인</span></div>`).join(''):'<div class="empty" style="padding:22px"><b>오프라인 화면이 없어요</b></div>'}
   </div>`;
  /* 프랜차이즈·기업: 전체 매장 운영 현황 */
  const regions=(window.__regionStats?window.__regionStats():[]).slice(0,5);
@@ -3265,7 +3267,7 @@ function renderDashboard(root){
     <span style="display:block;height:4px;border-radius:2px;background:var(--blue-100);margin-top:6px;overflow:hidden"><span style="display:block;height:100%;width:${plan.storPct}%;background:var(--blue)"></span></span></span></div>
   </div>`;
  root.innerHTML=`
-  <header class="page-head"><h1>${t('page.dash.t')}</h1><span class="desc">${tDate(new Date(2026,6,6),{dateStyle:'full'})} · ${PROFILE.name}님, ${multi?'오늘도 전 매장이 순항 중이에요':'오늘도 우리 매장 화면이 순항 중이에요'}</span>
+  <header class="page-head"><h1>${t('page.dash.t')}</h1><span class="desc">${tDate(new Date(2026,6,6),{dateStyle:'full'})} · ${PROFILE.name}님 · ${issues.length?'확인 필요: '+issues.join(', '):'확인이 필요한 화면과 배포가 없어요'}</span>
    <div class="actions">
     <div class="seg" title="프로토타입 데모: 사용자 유형별 대시보드 미리보기"><button class="${multi?'':'on'}" data-utype="single">개인·소상공인</button><button class="${multi?'on':''}" data-utype="multi">프랜차이즈·기업</button></div>
     <span class="sync-note-top"><span class="dot on pulse"></span>실시간 · 방금 동기화</span></div></header>
@@ -3293,7 +3295,7 @@ function renderDashboard(root){
  });
  root.querySelectorAll('[data-att]').forEach(el=>el.addEventListener('click',()=>{
   showPage('panels');window.__setPanelFilter&&window.__setPanelFilter('attention');
-  toast('주의가 필요한 화면만 모아서 보여드려요.');
+  toast(`화면 관리에 '주의 필요' 필터를 적용했어요.`);
  }));
  root.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.go)));
  const _ds=root.querySelector('#dash-sched');if(_ds)_ds.onclick=()=>{document.getElementById('mod-products').hidden=true;document.getElementById('mod-panels').hidden=false;(window.__openPanelScheduleMonth||openPanelScheduleInline)();};
