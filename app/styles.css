@@ -2879,3 +2879,19 @@ table.grid tr.checked td{background:var(--blue-50)}
 .w-cm.on .rd{border:6px solid var(--blue)}
 .w-cinfo{display:flex;gap:10px;align-items:flex-start;background:#F5F5F5;border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--text-2);line-height:1.55;margin-top:4px}
 .w-cinfo>i{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--text-3);color:var(--text-3);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+/* 태그 입력 필드(콘텐츠 미리보기 · URL 추가): 태그와 +태그 버튼을 같은 높이로 정렬 */
+.tag-field{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tag-field .badge,.tag-field .chip{height:26px}
+.tag-field .chip{padding:0 10px}
+
+/* 목록 툴바(템플릿·콘텐츠·재생목록·비디오월·화면): 정렬과 보기 전환(그리드/리스트)은 폭이 줄어도 첫 줄 오른쪽에 고정.
+   폭이 모자라면 검색창이 먼저 줄고(최소 120px), 그래도 모자라면 필터 칩 묶음이 줄바꿈 대신 가로 스크롤 */
+:is(.prod-toolbar,.toolbar):has(> .view-toggle){flex-wrap:nowrap}
+:is(.prod-toolbar,.toolbar):has(> .view-toggle) > *{flex:none}
+:is(.prod-toolbar,.toolbar):has(> .view-toggle) > .search-wrap{flex:0 4 280px;width:auto;min-width:120px}
+:is(.prod-toolbar,.toolbar):has(> .view-toggle) > div:not([class]){flex:0 .05 auto;min-width:0;overflow-x:auto;flex-wrap:nowrap!important;scrollbar-width:none}
+:is(.prod-toolbar,.toolbar):has(> .view-toggle) > div:not([class])::-webkit-scrollbar{display:none}
+:is(.prod-toolbar,.toolbar):has(> .view-toggle) > div:not([class]) > *{flex:none}
+:is(.prod-toolbar,.toolbar):has(> .view-toggle) > .spacer{flex:1 1 0;min-width:0}
+/* 좁은 화면: '전체 선택' 글자를 숨기고 체크박스만 남김(체크박스 aria-label로 의미 유지) */
+@media (max-width:1180px){:is(.prod-toolbar,.toolbar):has(> .view-toggle) > .sel-all{font-size:0;gap:0}}

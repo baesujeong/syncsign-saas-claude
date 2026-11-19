@@ -1866,7 +1866,7 @@ function renderLibraryPage(root){
   <div class="rail-layout" style="padding-top:12px">
    <aside class="folder-rail"><div class="fr-head">폴더<button class="icon-btn" id="lf-add" style="width:24px;height:24px" aria-label="새 폴더">${IC.plus}</button></div>
     <div class="fr-list" id="lf-list"></div>
-    <div style="padding:10px 12px;border-top:1px solid var(--border);font-size:13px;color:var(--text-3);word-break:keep-all">파일을 화면 어디에나 끌어다 놓으면 현재 폴더로 업로드돼요</div></aside>
+    <div style="padding:10px 12px;border-top:1px solid var(--border);font-size:13px;color:var(--text-3);word-break:keep-all">파일을 이 페이지 어디에나 끌어다 놓으면 현재 폴더로 업로드돼요</div></aside>
    <div class="rail-main std">
     <div class="prod-toolbar">
      <div class="search-wrap">${IC.search}<input class="input input-sm" id="l-q" placeholder="${t('ph.library')}" value="${lQ}"></div>
@@ -1956,7 +1956,7 @@ function drawLib(){
     <div class="body"><div class="nm">${c.name}</div>
      <div class="sub">${c.size}
       <button class="icon-btn" data-lm="${c.id}" style="margin-left:auto;width:26px;height:26px" aria-label="더보기">${IC.dots}</button></div></div>
-   </div>`).join('')||(lQ?`<div style="grid-column:1/-1">${searchEmptyHtml(lQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${lTags.length?'조건에 맞는 콘텐츠가 없어요':LIB.length===0?'아직 업로드한 콘텐츠가 없어요':'이 폴더는 비어 있어요'}</b><span>${LIB.length===0?'이미지·동영상·웹 URL을 올리면 에디터·재생목록·송출 어디서든 재사용할 수 있어요':'파일을 끌어다 놓거나 업로드 버튼을 눌러보세요'}</span><button class="btn ${LIB.length===0?'btn-primary':'btn-tonal'} btn-sm" onclick="simulateUpload()">${IC.upload}${LIB.length===0?'첫 콘텐츠 업로드':'업로드'}</button></div>`)}</div>`;
+   </div>`).join('')||(lQ?`<div style="grid-column:1/-1">${searchEmptyHtml(lQ)}</div>`:`<div class="empty" style="grid-column:1/-1"><b>${lTags.length?'조건에 맞는 콘텐츠가 없어요':LIB.length===0?'아직 업로드한 콘텐츠가 없어요':'이 폴더는 비어 있어요'}</b><span>파일을 끌어다 놓거나 업로드 버튼을 눌러보세요</span><button class="btn ${LIB.length===0?'btn-primary':'btn-tonal'} btn-sm" onclick="simulateUpload()">${IC.upload}${LIB.length===0?'첫 콘텐츠 업로드':'업로드'}</button></div>`)}</div>`;
  }else{
   const selectable=arr.filter(c=>!c.error);
   sc.innerHTML=`<div class="ptable-wrap"><table class="grid"><thead><tr>
@@ -2019,11 +2019,13 @@ function drawLibBulk(){
   onToggle:t=>{lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`선택한 콘텐츠에 '${t}' 태그를 추가했어요.`);},
   onCreate:t=>{if(!LIB_TAGS.includes(t))LIB_TAGS.push(t);lChecked.forEach(id=>{const c=libOf(id);if(c&&!c.tags.includes(t))c.tags.push(t)});drawLib();toast(`'${t}' 태그를 만들어 추가했어요.`);},
   onManage:openLibTagManager});
- bulk.querySelector('#lb-del').onclick=()=>confirmDialog({title:`콘텐츠 ${lChecked.size}개를 삭제할까요?`,desc:'삭제한 콘텐츠는 복구할 수 없어요. 사용 중인 콘텐츠가 포함되어 있으면 해당 화면이 비어 보일 수 있어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(c=>!lChecked.has(c.id));lChecked.clear();drawLibFolders();drawLib();toast('삭제했어요.')}});
+ /* 선택 항목 중 재생목록·템플릿에서 사용 중인 개수를 직접 세어 안내(단건 삭제 문구와 동일 기준) */
+ const usedN=[...lChecked].filter(id=>{const c=libOf(id);return c&&(c.used.pl+c.used.tp)>0}).length;
+ bulk.querySelector('#lb-del').onclick=()=>confirmDialog({title:`콘텐츠 ${lChecked.size}개를 삭제할까요?`,desc:usedN?`삭제한 콘텐츠는 복구할 수 없어요. 이 중 ${usedN}개는 재생목록·템플릿에서 사용 중이며, 삭제하면 해당 위치에서 빈 화면이 될 수 있어요.`:'삭제한 콘텐츠는 복구할 수 없어요. 선택한 콘텐츠를 사용 중인 재생목록·템플릿은 없어요.',confirmText:'삭제',danger:true,onConfirm:()=>{LIB=LIB.filter(c=>!lChecked.has(c.id));lChecked.clear();drawLibFolders();drawLib();toast('삭제했어요.')}});
 }
 function openLibPreview(c){
  openModal(`
-  <div class="modal-head"><div><h2 style="font-size:16px">${c.name}</h2><div class="sub">${typeBadge(c)} · ${c.size}${c.type==='video'?' · '+durFmt(c.dur):''} · 업로드 ${c.date}</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
+  <div class="modal-head"><div><h2 style="font-size:16px">${c.name}</h2><div class="sub">${c.type==='image'?'이미지':c.type==='video'?'동영상':'웹 URL'}${c.size&&c.size!=='—'?' · '+c.size:''}${c.type==='video'?' · '+durFmt(c.dur):''} · 업로드 ${c.date}</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body" style="padding-bottom:6px">
    <div style="aspect-ratio:16/9;background:${c.g};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;position:relative">
     <span style="font-size:60px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.4))">${c.e}</span>
@@ -2033,8 +2035,11 @@ function openLibPreview(c){
    <dl class="kv" style="margin-top:14px"><dt>사용 위치</dt><dd>${c.used.pl?`재생목록 ${c.used.pl}곳`:''}${c.used.pl&&c.used.tp?' · ':''}${c.used.tp?`템플릿 ${c.used.tp}곳`:''}${!c.used.pl&&!c.used.tp?'아직 사용되지 않음':''}</dd>
    <dt>태그</dt><dd class="tag-field" id="pv-tags"></dd></dl>
   </div>
-  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button>${canEdit('library')?`<button class="btn btn-primary" data-close>에디터에서 사용</button>`:''}</div>`,
+  <div class="modal-foot"><span class="grow"></span><button class="btn" data-close>닫기</button>${canEdit('playlists')?`<button class="btn btn-primary" id="pv-to-pl">재생목록 만들기</button>`:''}</div>`,
  {width:'640px',onMount:ov=>{
+   /* 이 콘텐츠 1개를 담은 새 재생목록 편집기로 이동 (업로드 완료 토스트의 '재생목록 만들기'와 같은 동작) */
+   const toPl=ov.querySelector('#pv-to-pl');
+   if(toPl)toPl.onclick=()=>{ov.remove();openPlaylistEditor(null,[c.id]);};
    const tf=ov.querySelector('#pv-tags');
    /* 뷰어(라이브러리 편집 권한 없음)는 태그를 읽기 전용 배지로만 보여준다 — 추가/삭제 진입점(+태그) 미노출 */
    const roTags=!canEdit('library');
@@ -2094,7 +2099,7 @@ function simulateUpload(onDone){
  const total=files.length;
  let tray=$('#upload-tray');
  if(!tray){tray=document.createElement('div');tray.id='upload-tray';document.body.appendChild(tray);}
- tray.innerHTML=`<div class="tr-head">${IC.upload}<span id="tray-title">업로드 중 — ${total}개 파일</span><span id="tray-fail" class="tr-fail"></span><button class="icon-btn" style="width:24px;height:24px" id="tray-x">${IC.xs}</button></div>
+ tray.innerHTML=`<div class="tr-head">${IC.upload}<span id="tray-title">업로드 중 · ${total}개 파일</span><span id="tray-fail" class="tr-fail"></span><button class="icon-btn" style="width:24px;height:24px" id="tray-x">${IC.xs}</button></div>
   <div class="tr-body">${files.map((f,i)=>`<div class="up-progress" id="up-${i}"><div class="row"><span style="flex:1;font-weight:600">${f[0]}</span><span class="st" id="up-st-${i}"><span class="num" style="color:var(--text-3)">0%</span></span></div><div class="bar"><i id="up-bar-${i}" style="width:0%"></i></div></div>`).join('')}</div>`;
  tray.querySelector('#tray-x').onclick=()=>tray.remove();
  const state=files.map(()=>({done:false,failed:false}));
@@ -2102,7 +2107,7 @@ function simulateUpload(onDone){
   if(state.some(s=>!s.done&&!s.failed))return;
   const failed=state.filter(s=>s.failed).length;
   const title=$('#tray-title');
-  if(failed){if(title)title.textContent='업로드 완료';const ff=$('#tray-fail');if(ff)ff.innerHTML=`<span style="color:var(--red);font-weight:700">${failed}개 실패</span>`;return;}
+  if(failed){if(title)title.textContent=`${total-failed}개 업로드 완료`;const ff=$('#tray-fail');if(ff)ff.innerHTML=`<span style="color:var(--red);font-weight:700">${failed}개 실패</span>`;return;}
   obDone.upload=true;renderObBanner();
   setTimeout(()=>{tray.remove();
    if(typeof onDone==='function')onDone(total);
