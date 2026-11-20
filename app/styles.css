@@ -624,7 +624,7 @@ body.perm-ro .sc-top .name-input{pointer-events:none;cursor:default}
 .ple-item.ro{cursor:default}
 .ple-item .dur-ro{font-size:13px;font-weight:700;color:var(--text-2);font-variant-numeric:tabular-nums;padding-right:2px}
 /* 미리보기 재생 */
-.play-stage{aspect-ratio:16/9;background:#0B0E13;border-radius:var(--r-lg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff}
+.play-stage{aspect-ratio:16/9;background:#0B0E13;border-radius:var(--r-lg);border:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff}
 .play-stage .e{font-size:74px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5))}
 .play-stage .cap{position:absolute;left:16px;bottom:14px;font-size:14px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 .play-stage .idx{position:absolute;right:16px;top:12px;font-size:13px;background:rgba(0,0,0,.45);padding:4px 8px;border-radius:99px}
