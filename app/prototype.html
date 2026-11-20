@@ -2027,7 +2027,7 @@ function openLibPreview(c){
  openModal(`
   <div class="modal-head"><div><h2 style="font-size:16px">${c.name}</h2><div class="sub">${c.type==='image'?'이미지':c.type==='video'?'동영상':'웹 URL'}${c.size&&c.size!=='—'?' · '+c.size:''}${c.type==='video'?' · '+durFmt(c.dur):''} · 업로드 ${c.date}</div></div><button class="icon-btn" data-close>${IC.x}</button></div>
   <div class="modal-body" style="padding-bottom:6px">
-   <div style="aspect-ratio:16/9;background:${c.g};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;position:relative">
+   <div style="aspect-ratio:16/9;background:${c.g};border-radius:12px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;position:relative">
     <span style="font-size:60px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.4))">${c.e}</span>
     ${c.type==='video'?`<span style="position:absolute;inset:auto 0 0 0;height:4px;background:rgba(255,255,255,.2)"><span style="display:block;width:35%;height:100%;background:var(--blue)"></span></span><button class="icon-btn" style="position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.4);color:#fff">${IC.play}</button>`:''}
     ${c.type==='url'?`<span style="font-size:13px;background:rgba(0,0,0,.4);padding:4px 12px;border-radius:99px">🔗 실시간 웹 페이지가 화면에 그대로 표시돼요</span>`:''}

@@ -1911,7 +1911,7 @@ table.grid tr.checked td{background:var(--blue-50)}
 .dtabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin:6px 0 16px}
 .dtabs button{padding:8px 12px;font-size:14px;font-weight:600;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px}
 .dtabs button.on{color:var(--blue);border-color:var(--blue)}
-.dpreview{aspect-ratio:16/9;border-radius:var(--r-lg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:14px}
+.dpreview{aspect-ratio:16/9;border-radius:var(--r-lg);border:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:14px}
 .dpreview .cemoji{font-size:54px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
 .dpreview .live{position:absolute;left:12px;top:11px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.42);padding:4px 8px;border-radius:99px}
 .dpreview .cname{position:absolute;left:12px;bottom:10px;font-size:13px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6)}
